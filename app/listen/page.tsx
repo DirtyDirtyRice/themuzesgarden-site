@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { TRACKS_SEED } from "../../lib/tracksSeed";
 
@@ -10,6 +11,41 @@ type Track = {
   artist?: string;
   tags?: string[];
 };
+
+function Nav() {
+  const baseBtn: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 12px",
+    borderRadius: 999,
+    border: "1px solid #475569",
+    background: "#020617",
+    color: "#e5e7eb",
+    textDecoration: "none",
+    fontWeight: 700,
+    fontSize: 13,
+  };
+
+  const activeBtn: React.CSSProperties = {
+    ...baseBtn,
+    background: "#1e293b",
+    border: "1px solid #93c5fd",
+    color: "#f8fafc",
+  };
+
+  return (
+    <nav style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <Link href="/" style={baseBtn}>
+        Player
+      </Link>
+      <Link href="/library" style={baseBtn}>
+        Library
+      </Link>
+      <span style={activeBtn}>Listen</span>
+    </nav>
+  );
+}
 
 function normalize(s: string) {
   return s.trim().toLowerCase();
@@ -57,7 +93,6 @@ export default function ListenPage() {
     return filteredTracks[0] ?? tracks[0] ?? null;
   }, [filteredTracks, selectedId, tracks]);
 
-  // Keep selectedId valid when filters change
   useEffect(() => {
     if (!selectedTrack) return;
     if (selectedId !== selectedTrack.id) setSelectedId(selectedTrack.id);
@@ -110,7 +145,6 @@ export default function ListenPage() {
     setActiveIndex(-1);
   }
 
-  // Click outside closes
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
       const el = containerRef.current;
@@ -121,7 +155,6 @@ export default function ListenPage() {
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, []);
 
-  // Keep activeIndex sane when suggestions change
   useEffect(() => {
     if (!isOpen) return;
     if (filteredSuggestions.length === 0) {
@@ -133,7 +166,6 @@ export default function ListenPage() {
     }
   }, [filteredSuggestions.length, activeIndex, isOpen]);
 
-  // Keep highlighted item in view
   useEffect(() => {
     if (!isOpen) return;
     if (activeIndex < 0) return;
@@ -210,6 +242,9 @@ export default function ListenPage() {
             <p style={{ margin: "6px 0 0", color: "#cbd5f5" }}>
               Player + Library unified (filter tags, then play).
             </p>
+            <div style={{ marginTop: 12 }}>
+              <Nav />
+            </div>
           </div>
 
           <button
@@ -502,9 +537,7 @@ export default function ListenPage() {
 
               <div style={{ fontSize: 12, color: "#cbd5f5" }}>
                 Selected:{" "}
-                <strong style={{ color: "#f8fafc" }}>
-                  {selectedTrack?.title ?? "None"}
-                </strong>
+                <strong style={{ color: "#f8fafc" }}>{selectedTrack?.title ?? "None"}</strong>
               </div>
             </div>
 

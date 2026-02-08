@@ -1,7 +1,43 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { TRACKS_SEED } from "../lib/tracksSeed";
+
+function Nav() {
+  const baseBtn: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 12px",
+    borderRadius: 999,
+    border: "1px solid #475569",
+    background: "#020617",
+    color: "#e5e7eb",
+    textDecoration: "none",
+    fontWeight: 700,
+    fontSize: 13,
+  };
+
+  const activeBtn: React.CSSProperties = {
+    ...baseBtn,
+    background: "#1e293b",
+    border: "1px solid #93c5fd",
+    color: "#f8fafc",
+  };
+
+  return (
+    <nav style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+      <span style={activeBtn}>Player</span>
+      <Link href="/library" style={baseBtn}>
+        Library
+      </Link>
+      <Link href="/listen" style={baseBtn}>
+        Listen
+      </Link>
+    </nav>
+  );
+}
 
 export default function HomePage() {
   const tracks = useMemo(() => TRACKS_SEED ?? [], []);
@@ -40,18 +76,16 @@ export default function HomePage() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 20,
+        gap: 18,
         padding: 32,
         fontFamily: "system-ui, sans-serif",
       }}
     >
-      <h1 style={{ margin: 0, fontSize: 32, color: "#f8fafc" }}>
-        The Muzes Garden
-      </h1>
+      <h1 style={{ margin: 0, fontSize: 32, color: "#f8fafc" }}>The Muzes Garden</h1>
 
-      <p style={{ margin: 0, color: "#cbd5f5" }}>
-        Choose a track from the dropdown.
-      </p>
+      <Nav />
+
+      <p style={{ margin: 0, color: "#cbd5f5" }}>Choose a track from the dropdown.</p>
 
       {/* DROPDOWN + PLAYER */}
       <div
@@ -64,9 +98,7 @@ export default function HomePage() {
           boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
         }}
       >
-        <div style={{ fontSize: 12, color: "#93c5fd", marginBottom: 8 }}>
-          Player
-        </div>
+        <div style={{ fontSize: 12, color: "#93c5fd", marginBottom: 8 }}>Player</div>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <select
@@ -98,7 +130,7 @@ export default function HomePage() {
               border: "none",
               borderRadius: 10,
               padding: "10px 14px",
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: "pointer",
             }}
           >
@@ -106,13 +138,13 @@ export default function HomePage() {
           </button>
 
           <div style={{ fontSize: 12, color: "#cbd5f5" }}>
-            Selected: <strong style={{ color: "#f8fafc" }}>{selected.title}</strong>
+            Selected: <strong style={{ color: "#f8fafc" }}>{selected?.title ?? "None"}</strong>
           </div>
         </div>
 
         <div style={{ marginTop: 14 }}>
           <audio ref={audioRef} controls preload="none" style={{ width: "100%" }}>
-            <source src={selected.url} />
+            <source src={selected?.url ?? ""} />
           </audio>
         </div>
       </div>

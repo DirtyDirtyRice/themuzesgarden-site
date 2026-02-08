@@ -1,8 +1,44 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { TRACKS_SEED } from "../../lib/tracksSeed";
+
+function Nav() {
+  const baseBtn: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 12px",
+    borderRadius: 999,
+    border: "1px solid #475569",
+    background: "#020617",
+    color: "#e5e7eb",
+    textDecoration: "none",
+    fontWeight: 700,
+    fontSize: 13,
+  };
+
+  const activeBtn: React.CSSProperties = {
+    ...baseBtn,
+    background: "#1e293b",
+    border: "1px solid #93c5fd",
+    color: "#f8fafc",
+  };
+
+  return (
+    <nav style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <Link href="/" style={baseBtn}>
+        Player
+      </Link>
+      <span style={activeBtn}>Library</span>
+      <Link href="/listen" style={baseBtn}>
+        Listen
+      </Link>
+    </nav>
+  );
+}
 
 function normalize(s: string) {
   return s.trim().toLowerCase();
@@ -180,6 +216,9 @@ export default function LibraryPage() {
             <p style={{ margin: "6px 0 0", color: "#cbd5f5" }}>
               Filter tracks by tags (↑ ↓ + Enter).
             </p>
+            <div style={{ marginTop: 12 }}>
+              <Nav />
+            </div>
           </div>
 
           <button
