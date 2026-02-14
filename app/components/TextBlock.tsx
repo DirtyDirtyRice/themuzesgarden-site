@@ -1,68 +1,159 @@
 "use client";
 
-import React from "react";
+import { Rnd } from "react-rnd";
+import type { Block } from "../music/page";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
-  id: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  text: string;
+  block: Block;
   selected: boolean;
-  locked: boolean;
-
-  onPointerDown: (e: React.PointerEvent, id: string) => void;
-  onChangeText: (id: string, nextText: string) => void;
+  onSelect: (additive: boolean) => void;
+  onChange: (id: number, updates: Partial<Block>) => void;
+  onDragStop: (id: number, x: number, y: number) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  snapEnabled: boolean;
+  grid: number;
+  onPointerDown?: React.PointerEventHandler<HTMLDivElement>;
 };
 
-export default function TextBlock(props: Props) {
-  const { id, x, y, w, h, text, selected, locked, onPointerDown, onChangeText } = props;
+export default function TextBlock({
+  block,
+  selected,
+  onSelect,
+  onChange,
+  onDragStop,
+  onDelete,
+  onDuplicate,
+  snapEnabled,
+  grid,
+  onPointerDown,
+}: Props) {
+  const snap = snapEnabled ? ([grid, grid] as [number, number]) : undefined;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const localRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!selected) setIsEditing(false);
+  }, [selected]);
+
+  // ✅ IMPORTANT: DO NOT stopPropagation here.
+  // react-rnd needs the mousedown to bubble up to start dragging.
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    onSelect(e.shiftKey);
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+    requestAnimationFrame(() => localRef.current?.focus());
+  };
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    onChange(block.id, { text: e.currentTarget.textContent ?? "" });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isEditing && (e.key === "Delete" || e.key === "Backspace")) {
+      e.preventDefault();
+      onDelete();
+      return;
+    }
+
+    if (!isEditing && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+      e.preventDefault();
+      onDuplicate();
+      return;
+    }
+
+    if (!isEditing && e.key === "Enter") {
+      e.preventDefault();
+      setIsEditing(true);
+      requestAnimationFrame(() => localRef.current?.focus());
+      return;
+    }
+
+    if (isEditing && e.key === "Escape") {
+      e.preventDefault();
+      setIsEditing(false);
+      return;
+    }
+  };
 
   return (
-    <div
-      className={[
-        "absolute rounded-lg border bg-white shadow-sm",
-        "select-none",
-        locked ? "opacity-95" : "",
-        selected ? "border-zinc-900 ring-2 ring-zinc-900/20" : "border-zinc-200 hover:border-zinc-400",
-      ].join(" ")}
-      style={{
-        left: x,
-        top: y,
-        width: w,
-        height: h,
-        touchAction: "none",
+    <Rnd
+      size={{ width: block.width, height: block.height }}
+      position={{ x: block.x, y: block.y }}
+      bounds="parent"
+      enableResizing={!isEditing}
+      disableDragging={isEditing}
+      grid={snap}
+      dragHandleClassName="drag-handle"
+      onDragStop={(_, data) => onDragStop(block.id, data.x, data.y)}
+      onResizeStop={(_, __, ref, ___, pos) => {
+        onChange(block.id, {
+          width: ref.offsetWidth,
+          height: ref.offsetHeight,
+          x: pos.x,
+          y: pos.y,
+        });
       }}
     >
-      <div className="flex h-full flex-col">
-        <div
-          onPointerDown={(e) => onPointerDown(e, id)}
-          className="flex cursor-move items-center justify-between border-b px-3 py-2 text-xs text-zinc-600"
-          style={{ touchAction: "none" }}
-        >
-          <span className="flex items-center gap-2">
-            <span>Text</span>
-            {locked ? (
-              <span className="rounded bg-zinc-200 px-2 py-0.5 text-zinc-800">Locked</span>
-            ) : null}
-          </span>
-
-          {selected ? (
-            <span className="rounded bg-zinc-900 px-2 py-0.5 text-white">Selected</span>
-          ) : null}
+      <div
+        onPointerDown={onPointerDown}
+        onMouseDown={handleMouseDown}
+        onDoubleClick={handleDoubleClick}
+        onKeyDown={handleKeyDown}
+        className={`h-full w-full rounded bg-white shadow-sm ${
+          selected ? "ring-2 ring-blue-500" : "ring-1 ring-zinc-300"
+        }`}
+        style={{ userSelect: isEditing ? "text" : "none" }}
+      >
+        {/* DRAG HANDLE */}
+        <div className="drag-handle flex items-center justify-between rounded-t bg-zinc-50 px-2 py-1 text-[11px] text-zinc-500 cursor-move select-none">
+          <span>drag</span>
+          {selected && !isEditing && <span className="text-zinc-400">Double-click to edit</span>}
         </div>
 
-        <textarea
-          value={text}
-          onChange={(e) => onChangeText(id, e.target.value)}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-          }}
-          className="h-full w-full resize-none rounded-b-lg bg-white px-3 py-2 text-sm outline-none"
-          style={{ userSelect: "text" }}
-        />
+        <div className="p-2">
+          <div
+            ref={localRef}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onInput={handleInput}
+            className="min-h-[24px] outline-none whitespace-pre-wrap"
+          >
+            {block.text}
+          </div>
+
+          {selected && !isEditing && (
+            <div className="mt-2 flex gap-2">
+              <button
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate();
+                }}
+                className="rounded border px-2 py-1 text-xs"
+              >
+                Duplicate
+              </button>
+              <button
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="rounded border px-2 py-1 text-xs"
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Rnd>
   );
 }

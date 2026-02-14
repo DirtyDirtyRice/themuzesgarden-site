@@ -49,4 +49,20 @@ export const TRACKS_SEED: Track[] = [
     tags: ["demo"],
     createdAt: new Date().toISOString(),
   },
+   {
+    id: "demo-7",
+    title: "Break da Hold",
+    artist: "The Muzes Garden",
+    url: "https://ohjvqopxmmfrvgliolcr.supabase.co/storage/v1/object/public/audio/Break_Da_Hold%20HARD%20ROCK1%20FUNKY%204%2006.mp3",
+    tags: ["demo"],
+    createdAt: new Date().toISOString(),
+  },
+   {
+    id: "demo-8",
+    title: "Back to the Sea",
+    artist: "The Muzes Garden",
+    url: "https://ohjvqopxmmfrvgliolcr.supabase.co/storage/v1/object/public/audio/back%20to%20the%20sea1%20r&b%20KEEPER.mp3",
+    tags: ["demo"],
+    createdAt: new Date().toISOString(),
+  },
 ];
