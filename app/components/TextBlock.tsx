@@ -1,8 +1,17 @@
 "use client";
 
 import { Rnd } from "react-rnd";
-
 import { useEffect, useRef, useState } from "react";
+import type { PointerEventHandler } from "react";
+
+type Block = {
+  id: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
+};
 
 type Props = {
   block: Block;
@@ -14,7 +23,7 @@ type Props = {
   onDuplicate: () => void;
   snapEnabled: boolean;
   grid: number;
-  onPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerDown?: PointerEventHandler<HTMLDivElement>;
 };
 
 export default function TextBlock({
@@ -38,8 +47,6 @@ export default function TextBlock({
     if (!selected) setIsEditing(false);
   }, [selected]);
 
-  // ✅ IMPORTANT: DO NOT stopPropagation here.
-  // react-rnd needs the mousedown to bubble up to start dragging.
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     onSelect(e.shiftKey);
@@ -111,10 +118,11 @@ export default function TextBlock({
         }`}
         style={{ userSelect: isEditing ? "text" : "none" }}
       >
-        {/* DRAG HANDLE */}
         <div className="drag-handle flex items-center justify-between rounded-t bg-zinc-50 px-2 py-1 text-[11px] text-zinc-500 cursor-move select-none">
           <span>drag</span>
-          {selected && !isEditing && <span className="text-zinc-400">Double-click to edit</span>}
+          {selected && !isEditing && (
+            <span className="text-zinc-400">Double-click to edit</span>
+          )}
         </div>
 
         <div className="p-2">
