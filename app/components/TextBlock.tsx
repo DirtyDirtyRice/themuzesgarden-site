@@ -1,7 +1,7 @@
 "use client";
 
 import { Rnd } from "react-rnd";
-import type { Block } from "../music/page";
+
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
