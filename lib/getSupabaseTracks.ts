@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import * as supabaseClientModule from "./supabaseClient";
 
 export type SupabaseTrack = {
   id: string; // stable id
@@ -11,6 +11,18 @@ export type SupabaseTrack = {
   updatedAt?: string;
 };
 
+const supabase: any =
+  (supabaseClientModule as any).supabase ??
+  (supabaseClientModule as any).default ??
+  (supabaseClientModule as any).client ??
+  (supabaseClientModule as any).supabaseClient;
+
+if (!supabase) {
+  throw new Error(
+    "supabaseClient.ts export not found. Expected default export or named export like supabase/client/supabaseClient."
+  );
+}
+
 function titleFromFilename(name: string) {
   const noExt = name.replace(/\.[^.]+$/, "");
   return noExt.replace(/[_]+/g, " ").trim() || "Untitled";
@@ -21,7 +33,6 @@ function uniq(arr: string[]) {
 }
 
 function tagsFromPath(path: string) {
-  // path like: "rock/song.mp3" or "demo/foo/bar.mp3"
   const parts = path.split("/").filter(Boolean);
   const folders = parts.slice(0, -1);
   return uniq(["supabase", "mp3", ...folders.map((s) => s.toLowerCase())]);
@@ -49,7 +60,7 @@ async function listAllMp3sFromBucket(bucket: string) {
     if (error) throw new Error(error.message);
 
     for (const item of data ?? []) {
-      const isFolder = !item.id;
+      const isFolder = !(item as any).id;
       const itemName = item.name;
 
       if (isFolder) {
@@ -74,10 +85,6 @@ async function listAllMp3sFromBucket(bucket: string) {
   return results;
 }
 
-/**
- * Shared, client-side Supabase track fetch.
- * Requires Storage SELECT policy (you already added it).
- */
 export async function getSupabaseTracksClient(options?: {
   bucket?: string;
 }): Promise<SupabaseTrack[]> {
@@ -101,3 +108,7 @@ export async function getSupabaseTracksClient(options?: {
     };
   });
 }
+
+// EXTEND ONLY: aliases so any import name works
+export const getSupabaseTracks = getSupabaseTracksClient;
+export const getSupabaseTracksClients = getSupabaseTracksClient;

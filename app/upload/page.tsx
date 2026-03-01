@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import TopNav from "../components/TopNav";
 import { supabase } from "../../lib/supabaseClient";
 import type { Track } from "../../types/track";
@@ -38,10 +39,15 @@ function titleFromFileName(name: string) {
 
 function newTrackId() {
   const c = globalThis.crypto as unknown as { randomUUID?: () => string };
-  return c?.randomUUID?.() ?? `upl_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  return (
+    c?.randomUUID?.() ??
+    `upl_${Date.now()}_${Math.random().toString(16).slice(2)}`
+  );
 }
 
 export default function UploadPage() {
+  const router = useRouter();
+
   // ✅ CHANGE THIS if your public bucket name is different
   const BUCKET = "audio";
 
@@ -50,11 +56,42 @@ export default function UploadPage() {
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  const [checkingSession, setCheckingSession] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [items, setItems] = useState<UploadedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const accept = useMemo(() => ".mp3,audio/mpeg", []);
+
+  // ✅ Member Protection: require an authenticated session to use /upload
+  useEffect(() => {
+    let mounted = true;
+
+    async function check() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        const session = data.session;
+        if (!session) {
+          router.replace("/members");
+          return;
+        }
+      } catch {
+        // If anything goes wrong, fail safe: send to members page
+        router.replace("/members");
+        return;
+      } finally {
+        if (mounted) setCheckingSession(false);
+      }
+    }
+
+    check();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
 
   async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
     setError(null);
@@ -128,6 +165,19 @@ export default function UploadPage() {
     } catch {
       // ignore
     }
+  }
+
+  // While we verify session, avoid showing upload UI to logged-out users
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-zinc-50 text-zinc-900">
+        <TopNav />
+        <main className="mx-auto max-w-5xl px-5 py-10">
+          <h1 className="text-2xl font-semibold">Upload</h1>
+          <p className="mt-2 text-sm text-zinc-600">Checking session…</p>
+        </main>
+      </div>
+    );
   }
 
   return (
