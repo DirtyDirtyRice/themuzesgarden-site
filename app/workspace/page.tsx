@@ -123,12 +123,18 @@ export default function WorkspacePage() {
             My Library
           </Link>
 
+          <Link className="rounded border px-3 py-2 text-sm" href="/workspace/projects">
+            Projects
+          </Link>
+
           <Link className="rounded border px-3 py-2 text-sm" href="/library">
             Browse Library
           </Link>
+
           <Link className="rounded border px-3 py-2 text-sm" href="/listen">
             Listen
           </Link>
+
           <Link className="rounded border px-3 py-2 text-sm" href="/live">
             Live Engine
           </Link>
