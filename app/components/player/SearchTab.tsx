@@ -4,15 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import type { AnyTrack, TrackSection } from "./playerTypes";
 import {
   buildDiscoveryIndex,
+  debugMomentPlayback,
   emitTagSearch,
+  formatMomentTime,
   getAllDiscoveryTags,
   getTagSourceSummary,
   getTrackSections,
   getTrackTags,
   isTypingTarget,
+  MUZES_PLAYBACK_TARGET_EVENT,
 } from "./playerUtils";
-
-const MUZES_PLAYBACK_TARGET_EVENT = "muzesgarden-playback-target";
 
 type MatchedMoment = {
   sectionId: string;
@@ -24,6 +25,13 @@ type MatchedMoment = {
 function emitMomentPlaybackTarget(track: AnyTrack, match: MatchedMoment) {
   const trackId = String(track?.id ?? "").trim();
   if (!trackId) return;
+
+  debugMomentPlayback({
+    source: "SearchTab/PlayMoment",
+    trackId,
+    sectionId: match.sectionId,
+    startTime: match.startTime,
+  });
 
   window.dispatchEvent(
     new CustomEvent(MUZES_PLAYBACK_TARGET_EVENT, {
@@ -303,6 +311,9 @@ export default function SearchTab(props: {
             const query = q.trim().toLowerCase();
             const matchSummary = getMatchSummary(t, query);
             const matchedMoment = findMatchedMoment(t, query);
+            const matchedMomentTime = matchedMoment
+              ? formatMomentTime(matchedMoment.startTime)
+              : null;
 
             return (
               <div
@@ -330,7 +341,7 @@ export default function SearchTab(props: {
 
                   {matchedMoment ? (
                     <div className="mt-1 text-[11px] text-zinc-600 truncate">
-                      Moment hit: {matchedMoment.label}
+                      Moment hit: {matchedMoment.label} — {matchedMomentTime}
                     </div>
                   ) : null}
 
@@ -362,7 +373,7 @@ export default function SearchTab(props: {
                         e.stopPropagation();
                         emitMomentPlaybackTarget(t, matchedMoment);
                       }}
-                      title={`Play matched moment: ${matchedMoment.label}`}
+                      title={`Play matched moment: ${matchedMoment.label} @ ${matchedMomentTime}`}
                     >
                       Play Moment
                     </button>
