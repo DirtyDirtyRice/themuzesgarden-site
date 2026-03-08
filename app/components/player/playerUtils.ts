@@ -1,6 +1,7 @@
 import type { AnyTrack, TrackSection } from "./playerTypes";
 
 export const MUZES_SEARCH_TAG_EVENT = "muzesgarden-search-tag";
+export const MUZES_PLAYBACK_TARGET_EVENT = "muzesgarden-playback-target";
 
 export function looksLikeUuid(v: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -187,4 +188,38 @@ export function buildDiscoveryIndex(t: AnyTrack): DiscoveryIndex {
     path: String(t?.path ?? "").toLowerCase(),
     id: String(t?.id ?? "").toLowerCase(),
   };
+}
+
+export function formatMomentTime(sec: number | null | undefined): string {
+  const safe = Number(sec);
+  const total = Number.isFinite(safe) ? Math.max(0, Math.floor(safe)) : 0;
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+export function debugMomentPlayback(payload: {
+  trackId?: string | null;
+  sectionId?: string | null;
+  startTime?: number | null;
+  source?: string | null;
+}) {
+  if (typeof window === "undefined") return;
+  if (process.env.NODE_ENV === "production") return;
+
+  const trackId = String(payload.trackId ?? "").trim() || "(none)";
+  const sectionId = String(payload.sectionId ?? "").trim() || "(none)";
+  const source = String(payload.source ?? "").trim() || "unknown";
+  const startTime =
+    typeof payload.startTime === "number" && Number.isFinite(payload.startTime)
+      ? payload.startTime
+      : null;
+
+  console.log("[MomentPlayback]", {
+    source,
+    trackId,
+    sectionId,
+    startTime,
+    startLabel: startTime === null ? "(none)" : formatMomentTime(startTime),
+  });
 }
