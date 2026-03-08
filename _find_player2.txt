@@ -1,0 +1,108 @@
+app\api\mp3s\route.ts:16:      "Go to the Player page and we will debug which folder your MP3s are in.",
+app\components\MusicSection.tsx:18:  const audioRefs = useRef<HTMLAudioElement[]>([]);
+app\components\MusicSection.tsx:23:      audioRefs.current.forEach((a) => {
+app\components\MusicSection.tsx:29:      audioRefs.current = [];
+app\components\MusicSection.tsx:44:            <audio
+app\components\MusicSection.tsx:48:                if (el) audioRefs.current[i] = el;
+app\components\PlaybackHelper.tsx:161:              <div className="text-xs text-zinc-500">Now playing</div>
+app\components\TopNav.tsx:12:  { label: "Player", href: "/" },
+app\components\TopNav.tsx:27:    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur">
+app\listen\page.tsx:40:        Player
+app\listen\page.tsx:64:  // --- Player ---
+app\listen\page.tsx:66:  const audioRef = useRef<HTMLAudioElement | null>(null);
+app\listen\page.tsx:103:    const el = audioRef.current;
+app\listen\page.tsx:113:      const el = audioRef.current;
+app\listen\page.tsx:243:              Player + Library unified (filter tags, then play).
+app\listen\page.tsx:422:                              title="Load into player"
+app\listen\page.tsx:484:          {/* RIGHT: Player */}
+app\listen\page.tsx:493:              position: "sticky",
+app\listen\page.tsx:497:            <div style={{ fontSize: 12, color: "#93c5fd", marginBottom: 8 }}>Player</div>
+app\listen\page.tsx:545:              <audio ref={audioRef} controls preload="none" style={{ width: "100%" }}>
+app\upload\page.tsx:290:                    <audio className="mt-2 w-full" controls src={it.publicUrl} />
+app\workspace\projects\[id]\page.tsx:216:  // Phase 3: Project Player Mode
+app\workspace\projects\[id]\page.tsx:217:  const audioRef = useRef<HTMLAudioElement | null>(null);
+app\workspace\projects\[id]\page.tsx:220:  const [playerErr, setPlayerErr] = useState<string | null>(null);
+app\workspace\projects\[id]\page.tsx:223:  // Performance Mode: player UI state
+app\workspace\projects\[id]\page.tsx:229:  const [miniPlayerPinned, setMiniPlayerPinned] = useState(false);
+app\workspace\projects\[id]\page.tsx:242:  // Scroll target for "jump to Now Playing"
+app\workspace\projects\[id]\page.tsx:657:  // Player controls
+app\workspace\projects\[id]\page.tsx:665:    setPlayerErr(null);
+app\workspace\projects\[id]\page.tsx:669:      setPlayerErr("Track URL missing. Cannot play.");
+app\workspace\projects\[id]\page.tsx:674:    setPreviewTrackId(String(tid)); // keep UI consistent (preview follows player)
+app\workspace\projects\[id]\page.tsx:676:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:693:          setPlayerErr(err?.message ?? "Playback blocked by browser.");
+app\workspace\projects\[id]\page.tsx:697:      setPlayerErr(e?.message ?? "Failed to start playback.");
+app\workspace\projects\[id]\page.tsx:702:    setPlayerErr(null);
+app\workspace\projects\[id]\page.tsx:705:      setPlayerErr("No linked tracks. Link tracks first.");
+app\workspace\projects\[id]\page.tsx:714:      setPlayerErr("No playable track found.");
+app\workspace\projects\[id]\page.tsx:722:    setPlayerErr(null);
+app\workspace\projects\[id]\page.tsx:734:    setPlayerErr(null);
+app\workspace\projects\[id]\page.tsx:750:  function stopPlayer() {
+app\workspace\projects\[id]\page.tsx:751:    setPlayerErr(null);
+app\workspace\projects\[id]\page.tsx:753:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:774:    setPlayerErr(null);
+app\workspace\projects\[id]\page.tsx:775:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:789:            setPlayerErr(err?.message ?? "Playback blocked by browser.");
+app\workspace\projects\[id]\page.tsx:796:      setPlayerErr(e?.message ?? "Failed to toggle playback.");
+app\workspace\projects\[id]\page.tsx:826:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:835:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:851:      const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:869:  const miniVisible = (miniAutoVisible || miniPlayerPinned) && !!nowPlayingId;
+app\workspace\projects\[id]\page.tsx:923:  // Mini auto visibility: show once Now Playing card scrolls off top
+app\workspace\projects\[id]\page.tsx:940:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:996:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:1003:    const el = audioRef.current;
+app\workspace\projects\[id]\page.tsx:1507:      {/* Floating Mini Player (Performance Mode) */}
+app\workspace\projects\[id]\page.tsx:1521:                  title="Jump to Now Playing"
+app\workspace\projects\[id]\page.tsx:1553:                  onClick={() => setMiniPlayerPinned((v) => !v)}
+app\workspace\projects\[id]\page.tsx:1554:                  title={miniPlayerPinned ? "Unpin mini player" : "Pin mini player"}
+app\workspace\projects\[id]\page.tsx:1556:                  {miniPlayerPinned ? "Unpin" : "Pin"}
+app\workspace\projects\[id]\page.tsx:1598:                  onClick={stopPlayer}
+app\workspace\projects\[id]\page.tsx:1734:            {/* Now Playing */}
+app\workspace\projects\[id]\page.tsx:1737:                <div className="font-medium text-sm">Now Playing</div>
+app\workspace\projects\[id]\page.tsx:1741:              {playerErr ? (
+app\workspace\projects\[id]\page.tsx:1743:                  {playerErr}
+app\workspace\projects\[id]\page.tsx:1796:                      onClick={stopPlayer}
+app\workspace\projects\[id]\page.tsx:1866:                      onClick={() => setMiniPlayerPinned((v) => !v)}
+app\workspace\projects\[id]\page.tsx:1867:                      title="Pin mini player to always show while playing"
+app\workspace\projects\[id]\page.tsx:1870:                      {miniPlayerPinned ? "Unpin Mini" : "Pin Mini"}
+app\workspace\projects\[id]\page.tsx:1920:                  <audio ref={audioRef} controls className="w-full" onEnded={onEnded} />
+app\workspace\projects\[id]\page.tsx:2004:                          <audio controls src={t.url} className="w-full" />
+lib\performanceState.ts:2:// Performance Mode: LocalStorage helpers for project player state.
+node_modules\@eslint-community\regexpp\index.d.ts:492:    sticky: boolean;
+node_modules\@eslint-community\regexpp\index.d.ts:635:       * @param flags.sticky `y` flag.
+node_modules\@eslint-community\regexpp\index.d.ts:648:          sticky: boolean;
+node_modules\@eslint-community\regexpp\index.d.ts:662:       * @param sticky `y` flag.
+node_modules\@eslint-community\regexpp\index.d.ts:675:        sticky: boolean,
+node_modules\@types\node\fs\promises.d.ts:568:     * @param [mode=0o666] Sets the file mode (permission and sticky bits) if the file is created.
+node_modules\@types\node\fs\promises.d.ts:606:     * and sticky bits), or an object with a `mode` property and a `recursive` property indicating whether parent directories should be created. Calling `fsPromises.mkdir()` when `path` is a directory
+node_modules\@types\node\fs.d.ts:1687:     * and sticky bits), or an object with a `mode` property and a `recursive` property indicating whether parent directories should be created. Calling `fs.mkdir()` when `path` is a directory that
+node_modules\@types\node\fs.d.ts:2241:     * `mode` sets the file mode (permission and sticky bits), but only if the file was
+node_modules\@types\node\fs.d.ts:3949:     * `mode` sets the file mode (permission and sticky bits), but only if the
+node_modules\@types\node\vm.d.ts:87:        displayErrors?: boolean | undefined;
+node_modules\csstype\index.d.ts:4029:   * **Syntax**: `static | relative | absolute | sticky | fixed`
+node_modules\csstype\index.d.ts:13786:   * **Syntax**: `static | relative | absolute | sticky | fixed`
+node_modules\csstype\index.d.ts:21143:  export type Position = Globals | "-webkit-sticky" | "absolute" | "fixed" | "relative" | "static" | "sticky";
+node_modules\lightningcss\node\ast.d.ts:4711:      type: "sticky";
+node_modules\next\dist\lib\metadata\types\metadata-types.d.ts:128:    player_loc?: string | undefined;
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:2:export type Twitter = TwitterSummary | TwitterSummaryLargeImage | TwitterPlayer | TwitterApp | TwitterMetadata;
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:18:type TwitterPlayer = TwitterMetadata & {
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:19:    card: 'player';
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:20:    players: TwitterPlayerDescriptor | Array<TwitterPlayerDescriptor>;
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:48:type TwitterPlayerDescriptor = {
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:49:    playerUrl: string | URL;
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:71:type ResolvedTwitterPlayer = ResolvedTwitterSummary & {
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:72:    players: Array<TwitterPlayerDescriptor>;
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:82:    card: 'player';
+node_modules\next\dist\lib\metadata\types\twitter-types.d.ts:83:} & ResolvedTwitterPlayer) | ({
+node_modules\typescript\lib\lib.dom.d.ts:2933: * The **`Animation`** interface of the Web Animations API represents a single animation player and provides playback controls and a timeline for an animation node or source.
+node_modules\typescript\lib\lib.dom.d.ts:3569:    isConfigSupported(config: AudioDecoderConfig): Promise<AudioDecoderSupport>;
+node_modules\typescript\lib\lib.dom.d.ts:3660:    isConfigSupported(config: AudioEncoderConfig): Promise<AudioEncoderSupport>;
+node_modules\typescript\lib\lib.dom.d.ts:4305:    decodeAudioData(audioData: ArrayBuffer, successCallback?: DecodeSuccessCallback | null, errorCallback?: DecodeErrorCallback | null): Promise<AudioBuffer>;
+node_modules\typescript\lib\lib.dom.d.ts:22338:    startRendering(): Promise<AudioBuffer>;
+node_modules\typescript\lib\lib.dom.d.ts:32824:     * The read-only **`hasBeenActive`** property of the UserActivation interface indicates whether the current window has sticky activation.
+node_modules\typescript\lib\lib.es2015.core.d.ts:378:     *    - "y" for sticky
+node_modules\typescript\lib\lib.es2015.core.d.ts:385:     * Returns a Boolean value indicating the state of the sticky flag (y) used with a regular
+node_modules\typescript\lib\lib.es2015.core.d.ts:388:    readonly sticky: boolean;
+node_modules\typescript\lib\lib.webworker.d.ts:1342:    isConfigSupported(config: AudioDecoderConfig): Promise<AudioDecoderSupport>;
+node_modules\typescript\lib\lib.webworker.d.ts:1414:    isConfigSupported(config: AudioEncoderConfig): Promise<AudioEncoderSupport>;

@@ -32,10 +32,52 @@ function uniq(arr: string[]) {
   return Array.from(new Set(arr));
 }
 
+function normalizeTagPart(value: string): string[] {
+  const cleaned = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_]+/g, " ")
+    .replace(/[-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) return [];
+
+  const parts = cleaned
+    .split(" ")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const out = [cleaned, ...parts].filter(Boolean);
+
+  return uniq(out);
+}
+
 function tagsFromPath(path: string) {
   const parts = path.split("/").filter(Boolean);
   const folders = parts.slice(0, -1);
-  return uniq(["supabase", "mp3", ...folders.map((s) => s.toLowerCase())]);
+
+  const rawTags = ["supabase", "mp3", ...folders.flatMap(normalizeTagPart)];
+
+  return uniq(
+    rawTags.filter((tag) => {
+      const t = String(tag ?? "").trim();
+      if (!t) return false;
+      if (t === "audio") return false;
+      return true;
+    })
+  );
+}
+
+function compareTracks(a: SupabaseTrack, b: SupabaseTrack) {
+  const byTitle = a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+  if (byTitle !== 0) return byTitle;
+
+  const byPath = a.path.localeCompare(b.path, undefined, { sensitivity: "base" });
+  if (byPath !== 0) return byPath;
+
+  return a.id.localeCompare(b.id, undefined, { sensitivity: "base" });
 }
 
 async function listAllMp3sFromBucket(bucket: string) {
@@ -92,9 +134,9 @@ export async function getSupabaseTracksClient(options?: {
 
   const files = await listAllMp3sFromBucket(bucket);
 
-  return files.map((f) => {
+  const mapped: SupabaseTrack[] = files.map((f) => {
     const { data } = supabase.storage.from(bucket).getPublicUrl(f.path);
-    const publicUrl = data.publicUrl;
+    const publicUrl = String(data?.publicUrl ?? "");
 
     return {
       id: `sb:${bucket}:${f.path}`,
@@ -107,6 +149,18 @@ export async function getSupabaseTracksClient(options?: {
       updatedAt: f.updatedAt,
     };
   });
+
+  const deduped = new Map<string, SupabaseTrack>();
+
+  for (const track of mapped) {
+    if (!track.id) continue;
+    if (!track.url) continue;
+    if (!deduped.has(track.id)) {
+      deduped.set(track.id, track);
+    }
+  }
+
+  return Array.from(deduped.values()).sort(compareTracks);
 }
 
 // EXTEND ONLY: aliases so any import name works

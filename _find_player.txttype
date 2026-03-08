@@ -1,0 +1,22 @@
+app\components\PlaybackHelper.tsx:6:  startPlayback,
+app\components\PlaybackHelper.tsx:10:} from "../../lib/playbackBridge";
+app\components\PlaybackHelper.tsx:161:              <div className="text-xs text-zinc-500">Now playing</div>
+app\components\PlaybackHelper.tsx:170:              onClick={startPlayback}
+app\workspace\projects\[id]\page.tsx:229:  const [miniPlayerPinned, setMiniPlayerPinned] = useState(false);
+app\workspace\projects\[id]\page.tsx:242:  // Scroll target for "jump to Now Playing"
+app\workspace\projects\[id]\page.tsx:869:  const miniVisible = (miniAutoVisible || miniPlayerPinned) && !!nowPlayingId;
+app\workspace\projects\[id]\page.tsx:923:  // Mini auto visibility: show once Now Playing card scrolls off top
+app\workspace\projects\[id]\page.tsx:1507:      {/* Floating Mini Player (Performance Mode) */}
+app\workspace\projects\[id]\page.tsx:1521:                  title="Jump to Now Playing"
+app\workspace\projects\[id]\page.tsx:1553:                  onClick={() => setMiniPlayerPinned((v) => !v)}
+app\workspace\projects\[id]\page.tsx:1554:                  title={miniPlayerPinned ? "Unpin mini player" : "Pin mini player"}
+app\workspace\projects\[id]\page.tsx:1556:                  {miniPlayerPinned ? "Unpin" : "Pin"}
+app\workspace\projects\[id]\page.tsx:1734:            {/* Now Playing */}
+app\workspace\projects\[id]\page.tsx:1737:                <div className="font-medium text-sm">Now Playing</div>
+app\workspace\projects\[id]\page.tsx:1866:                      onClick={() => setMiniPlayerPinned((v) => !v)}
+app\workspace\projects\[id]\page.tsx:1867:                      title="Pin mini player to always show while playing"
+app\workspace\projects\[id]\page.tsx:1870:                      {miniPlayerPinned ? "Unpin Mini" : "Pin Mini"}
+app\workspace\projects\[id]\page.tsx:1925:            {/* Project Audio Dock */}
+app\workspace\projects\[id]\page.tsx:1928:                <div className="font-medium text-sm">Project Audio Dock</div>
+lib\playbackBridge.ts:1:// lib/playbackBridge.ts
+lib\playbackBridge.ts:48:export function startPlayback() {
