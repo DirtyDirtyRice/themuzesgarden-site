@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PlayerTab } from "./player/playerTypes";
+import { readPersisted, writePersisted } from "./player/playerStorage";
 import { useAllTracks } from "./player/useAllTracks";
 import { useProjectContext } from "./player/useProjectContext";
 import { useProjectSetlist } from "./player/useProjectSetlist";
@@ -10,7 +11,9 @@ import PlayerPanel from "./player/PlayerPanel";
 
 export default function GlobalPlayer() {
   const [tab, setTab] = useState<PlayerTab>("search");
-  const [q, setQ] = useState("");
+  const [q, setQState] = useState("");
+
+  const restoredSearchRef = useRef(false);
 
   const { allTracks } = useAllTracks();
   const { onProjectPage, projectId } = useProjectContext();
@@ -40,6 +43,32 @@ export default function GlobalPlayer() {
     allTracks,
     projectTracks,
   });
+
+  function setQ(nextValue: string) {
+    const clean = String(nextValue ?? "");
+    setQState(clean);
+
+    const trimmed = clean.trim();
+    writePersisted({
+      lastSearchQuery: trimmed || undefined,
+    });
+  }
+
+  useEffect(() => {
+    if (restoredSearchRef.current) return;
+    restoredSearchRef.current = true;
+
+    const persisted = readPersisted();
+    const savedQuery = String(persisted.lastSearchQuery ?? "").trim();
+
+    if (savedQuery) {
+      setQState(savedQuery);
+    }
+  }, []);
+
+  useEffect(() => {
+    writePersisted({ tab });
+  }, [tab]);
 
   useEffect(() => {
     if (!onProjectPage) return;
@@ -74,6 +103,33 @@ export default function GlobalPlayer() {
       );
     };
   }, []);
+
+  /* NEW: SPACEBAR PLAY / PAUSE SHORTCUT */
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+
+      const isTyping =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isTyping) return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        engine.togglePlayPause();
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [engine]);
 
   const jumpIfPossible = () => {
     if (!engine.nowId) return;
