@@ -59,10 +59,7 @@ function PanelShell(props: {
   );
 }
 
-function MiniStat(props: {
-  label: string;
-  value: string;
-}) {
+function MiniStat(props: { label: string; value: string }) {
   const { label, value } = props;
 
   return (
@@ -113,9 +110,22 @@ export default function MomentInspectorFamilyPanels(
     selectedStableFamily?.id
   );
 
+  const selectedLegacyFamilyId =
+    (
+      similarityState.selectedFamily as
+        | { anchorId?: string | null; familyId?: string | null }
+        | null
+    )?.anchorId ??
+    (
+      similarityState.selectedFamily as
+        | { anchorId?: string | null; familyId?: string | null }
+        | null
+    )?.familyId ??
+    null;
+
   const selectedRepeatDiagnostics = findRepeatDiagnostics(
     repeatDiagnostics,
-    similarityState.selectedFamily?.anchorId
+    selectedLegacyFamilyId
   );
 
   const topSimilarityDebugRows = similarityState.similarityDebugRows.slice(0, 3);
