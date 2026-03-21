@@ -25,6 +25,8 @@ export default function MomentInspectorWorkspaceQueueBody(
   const selectionSummary = viewModel?.selectionSummary ?? {};
   const derivedView = viewModel?.derivedView ?? {};
 
+  const WorkspaceContentAny = MomentInspectorWorkspaceContent as any;
+
   return (
     <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
       <MomentInspectorWorkspaceQueueHeader
@@ -42,7 +44,7 @@ export default function MomentInspectorWorkspaceQueueBody(
           selectedCount={selectionSummary?.selectedCount ?? 0}
         />
 
-        <MomentInspectorWorkspaceContent
+        <WorkspaceContentAny
           lane={props.lane}
           searchQuery={props.searchQuery}
           derivedView={derivedView}
