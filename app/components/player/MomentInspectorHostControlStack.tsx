@@ -1,7 +1,11 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import MomentInspectorTrackControls from "./MomentInspectorTrackControls";
-import type { MomentInspectorHostControlStackProps } from "./momentInspectorHostControlStack.types";
+
+type MomentInspectorHostControlStackProps = ComponentProps<
+  typeof MomentInspectorTrackControls
+>;
 
 export default function MomentInspectorHostControlStack(
   props: MomentInspectorHostControlStackProps
