@@ -34,11 +34,19 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
           0
         }
         selectedCount={(selectionSummary as any)?.selectedCount ?? 0}
+        totalCount={
+          (visibleStats as any)?.queueStats?.totalCount ??
+          (visibleStats as any)?.totalCount ??
+          (visibleStats as any)?.visibleCount ??
+          0
+        }
         laneSummaries={(viewModel as any)?.laneSummaries ?? []}
         activeLane={(viewModel as any)?.activeLane ?? null}
         onLaneChange={actions?.onLaneChange ?? (() => {})}
         searchQuery={(viewModel as any)?.searchQuery ?? ""}
         onSearchQueryChange={actions?.onSearchQueryChange ?? (() => {})}
+        filters={(viewModel as any)?.filters ?? {}}
+        onFiltersChange={actions?.onFiltersChange ?? (() => {})}
       />
 
       <MomentInspectorWorkspacePanelQueueBlock context={context} />
