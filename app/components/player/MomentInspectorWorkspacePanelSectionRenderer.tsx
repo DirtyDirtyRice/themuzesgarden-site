@@ -49,9 +49,9 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
         onFiltersChange={actions?.onFiltersChange ?? (() => {})}
       />
 
-      <MomentInspectorWorkspacePanelQueueBlock context={context} />
+      <MomentInspectorWorkspacePanelQueueBlock />
 
-      <MomentInspectorWorkspacePanelSelectionBlock context={context} />
+      <MomentInspectorWorkspacePanelSelectionBlock />
     </>
   );
 }
