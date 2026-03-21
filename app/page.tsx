@@ -1,77 +1,40 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabaseClient";
+import { useEffect } from "react";
 
-export default function HomePage() {
-  const router = useRouter();
-  const [checking, setChecking] = useState(true);
-
+export default function OldHomeRedirect() {
   useEffect(() => {
-    let mounted = true;
+    const timer = setTimeout(() => {
+      window.location.href = "https://themuzesgarden-site-git-main-muzes-garden.vercel.app";
+    }, 3000);
 
-    async function check() {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        if (data.session) {
-          router.replace("/members");
-          return;
-        }
-      } catch {
-        // ignore; treat as logged out
-      } finally {
-        if (mounted) setChecking(false);
-      }
-    }
-
-    check();
-
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
-
-  if (checking) {
-    return (
-      <main className="mx-auto max-w-4xl p-6">
-        <h1 className="text-3xl font-semibold">The Muzes Garden</h1>
-        <p className="mt-2 text-zinc-700">Checking session…</p>
-      </main>
-    );
-  }
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
+    <main className="mx-auto max-w-2xl p-10 text-center">
       <h1 className="text-3xl font-semibold">The Muzes Garden</h1>
 
-      <p className="mt-2 text-zinc-700">Welcome. This is the front door.</p>
+      <p className="mt-4 text-zinc-700">
+        This page is out of date.
+      </p>
 
-      <div className="mt-8 flex gap-3">
-        <Link
-          href="/members"
-          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
-        >
-          Enter
-        </Link>
+      <p className="mt-2 text-zinc-700">
+        The site has moved to a newer version.
+      </p>
 
-        <Link
-          href="/members"
-          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+      <div className="mt-6">
+        <a
+          href="https://themuzesgarden-site-git-main-muzes-garden.vercel.app"
+          className="text-lg underline"
         >
-          Upload
-        </Link>
-
-        <Link
-          href="/members"
-          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
-        >
-          Library
-        </Link>
+          → Go to the current version
+        </a>
       </div>
+
+      <p className="mt-6 text-sm text-zinc-500">
+        Redirecting automatically...
+      </p>
     </main>
   );
 }
