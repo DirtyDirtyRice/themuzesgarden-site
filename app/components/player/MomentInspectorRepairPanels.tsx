@@ -60,37 +60,56 @@ export default function MomentInspectorRepairPanels(props: {
     ? intendedActionView.actionsByFamilyId[selectedActionPlan.familyId] ?? []
     : [];
 
-  const selectedPhraseDriftFamily = similarityState.selectedPhraseDriftFamily;
+  const selectedPhraseDriftFamilySource =
+    similarityState.selectedPhraseDriftFamily;
 
-  const selectedPhraseDriftMembers = selectedPhraseDriftFamily
-    ? phraseDriftView.membersByFamily[selectedPhraseDriftFamily.familyId] ?? []
+  const selectedPhraseDriftFamily = selectedPhraseDriftFamilySource
+    ? phraseDriftView.familyRows.find(
+        (row) => row.familyId === selectedPhraseDriftFamilySource.familyId
+      ) ?? null
+    : null;
+
+  const selectedPhraseDriftMembers = selectedPhraseDriftFamilySource
+    ? phraseDriftView.membersByFamily[selectedPhraseDriftFamilySource.familyId] ??
+      []
     : [];
 
-  const selectedPhraseStabilityFamily = similarityState.selectedPhraseStabilityFamily
-    ? phraseStabilityView.byFamilyId[
-        similarityState.selectedPhraseStabilityFamily.familyId
-      ] ?? null
-    : null;
+  const selectedPhraseStabilityFamily =
+    similarityState.selectedPhraseStabilityFamily
+      ? phraseStabilityView.byFamilyId[
+          similarityState.selectedPhraseStabilityFamily.familyId
+        ] ?? null
+      : null;
 
   const selectedRepairRow =
     (selectedStableFamilyId
-      ? repairQueueView.rows.find((row) => row.familyId === selectedStableFamilyId) ?? null
+      ? repairQueueView.rows.find(
+          (row) => row.familyId === selectedStableFamilyId
+        ) ?? null
       : null) ?? repairQueueView.rows[0] ?? null;
 
   const selectedRepeatSummaryRows = selectedStableFamilyId
-    ? intendedRepeatView.summaryRows.filter((row) => row.familyId === selectedStableFamilyId)
+    ? intendedRepeatView.summaryRows.filter(
+        (row) => row.familyId === selectedStableFamilyId
+      )
     : intendedRepeatView.summaryRows;
 
   const selectedActionSummaryRows = selectedStableFamilyId
-    ? intendedActionView.summaryRows.filter((row) => row.familyId === selectedStableFamilyId)
+    ? intendedActionView.summaryRows.filter(
+        (row) => row.familyId === selectedStableFamilyId
+      )
     : intendedActionView.summaryRows;
 
   const selectedDriftSummaryRows = selectedStableFamilyId
-    ? phraseDriftView.familyRows.filter((row) => row.familyId === selectedStableFamilyId)
+    ? phraseDriftView.familyRows.filter(
+        (row) => row.familyId === selectedStableFamilyId
+      )
     : phraseDriftView.familyRows;
 
   const selectedStabilitySummaryRows = selectedStableFamilyId
-    ? phraseStabilityView.familyRows.filter((row) => row.familyId === selectedStableFamilyId)
+    ? phraseStabilityView.familyRows.filter(
+        (row) => row.familyId === selectedStableFamilyId
+      )
     : phraseStabilityView.familyRows;
 
   return (
