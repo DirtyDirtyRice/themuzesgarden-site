@@ -15,6 +15,12 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
   const visibleStats = viewModel?.visibleStats ?? {};
   const selectionSummary = viewModel?.selectionSummary ?? {};
 
+  const selectedCount = (selectionSummary as any)?.selectedCount ?? 0;
+  const hasSelection =
+    (selectionSummary as any)?.hasSelection ??
+    selectedCount > 0 ??
+    false;
+
   return (
     <>
       <MomentInspectorWorkspacePanelHeaderBlock
@@ -33,7 +39,7 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
           (visibleStats as any)?.visibleCount ??
           0
         }
-        selectedCount={(selectionSummary as any)?.selectedCount ?? 0}
+        selectedCount={selectedCount}
         totalCount={
           (visibleStats as any)?.queueStats?.totalCount ??
           (visibleStats as any)?.totalCount ??
@@ -51,7 +57,11 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
 
       <MomentInspectorWorkspacePanelQueueBlock />
 
-      <MomentInspectorWorkspacePanelSelectionBlock />
+      <MomentInspectorWorkspacePanelSelectionBlock
+        label={(selectionSummary as any)?.label ?? "Selection"}
+        hasSelection={Boolean(hasSelection)}
+        onClearSelection={actions?.onClearSelection ?? (() => {})}
+      />
     </>
   );
 }
