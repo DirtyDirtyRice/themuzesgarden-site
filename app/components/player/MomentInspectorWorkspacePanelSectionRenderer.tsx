@@ -39,10 +39,6 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
         onLaneChange={actions?.onLaneChange ?? (() => {})}
         searchQuery={(viewModel as any)?.searchQuery ?? ""}
         onSearchQueryChange={actions?.onSearchQueryChange ?? (() => {})}
-        filterMode={(viewModel as any)?.filterMode ?? "all"}
-        onFilterModeChange={actions?.onFilterModeChange ?? (() => {})}
-        groupBy={(viewModel as any)?.groupBy ?? "none"}
-        onGroupByChange={actions?.onGroupByChange ?? (() => {})}
       />
 
       <MomentInspectorWorkspacePanelQueueBlock context={context} />
