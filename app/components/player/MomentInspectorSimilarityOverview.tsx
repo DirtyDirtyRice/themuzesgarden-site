@@ -6,8 +6,9 @@ type SimilarityState = ReturnType<typeof buildMomentInspectorSimilarity>;
 
 export default function MomentInspectorSimilarityOverview(props: {
   similarityState: SimilarityState;
+  similarityDebugRows?: any[];
 }) {
-  const { similarityState } = props;
+  const { similarityState, similarityDebugRows = [] } = props;
 
   const selectedFamilyAny = similarityState.selectedFamily as
     | {
@@ -48,6 +49,12 @@ export default function MomentInspectorSimilarityOverview(props: {
         {selectedRepeatDiagnostics
           ? JSON.stringify(selectedRepeatDiagnostics)
           : "No diagnostics available"}
+      </div>
+
+      <div className="mt-4 text-xs text-zinc-500">Debug Rows:</div>
+
+      <div className="text-sm text-zinc-800">
+        {similarityDebugRows.length}
       </div>
     </div>
   );
