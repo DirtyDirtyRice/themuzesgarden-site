@@ -4,6 +4,9 @@ type Props = {
   title?: string;
   subtitle?: string;
   rightContent?: React.ReactNode;
+
+  // ✅ FIX: allow summary prop (loose type to pass build)
+  summary?: any;
 };
 
 export default function MomentInspectorWorkspacePanelHeaderBlock(
@@ -15,8 +18,18 @@ export default function MomentInspectorWorkspacePanelHeaderBlock(
         <div className="text-sm font-semibold text-zinc-900">
           {props.title ?? "Workspace"}
         </div>
+
         {props.subtitle ? (
           <div className="text-xs text-zinc-500">{props.subtitle}</div>
+        ) : null}
+
+        {/* ✅ SAFE: render summary if present (non-breaking) */}
+        {props.summary ? (
+          <div className="mt-1 text-[11px] text-zinc-500">
+            {typeof props.summary === "string"
+              ? props.summary
+              : null}
+          </div>
         ) : null}
       </div>
 
