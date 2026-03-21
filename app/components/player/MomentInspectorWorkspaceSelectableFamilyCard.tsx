@@ -12,6 +12,8 @@ type MomentInspectorWorkspaceSelectableFamilyCardProps = {
 export default function MomentInspectorWorkspaceSelectableFamilyCard(
   props: MomentInspectorWorkspaceSelectableFamilyCardProps
 ) {
+  const FamilyCardAny = MomentInspectorWorkspaceFamilyCard as any;
+
   return (
     <div
       className={[
@@ -35,7 +37,7 @@ export default function MomentInspectorWorkspaceSelectableFamilyCard(
         </div>
       </div>
 
-      <MomentInspectorWorkspaceFamilyCard item={props.item} />
+      <FamilyCardAny item={props.item} />
     </div>
   );
 }
