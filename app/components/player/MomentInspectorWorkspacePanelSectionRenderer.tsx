@@ -17,9 +17,7 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
 
   const selectedCount = (selectionSummary as any)?.selectedCount ?? 0;
   const hasSelection =
-    (selectionSummary as any)?.hasSelection ??
-    selectedCount > 0 ??
-    false;
+    (selectionSummary as any)?.hasSelection ?? selectedCount > 0;
 
   return (
     <>
