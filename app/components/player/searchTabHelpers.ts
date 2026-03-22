@@ -546,7 +546,10 @@ export function buildSearchSuggestions(
         ? row
         : null;
     })
-    .filter((row): row is SearchSuggestionRow => Boolean(row) && row.score > 0)
+    .filter((row): row is SearchSuggestionRow => {
+      if (!row) return false;
+      return row.score > 0;
+    })
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
 
