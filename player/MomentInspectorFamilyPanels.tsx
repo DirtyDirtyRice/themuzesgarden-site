@@ -18,6 +18,10 @@ type MomentInspectorFamilyPanelsProps = {
   repeatDiagnostics?: SimilarityState["repeatDiagnostics"];
 };
 
+function normalizeText(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
 function formatScorePercent(value: number): string {
   const pct = Math.round(Math.max(0, Math.min(1, Number(value) || 0)) * 100);
   return `${pct}%`;
@@ -36,6 +40,18 @@ function formatRepeatHint(value: number | null): string {
 function formatOptionalSeconds(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return "n/a";
   return `${value.toFixed(2)} sec`;
+}
+
+function getLegacyFamilyDiagnosticsId(value: unknown): string | null {
+  const family = value as any;
+
+  return (
+    normalizeText(family?.familyId) ||
+    normalizeText(family?.id) ||
+    normalizeText(family?.anchorId) ||
+    normalizeText(family?.anchorMomentId) ||
+    null
+  );
 }
 
 function PanelShell(props: {
@@ -59,10 +75,7 @@ function PanelShell(props: {
   );
 }
 
-function MiniStat(props: {
-  label: string;
-  value: string;
-}) {
+function MiniStat(props: { label: string; value: string }) {
   const { label, value } = props;
 
   return (
@@ -113,9 +126,13 @@ export default function MomentInspectorFamilyPanels(
     selectedStableFamily?.id
   );
 
+  const selectedLegacyFamilyDiagnosticsId = getLegacyFamilyDiagnosticsId(
+    similarityState.selectedFamily
+  );
+
   const selectedRepeatDiagnostics = findRepeatDiagnostics(
     repeatDiagnostics,
-    similarityState.selectedFamily?.anchorId
+    selectedLegacyFamilyDiagnosticsId
   );
 
   const topSimilarityDebugRows = similarityState.similarityDebugRows.slice(0, 3);
