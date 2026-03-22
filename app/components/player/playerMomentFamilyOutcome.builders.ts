@@ -43,7 +43,7 @@ export function buildFamilyOutcome(
     trustDelta,
   });
 
-  const outcomeLabel = getOutcomeLabel(outcomeScore);
+  const outcomeLabel = (getOutcomeLabel(outcomeScore) ?? null) as any;
 
   const reasons: string[] = [];
 
