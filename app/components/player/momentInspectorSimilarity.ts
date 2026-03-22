@@ -70,6 +70,15 @@ function getSelectedLegacyFamily(params: {
   );
 }
 
+function buildPhraseDriftSafeMoments(
+  moments: InspectorComparableMoment[]
+): InspectorComparableMoment[] {
+  return moments.map((moment) => ({
+    ...moment,
+    description: moment.description ?? undefined,
+  }));
+}
+
 export function buildMomentInspectorSimilarity(
   params: BuildMomentInspectorSimilarityParams
 ): BuildMomentInspectorSimilarityResult {
@@ -80,6 +89,7 @@ export function buildMomentInspectorSimilarity(
   }
 
   const moments = sections.map((section) => toComparableMoment(track, section));
+  const phraseDriftMoments = buildPhraseDriftSafeMoments(moments);
   const momentsById: Record<string, InspectorComparableMoment> = {};
 
   for (const moment of moments) {
@@ -124,7 +134,7 @@ export function buildMomentInspectorSimilarity(
   const repeatPlan = selectedFamily ? getEstimatedRepeatPlan(selectedFamily) : null;
 
   const stableFamilyResult = buildMomentFamilies({
-    moments,
+    moments: phraseDriftMoments,
     similarityThreshold: STABLE_FAMILY_SIMILARITY_THRESHOLD,
     maxMatchesPerMoment: STABLE_FAMILY_MAX_MATCHES_PER_MOMENT,
   });
@@ -160,7 +170,7 @@ export function buildMomentInspectorSimilarity(
   );
 
   const phraseDriftResult = buildMomentPhraseDrift({
-    moments,
+    moments: phraseDriftMoments,
     families: stableFamilies,
     ...PHRASE_DRIFT_CONFIG,
   });
