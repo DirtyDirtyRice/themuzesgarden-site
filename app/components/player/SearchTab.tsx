@@ -41,7 +41,7 @@ const SEARCH_PRESETS: SearchPreset[] = [
   {
     id: "soft-piano",
     label: "Soft Piano",
-    query: '+soft +piano',
+    query: "+soft +piano",
   },
   {
     id: "title-out-of-tune",
@@ -412,7 +412,12 @@ export default function SearchTab(props: {
             const selected = idx === selectedIdx;
 
             return (
-              <div key={tid} ref={(el) => (resultRefs.current[idx] = el)}>
+              <div
+                key={tid}
+                ref={(el) => {
+                  resultRefs.current[idx] = el;
+                }}
+              >
                 <SearchResultCard
                   row={row}
                   idx={idx}
