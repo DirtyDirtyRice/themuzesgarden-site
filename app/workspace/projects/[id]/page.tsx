@@ -528,19 +528,19 @@ export default function ProjectDetailsPage() {
         return;
       }
 
-          const { error } = await supabase.from("project_tracks").insert({ project_id: id, track_id: trackId });
+      const { error } = await supabase.from("project_tracks").insert({ project_id: id, track_id: trackId });
 
       if (error) throw new Error(error.message);
 
       const linkedTrack =
         allTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
 
-  logProjectActivity(
-  id,
-  "link",
-  `Linked track: ${linkedTrack?.title ?? "Untitled"}`,
-  { trackId }
-);
+      logProjectActivity(
+        id,
+        "link",
+        `Linked track: ${linkedTrack?.title ?? "Untitled"}`,
+        { trackId }
+      );
 
       setSetlistOrder((prev) => {
         if (prev.includes(trackId)) return prev;
@@ -580,7 +580,7 @@ export default function ProjectDetailsPage() {
 
       setSetlistOrder((prev) => prev.filter((tid) => tid !== trackId));
 
-         const { error } = await supabase
+      const { error } = await supabase
         .from("project_tracks")
         .delete()
         .eq("project_id", id)
@@ -591,12 +591,12 @@ export default function ProjectDetailsPage() {
       const unlinkedTrack =
         allTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
 
-    logProjectActivity(
-  id,
-  "unlink",
-  `Unlinked track: ${unlinkedTrack?.title ?? "Untitled"}`,
-  { trackId }
-);
+      logProjectActivity(
+        id,
+        "unlink",
+        `Unlinked track: ${unlinkedTrack?.title ?? "Untitled"}`,
+        { trackId }
+      );
 
       if (previewTrackId === trackId) setPreviewTrackId(null);
       if (nowPlayingId === trackId) setNowPlayingId(null);
@@ -649,12 +649,12 @@ export default function ProjectDetailsPage() {
 
     setNowPlayingId(String(tid));
     setPreviewTrackId(String(tid)); // keep UI consistent (preview follows player)
-logProjectActivity(
-  id,
-  "play",
-  `Played track: ${t.title ?? "Untitled"}`,
-  { trackId: tid }
-);
+    logProjectActivity(
+      id,
+      "play",
+      `Played track: ${t.title ?? "Untitled"}`,
+      { trackId: tid }
+    );
 
     const el = audioRef.current;
     if (!el) return;
@@ -939,9 +939,12 @@ logProjectActivity(
       syncTimesFromAudio();
     }
     function onVolumeChange() {
+      const activeEl = audioRef.current;
+      if (!activeEl) return;
+
       try {
-        setVolume01(clamp01(el.volume));
-        setMuted(!!el.muted);
+        setVolume01(clamp01(activeEl.volume));
+        setMuted(!!activeEl.muted);
       } catch {
         // ignore
       }
@@ -955,7 +958,7 @@ logProjectActivity(
     el.addEventListener("volumechange", onVolumeChange);
 
     syncTimesFromAudio();
-    setIsPaused(el.paused);
+    setIsPaused(!!el.paused);
     setVolume01(clamp01(el.volume));
     setMuted(!!el.muted);
 
@@ -1250,7 +1253,7 @@ logProjectActivity(
 
       if (!opts?.silent) setSavingNote(true);
 
-        const { error } = await supabase.from("project_notes").update({ title, body }).eq("id", activeNote.id);
+      const { error } = await supabase.from("project_notes").update({ title, body }).eq("id", activeNote.id);
 
       if (error) throw new Error(error.message);
 
@@ -1325,7 +1328,7 @@ logProjectActivity(
       if (!supabase) throw new Error("Supabase client not found.");
       setDeletingNote(true);
 
-        const deletedTitle = activeNote.title ?? "Note";
+      const deletedTitle = activeNote.title ?? "Note";
 
       const { error } = await supabase.from("project_notes").delete().eq("id", activeNote.id);
 
