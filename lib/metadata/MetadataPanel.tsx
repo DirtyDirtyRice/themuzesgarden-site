@@ -3,13 +3,19 @@
 import { getMetadataByTarget } from "./metadataApi";
 import type { MetadataTargetType } from "./metadataTypes";
 
+type MetadataItemLike = {
+  id: string;
+  label?: string | null;
+  description?: string | null;
+};
+
 type Props = {
   targetType: MetadataTargetType;
   targetId: string;
 };
 
 export default function MetadataPanel({ targetType, targetId }: Props) {
-  const items = getMetadataByTarget(targetType, targetId);
+  const items = (getMetadataByTarget(targetType, targetId) ?? []) as MetadataItemLike[];
 
   if (!items.length) return null;
 
@@ -19,11 +25,13 @@ export default function MetadataPanel({ targetType, targetId }: Props) {
 
       <div className="space-y-2">
         {items.map((m) => (
-          <div key={m.id} className="rounded border p-2">
-            <div className="font-medium">{m.label}</div>
+          <div key={String(m.id)} className="rounded border p-2">
+            <div className="font-medium">{String(m.label ?? "Untitled")}</div>
 
             {m.description ? (
-              <div className="mt-1 text-xs text-gray-600">{m.description}</div>
+              <div className="mt-1 text-xs text-gray-600">
+                {String(m.description)}
+              </div>
             ) : null}
           </div>
         ))}
