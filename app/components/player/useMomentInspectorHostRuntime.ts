@@ -26,6 +26,29 @@ function normalizeText(value: unknown): string {
   return String(value ?? "").trim();
 }
 
+function normalizeTrustState(value: any): any {
+  if (!value || typeof value !== "object") return value ?? null;
+
+  return {
+    ...value,
+    repeatCoverageScore:
+      value.repeatCoverageScore == null ? undefined : value.repeatCoverageScore,
+    timingConsistencyScore:
+      value.timingConsistencyScore == null ? undefined : value.timingConsistencyScore,
+    durationConsistencyScore:
+      value.durationConsistencyScore == null
+        ? undefined
+        : value.durationConsistencyScore,
+    structuralConfidenceScore:
+      value.structuralConfidenceScore == null
+        ? undefined
+        : value.structuralConfidenceScore,
+    confidenceScore:
+      value.confidenceScore == null ? undefined : value.confidenceScore,
+    trustScore: value.trustScore == null ? undefined : value.trustScore,
+  };
+}
+
 export function useMomentInspectorHostRuntime(params: {
   allTracks: AnyTrack[];
 }) {
@@ -36,12 +59,7 @@ export function useMomentInspectorHostRuntime(params: {
 
   const trackState = useMomentInspectorTrackState(allTracks);
 
-  const {
-    discoveryRuntime,
-    sortedTracks,
-    selectedTrack,
-    setTrackId,
-  } = trackState;
+  const { discoveryRuntime, sortedTracks, selectedTrack, setTrackId } = trackState;
 
   const sectionState = useMomentInspectorSectionFilterState(selectedTrack);
 
@@ -134,15 +152,8 @@ export function useMomentInspectorHostRuntime(params: {
   const {
     hostFilterState,
     pinnedState,
-    hostFilterResult,
-    pinnedResult,
     filteredFamilyOptions,
     compareFamilyOptions,
-    isSelectedFamilyPinned,
-    handleChangeHostVerdictFilter,
-    handleTogglePinnedOnly,
-    handleResetPins,
-    handleToggleSelectedFamilyPin,
   } = hostFilters;
 
   useEffect(() => {
@@ -161,9 +172,7 @@ export function useMomentInspectorHostRuntime(params: {
     null;
 
   const selectedLineageResult =
-    phraseFamilyLineageResult ??
-    runtimeBridgeAny.familyLineageResult ??
-    null;
+    phraseFamilyLineageResult ?? runtimeBridgeAny.familyLineageResult ?? null;
 
   const selectedFamilyState = useMemo(() => {
     return buildMomentInspectorSelectedFamilyState({
@@ -200,7 +209,7 @@ export function useMomentInspectorHostRuntime(params: {
   const intelligenceRuntime = useMemo(() => {
     return buildMomentInspectorIntelligenceRuntime({
       selectedFamilyRuntimeSignals,
-      selectedTrustState,
+      selectedTrustState: normalizeTrustState(selectedTrustState),
       selectedConfidenceHistoryResult,
       selectedLineageResult,
     });
@@ -314,7 +323,8 @@ export function useMomentInspectorHostRuntime(params: {
       discoverySnapshot: runtimeBridge.discoverySnapshot,
       discoverySummary: runtimeBridge.discoverySummary,
       metadataSummary: runtimeBridge.metadataSummary,
-      runtimeConfidenceHistoryResult: runtimeBridgeAny.confidenceHistoryResult ?? null,
+      runtimeConfidenceHistoryResult:
+        runtimeBridgeAny.confidenceHistoryResult ?? null,
       runtimeFamilyLineageResult: runtimeBridgeAny.familyLineageResult ?? null,
     },
 
@@ -338,7 +348,7 @@ export function useMomentInspectorHostRuntime(params: {
       selectedActionRows,
       selectedDriftMembers,
       hasMomentIntelligence,
-      selectedTrustState,
+      selectedTrustState: normalizeTrustState(selectedTrustState),
     },
   };
 }
