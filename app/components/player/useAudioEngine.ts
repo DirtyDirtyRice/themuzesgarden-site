@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack, PlayerTab, TrackSection } from "./playerTypes";
 import { pickUrl, isTypingTarget } from "./playerUtils";
@@ -582,8 +584,8 @@ export function useAudioEngine(args: {
           p.lastMatchedSectionStartTime >= 0
         ? clampNonNegative(p.lastMatchedSectionStartTime)
         : section
-        ? clampNonNegative(section.start)
-        : 0;
+          ? clampNonNegative(section.start)
+          : 0;
 
     playTarget({
       track,
@@ -674,12 +676,18 @@ export function useAudioEngine(args: {
     if (!el) return;
 
     function onVolume() {
-      const v = Math.max(0, Math.min(1, el.volume));
+      const activeEl = audioRef.current;
+      if (!activeEl) return;
+
+      const v = Math.max(0, Math.min(1, activeEl.volume));
       writePersisted({ volume: v });
       setStatusVolPct(Math.round(v * 100));
     }
 
     function onTime() {
+      const activeEl = audioRef.current;
+      if (!activeEl) return;
+
       const now = Date.now();
       if (now - lastTimeSavedRef.current < 500) return;
       lastTimeSavedRef.current = now;
@@ -688,7 +696,7 @@ export function useAudioEngine(args: {
       if (
         typeof sectionEnd === "number" &&
         Number.isFinite(sectionEnd) &&
-        el.currentTime >= sectionEnd
+        activeEl.currentTime >= sectionEnd
       ) {
         if (loopRef.current && currentSectionIdRef.current && nowIdRef.current) {
           const curTrack =
@@ -708,12 +716,12 @@ export function useAudioEngine(args: {
         }
 
         try {
-          el.currentTime = sectionEnd;
+          activeEl.currentTime = sectionEnd;
         } catch {
           // ignore
         }
 
-        el.pause();
+        activeEl.pause();
         setStatusTime(fmtTime(sectionEnd));
 
         writePersisted({
@@ -728,14 +736,14 @@ export function useAudioEngine(args: {
       }
 
       writePersisted({
-        currentTime: el.currentTime,
+        currentTime: activeEl.currentTime,
         currentSectionId: currentSectionIdRef.current,
         sectionStartTime: currentSectionStartRef.current,
         lastMatchedSectionId: currentSectionIdRef.current,
         lastMatchedSectionStartTime: currentSectionStartRef.current,
       });
 
-      setStatusTime(fmtTime(el.currentTime));
+      setStatusTime(fmtTime(activeEl.currentTime));
     }
 
     el.addEventListener("volumechange", onVolume);
