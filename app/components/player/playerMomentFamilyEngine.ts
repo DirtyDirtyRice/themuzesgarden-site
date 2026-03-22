@@ -1,10 +1,35 @@
-import type {
-  ComparableMoment,
-  MomentFamily,
-  MomentFamilyMember,
-  SimilarityResult,
-} from "./playerMomentSimilarityTypes";
 import { findSimilarMoments, scoreMomentSimilarity } from "./playerMomentSimilarity";
+
+type ComparableMoment = {
+  id?: unknown;
+  startTime?: unknown;
+  start?: unknown;
+  label?: unknown;
+  title?: unknown;
+  trackId?: unknown;
+  sourceTrackId?: unknown;
+  [key: string]: any;
+};
+
+type MomentFamilyMember = {
+  momentId: string;
+  similarityToAnchor: number;
+  [key: string]: any;
+};
+
+type MomentFamily = {
+  familyId: string;
+  members: MomentFamilyMember[];
+  [key: string]: any;
+};
+
+type SimilarityResult = {
+  score?: unknown;
+  similarityPercent?: unknown;
+  differencePercent?: unknown;
+  moment?: ComparableMoment;
+  [key: string]: any;
+};
 
 export type MomentFamilyEngineInput = {
   moments: ComparableMoment[];
@@ -89,10 +114,7 @@ function getTrackId(moment: ComparableMoment): string {
   return "track";
 }
 
-function compareOrderedMoments(
-  a: ComparableMoment,
-  b: ComparableMoment
-): number {
+function compareOrderedMoments(a: ComparableMoment, b: ComparableMoment): number {
   const trackCompare = getTrackId(a).localeCompare(getTrackId(b));
   if (trackCompare !== 0) return trackCompare;
 
@@ -106,10 +128,7 @@ function compareOrderedMoments(
   return getMomentLabel(a).localeCompare(getMomentLabel(b));
 }
 
-function compareFamilyMoments(
-  a: ComparableMoment,
-  b: ComparableMoment
-): number {
+function compareFamilyMoments(a: ComparableMoment, b: ComparableMoment): number {
   const trackCompare = getTrackId(a).localeCompare(getTrackId(b));
   if (trackCompare !== 0) return trackCompare;
 
@@ -215,10 +234,7 @@ function getSimilarityScore(result: SimilarityResult): number {
   return 0;
 }
 
-function getMomentSimilarityScore(
-  a: ComparableMoment,
-  b: ComparableMoment
-): number {
+function getMomentSimilarityScore(a: ComparableMoment, b: ComparableMoment): number {
   return getSimilarityScore(scoreMomentSimilarity(a, b) as SimilarityResult);
 }
 
@@ -233,9 +249,9 @@ function collectPairMatches(
     const momentId = getMomentId(moment);
 
     const matches = findSimilarMoments(moment, orderedMoments)
-      .map((result) => ({
-        id: getMomentId(result.moment),
-        score: getSimilarityScore(result),
+      .map((result: any) => ({
+        id: getMomentId(result?.moment),
+        score: getSimilarityScore(result as SimilarityResult),
       }))
       .filter((result) => {
         if (!result.id || result.id === momentId) return false;
