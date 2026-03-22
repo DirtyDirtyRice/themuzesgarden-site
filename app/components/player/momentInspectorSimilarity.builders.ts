@@ -25,7 +25,9 @@ function buildNormalizedTagSet(tags: unknown): Set<string> {
 }
 
 function getTagOverlapScore(selectedTags: Set<string>, matchTags: Set<string>): number {
-  const overlappingTags = Array.from(selectedTags).filter((tag) => matchTags.has(tag)).length;
+  const overlappingTags = Array.from(selectedTags).filter((tag) =>
+    matchTags.has(tag)
+  ).length;
   const tagUnion = new Set([...Array.from(selectedTags), ...Array.from(matchTags)]).size;
   return tagUnion > 0 ? overlappingTags / tagUnion : 0;
 }
@@ -109,17 +111,29 @@ export function buildStableFamilyDiagnostics(params: {
   const ungroupedRisk = round3(clamp01(totalUngrouped / Math.max(1, totalMoments)));
 
   return stableFamilies.map((family) => {
-    const similarities = family.members
-      .map((member) => Number(member.similarityToAnchor ?? 0))
+    const similarities = (family.members ?? [])
+      .map((member) =>
+        Number(
+          (member as any)?.similarityToAnchor ??
+            (member as any)?.moment?.similarityToAnchor ??
+            0
+        )
+      )
       .filter((value) => Number.isFinite(value));
 
-    const starts = family.members
-      .map((member) => Number((member as { startTime?: unknown }).startTime ?? 0))
+    const starts = (family.members ?? [])
+      .map((member) =>
+        Number(
+          (member as any)?.startTime ??
+            (member as any)?.moment?.startTime ??
+            0
+        )
+      )
       .filter((value) => Number.isFinite(value))
       .sort((a, b) => a - b);
 
     const avgSimilarity = round3(clamp01(average(similarities)));
-    const familySize = family.members.length;
+    const familySize = (family.members ?? []).length;
     const timingSpread = getTimingSpread(starts);
 
     const familyConfidence = round3(
@@ -131,12 +145,12 @@ export function buildStableFamilyDiagnostics(params: {
     );
 
     return {
-      familyId: family.id,
+      familyId: (family as any).id,
       familySize,
       avgSimilarity,
       timingSpread,
       familyConfidence,
-      familyAnchorMomentId: normalizeText(family.anchorMomentId),
+      familyAnchorMomentId: normalizeText((family as any).anchorMomentId),
       ungroupedRisk,
     };
   });
