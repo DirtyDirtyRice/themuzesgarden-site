@@ -9,12 +9,17 @@ import type { MomentInspectorHostTimelineStackProps } from "./momentInspectorHos
 export default function MomentInspectorHostTimelineStack(
   props: MomentInspectorHostTimelineStackProps
 ) {
+  const TimelinePanelAny = MomentInspectorTimelinePanel as any;
+  const SelectedFamilyStackAny = MomentInspectorSelectedFamilyStack as any;
+  const FamilySummaryColumnsAny = MomentInspectorFamilySummaryColumns as any;
+  const SectionRowsAny = MomentInspectorSectionRows as any;
+
   return (
     <>
-      <MomentInspectorTimelinePanel {...props.timelineProps} />
-      <MomentInspectorSelectedFamilyStack {...props.selectedProps} />
-      <MomentInspectorFamilySummaryColumns {...props.columnsProps} />
-      <MomentInspectorSectionRows {...props.sectionsProps} />
+      <TimelinePanelAny {...(props.timelineProps ?? {})} />
+      <SelectedFamilyStackAny {...(props.selectedProps ?? {})} />
+      <FamilySummaryColumnsAny {...(props.columnsProps ?? {})} />
+      <SectionRowsAny {...(props.sectionsProps ?? {})} />
     </>
   );
 }
