@@ -16,6 +16,19 @@ import {
   sortPlanningItems,
 } from "./playerMomentFamilyPlanning.shared";
 
+type StrategyItemLike = {
+  familyId?: string;
+  strategyScore?: number | null;
+  leverageScore?: number | null;
+  timingScore?: number | null;
+  protectionScore?: number | null;
+  reuseProgramScore?: number | null;
+  strategyAction?: string | null;
+  strongestReason?: string | null;
+  reasons?: string[];
+  [key: string]: any;
+};
+
 function getUrgencyScore(params: {
   strategyScore: number | null;
   timingScore: number | null;
@@ -204,13 +217,13 @@ function getItemStrongestReason(params: {
 
 function buildPlanningItem(params: {
   itemRank: number;
-  strategyItem: FamilyStrategyResult["items"][number];
+  strategyItem: StrategyItemLike;
   portfolioHealth: string | null;
 }): FamilyPlanningItem {
   const strategyItem = params.strategyItem;
   const portfolioItem =
     strategyItem.familyId &&
-    strategyItem; // keeps local naming simple, no assumption beyond inspected structure
+    strategyItem;
 
   const recommendationResult =
     strategyItem.familyId &&
@@ -270,7 +283,7 @@ function buildPlanningItem(params: {
     strategyAction: strategyItem.strategyAction ?? null,
     strategyStrongestReason: strategyItem.strongestReason ?? null,
     portfolioHealth: params.portfolioHealth,
-    pointCount: strategyItem.reasons.includes("proof-base-thin") ? 1 : 2,
+    pointCount: strategyItem.reasons?.includes("proof-base-thin") ? 1 : 2,
   });
 
   const strongestReason = getItemStrongestReason({
@@ -280,7 +293,7 @@ function buildPlanningItem(params: {
     protectionNeedScore,
     readinessScore,
     urgencyScore,
-    pointCount: strategyItem.reasons.includes("proof-base-thin") ? 1 : 2,
+    pointCount: strategyItem.reasons?.includes("proof-base-thin") ? 1 : 2,
   });
 
   const planningAction = getPlanningAction({
@@ -332,7 +345,10 @@ function buildReasons(params: {
     reasons.push("reuse-path-open");
   }
 
-  if (params.nextCount + params.immediateCount >= Math.max(1, Math.ceil(params.familyCount * 0.3))) {
+  if (
+    params.nextCount + params.immediateCount >=
+    Math.max(1, Math.ceil(params.familyCount * 0.3))
+  ) {
     reasons.push("development-queue-worthy");
   }
 
@@ -344,7 +360,9 @@ function buildReasons(params: {
     reasons.push("portfolio-support-strong");
   }
 
-  if (params.proofThinCount >= Math.max(1, Math.ceil(params.familyCount * 0.25))) {
+  if (
+    params.proofThinCount >= Math.max(1, Math.ceil(params.familyCount * 0.25))
+  ) {
     reasons.push("proof-still-thin");
   }
 
