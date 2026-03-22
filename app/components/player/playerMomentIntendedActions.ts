@@ -127,21 +127,22 @@ function getReusableMemberIdForFamily(params: {
   phraseDriftResult?: PhraseDriftEngineResult | null;
 }): string | null {
   const familyId = normalizeText(params.family.id);
-  const driftFamily = params.phraseDriftResult?.byFamilyId?.[familyId] ?? null;
+  const driftFamily = (params.phraseDriftResult?.byFamilyId?.[familyId] as any) ?? null;
   const anchorMomentId = normalizeText(params.family.anchorMomentId) || null;
 
   const scoredMembers: ScoredReusableMember[] = getFamilyMembers(params.family)
     .map((member) => {
       const momentId = normalizeText(member.momentId);
-      const driftRow = driftFamily?.members.find(
-        (row) => normalizeText(row.momentId) === momentId
+      const driftMembers = Array.isArray(driftFamily?.members) ? driftFamily.members : [];
+      const driftRow = driftMembers.find(
+        (row: any) => normalizeText(row?.momentId) === momentId
       );
 
       return {
         momentId,
         similarityToAnchor: clamp01(member.similarityToAnchor),
-        confidenceScore: clamp01(driftRow?.confidenceScore ?? 0.7),
-        driftSeverity: normalizeText(driftRow?.driftSeverity),
+        confidenceScore: clamp01((driftRow as any)?.confidenceScore ?? 0.7),
+        driftSeverity: normalizeText((driftRow as any)?.driftSeverity),
       };
     })
     .filter((member) => member.momentId);
@@ -332,15 +333,20 @@ function buildActionForPlacement(params: {
     phraseDriftResult,
   });
 
-  const driftFamily = phraseDriftResult?.byFamilyId?.[familyId] ?? null;
-  const stabilityFamily = phraseStabilityResult?.byFamilyId?.[familyId] ?? null;
+  const driftFamily = (phraseDriftResult?.byFamilyId?.[familyId] as any) ?? null;
+  const stabilityFamily = (phraseStabilityResult?.byFamilyId?.[familyId] as any) ?? null;
 
-  const stabilityScore = stabilityFamily
-    ? clamp100(stabilityFamily.stabilityScore)
-    : null;
+  const stabilityScore =
+    stabilityFamily != null ? clamp100(stabilityFamily.stabilityScore) : null;
 
-  const stabilityLabel = normalizeText(stabilityFamily?.stabilityLabel) || null;
-  const highestDriftSeverity = normalizeText(driftFamily?.highestSeverity) || null;
+  const stabilityLabel =
+    normalizeText(
+      stabilityFamily?.stabilityLabel ?? stabilityFamily?.label
+    ) || null;
+
+  const highestDriftSeverity =
+    normalizeText(driftFamily?.highestSeverity ?? driftFamily?.highestDriftSeverity) ||
+    null;
 
   const placementConfidence = clamp01(placement.confidence);
   const strongestScore = clamp01(family.strongestScore);
