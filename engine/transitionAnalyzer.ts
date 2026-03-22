@@ -1,4 +1,7 @@
-import type { PlannedTransition } from "./core/types";
+type PlannedTransitionLike = {
+  id: string;
+  [key: string]: any;
+};
 
 export type TransitionScore = {
   id: string;
@@ -21,7 +24,7 @@ function clamp(v: number, min: number, max: number) {
  * - convert timing accuracy into musical smoothness
  */
 export function analyzeTransition(
-  transition: PlannedTransition,
+  transition: PlannedTransitionLike,
   expectedEndMs: number,
   actualEndMs: number
 ): TransitionScore {
@@ -30,7 +33,7 @@ export function analyzeTransition(
   const smoothness = clamp(100 - timingErrorMs * 2, 0, 100);
 
   const result: TransitionScore = {
-    id: transition.id,
+    id: String(transition?.id ?? ""),
     timingErrorMs,
     smoothness,
     completedAt: performance.now(),
@@ -39,9 +42,9 @@ export function analyzeTransition(
   history.push(result);
 
   console.log(
-    `[Transition Analyzer] ${transition.id} | error=${timingErrorMs.toFixed(
-      2
-    )}ms | smooth=${smoothness.toFixed(1)}`
+    `[Transition Analyzer] ${String(
+      transition?.id ?? ""
+    )} | error=${timingErrorMs.toFixed(2)}ms | smooth=${smoothness.toFixed(1)}`
   );
 
   return result;
