@@ -11,10 +11,13 @@ type MomentInspectorWorkspaceSummarySectionProps = {
 export default function MomentInspectorWorkspaceSummarySection(
   props: MomentInspectorWorkspaceSummarySectionProps
 ) {
+  const LegendAny = MomentInspectorWorkspaceLegend as any;
+  const summary = props.summary ?? ({} as any);
+
   return (
     <div className="space-y-3">
-      <MomentInspectorWorkspaceSummaryBar metrics={props.summary.metrics} />
-      <MomentInspectorWorkspaceLegend />
+      <MomentInspectorWorkspaceSummaryBar metrics={summary.metrics ?? []} />
+      <LegendAny lanes={summary.lanes ?? []} />
     </div>
   );
 }
