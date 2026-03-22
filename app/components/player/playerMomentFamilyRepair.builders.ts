@@ -17,7 +17,6 @@ function normalizeNumber(value: unknown): number | null {
 export function buildFamilyRepair(
   params: BuildFamilyRepairParams
 ): FamilyRepairResult {
-
   const driftSeverity = normalizeNumber(params.driftSeverity)
   const stabilityScore = normalizeNumber(params.stabilityScore)
   const learningScore = normalizeNumber(params.learningScore)
@@ -33,7 +32,7 @@ export function buildFamilyRepair(
     optimizationScore,
   })
 
-  const repairLabel = getRepairLabel(repairScore)
+  const repairLabel = (getRepairLabel(repairScore) ?? null) as any
 
   const repairDrift =
     (driftSeverity ?? 0) > 0.3
