@@ -46,14 +46,14 @@ function comparePhraseStabilityFamilies(
 export function buildMomentPhraseStability(
   input: PhraseStabilityEngineInput
 ): PhraseStabilityEngineResult {
-  const sourceFamilies = Array.isArray(input.phraseDriftResult?.families)
+  const sourceFamilies: unknown[] = Array.isArray(input.phraseDriftResult?.families)
     ? input.phraseDriftResult.families
     : [];
 
   const families = sourceFamilies
-    .map((family) =>
+    .map((family: unknown) =>
       buildFamilyResult({
-        family,
+        family: family as any,
         intendedRepeatMetadata: input.intendedRepeatMetadata,
       })
     )
