@@ -2,10 +2,17 @@ import { findSimilarMoments, scoreMomentSimilarity } from "./playerMomentSimilar
 
 type ComparableMoment = {
   id?: unknown;
+  sectionId?: unknown;
   startTime?: unknown;
   start?: unknown;
+  endTime?: unknown;
+  end?: unknown;
+  duration?: unknown;
   label?: unknown;
   title?: unknown;
+  description?: unknown;
+  text?: unknown;
+  tags?: unknown;
   trackId?: unknown;
   sourceTrackId?: unknown;
   [key: string]: any;
@@ -20,6 +27,19 @@ type MomentFamilyMember = {
 type MomentFamily = {
   familyId: string;
   members: MomentFamilyMember[];
+  [key: string]: any;
+};
+
+type SimilarityComparableMoment = {
+  id: string;
+  sectionId: string;
+  startTime: number;
+  endTime?: number;
+  duration?: number;
+  label?: string;
+  description?: string;
+  tags?: string[];
+  trackId?: string;
   [key: string]: any;
 };
 
@@ -94,6 +114,29 @@ function getMomentStart(moment: ComparableMoment): number | null {
   return null;
 }
 
+function getMomentEnd(moment: ComparableMoment): number | null {
+  const direct = toNumber((moment as { endTime?: unknown }).endTime);
+  if (direct !== null) return direct;
+
+  const alt = toNumber((moment as { end?: unknown }).end);
+  if (alt !== null) return alt;
+
+  return null;
+}
+
+function getMomentDuration(moment: ComparableMoment): number | null {
+  const direct = toNumber((moment as { duration?: unknown }).duration);
+  if (direct !== null) return direct;
+
+  const start = getMomentStart(moment);
+  const end = getMomentEnd(moment);
+  if (start !== null && end !== null && end >= start) {
+    return end - start;
+  }
+
+  return null;
+}
+
 function getMomentLabel(moment: ComparableMoment): string {
   const direct = normalizeText((moment as { label?: unknown }).label);
   if (direct) return direct;
@@ -104,6 +147,23 @@ function getMomentLabel(moment: ComparableMoment): string {
   return getMomentId(moment);
 }
 
+function getMomentDescription(moment: ComparableMoment): string {
+  const direct = String((moment as { description?: unknown }).description ?? "").trim();
+  if (direct) return direct;
+
+  const alt = String((moment as { text?: unknown }).text ?? "").trim();
+  if (alt) return alt;
+
+  return getMomentLabel(moment);
+}
+
+function getMomentTags(moment: ComparableMoment): string[] {
+  if (!Array.isArray((moment as { tags?: unknown }).tags)) return [];
+  return ((moment as { tags?: unknown[] }).tags ?? [])
+    .map((tag) => String(tag ?? "").trim())
+    .filter(Boolean);
+}
+
 function getTrackId(moment: ComparableMoment): string {
   const direct = normalizeText((moment as { trackId?: unknown }).trackId);
   if (direct) return direct;
@@ -112,6 +172,33 @@ function getTrackId(moment: ComparableMoment): string {
   if (alt) return alt;
 
   return "track";
+}
+
+function getSectionId(moment: ComparableMoment): string {
+  const direct = String((moment as { sectionId?: unknown }).sectionId ?? "").trim();
+  if (direct) return direct;
+  return getMomentId(moment);
+}
+
+function toSimilarityComparableMoment(
+  moment: ComparableMoment
+): SimilarityComparableMoment {
+  const startTime = getMomentStart(moment) ?? 0;
+  const endTime = getMomentEnd(moment) ?? undefined;
+  const duration = getMomentDuration(moment) ?? undefined;
+
+  return {
+    ...(moment as any),
+    id: getMomentId(moment),
+    sectionId: getSectionId(moment),
+    startTime,
+    endTime,
+    duration,
+    label: String((moment as any)?.label ?? (moment as any)?.title ?? "").trim(),
+    description: getMomentDescription(moment),
+    tags: getMomentTags(moment),
+    trackId: getTrackId(moment),
+  };
 }
 
 function compareOrderedMoments(a: ComparableMoment, b: ComparableMoment): number {
@@ -235,7 +322,12 @@ function getSimilarityScore(result: SimilarityResult): number {
 }
 
 function getMomentSimilarityScore(a: ComparableMoment, b: ComparableMoment): number {
-  return getSimilarityScore(scoreMomentSimilarity(a, b) as SimilarityResult);
+  return getSimilarityScore(
+    scoreMomentSimilarity(
+      toSimilarityComparableMoment(a) as any,
+      toSimilarityComparableMoment(b) as any
+    ) as SimilarityResult
+  );
 }
 
 function collectPairMatches(
@@ -248,7 +340,10 @@ function collectPairMatches(
   for (const moment of orderedMoments) {
     const momentId = getMomentId(moment);
 
-    const matches = findSimilarMoments(moment, orderedMoments)
+    const matches = findSimilarMoments(
+      toSimilarityComparableMoment(moment) as any,
+      orderedMoments.map((candidate) => toSimilarityComparableMoment(candidate) as any)
+    )
       .map((result: any) => ({
         id: getMomentId(result?.moment),
         score: getSimilarityScore(result as SimilarityResult),
