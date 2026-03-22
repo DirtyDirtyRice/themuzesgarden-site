@@ -1,4 +1,3 @@
-import type { ComparableMoment } from "./playerMomentSimilarityTypes";
 import type { MomentFamilyEngineFamily } from "./playerMomentFamilyEngine";
 import type {
   PhraseDriftFamilyResult,
@@ -6,6 +5,21 @@ import type {
   PhraseDriftMemberResult,
   PhraseDriftSeverity,
 } from "./playerMomentPhraseDrift.types";
+
+type ComparableMoment = {
+  id?: string;
+  sectionId?: string;
+  startTime?: number | null;
+  start?: number | null;
+  endTime?: number | null;
+  end?: number | null;
+  duration?: number | null;
+  label?: string;
+  description?: string;
+  tags?: string[];
+  trackId?: string;
+  [key: string]: any;
+};
 
 export function toNumber(value: unknown): number | null {
   const n = Number(value);
@@ -178,7 +192,7 @@ export function sortFamilyMembers(
   momentsById: Map<string, ComparableMoment>
 ): ComparableMoment[] {
   return family.members
-    .map((member) => momentsById.get(String(member.momentId ?? "").trim()))
+    .map((member) => momentsById.get(String((member as any).momentId ?? "").trim()))
     .filter((moment): moment is ComparableMoment => Boolean(moment))
     .sort((a, b) => {
       const startA = getMomentStart(a);
