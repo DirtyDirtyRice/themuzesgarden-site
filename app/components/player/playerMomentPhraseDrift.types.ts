@@ -1,5 +1,19 @@
-import type { ComparableMoment } from "./playerMomentSimilarityTypes";
 import type { MomentFamilyEngineFamily } from "./playerMomentFamilyEngine";
+
+type ComparableMoment = {
+  id?: string;
+  sectionId?: string;
+  startTime?: number | null;
+  start?: number | null;
+  endTime?: number | null;
+  end?: number | null;
+  duration?: number | null;
+  label?: string;
+  description?: string;
+  tags?: string[];
+  trackId?: string;
+  [key: string]: any;
+};
 
 export type PhraseDriftLabel =
   | "stable"
