@@ -1,6 +1,4 @@
-// engine/intelligence/transitionAnalyzer.ts
-
-import type { PlannedTransition } from "../core/types";
+import type { PlannedTransition } from "./core/types";
 
 export type TransitionScore = {
   id: string;
@@ -29,12 +27,7 @@ export function analyzeTransition(
 ): TransitionScore {
   const timingErrorMs = Math.abs(actualEndMs - expectedEndMs);
 
-  // Humans detect ≈10–20ms timing deviation
-  const smoothness = clamp(
-    100 - timingErrorMs * 2,
-    0,
-    100
-  );
+  const smoothness = clamp(100 - timingErrorMs * 2, 0, 100);
 
   const result: TransitionScore = {
     id: transition.id,
@@ -54,6 +47,6 @@ export function analyzeTransition(
   return result;
 }
 
-export function getTransitionHistory() {
+export function getTransitionHistory(): TransitionScore[] {
   return history;
 }
