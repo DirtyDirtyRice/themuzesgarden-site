@@ -70,10 +70,11 @@ export default function ProjectActivityPanel() {
       return;
     }
 
-    setProjectId(id);
+    const activeProjectId = String(id);
+    setProjectId(activeProjectId);
 
     function loadActivity(markUpdated = false) {
-      setItems(readProjectActivity(id));
+      setItems(readProjectActivity(activeProjectId));
       if (markUpdated) {
         setLastUpdatedAt(Date.now());
       }
@@ -81,7 +82,7 @@ export default function ProjectActivityPanel() {
 
     function onActivityUpdated(event: Event) {
       const custom = event as CustomEvent<{ projectId?: string }>;
-      if (custom.detail?.projectId === id) {
+      if (custom.detail?.projectId === activeProjectId) {
         loadActivity(true);
       }
     }
