@@ -173,7 +173,7 @@ export function useMomentInspectorHostRuntime(params: {
       actionView,
       repairQueueView,
       trustStateByFamilyId,
-      trustSummaryRows,
+      trustSummaryRows: trustSummaryRows as any,
     });
   }, [
     selectedPhraseFamilyId,
@@ -217,7 +217,7 @@ export function useMomentInspectorHostRuntime(params: {
     stabilityRows: stabilityView.familyRows,
     actionRows: actionView.summaryRows,
     repairRows: repairQueueView.rows,
-    trustRows: trustSummaryRows,
+    trustRows: trustSummaryRows as any,
   });
 
   const compareSetState = getFn(
