@@ -42,7 +42,10 @@ function getTagOriginLabel(trackCount: number, sectionCount: number): string {
   return "Track";
 }
 
-function getHeatBucket(score: number, matchedMomentCount: number): "hot" | "warm" | "none" {
+function getHeatBucket(
+  score: number,
+  matchedMomentCount: number
+): "hot" | "warm" | "none" {
   if (matchedMomentCount <= 0) return "none";
   if (score >= 220) return "hot";
   if (score >= 140) return "warm";
@@ -150,8 +153,10 @@ export default function PlayerPanel(props: {
     onPlayTrack,
   } = props;
 
-  const trackCount = tab === "project" ? projectTracks.length : allTracks.length;
-  const trackCountLabel = tab === "project" ? `Setlist ${trackCount}` : `Library ${trackCount}`;
+  const trackCount =
+    tab === "project" ? projectTracks.length : allTracks.length;
+  const trackCountLabel =
+    tab === "project" ? `Setlist ${trackCount}` : `Library ${trackCount}`;
 
   const hasNow = Boolean(nowId);
   const isProjectTab = tab === "project";
@@ -209,7 +214,9 @@ export default function PlayerPanel(props: {
 
   const upNextIdx = nowIdx >= 0 ? nowIdx + 1 : -1;
   const remainingCount =
-    nowIdx >= 0 ? Math.max(0, projectTracks.length - (nowIdx + 1)) : projectTracks.length;
+    nowIdx >= 0
+      ? Math.max(0, projectTracks.length - (nowIdx + 1))
+      : projectTracks.length;
 
   const atProjectStart = isProjectTab && hasNow && nowIdx === 0 && !shuffle;
   const atProjectEnd =
@@ -272,7 +279,9 @@ export default function PlayerPanel(props: {
         if (b[1].sectionCount !== a[1].sectionCount) {
           return b[1].sectionCount - a[1].sectionCount;
         }
-        return a[0].localeCompare(b[0], undefined, { sensitivity: "base" });
+        return a[0].localeCompare(b[0], undefined, {
+          sensitivity: "base",
+        });
       })
       .slice(0, 18)
       .map(([tag, meta]) => ({
@@ -328,18 +337,30 @@ export default function PlayerPanel(props: {
     const host = audioHostRef.current;
     if (!host) return;
 
-    const el = host.querySelector("audio") as HTMLAudioElement | null;
-    audioDomRef.current = el;
+    const foundAudioEl = host.querySelector("audio") as HTMLAudioElement | null;
+    audioDomRef.current = foundAudioEl;
 
-    if (!el) {
+    if (!foundAudioEl) {
       setDurSec(0);
       setCurSec(0);
       return;
     }
 
     function pull() {
-      const d = Number.isFinite(el.duration) ? el.duration : 0;
-      const c = Number.isFinite(el.currentTime) ? el.currentTime : 0;
+      const currentAudioEl = audioDomRef.current;
+      if (!currentAudioEl) {
+        setDurSec(0);
+        setCurSec(0);
+        return;
+      }
+
+      const d = Number.isFinite(currentAudioEl.duration)
+        ? currentAudioEl.duration
+        : 0;
+      const c = Number.isFinite(currentAudioEl.currentTime)
+        ? currentAudioEl.currentTime
+        : 0;
+
       setDurSec(d > 0 ? d : 0);
 
       if (!isSeeking) setCurSec(c >= 0 ? c : 0);
@@ -347,14 +368,14 @@ export default function PlayerPanel(props: {
 
     pull();
 
-    el.addEventListener("loadedmetadata", pull);
-    el.addEventListener("durationchange", pull);
-    el.addEventListener("timeupdate", pull);
+    foundAudioEl.addEventListener("loadedmetadata", pull);
+    foundAudioEl.addEventListener("durationchange", pull);
+    foundAudioEl.addEventListener("timeupdate", pull);
 
     return () => {
-      el.removeEventListener("loadedmetadata", pull);
-      el.removeEventListener("durationchange", pull);
-      el.removeEventListener("timeupdate", pull);
+      foundAudioEl.removeEventListener("loadedmetadata", pull);
+      foundAudioEl.removeEventListener("durationchange", pull);
+      foundAudioEl.removeEventListener("timeupdate", pull);
     };
   }, [audioEl, open, isSeeking]);
 
@@ -429,7 +450,12 @@ export default function PlayerPanel(props: {
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           <div className="space-y-3">
             {isSearchTab && !compact ? (
-              <SearchTab q={q} setQ={setQ} allTracks={allTracks} onPlay={onPlayTrack} />
+              <SearchTab
+                q={q}
+                setQ={setQ}
+                allTracks={allTracks}
+                onPlay={onPlayTrack}
+              />
             ) : null}
 
             <PlayerStatusBadges
@@ -458,7 +484,10 @@ export default function PlayerPanel(props: {
               searchInsights={searchInsights}
             />
 
-            <PlayerSearchHelpPanel compact={compact} isSearchTab={isSearchTab} />
+            <PlayerSearchHelpPanel
+              compact={compact}
+              isSearchTab={isSearchTab}
+            />
 
             <PlayerProjectHelpPanels
               compact={compact}
@@ -518,13 +547,17 @@ export default function PlayerPanel(props: {
               projectTracksLength={projectTracks.length}
               nowId={nowId}
               onPrevWrapped={() => {
-                if (tab === "project") setNavTick((s) => ({ ...s, prev: s.prev + 1 }));
+                if (tab === "project") {
+                  setNavTick((s) => ({ ...s, prev: s.prev + 1 }));
+                }
                 onPrev();
               }}
               onToggle={onToggle}
               onStop={onStop}
               onNextWrapped={() => {
-                if (tab === "project") setNavTick((s) => ({ ...s, next: s.next + 1 }));
+                if (tab === "project") {
+                  setNavTick((s) => ({ ...s, next: s.next + 1 }));
+                }
                 onNext();
               }}
               onResume={onResume}
