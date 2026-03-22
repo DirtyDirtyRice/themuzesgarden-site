@@ -23,6 +23,12 @@ const LANE_META: Record<
     shortLabel: "Repair",
     description: "Families that need direct repair attention.",
   },
+  blocked: {
+    lane: "blocked",
+    label: "Blocked Families",
+    shortLabel: "Blocked",
+    description: "Families that are blocked from progress and need attention.",
+  },
 };
 
 export function getMomentInspectorWorkspaceLaneMeta(
