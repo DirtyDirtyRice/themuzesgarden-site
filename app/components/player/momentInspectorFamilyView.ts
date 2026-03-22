@@ -149,30 +149,42 @@ export function buildInspectorFamilyView(
   const membersByFamily: Record<string, InspectorFamilyMemberRow[]> = {};
 
   for (const family of families) {
-    const familyId = normalizeText(family.id);
+    const familyId = normalizeText((family as any).id);
     if (!familyId) continue;
 
     const driftFamily = driftResult?.byFamilyId?.[familyId] ?? null;
 
     const driftMembersByMomentId = new Map(
-      (driftFamily?.members ?? []).map((member) => [normalizeText(member.momentId), member] as const)
+      ((driftFamily?.members ?? []) as any[]).map((member) => [
+        normalizeText((member as any)?.momentId),
+        member,
+      ] as const)
     );
 
-    const familyMembers: InspectorFamilyMemberRow[] = family.members
+    const familyMembers: InspectorFamilyMemberRow[] = (((family as any).members ?? []) as any[])
       .map((member) => {
-        const momentId = normalizeText(member.momentId);
+        const momentId = normalizeText(
+          (member as any)?.momentId ??
+            (member as any)?.moment?.id ??
+            (member as any)?.id
+        );
+
         const driftMember = driftMembersByMomentId.get(momentId);
 
         return {
           momentId,
-          similarityToAnchor: normalizePercent(member.similarityToAnchor),
-          driftLabel: normalizeDriftLabel(driftMember?.driftLabel ?? null),
-          driftSeverity: normalizeDriftSeverity(driftMember?.driftSeverity ?? null),
-          timingOffset: round3(toNumberOrNull(driftMember?.timingOffset ?? null)),
-          durationDrift: round3(toNumberOrNull(driftMember?.durationDrift ?? null)),
-          confidenceScore: round3(toNumberOrNull(driftMember?.confidenceScore ?? null)),
-          expectedStartTime: round3(toNumberOrNull(driftMember?.expectedStartTime ?? null)),
-          actualStartTime: round3(toNumberOrNull(driftMember?.actualStartTime ?? null)),
+          similarityToAnchor: normalizePercent((member as any)?.similarityToAnchor),
+          driftLabel: normalizeDriftLabel((driftMember as any)?.driftLabel ?? null),
+          driftSeverity: normalizeDriftSeverity((driftMember as any)?.driftSeverity ?? null),
+          timingOffset: round3(toNumberOrNull((driftMember as any)?.timingOffset ?? null)),
+          durationDrift: round3(toNumberOrNull((driftMember as any)?.durationDrift ?? null)),
+          confidenceScore: round3(toNumberOrNull((driftMember as any)?.confidenceScore ?? null)),
+          expectedStartTime: round3(
+            toNumberOrNull((driftMember as any)?.expectedStartTime ?? null)
+          ),
+          actualStartTime: round3(
+            toNumberOrNull((driftMember as any)?.actualStartTime ?? null)
+          ),
         };
       })
       .sort((a, b) => {
@@ -193,27 +205,33 @@ export function buildInspectorFamilyView(
 
     membersByFamily[familyId] = familyMembers;
 
-    const strongestScore = normalizePercent(family.strongestScore);
-    const averageScore = normalizePercent(family.averageScore);
-    const highestDriftSeverity = normalizeDriftSeverity(driftFamily?.highestSeverity ?? null);
-    const driftUnstableCount = driftFamily?.unstableCount ?? 0;
+    const strongestScore = normalizePercent((family as any).strongestScore);
+    const averageScore = normalizePercent((family as any).averageScore);
+    const highestDriftSeverity = normalizeDriftSeverity(
+      (driftFamily as any)?.highestSeverity ?? null
+    );
+    const driftUnstableCount = (driftFamily as any)?.unstableCount ?? 0;
 
     const row: InspectorFamilyRow = {
       familyId,
-      size: family.size,
+      size: Number((family as any).size ?? familyMembers.length ?? 0),
       strongestScore,
       averageScore,
-      repeatIntervalHint: round3(toNumberOrNull(family.repeatIntervalHint ?? null)),
-      driftComparedMemberCount: driftFamily?.comparedMemberCount ?? 0,
-      driftStableCount: driftFamily?.stableCount ?? 0,
+      repeatIntervalHint: round3(
+        toNumberOrNull((family as any).repeatIntervalHint ?? null)
+      ),
+      driftComparedMemberCount: (driftFamily as any)?.comparedMemberCount ?? 0,
+      driftStableCount: (driftFamily as any)?.stableCount ?? 0,
       driftUnstableCount,
-      dominantDriftLabel: normalizeDriftLabel(driftFamily?.dominantDriftLabel ?? null),
+      dominantDriftLabel: normalizeDriftLabel(
+        (driftFamily as any)?.dominantDriftLabel ?? null
+      ),
       highestDriftSeverity,
       averageAbsoluteTimingOffset: round3(
-        toNumberOrNull(driftFamily?.averageAbsoluteTimingOffset ?? null)
+        toNumberOrNull((driftFamily as any)?.averageAbsoluteTimingOffset ?? null)
       ),
       averageAbsoluteDurationDrift: round3(
-        toNumberOrNull(driftFamily?.averageAbsoluteDurationDrift ?? null)
+        toNumberOrNull((driftFamily as any)?.averageAbsoluteDurationDrift ?? null)
       ),
     };
 
