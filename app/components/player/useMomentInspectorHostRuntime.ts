@@ -94,6 +94,8 @@ export function useMomentInspectorHostRuntime(params: {
     trimmedFilter,
   ]);
 
+  const runtimeBridgeAny = runtimeBridge as any;
+
   const similarityState = useMemo(() => {
     return buildMomentInspectorSimilarity({
       track: selectedTrack,
@@ -151,16 +153,16 @@ export function useMomentInspectorHostRuntime(params: {
       selectedPhraseFamilyId,
       setSelectedPhraseFamilyId,
     });
-  }, [filteredFamilyOptions, selectedPhraseFamilyId]);
+  }, [filteredFamilyOptions, selectedPhraseFamilyId, setSelectedPhraseFamilyId]);
 
   const selectedConfidenceHistoryResult =
     phraseConfidenceHistoryResult ??
-    runtimeBridge.confidenceHistoryResult ??
+    runtimeBridgeAny.confidenceHistoryResult ??
     null;
 
   const selectedLineageResult =
     phraseFamilyLineageResult ??
-    runtimeBridge.familyLineageResult ??
+    runtimeBridgeAny.familyLineageResult ??
     null;
 
   const selectedFamilyState = useMemo(() => {
@@ -312,8 +314,8 @@ export function useMomentInspectorHostRuntime(params: {
       discoverySnapshot: runtimeBridge.discoverySnapshot,
       discoverySummary: runtimeBridge.discoverySummary,
       metadataSummary: runtimeBridge.metadataSummary,
-      runtimeConfidenceHistoryResult: runtimeBridge.confidenceHistoryResult,
-      runtimeFamilyLineageResult: runtimeBridge.familyLineageResult,
+      runtimeConfidenceHistoryResult: runtimeBridgeAny.confidenceHistoryResult ?? null,
+      runtimeFamilyLineageResult: runtimeBridgeAny.familyLineageResult ?? null,
     },
 
     phraseState: {
