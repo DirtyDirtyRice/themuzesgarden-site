@@ -65,18 +65,18 @@ function getSelectedLegacyFamily(params: {
 
   return (
     families.find((family) =>
-      family.members.some((member) => member.moment.sectionId === selectedMoment.sectionId)
+      family.members.some(
+        (member) => member.moment.sectionId === selectedMoment.sectionId
+      )
     ) ?? null
   );
 }
 
-function buildPhraseDriftSafeMoments(
-  moments: InspectorComparableMoment[]
-): InspectorComparableMoment[] {
+function buildPhraseDriftSafeMoments(moments: InspectorComparableMoment[]) {
   return moments.map((moment) => ({
     ...moment,
     description: moment.description ?? undefined,
-  }));
+  })) as any[];
 }
 
 export function buildMomentInspectorSimilarity(
@@ -97,7 +97,9 @@ export function buildMomentInspectorSimilarity(
   }
 
   const selectedMoment =
-    moments.find((moment) => moment.sectionId === selectedSectionId) ?? moments[0] ?? null;
+    moments.find((moment) => moment.sectionId === selectedSectionId) ??
+    moments[0] ??
+    null;
 
   if (!selectedMoment) {
     return buildEmptyMomentInspectorSimilarityResult({
@@ -134,7 +136,7 @@ export function buildMomentInspectorSimilarity(
   const repeatPlan = selectedFamily ? getEstimatedRepeatPlan(selectedFamily) : null;
 
   const stableFamilyResult = buildMomentFamilies({
-    moments: phraseDriftMoments,
+    moments: phraseDriftMoments as any,
     similarityThreshold: STABLE_FAMILY_SIMILARITY_THRESHOLD,
     maxMatchesPerMoment: STABLE_FAMILY_MAX_MATCHES_PER_MOMENT,
   });
@@ -170,7 +172,7 @@ export function buildMomentInspectorSimilarity(
   );
 
   const phraseDriftResult = buildMomentPhraseDrift({
-    moments: phraseDriftMoments,
+    moments: phraseDriftMoments as any,
     families: stableFamilies,
     ...PHRASE_DRIFT_CONFIG,
   });
