@@ -1,6 +1,7 @@
 import { buildFamilyResult } from "./playerMomentPhraseStability.builders";
 import { getSeveritySortRank } from "./playerMomentPhraseStability.shared";
 
+import type { PhraseDriftSeverity } from "./playerMomentPhraseDrift";
 import type {
   PhraseStabilityEngineInput,
   PhraseStabilityEngineResult,
@@ -21,6 +22,13 @@ function normalizeText(value: unknown): string {
   return String(value ?? "").trim();
 }
 
+function normalizePhraseDriftSeverity(value: unknown): PhraseDriftSeverity {
+  if (value === "high") return "high";
+  if (value === "medium") return "medium";
+  if (value === "low") return "low";
+  return "none";
+}
+
 function comparePhraseStabilityFamilies(
   a: PhraseStabilityFamilyResult,
   b: PhraseStabilityFamilyResult
@@ -29,11 +37,11 @@ function comparePhraseStabilityFamilies(
     return a.stabilityScore - b.stabilityScore;
   }
 
-  if (a.highestDriftSeverity !== b.highestDriftSeverity) {
-    return (
-      getSeveritySortRank(a.highestDriftSeverity) -
-      getSeveritySortRank(b.highestDriftSeverity)
-    );
+  const aSeverity = normalizePhraseDriftSeverity(a.highestDriftSeverity);
+  const bSeverity = normalizePhraseDriftSeverity(b.highestDriftSeverity);
+
+  if (aSeverity !== bSeverity) {
+    return getSeveritySortRank(aSeverity) - getSeveritySortRank(bSeverity);
   }
 
   if (a.structuralConfidence !== b.structuralConfidence) {
