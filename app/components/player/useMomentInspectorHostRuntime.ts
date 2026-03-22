@@ -22,6 +22,10 @@ function getFn(value: unknown, fallback: AnyFn): AnyFn {
   return typeof value === "function" ? (value as AnyFn) : fallback;
 }
 
+function normalizeText(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
 export function useMomentInspectorHostRuntime(params: {
   allTracks: AnyTrack[];
 }) {
@@ -141,7 +145,9 @@ export function useMomentInspectorHostRuntime(params: {
 
   useEffect(() => {
     syncPhraseFamilySelection({
-      familyOptions: filteredFamilyOptions,
+      familyOptions: filteredFamilyOptions.map((option: any) =>
+        normalizeText(option?.familyId ?? option?.id ?? option?.value)
+      ),
       selectedPhraseFamilyId,
       setSelectedPhraseFamilyId,
     });
