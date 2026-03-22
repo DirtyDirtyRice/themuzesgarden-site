@@ -36,10 +36,10 @@ export function getSeverityPenalty(severity: PhraseDriftSeverity): number {
 }
 
 export function getStabilityLabel(score: number): PhraseStabilityLabel {
-  if (score >= 85) return "solid";
-  if (score >= 70) return "good";
-  if (score >= 50) return "fragile";
-  return "unstable";
+  if (score >= 85) return "stable";
+  if (score >= 70) return "watch";
+  if (score >= 50) return "repair";
+  return "blocked";
 }
 
 export function getSeveritySortRank(severity: PhraseDriftSeverity): number {
