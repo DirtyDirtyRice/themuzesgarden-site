@@ -35,7 +35,12 @@ export function buildFamilyLearning(
     trustDelta,
   });
 
-  const learningLabel = getLearningLabel(learningScore);
+  const learningLabel = getLearningLabel(learningScore) as
+    | "strong-learning"
+    | "positive-learning"
+    | "neutral-learning"
+    | "negative-learning"
+    | null;
 
   const reinforceStrategy =
     signalConfirmed && (learningScore ?? 0) >= 0.65;
