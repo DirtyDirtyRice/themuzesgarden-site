@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack, PlayerTab, TrackSection } from "./playerTypes";
 import { pickUrl, isTypingTarget } from "./playerUtils";
@@ -653,8 +651,10 @@ export function useAudioEngine(args: {
     }
 
     function onPlaying() {
+      const activeEl = audioRef.current;
       errorSkipGuardRef.current = 0;
-      const currentTime = Number.isFinite(el.currentTime) ? el.currentTime : 0;
+      const currentTime =
+        activeEl && Number.isFinite(activeEl.currentTime) ? activeEl.currentTime : 0;
       setStatusTime(fmtTime(currentTime));
     }
 
