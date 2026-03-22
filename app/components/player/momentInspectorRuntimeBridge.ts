@@ -108,7 +108,9 @@ function getFamilyOptions(args: {
   const selectedPhraseFamilyId = normalizeText(args.selectedPhraseFamilyId);
   const runtimeFamilyId = normalizeText(args.intelligenceRuntimeInput?.familyId);
 
-  return Array.from(new Set([selectedPhraseFamilyId, runtimeFamilyId, ...normalized].filter(Boolean)));
+  return Array.from(
+    new Set([selectedPhraseFamilyId, runtimeFamilyId, ...normalized].filter(Boolean))
+  );
 }
 
 function buildMatchedTags(trackTags: string[], momentTags: string[]): string[] {
@@ -180,7 +182,9 @@ function buildSafeIntelligenceRuntime(args: {
   const { selectedPhraseFamilyId, intelligenceRuntimeInput } = args;
 
   const familyId =
-    normalizeText(intelligenceRuntimeInput?.familyId) || normalizeText(selectedPhraseFamilyId) || "";
+    normalizeText(intelligenceRuntimeInput?.familyId) ||
+    normalizeText(selectedPhraseFamilyId) ||
+    "";
 
   return buildPlayerMomentIntelligenceRuntime({
     familyId,
@@ -249,9 +253,12 @@ export function buildMomentInspectorRuntimeBridge(
     discoverySnapshot,
   });
 
-  const metadataSummary =
-    buildInspectorMetadataClarificationSummary(metadataClarificationResult) ??
-    buildMetadataInspectorSummary(null);
+  const metadataSummary = ((buildInspectorMetadataClarificationSummary(
+    metadataClarificationResult
+  ) as ReturnType<typeof buildMetadataInspectorSummary> | null) ??
+    buildMetadataInspectorSummary(null)) as ReturnType<
+    typeof buildMetadataInspectorSummary
+  >;
 
   const runtimeHealth = buildMomentInspectorRuntimeHealth({
     selectedTrack,
