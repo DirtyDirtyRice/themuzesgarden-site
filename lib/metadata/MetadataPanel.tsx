@@ -1,7 +1,7 @@
 "use client";
 
-import { getMetadataByTarget } from "../../../lib/metadata/metadataApi";
-import type { MetadataTargetType } from "../../../lib/metadata/metadataTypes";
+import { getMetadataByTarget } from "./metadataApi";
+import type { MetadataTargetType } from "./metadataTypes";
 
 type Props = {
   targetType: MetadataTargetType;
@@ -23,9 +23,7 @@ export default function MetadataPanel({ targetType, targetId }: Props) {
             <div className="font-medium">{m.label}</div>
 
             {m.description ? (
-              <div className="text-gray-600 text-xs mt-1">
-                {m.description}
-              </div>
+              <div className="mt-1 text-xs text-gray-600">{m.description}</div>
             ) : null}
           </div>
         ))}
