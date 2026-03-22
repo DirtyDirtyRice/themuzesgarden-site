@@ -105,27 +105,27 @@ function getMomentId(moment: ComparableMoment): string {
 }
 
 function getMomentStart(moment: ComparableMoment): number | null {
-  const direct = toNumber((moment as { startTime?: unknown }).startTime);
+  const direct = toNumber(moment?.startTime);
   if (direct !== null) return direct;
 
-  const alt = toNumber((moment as { start?: unknown }).start);
+  const alt = toNumber(moment?.start);
   if (alt !== null) return alt;
 
   return null;
 }
 
 function getMomentEnd(moment: ComparableMoment): number | null {
-  const direct = toNumber((moment as { endTime?: unknown }).endTime);
+  const direct = toNumber(moment?.endTime);
   if (direct !== null) return direct;
 
-  const alt = toNumber((moment as { end?: unknown }).end);
+  const alt = toNumber(moment?.end);
   if (alt !== null) return alt;
 
   return null;
 }
 
 function getMomentDuration(moment: ComparableMoment): number | null {
-  const direct = toNumber((moment as { duration?: unknown }).duration);
+  const direct = toNumber(moment?.duration);
   if (direct !== null) return direct;
 
   const start = getMomentStart(moment);
@@ -138,44 +138,42 @@ function getMomentDuration(moment: ComparableMoment): number | null {
 }
 
 function getMomentLabel(moment: ComparableMoment): string {
-  const direct = normalizeText((moment as { label?: unknown }).label);
+  const direct = normalizeText(moment?.label);
   if (direct) return direct;
 
-  const alt = normalizeText((moment as { title?: unknown }).title);
+  const alt = normalizeText(moment?.title);
   if (alt) return alt;
 
   return getMomentId(moment);
 }
 
 function getMomentDescription(moment: ComparableMoment): string {
-  const direct = String((moment as { description?: unknown }).description ?? "").trim();
+  const direct = String(moment?.description ?? "").trim();
   if (direct) return direct;
 
-  const alt = String((moment as { text?: unknown }).text ?? "").trim();
+  const alt = String(moment?.text ?? "").trim();
   if (alt) return alt;
 
   return getMomentLabel(moment);
 }
 
 function getMomentTags(moment: ComparableMoment): string[] {
-  if (!Array.isArray((moment as { tags?: unknown }).tags)) return [];
-  return ((moment as { tags?: unknown[] }).tags ?? [])
-    .map((tag) => String(tag ?? "").trim())
-    .filter(Boolean);
+  if (!Array.isArray(moment?.tags)) return [];
+  return moment.tags.map((tag) => String(tag ?? "").trim()).filter(Boolean);
 }
 
 function getTrackId(moment: ComparableMoment): string {
-  const direct = normalizeText((moment as { trackId?: unknown }).trackId);
+  const direct = normalizeText(moment?.trackId);
   if (direct) return direct;
 
-  const alt = normalizeText((moment as { sourceTrackId?: unknown }).sourceTrackId);
+  const alt = normalizeText(moment?.sourceTrackId);
   if (alt) return alt;
 
   return "track";
 }
 
 function getSectionId(moment: ComparableMoment): string {
-  const direct = String((moment as { sectionId?: unknown }).sectionId ?? "").trim();
+  const direct = String(moment?.sectionId ?? "").trim();
   if (direct) return direct;
   return getMomentId(moment);
 }
@@ -194,7 +192,7 @@ function toSimilarityComparableMoment(
     startTime,
     endTime,
     duration,
-    label: String((moment as any)?.label ?? (moment as any)?.title ?? "").trim(),
+    label: String(moment?.label ?? moment?.title ?? "").trim(),
     description: getMomentDescription(moment),
     tags: getMomentTags(moment),
     trackId: getTrackId(moment),
@@ -305,28 +303,24 @@ function mergeFamilies(target: InternalFamily, source: InternalFamily) {
 }
 
 function getSimilarityScore(result: SimilarityResult): number {
-  const direct = toNumber((result as { score?: unknown }).score);
+  const direct = toNumber(result?.score);
   if (direct !== null) return clamp01(direct);
 
-  const percent = toNumber(
-    (result as { similarityPercent?: unknown }).similarityPercent
-  );
+  const percent = toNumber(result?.similarityPercent);
   if (percent !== null) return clamp01(percent / 100);
 
-  const diff = toNumber(
-    (result as { differencePercent?: unknown }).differencePercent
-  );
+  const diff = toNumber(result?.differencePercent);
   if (diff !== null) return clamp01(1 - diff / 100);
 
   return 0;
 }
 
 function getMomentSimilarityScore(a: ComparableMoment, b: ComparableMoment): number {
+  const safeA = toSimilarityComparableMoment(a);
+  const safeB = toSimilarityComparableMoment(b);
+
   return getSimilarityScore(
-    scoreMomentSimilarity(
-      toSimilarityComparableMoment(a) as any,
-      toSimilarityComparableMoment(b) as any
-    ) as SimilarityResult
+    (scoreMomentSimilarity as any)(safeA, safeB) as SimilarityResult
   );
 }
 
@@ -336,23 +330,26 @@ function collectPairMatches(
   maxMatchesPerMoment: number
 ): Map<string, PairMatch[]> {
   const pairMap = new Map<string, PairMatch[]>();
+  const comparableMoments = orderedMoments.map((candidate) =>
+    toSimilarityComparableMoment(candidate)
+  );
 
   for (const moment of orderedMoments) {
     const momentId = getMomentId(moment);
 
-    const matches = findSimilarMoments(
-      toSimilarityComparableMoment(moment) as any,
-      orderedMoments.map((candidate) => toSimilarityComparableMoment(candidate) as any)
-    )
+    const matches = ((findSimilarMoments as any)(
+      toSimilarityComparableMoment(moment),
+      comparableMoments
+    ) ?? [])
       .map((result: any) => ({
         id: getMomentId(result?.moment),
         score: getSimilarityScore(result as SimilarityResult),
       }))
-      .filter((result) => {
+      .filter((result: PairMatch) => {
         if (!result.id || result.id === momentId) return false;
         return result.score >= similarityThreshold;
       })
-      .sort((a, b) => b.score - a.score)
+      .sort((a: PairMatch, b: PairMatch) => b.score - a.score)
       .slice(0, maxMatchesPerMoment);
 
     pairMap.set(momentId, matches);
