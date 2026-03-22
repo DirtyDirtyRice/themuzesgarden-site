@@ -1,7 +1,5 @@
 import type { IntendedRepeatMetadataResult } from "./playerMomentIntendedRepeat";
-import type {
-  PhraseDriftFamilyResult,
-} from "./playerMomentPhraseDrift";
+import type { PhraseDriftFamilyResult } from "./playerMomentPhraseDrift";
 import type {
   PhraseStabilityFamilyResult,
   PhraseStabilityIssueFlag,
@@ -132,14 +130,14 @@ export function buildIssueFlags(params: {
   const plan = params.intendedRepeatMetadata?.plansByFamilyId?.[params.family.familyId];
 
   if ((plan?.missingCount ?? 0) > 0 || params.repeatCoverage < 0.6) {
-    flags.add("missing-repeats");
+    flags.add("missing-repeats" as PhraseStabilityIssueFlag);
   }
 
   if (
     (plan?.nearCount ?? 0) > 0 ||
     (params.repeatCoverage >= 0.6 && params.repeatCoverage < 0.8)
   ) {
-    flags.add("near-repeats");
+    flags.add("near-repeats" as PhraseStabilityIssueFlag);
   }
 
   if (params.timingConsistency < 0.78) {
@@ -155,11 +153,11 @@ export function buildIssueFlags(params: {
     params.timingConsistency < 0.6 ||
     params.durationConsistency < 0.6
   ) {
-    flags.add("high-severity-drift");
+    flags.add("high-severity-drift" as PhraseStabilityIssueFlag);
   }
 
   if (params.structuralConfidence < 0.68) {
-    flags.add("low-confidence");
+    flags.add("low-confidence" as PhraseStabilityIssueFlag);
   }
 
   return Array.from(flags);
@@ -204,12 +202,15 @@ export function buildFamilyResult(params: {
     familyId: family.familyId,
     anchorMomentId: family.anchorMomentId,
     stabilityScore,
-    stabilityLabel,
+    structuralConfidence: round1(structuralConfidence * 100),
+    highestDriftSeverity: family.highestSeverity,
+    label: stabilityLabel as any,
+    stabilityLabel: stabilityLabel as any,
     timingConsistency: round1(timingConsistency * 100),
     durationConsistency: round1(durationConsistency * 100),
     repeatCoverage: round1(repeatCoverage * 100),
-    structuralConfidence: round1(structuralConfidence * 100),
-    highestDriftSeverity: family.highestSeverity,
     issueFlags,
-  };
+    notes: [],
+    sourceFamily: family,
+  } as PhraseStabilityFamilyResult;
 }
