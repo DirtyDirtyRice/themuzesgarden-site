@@ -10,7 +10,7 @@ export type InspectorPhraseStabilityFamilyRow = {
   familyId: string;
   anchorMomentId: string;
   stabilityScore: number;
-  stabilityLabel: PhraseStabilityLabel;
+  stabilityLabel: PhraseStabilityLabel | string;
   timingConsistency: number;
   durationConsistency: number;
   repeatCoverage: number;
@@ -42,6 +42,21 @@ function normalizeDriftSeverity(value: unknown): PhraseDriftSeverity {
   return "none";
 }
 
+function normalizePhraseStabilityLabel(value: unknown): PhraseStabilityLabel | string {
+  const clean = normalizeText(value).toLowerCase();
+
+  if (clean === "solid") return "solid";
+  if (clean === "good") return "good";
+  if (clean === "fragile") return "fragile";
+  if (clean === "unstable") return "unstable";
+  if (clean === "stable") return "stable";
+  if (clean === "watch") return "watch";
+  if (clean === "repair") return "repair";
+  if (clean === "blocked") return "blocked";
+
+  return clean || "unstable";
+}
+
 function getSeverityRank(severity: PhraseDriftSeverity): number {
   if (severity === "high") return 3;
   if (severity === "medium") return 2;
@@ -55,17 +70,32 @@ function dedupeIssueFlags(
   return Array.from(new Set((flags ?? []).filter(Boolean)));
 }
 
-export function getPhraseStabilityLabelUi(label: PhraseStabilityLabel): string {
-  if (label === "solid") return "SOLID";
-  if (label === "good") return "GOOD";
-  if (label === "fragile") return "FRAGILE";
+export function getPhraseStabilityLabelUi(label: PhraseStabilityLabel | string): string {
+  const clean = normalizeText(label).toLowerCase();
+
+  if (clean === "solid") return "SOLID";
+  if (clean === "good") return "GOOD";
+  if (clean === "fragile") return "FRAGILE";
+  if (clean === "stable") return "STABLE";
+  if (clean === "watch") return "WATCH";
+  if (clean === "repair") return "REPAIR";
+  if (clean === "blocked") return "BLOCKED";
+
   return "UNSTABLE";
 }
 
-export function getPhraseStabilityLabelRank(label: PhraseStabilityLabel): number {
-  if (label === "unstable") return 3;
-  if (label === "fragile") return 2;
-  if (label === "good") return 1;
+export function getPhraseStabilityLabelRank(
+  label: PhraseStabilityLabel | string
+): number {
+  const clean = normalizeText(label).toLowerCase();
+
+  if (clean === "blocked") return 6;
+  if (clean === "unstable") return 5;
+  if (clean === "repair") return 4;
+  if (clean === "fragile") return 3;
+  if (clean === "watch") return 2;
+  if (clean === "good") return 1;
+  if (clean === "solid") return 0;
   return 0;
 }
 
@@ -75,29 +105,37 @@ export function getPhraseStabilityIssueUi(flag: PhraseStabilityIssueFlag): strin
   if (flag === "timing-drift") return "timing drift";
   if (flag === "duration-drift") return "duration drift";
   if (flag === "high-severity-drift") return "high severity drift";
+  if (flag === "missing-intended-repeat") return "missing intended repeat";
+  if (flag === "weak-structure") return "weak structure";
+  if (flag === "severity-spike") return "severity spike";
+  if (flag === "unstable-family") return "unstable family";
   return "low confidence";
 }
 
 function buildFamilyRow(
   family: PhraseStabilityFamilyResult
 ): InspectorPhraseStabilityFamilyRow {
+  const familyAny = family as any;
+
   return {
-    familyId: normalizeText(family.familyId),
-    anchorMomentId: normalizeText(family.anchorMomentId),
-    stabilityScore: Number(clamp100(Number(family.stabilityScore)).toFixed(1)),
-    stabilityLabel: family.stabilityLabel,
+    familyId: normalizeText(familyAny.familyId),
+    anchorMomentId: normalizeText(familyAny.anchorMomentId),
+    stabilityScore: Number(clamp100(Number(familyAny.stabilityScore)).toFixed(1)),
+    stabilityLabel: normalizePhraseStabilityLabel(
+      familyAny.stabilityLabel ?? familyAny.label
+    ),
     timingConsistency: Number(
-      clamp100(Number(family.timingConsistency)).toFixed(1)
+      clamp100(Number(familyAny.timingConsistency)).toFixed(1)
     ),
     durationConsistency: Number(
-      clamp100(Number(family.durationConsistency)).toFixed(1)
+      clamp100(Number(familyAny.durationConsistency)).toFixed(1)
     ),
-    repeatCoverage: Number(clamp100(Number(family.repeatCoverage)).toFixed(1)),
+    repeatCoverage: Number(clamp100(Number(familyAny.repeatCoverage)).toFixed(1)),
     structuralConfidence: Number(
-      clamp100(Number(family.structuralConfidence)).toFixed(1)
+      clamp100(Number(familyAny.structuralConfidence)).toFixed(1)
     ),
-    highestDriftSeverity: normalizeDriftSeverity(family.highestDriftSeverity),
-    issueFlags: dedupeIssueFlags([...(family.issueFlags ?? [])]),
+    highestDriftSeverity: normalizeDriftSeverity(familyAny.highestDriftSeverity),
+    issueFlags: dedupeIssueFlags([...(familyAny.issueFlags ?? [])]),
   };
 }
 
