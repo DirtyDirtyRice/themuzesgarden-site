@@ -1,9 +1,8 @@
-export type MomentInspectorHostIntelligenceStackProps = {
-  filterProps?: any;
-  pinnedProps?: any;
-  pinProps?: any;
-  bookmarkProps?: any;
-  compareBarProps?: any;
-  comparePanelProps?: any;
-  intelligenceProps?: any;
+export type MomentInspectorHostSummaryStackProps = {
+  summaryProps?: any;
+  timelineProps?: any;
+  familyProps?: any;
+  similarityProps?: any;
+  tagProps?: any;
+  diagnosticsProps?: any;
 };
