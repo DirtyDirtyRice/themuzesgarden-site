@@ -1,7 +1,7 @@
 "use client";
 
-import { getMetadataByTarget } from "./metadataApi";
-import type { MetadataTargetType } from "./metadataTypes";
+import { getMetadataByTarget } from "../lib/metadata/metadataApi";
+import type { MetadataTargetType } from "../lib/metadata/metadataTypes";
 
 type MetadataItemLike = {
   id: string;
