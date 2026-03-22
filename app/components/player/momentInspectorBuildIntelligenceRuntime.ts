@@ -151,7 +151,7 @@ export function buildMomentInspectorIntelligenceRuntime(params: {
     recoveryScore: selectedTrustState?.recoveryScore ?? null,
     volatilityScore: selectedTrustState?.volatilityScore ?? null,
     trustLevel: (selectedTrustState?.trustLevel ?? null) as any,
-    strongestTrustReason: selectedTrustState?.strongestReason ?? null,
-    trustReasons: selectedTrustState?.reasons ?? [],
+    strongestTrustReason: (selectedTrustState?.strongestReason ?? null) as any,
+    trustReasons: (selectedTrustState?.reasons ?? []) as any,
   });
 }
