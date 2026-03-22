@@ -17,7 +17,6 @@ function normalizeNumber(value: unknown): number | null {
 export function buildFamilySelfOptimization(
   params: BuildFamilyOptimizationParams
 ): FamilyOptimizationResult {
-
   const learningScore = normalizeNumber(params.learningScore)
   const trustScore = normalizeNumber(params.trustScore)
   const stabilityScore = normalizeNumber(params.stabilityScore)
@@ -35,7 +34,7 @@ export function buildFamilySelfOptimization(
     stabilityScore,
   })
 
-  const optimizationLabel = getOptimizationLabel(optimizationScore)
+  const optimizationLabel = (getOptimizationLabel(optimizationScore) ?? null) as any
 
   const reinforceFamily =
     reinforceStrategy ||
