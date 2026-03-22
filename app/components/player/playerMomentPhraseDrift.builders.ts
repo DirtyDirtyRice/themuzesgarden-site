@@ -1,4 +1,3 @@
-import type { ComparableMoment } from "./playerMomentSimilarityTypes";
 import type { MomentFamilyEngineFamily } from "./playerMomentFamilyEngine";
 import type {
   PhraseDriftFamilyResult,
@@ -19,6 +18,19 @@ import {
   buildFallbackRepeatInterval,
   getValidRepeatIntervalHint,
 } from "./playerMomentPhraseDrift.shared";
+
+type ComparableMoment = {
+  id?: string;
+  sectionId?: string;
+  startTime?: number | null;
+  endTime?: number | null;
+  duration?: number | null;
+  label?: string;
+  description?: string;
+  tags?: string[];
+  trackId?: string;
+  [key: string]: any;
+};
 
 export function buildExpectedStartTime(params: {
   anchorStart: number | null;
@@ -247,19 +259,19 @@ export function buildPhraseDriftFamilyResult(params: {
   if (orderedMembers.length < 2) return null;
 
   const anchor = orderedMembers[0];
-  const anchorMomentId = getMomentId(anchor);
-  const anchorStart = getMomentStart(anchor);
-  const anchorDuration = getMomentDuration(anchor);
+  const anchorMomentId = getMomentId(anchor as any);
+  const anchorStart = getMomentStart(anchor as any);
+  const anchorDuration = getMomentDuration(anchor as any);
   const repeatIntervalHint = getValidRepeatIntervalHint(family);
-  const fallbackRepeatInterval = buildFallbackRepeatInterval(orderedMembers);
+  const fallbackRepeatInterval = buildFallbackRepeatInterval(orderedMembers as any);
 
   const memberRows: PhraseDriftMemberResult[] = [];
 
   for (let i = 1; i < orderedMembers.length; i += 1) {
     const moment = orderedMembers[i];
-    const momentId = getMomentId(moment);
-    const actualStartTime = getMomentStart(moment);
-    const actualDuration = getMomentDuration(moment);
+    const momentId = getMomentId(moment as any);
+    const actualStartTime = getMomentStart(moment as any);
+    const actualDuration = getMomentDuration(moment as any);
 
     const expectedStartTime = buildExpectedStartTime({
       anchorStart,
