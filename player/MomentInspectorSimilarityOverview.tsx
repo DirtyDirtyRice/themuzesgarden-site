@@ -17,6 +17,26 @@ function formatOptionalSeconds(value: number | null): string {
   return `${value.toFixed(2)} sec`;
 }
 
+function readStringField(
+  value: unknown,
+  key: "familyId" | "id" | "anchorId"
+): string | null {
+  if (!value || typeof value !== "object") return null;
+
+  const candidate = (value as Record<string, unknown>)[key];
+  return typeof candidate === "string" && candidate.trim()
+    ? candidate
+    : null;
+}
+
+function getSelectedFamilyKey(value: unknown): string | null {
+  return (
+    readStringField(value, "familyId") ??
+    readStringField(value, "id") ??
+    readStringField(value, "anchorId")
+  );
+}
+
 export default function MomentInspectorSimilarityOverview(props: {
   similarityState: SimilarityState;
   similarityDebugRows?: SimilarityState["similarityDebugRows"];
@@ -35,12 +55,13 @@ export default function MomentInspectorSimilarityOverview(props: {
         ) ?? null
       : null;
 
-  const selectedRepeatDiagnostics =
-    similarityState.selectedFamily
-      ? similarityState.repeatDiagnostics.find(
-          (row) => row.familyId === similarityState.selectedFamily?.id
-        ) ?? null
-      : null;
+  const selectedFamilyKey = getSelectedFamilyKey(similarityState.selectedFamily);
+
+  const selectedRepeatDiagnostics = selectedFamilyKey
+    ? similarityState.repeatDiagnostics.find(
+        (row) => row.familyId === selectedFamilyKey
+      ) ?? null
+    : null;
 
   const topDebugRows = similarityDebugRows.slice(0, 3);
   const selectedMoment = similarityState.selectedMoment;
