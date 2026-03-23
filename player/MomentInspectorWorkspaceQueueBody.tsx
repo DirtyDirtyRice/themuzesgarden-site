@@ -52,20 +52,14 @@ function buildQueueStats(value: unknown): QueueStats {
   };
 }
 
-function buildNoteSummary(value: unknown): NoteSummary {
+function getNoteSummary(value: unknown): NoteSummary {
   const record = getObject(value);
   const source =
     getObject(record?.noteSummary) ??
     getObject(record?.summary) ??
-    record ??
     {};
 
-  return {
-    totalNotes: getOptionalNumber(source.totalNotes) ?? 0,
-    familiesWithNotes: getOptionalNumber(source.familiesWithNotes) ?? 0,
-    pinnedNotes: getOptionalNumber(source.pinnedNotes) ?? 0,
-    bookmarkedNotes: getOptionalNumber(source.bookmarkedNotes) ?? 0,
-  };
+  return source as NoteSummary;
 }
 
 function getSelectedCount(value: unknown): number {
@@ -97,7 +91,7 @@ export default function MomentInspectorWorkspaceQueueBody(
 ) {
   const visibleStats = props.viewModel?.visibleStats;
   const queueStats = buildQueueStats(visibleStats);
-  const noteSummary = buildNoteSummary(visibleStats);
+  const noteSummary = getNoteSummary(visibleStats);
   const selectedCount = getSelectedCount(props.viewModel?.selectionSummary);
 
   return (
