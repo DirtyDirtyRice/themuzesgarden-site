@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { PlayerTab } from "./player/playerTypes";
-import { readPersisted, writePersisted } from "./player/playerStorage";
-import { useAllTracks } from "./player/useAllTracks";
-import { useProjectContext } from "./player/useProjectContext";
-import { useProjectSetlist } from "./player/useProjectSetlist";
-import { useAudioEngine } from "./player/useAudioEngine";
-import PlayerPanel from "./player/PlayerPanel";
+import type { PlayerTab } from "../../player/playerTypes";
+import { readPersisted, writePersisted } from "../../player/playerStorage";
+import { useAllTracks } from "../../player/useAllTracks";
+import { useProjectContext } from "../../player/useProjectContext";
+import { useProjectSetlist } from "../../player/useProjectSetlist";
+import { useAudioEngine } from "../../player/useAudioEngine";
+import PlayerPanel from "../../player/PlayerPanel";
 
 export default function GlobalPlayer() {
   const [tab, setTab] = useState<PlayerTab>("search");
@@ -103,8 +103,6 @@ export default function GlobalPlayer() {
       );
     };
   }, []);
-
-  /* NEW: SPACEBAR PLAY / PAUSE SHORTCUT */
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
