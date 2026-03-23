@@ -49,6 +49,34 @@ function getDisplayText(value: unknown): string {
   return "";
 }
 
+function getOptionalNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function getVisibleCount(value: unknown): number {
+  if (!value || typeof value !== "object") return 0;
+
+  const record = value as Record<string, unknown>;
+
+  const directVisibleCount = getOptionalNumber(record.visibleCount);
+  if (directVisibleCount !== null) return directVisibleCount;
+
+  const totalCount = getOptionalNumber(record.totalCount);
+  if (totalCount !== null) return totalCount;
+
+  const queueStats = record.queueStats;
+  if (queueStats && typeof queueStats === "object") {
+    const queueRecord = queueStats as Record<string, unknown>;
+    const nestedVisibleCount = getOptionalNumber(queueRecord.visibleCount);
+    if (nestedVisibleCount !== null) return nestedVisibleCount;
+
+    const nestedTotalCount = getOptionalNumber(queueRecord.totalCount);
+    if (nestedTotalCount !== null) return nestedTotalCount;
+  }
+
+  return 0;
+}
+
 function LocalMomentInspectorWorkspacePanelHeaderBlock(
   props: LocalHeaderBlockProps
 ) {
@@ -83,6 +111,7 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
   const headerTitle = String(context.panelProps.title ?? "").trim();
   const headerSubtitle = String(context.panelProps.subtitle ?? "").trim();
   const headerSummary = getDisplayText(context.composer.summary);
+  const visibleCount = getVisibleCount(context.composer.viewModel.visibleStats);
 
   if (section === "header") {
     return (
@@ -109,9 +138,7 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
         groupMode={context.runtime.groupMode}
         onSortModeChange={actions.onSortModeChange}
         onGroupModeChange={actions.onGroupModeChange}
-        visibleCount={
-          context.composer.viewModel.visibleStats.queueStats.visibleCount
-        }
+        visibleCount={visibleCount}
         selectedCount={context.composer.viewModel.selectionSummary.selectedCount}
       />
     );
