@@ -1,6 +1,5 @@
 "use client";
 
-import MomentInspectorWorkspacePanelHeaderBlock from "./momentInspectorWorkspacePanelHeaderBlock";
 import MomentInspectorWorkspacePanelQueueBlock from "./MomentInspectorWorkspacePanelQueueBlock";
 import MomentInspectorWorkspacePanelSelectionBlock from "./MomentInspectorWorkspacePanelSelectionBlock";
 import MomentInspectorWorkspacePanelToolbarBlock from "./MomentInspectorWorkspacePanelToolbarBlock";
@@ -14,6 +13,38 @@ type MomentInspectorWorkspacePanelSectionRendererProps = {
   section: MomentInspectorWorkspacePanelLayoutSection;
 };
 
+type LocalHeaderBlockProps = {
+  title?: string | null;
+  subtitle?: string | null;
+  summary?: string | null;
+};
+
+function LocalMomentInspectorWorkspacePanelHeaderBlock(
+  props: LocalHeaderBlockProps
+) {
+  const title = String(props.title ?? "").trim();
+  const subtitle = String(props.subtitle ?? "").trim();
+  const summary = String(props.summary ?? "").trim();
+
+  if (!title && !subtitle && !summary) return null;
+
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-3">
+      {title ? (
+        <div className="text-sm font-semibold text-zinc-900">{title}</div>
+      ) : null}
+
+      {subtitle ? (
+        <div className="mt-1 text-xs text-zinc-600">{subtitle}</div>
+      ) : null}
+
+      {summary ? (
+        <div className="mt-2 text-xs text-zinc-500">{summary}</div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function MomentInspectorWorkspacePanelSectionRenderer(
   props: MomentInspectorWorkspacePanelSectionRendererProps
 ) {
@@ -21,7 +52,7 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
 
   if (section === "header") {
     return (
-      <MomentInspectorWorkspacePanelHeaderBlock
+      <LocalMomentInspectorWorkspacePanelHeaderBlock
         title={context.panelProps.title}
         subtitle={context.panelProps.subtitle}
         summary={context.composer.summary}
