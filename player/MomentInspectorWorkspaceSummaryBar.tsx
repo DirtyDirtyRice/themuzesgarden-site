@@ -6,7 +6,12 @@ type MomentInspectorWorkspaceSummaryBarProps = {
   metrics: MomentInspectorWorkspaceSummaryMetric[];
 };
 
-function SummaryMetricTile(props: MomentInspectorWorkspaceSummaryMetric) {
+type SummaryMetricTileProps = Omit<
+  MomentInspectorWorkspaceSummaryMetric,
+  "key"
+>;
+
+function SummaryMetricTile(props: SummaryMetricTileProps) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white px-3 py-3">
       <div className="text-[11px] uppercase tracking-wide text-zinc-500">
@@ -26,9 +31,11 @@ export default function MomentInspectorWorkspaceSummaryBar(
 
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
-      {props.metrics.map((metric) => (
-        <SummaryMetricTile key={metric.key} {...metric} />
-      ))}
+      {props.metrics.map((metric) => {
+        const { key, ...tileProps } = metric;
+
+        return <SummaryMetricTile key={key} {...tileProps} />;
+      })}
     </div>
   );
 }
