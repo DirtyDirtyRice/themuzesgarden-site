@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack, PlayerTab, TrackSection } from "./playerTypes";
 import { pickUrl, isTypingTarget } from "./playerUtils";
 import { readPersisted, writePersisted } from "./playerStorage";
-import { logProjectActivity } from "../../../lib/projectActivity";
+import { logProjectActivity } from "../lib/projectActivity";
 
 function fmtTime(sec: number): string {
   const s = Number.isFinite(sec) ? Math.max(0, Math.floor(sec)) : 0;
