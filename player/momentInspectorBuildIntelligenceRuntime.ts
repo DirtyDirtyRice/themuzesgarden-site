@@ -16,6 +16,15 @@ type RuntimeSignals = {
 type RuntimeTrustLevel =
   Parameters<typeof buildPlayerMomentIntelligenceRuntime>[0]["trustLevel"];
 
+type RuntimeTrustReason =
+  Parameters<typeof buildPlayerMomentIntelligenceRuntime>[0]["strongestTrustReason"];
+
+type RuntimeTrustReasons =
+  Parameters<typeof buildPlayerMomentIntelligenceRuntime>[0]["trustReasons"];
+
+type RuntimeTrustReasonItem =
+  RuntimeTrustReasons extends Array<infer T> ? T : never;
+
 type TrustState = {
   trustScore?: number;
   recoveryScore?: number;
@@ -50,6 +59,24 @@ function normalizeTrustLevel(value: unknown): RuntimeTrustLevel {
   if (!clean) return null;
 
   return clean as RuntimeTrustLevel;
+}
+
+function normalizeTrustReason(value: unknown): RuntimeTrustReason {
+  if (typeof value !== "string") return null;
+
+  const clean = value.trim();
+  if (!clean) return null;
+
+  return clean as RuntimeTrustReason;
+}
+
+function normalizeTrustReasons(value: unknown): RuntimeTrustReasons {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter(Boolean)
+    .map((item) => item as RuntimeTrustReasonItem);
 }
 
 export function buildMomentInspectorIntelligenceRuntime(params: {
@@ -163,7 +190,7 @@ export function buildMomentInspectorIntelligenceRuntime(params: {
     recoveryScore: selectedTrustState?.recoveryScore ?? null,
     volatilityScore: selectedTrustState?.volatilityScore ?? null,
     trustLevel: normalizeTrustLevel(selectedTrustState?.trustLevel),
-    strongestTrustReason: selectedTrustState?.strongestReason ?? null,
-    trustReasons: selectedTrustState?.reasons ?? [],
+    strongestTrustReason: normalizeTrustReason(selectedTrustState?.strongestReason),
+    trustReasons: normalizeTrustReasons(selectedTrustState?.reasons),
   });
 }
