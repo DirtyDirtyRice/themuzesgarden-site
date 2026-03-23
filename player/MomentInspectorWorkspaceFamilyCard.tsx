@@ -1,22 +1,29 @@
 "use client";
 
+type FamilyLike = {
+  familyId?: string;
+  title?: string;
+  label?: string;
+  summary?: string;
+  status?: string;
+  count?: number | null;
+} | null;
+
 type MomentInspectorWorkspaceFamilyCardProps = {
-  family?: {
-    familyId?: string;
-    title?: string;
-    label?: string;
-    summary?: string;
-    status?: string;
-    count?: number | null;
-  } | null;
+  family?: FamilyLike;
+  item?: FamilyLike;
   onClick?: () => void;
   isSelected?: boolean;
   className?: string;
 };
 
-function getDisplayTitle(
-  family: MomentInspectorWorkspaceFamilyCardProps["family"]
-): string {
+function getResolvedFamily(
+  props: MomentInspectorWorkspaceFamilyCardProps
+): FamilyLike {
+  return props.family ?? props.item ?? null;
+}
+
+function getDisplayTitle(family: FamilyLike): string {
   if (!family) return "Untitled family";
   if (family.title && family.title.trim()) return family.title.trim();
   if (family.label && family.label.trim()) return family.label.trim();
@@ -24,20 +31,18 @@ function getDisplayTitle(
   return "Untitled family";
 }
 
-function getDisplaySummary(
-  family: MomentInspectorWorkspaceFamilyCardProps["family"]
-): string {
+function getDisplaySummary(family: FamilyLike): string {
   if (!family?.summary) return "No family summary available yet.";
   const text = family.summary.trim();
   return text || "No family summary available yet.";
 }
 
-export default function MomentInspectorWorkspaceFamilyCard({
-  family,
-  onClick,
-  isSelected = false,
-  className = "",
-}: MomentInspectorWorkspaceFamilyCardProps) {
+export default function MomentInspectorWorkspaceFamilyCard(
+  props: MomentInspectorWorkspaceFamilyCardProps
+) {
+  const { onClick, isSelected = false, className = "" } = props;
+  const family = getResolvedFamily(props);
+
   const title = getDisplayTitle(family);
   const summary = getDisplaySummary(family);
   const status = String(family?.status ?? "").trim();
