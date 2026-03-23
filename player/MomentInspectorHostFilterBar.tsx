@@ -1,20 +1,17 @@
 "use client";
 
 import { MOMENT_INSPECTOR_HOST_FILTER_OPTIONS } from "./momentInspectorHostFilterOptions";
-import type {
-  MomentInspectorHostFilterCounts,
-  MomentInspectorRuntimeVerdictValue,
-} from "./momentInspectorHostFilter.types";
+import type { MomentInspectorHostFilterCounts } from "./momentInspectorHostFilter.types";
 import { getRuntimeVerdictFilterChipLabel } from "./momentInspectorHostFilter.utils";
 
+type RuntimeVerdictLike = "stable" | "watch" | "repair" | "blocked" | "all";
+
 type HostFilterOptionLike = {
-  value?: MomentInspectorRuntimeVerdictValue | string | null;
+  value?: string | null;
   description?: string | null;
 };
 
-function normalizeVerdict(
-  value: unknown
-): MomentInspectorRuntimeVerdictValue {
+function normalizeVerdict(value: unknown): RuntimeVerdictLike {
   if (value === "stable") return "stable";
   if (value === "watch") return "watch";
   if (value === "repair") return "repair";
@@ -23,8 +20,8 @@ function normalizeVerdict(
 }
 
 function getButtonTone(params: {
-  value: MomentInspectorRuntimeVerdictValue;
-  selectedValue: MomentInspectorRuntimeVerdictValue;
+  value: RuntimeVerdictLike;
+  selectedValue: string;
 }): string {
   const { value, selectedValue } = params;
   const isActive = value === selectedValue;
@@ -53,11 +50,11 @@ function getButtonTone(params: {
 }
 
 export default function MomentInspectorHostFilterBar(props: {
-  selectedVerdict: MomentInspectorRuntimeVerdictValue;
+  selectedVerdict: string;
   counts: MomentInspectorHostFilterCounts;
   visibleCount: number;
   totalCount: number;
-  onChange: (nextVerdict: MomentInspectorRuntimeVerdictValue) => void;
+  onChange: (nextVerdict: any) => void;
 }) {
   const { selectedVerdict, counts, visibleCount, totalCount, onChange } = props;
 
@@ -79,7 +76,7 @@ export default function MomentInspectorHostFilterBar(props: {
               <button
                 key={`${optionValue}-${index}`}
                 type="button"
-                onClick={() => onChange(optionValue)}
+                onClick={() => onChange(optionValue as any)}
                 className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${getButtonTone(
                   {
                     value: optionValue,
@@ -89,7 +86,7 @@ export default function MomentInspectorHostFilterBar(props: {
                 title={optionDescription}
                 aria-pressed={optionValue === selectedVerdict}
               >
-                {getRuntimeVerdictFilterChipLabel(optionValue, counts as any)}
+                {getRuntimeVerdictFilterChipLabel(optionValue as any, counts as any)}
               </button>
             );
           })}
