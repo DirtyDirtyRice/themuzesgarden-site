@@ -7,5 +7,5 @@ type MomentInspectorHostControlStackProps = Record<string, any>;
 export default function MomentInspectorHostControlStack(
   props: MomentInspectorHostControlStackProps
 ) {
-  return <MomentInspectorTrackControls {...props} />;
+  return <MomentInspectorTrackControls {...(props as any)} />;
 }
