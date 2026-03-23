@@ -117,6 +117,31 @@ function getMomentIdFromFamilyMember(member: unknown): string {
   );
 }
 
+function getSimilarityToAnchorFromFamilyMember(member: unknown): number {
+  if (!member || typeof member !== "object") return 0;
+
+  const candidate = member as {
+    similarityToAnchor?: unknown;
+    score?: unknown;
+    similarity?: unknown;
+    moment?: {
+      similarityToAnchor?: unknown;
+      score?: unknown;
+      similarity?: unknown;
+    } | null;
+  };
+
+  return normalizePercent(
+    candidate.similarityToAnchor ??
+      candidate.score ??
+      candidate.similarity ??
+      candidate.moment?.similarityToAnchor ??
+      candidate.moment?.score ??
+      candidate.moment?.similarity ??
+      0
+  );
+}
+
 function buildFamilyConfidence(params: {
   size: number;
   strongestScore: number;
@@ -186,7 +211,7 @@ export function buildInspectorFamilyView(
 
         return {
           momentId,
-          similarityToAnchor: normalizePercent(member.similarityToAnchor),
+          similarityToAnchor: getSimilarityToAnchorFromFamilyMember(member),
           driftLabel: normalizeDriftLabel(driftMember?.driftLabel ?? null),
           driftSeverity: normalizeDriftSeverity(driftMember?.driftSeverity ?? null),
           timingOffset: round3(toNumberOrNull(driftMember?.timingOffset ?? null)),
