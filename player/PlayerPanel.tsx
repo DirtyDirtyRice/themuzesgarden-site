@@ -337,9 +337,11 @@ export default function PlayerPanel(props: {
       return;
     }
 
+    const audio = el;
+
     function pull() {
-      const d = Number.isFinite(el.duration) ? el.duration : 0;
-      const c = Number.isFinite(el.currentTime) ? el.currentTime : 0;
+      const d = Number.isFinite(audio.duration) ? audio.duration : 0;
+      const c = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
       setDurSec(d > 0 ? d : 0);
 
       if (!isSeeking) setCurSec(c >= 0 ? c : 0);
@@ -347,14 +349,14 @@ export default function PlayerPanel(props: {
 
     pull();
 
-    el.addEventListener("loadedmetadata", pull);
-    el.addEventListener("durationchange", pull);
-    el.addEventListener("timeupdate", pull);
+    audio.addEventListener("loadedmetadata", pull);
+    audio.addEventListener("durationchange", pull);
+    audio.addEventListener("timeupdate", pull);
 
     return () => {
-      el.removeEventListener("loadedmetadata", pull);
-      el.removeEventListener("durationchange", pull);
-      el.removeEventListener("timeupdate", pull);
+      audio.removeEventListener("loadedmetadata", pull);
+      audio.removeEventListener("durationchange", pull);
+      audio.removeEventListener("timeupdate", pull);
     };
   }, [audioEl, open, isSeeking]);
 
