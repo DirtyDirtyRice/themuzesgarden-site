@@ -16,14 +16,16 @@ type MomentInspectorWorkspacePanelSectionRendererProps = {
 type LocalHeaderBlockProps = {
   title?: string | null;
   subtitle?: string | null;
-  summary?: unknown;
+  summary?: string | null;
 };
 
 function getDisplayText(value: unknown): string {
   if (typeof value === "string") return value.trim();
+
   if (typeof value === "number" || typeof value === "boolean") {
     return String(value);
   }
+
   if (!value || typeof value !== "object") return "";
 
   const record = value as Record<string, unknown>;
@@ -50,9 +52,9 @@ function getDisplayText(value: unknown): string {
 function LocalMomentInspectorWorkspacePanelHeaderBlock(
   props: LocalHeaderBlockProps
 ) {
-  const title = getDisplayText(props.title);
-  const subtitle = getDisplayText(props.subtitle);
-  const summary = getDisplayText(props.summary);
+  const title = String(props.title ?? "").trim();
+  const subtitle = String(props.subtitle ?? "").trim();
+  const summary = String(props.summary ?? "").trim();
 
   if (!title && !subtitle && !summary) return null;
 
@@ -78,12 +80,16 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
 ) {
   const { context, actions, section } = props;
 
+  const headerTitle = String(context.panelProps.title ?? "").trim();
+  const headerSubtitle = String(context.panelProps.subtitle ?? "").trim();
+  const headerSummary = getDisplayText(context.composer.summary);
+
   if (section === "header") {
     return (
       <LocalMomentInspectorWorkspacePanelHeaderBlock
-        title={context.panelProps.title}
-        subtitle={context.panelProps.subtitle}
-        summary={context.composer.summary}
+        title={headerTitle}
+        subtitle={headerSubtitle}
+        summary={headerSummary}
       />
     );
   }
