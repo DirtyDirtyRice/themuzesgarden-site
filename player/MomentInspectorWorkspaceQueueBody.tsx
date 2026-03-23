@@ -1,11 +1,16 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import MomentInspectorWorkspaceBatchActionBar from "./MomentInspectorWorkspaceBatchActionBar";
 import MomentInspectorWorkspaceContent from "./MomentInspectorWorkspaceContent";
 import MomentInspectorWorkspaceNoteSummaryBar from "./MomentInspectorWorkspaceNoteSummaryBar";
 import MomentInspectorWorkspaceQueueHeader from "./MomentInspectorWorkspaceQueueHeader";
 import MomentInspectorWorkspaceQueueStatsBar from "./MomentInspectorWorkspaceQueueStatsBar";
 import type { MomentInspectorWorkspaceLane } from "./momentInspectorWorkspace.types";
+
+type QueueStats = ComponentProps<
+  typeof MomentInspectorWorkspaceQueueStatsBar
+>["stats"];
 
 type MomentInspectorWorkspaceQueueBodyProps = {
   lane: MomentInspectorWorkspaceLane;
@@ -29,26 +34,22 @@ function getObject(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function getQueueStats(value: unknown): Record<string, unknown> {
+function buildQueueStats(value: unknown): QueueStats {
   const record = getObject(value);
-  if (!record) return {};
+  const nestedQueueStats = getObject(record?.queueStats);
+  const source = nestedQueueStats ?? record ?? {};
 
-  const nestedQueueStats = getObject(record.queueStats);
-  if (nestedQueueStats) return nestedQueueStats;
-
-  return record;
+  return {
+    visibleCount: getOptionalNumber(source.visibleCount) ?? 0,
+    pinnedCount: getOptionalNumber(source.pinnedCount) ?? 0,
+    bookmarkedCount: getOptionalNumber(source.bookmarkedCount) ?? 0,
+    comparedCount: getOptionalNumber(source.comparedCount) ?? 0,
+    highPriorityCount: getOptionalNumber(source.highPriorityCount) ?? 0,
+  };
 }
 
-function getVisibleCount(value: unknown): number {
-  const queueStats = getQueueStats(value);
-
-  const visibleCount = getOptionalNumber(queueStats.visibleCount);
-  if (visibleCount !== null) return visibleCount;
-
-  const totalCount = getOptionalNumber(queueStats.totalCount);
-  if (totalCount !== null) return totalCount;
-
-  return 0;
+function getVisibleCount(stats: QueueStats): number {
+  return stats.visibleCount;
 }
 
 function getNoteSummary(value: unknown): unknown {
@@ -89,8 +90,8 @@ export default function MomentInspectorWorkspaceQueueBody(
   props: MomentInspectorWorkspaceQueueBodyProps
 ) {
   const visibleStats = props.viewModel?.visibleStats;
-  const queueStats = getQueueStats(visibleStats);
-  const visibleCount = getVisibleCount(visibleStats);
+  const queueStats = buildQueueStats(visibleStats);
+  const visibleCount = getVisibleCount(queueStats);
   const noteSummary = getNoteSummary(visibleStats);
   const selectedCount = getSelectedCount(props.viewModel?.selectionSummary);
 
