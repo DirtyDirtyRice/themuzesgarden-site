@@ -75,7 +75,9 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
         groupMode={context.runtime.groupMode}
         onSortModeChange={actions.onSortModeChange}
         onGroupModeChange={actions.onGroupModeChange}
-        visibleCount={context.composer.viewModel.visibleStats.queueStats.visibleCount}
+        visibleCount={
+          context.composer.viewModel.visibleStats.queueStats.visibleCount
+        }
         selectedCount={context.composer.viewModel.selectionSummary.selectedCount}
       />
     );
