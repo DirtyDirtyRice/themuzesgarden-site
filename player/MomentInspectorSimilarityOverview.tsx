@@ -38,7 +38,7 @@ export default function MomentInspectorSimilarityOverview(props: {
   const selectedRepeatDiagnostics =
     similarityState.selectedFamily
       ? similarityState.repeatDiagnostics.find(
-          (row) => row.familyId === similarityState.selectedFamily?.anchorId
+          (row) => row.familyId === similarityState.selectedFamily?.id
         ) ?? null
       : null;
 
