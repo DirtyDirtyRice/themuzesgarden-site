@@ -77,6 +77,29 @@ function getVisibleCount(value: unknown): number {
   return 0;
 }
 
+function getSelectedCount(value: unknown): number {
+  if (!value || typeof value !== "object") return 0;
+
+  const record = value as Record<string, unknown>;
+
+  const directSelectedCount = getOptionalNumber(record.selectedCount);
+  if (directSelectedCount !== null) return directSelectedCount;
+
+  const count = getOptionalNumber(record.count);
+  if (count !== null) return count;
+
+  const totalSelected = getOptionalNumber(record.totalSelected);
+  if (totalSelected !== null) return totalSelected;
+
+  const selectedFamilyIds = record.selectedFamilyIds;
+  if (Array.isArray(selectedFamilyIds)) return selectedFamilyIds.length;
+
+  const selectedIds = record.selectedIds;
+  if (Array.isArray(selectedIds)) return selectedIds.length;
+
+  return 0;
+}
+
 function LocalMomentInspectorWorkspacePanelHeaderBlock(
   props: LocalHeaderBlockProps
 ) {
@@ -112,6 +135,9 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
   const headerSubtitle = String(context.panelProps.subtitle ?? "").trim();
   const headerSummary = getDisplayText(context.composer.summary);
   const visibleCount = getVisibleCount(context.composer.viewModel.visibleStats);
+  const selectedCount = getSelectedCount(
+    context.composer.viewModel.selectionSummary
+  );
 
   if (section === "header") {
     return (
@@ -139,7 +165,7 @@ export default function MomentInspectorWorkspacePanelSectionRenderer(
         onSortModeChange={actions.onSortModeChange}
         onGroupModeChange={actions.onGroupModeChange}
         visibleCount={visibleCount}
-        selectedCount={context.composer.viewModel.selectionSummary.selectedCount}
+        selectedCount={selectedCount}
       />
     );
   }
