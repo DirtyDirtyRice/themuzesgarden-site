@@ -5,11 +5,12 @@ import MomentInspectorWorkspaceGroupSection from "./MomentInspectorWorkspaceGrou
 import type { MomentInspectorWorkspaceLane } from "./momentInspectorWorkspace.types";
 
 type Props = {
-  lane: MomentInspectorWorkspaceLane;
-  searchQuery: string;
+  groups?: any[];
+  lane?: MomentInspectorWorkspaceLane;
+  searchQuery?: string;
   derivedView?: unknown;
-  selectedFamilyIds: string[];
-  onToggleSelected: (familyId: string) => void;
+  selectedFamilyIds?: string[];
+  onToggleSelected?: (familyId: string) => void;
 };
 
 function getObject(value: unknown): Record<string, unknown> | null {
@@ -30,6 +31,10 @@ function getGroupsFromDerivedView(derivedView: unknown): any[] {
     return record.groupSections;
   }
 
+  if (Array.isArray(record.lanes)) {
+    return record.lanes;
+  }
+
   if (Array.isArray(record.items)) {
     return record.items;
   }
@@ -38,7 +43,8 @@ function getGroupsFromDerivedView(derivedView: unknown): any[] {
 }
 
 export default function MomentInspectorWorkspaceContent(props: Props) {
-  const groups = getGroupsFromDerivedView(props.derivedView);
+  const groups =
+    props.groups ?? getGroupsFromDerivedView(props.derivedView);
 
   if (!groups.length) {
     return <MomentInspectorWorkspaceEmptyState />;
