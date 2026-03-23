@@ -12,6 +12,10 @@ type QueueStats = ComponentProps<
   typeof MomentInspectorWorkspaceQueueStatsBar
 >["stats"];
 
+type NoteSummary = ComponentProps<
+  typeof MomentInspectorWorkspaceNoteSummaryBar
+>["summary"];
+
 type MomentInspectorWorkspaceQueueBodyProps = {
   lane: MomentInspectorWorkspaceLane;
   searchQuery: string;
@@ -48,18 +52,20 @@ function buildQueueStats(value: unknown): QueueStats {
   };
 }
 
-function getVisibleCount(stats: QueueStats): number {
-  return stats.visibleCount;
-}
-
-function getNoteSummary(value: unknown): unknown {
+function buildNoteSummary(value: unknown): NoteSummary {
   const record = getObject(value);
-  if (!record) return null;
+  const source =
+    getObject(record?.noteSummary) ??
+    getObject(record?.summary) ??
+    record ??
+    {};
 
-  if ("noteSummary" in record) return record.noteSummary;
-  if ("summary" in record) return record.summary;
-
-  return null;
+  return {
+    totalNotes: getOptionalNumber(source.totalNotes) ?? 0,
+    familiesWithNotes: getOptionalNumber(source.familiesWithNotes) ?? 0,
+    pinnedNotes: getOptionalNumber(source.pinnedNotes) ?? 0,
+    bookmarkedNotes: getOptionalNumber(source.bookmarkedNotes) ?? 0,
+  };
 }
 
 function getSelectedCount(value: unknown): number {
@@ -91,15 +97,14 @@ export default function MomentInspectorWorkspaceQueueBody(
 ) {
   const visibleStats = props.viewModel?.visibleStats;
   const queueStats = buildQueueStats(visibleStats);
-  const visibleCount = getVisibleCount(queueStats);
-  const noteSummary = getNoteSummary(visibleStats);
+  const noteSummary = buildNoteSummary(visibleStats);
   const selectedCount = getSelectedCount(props.viewModel?.selectionSummary);
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
       <MomentInspectorWorkspaceQueueHeader
         lane={props.lane}
-        visibleCount={visibleCount}
+        visibleCount={queueStats.visibleCount}
       />
 
       <div className="mt-3 space-y-3">
