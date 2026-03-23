@@ -3,18 +3,18 @@
 import { MOMENT_INSPECTOR_HOST_FILTER_OPTIONS } from "./momentInspectorHostFilterOptions";
 import type {
   MomentInspectorHostFilterCounts,
-  MomentInspectorRuntimeVerdictFilter,
+  MomentInspectorRuntimeVerdictValue,
 } from "./momentInspectorHostFilter.types";
 import { getRuntimeVerdictFilterChipLabel } from "./momentInspectorHostFilter.utils";
 
 type HostFilterOptionLike = {
-  value?: MomentInspectorRuntimeVerdictFilter | string | null;
+  value?: MomentInspectorRuntimeVerdictValue | string | null;
   description?: string | null;
 };
 
 function normalizeVerdict(
   value: unknown
-): MomentInspectorRuntimeVerdictFilter {
+): MomentInspectorRuntimeVerdictValue {
   if (value === "stable") return "stable";
   if (value === "watch") return "watch";
   if (value === "repair") return "repair";
@@ -23,8 +23,8 @@ function normalizeVerdict(
 }
 
 function getButtonTone(params: {
-  value: MomentInspectorRuntimeVerdictFilter;
-  selectedValue: MomentInspectorRuntimeVerdictFilter;
+  value: MomentInspectorRuntimeVerdictValue;
+  selectedValue: MomentInspectorRuntimeVerdictValue;
 }): string {
   const { value, selectedValue } = params;
   const isActive = value === selectedValue;
@@ -53,11 +53,11 @@ function getButtonTone(params: {
 }
 
 export default function MomentInspectorHostFilterBar(props: {
-  selectedVerdict: MomentInspectorRuntimeVerdictFilter;
+  selectedVerdict: MomentInspectorRuntimeVerdictValue;
   counts: MomentInspectorHostFilterCounts;
   visibleCount: number;
   totalCount: number;
-  onChange: (nextVerdict: MomentInspectorRuntimeVerdictFilter) => void;
+  onChange: (nextVerdict: MomentInspectorRuntimeVerdictValue) => void;
 }) {
   const { selectedVerdict, counts, visibleCount, totalCount, onChange } = props;
 
@@ -89,7 +89,7 @@ export default function MomentInspectorHostFilterBar(props: {
                 title={optionDescription}
                 aria-pressed={optionValue === selectedVerdict}
               >
-                {getRuntimeVerdictFilterChipLabel(optionValue, counts)}
+                {getRuntimeVerdictFilterChipLabel(optionValue, counts as any)}
               </button>
             );
           })}
