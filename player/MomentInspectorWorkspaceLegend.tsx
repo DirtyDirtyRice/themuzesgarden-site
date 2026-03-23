@@ -5,6 +5,13 @@ import type { MomentInspectorWorkspaceLane } from "./momentInspectorWorkspace.ty
 
 const LANES: MomentInspectorWorkspaceLane[] = ["watch", "repair", "blocked"];
 
+function getOptionalBadgeClassName(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+
+  const candidate = (value as Record<string, unknown>).badgeClassName;
+  return typeof candidate === "string" ? candidate : "";
+}
+
 export default function MomentInspectorWorkspaceLegend() {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-3">
@@ -13,6 +20,7 @@ export default function MomentInspectorWorkspaceLegend() {
       <div className="mt-3 grid gap-2 lg:grid-cols-3">
         {LANES.map((lane) => {
           const meta = getMomentInspectorWorkspaceLaneMeta(lane);
+          const badgeClassName = getOptionalBadgeClassName(meta);
 
           return (
             <div
@@ -23,8 +31,10 @@ export default function MomentInspectorWorkspaceLegend() {
                 <span
                   className={[
                     "rounded-full border px-2 py-1 text-[11px] font-medium",
-                    meta.badgeClassName,
-                  ].join(" ")}
+                    badgeClassName,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                 >
                   {meta.label}
                 </span>
