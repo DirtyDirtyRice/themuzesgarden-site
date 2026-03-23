@@ -96,6 +96,27 @@ function getDriftLabelRank(value: PhraseDriftLabel | null): number {
   return 0;
 }
 
+function getMomentIdFromFamilyMember(member: unknown): string {
+  if (!member || typeof member !== "object") return "";
+
+  const candidate = member as {
+    momentId?: unknown;
+    id?: unknown;
+    moment?: {
+      id?: unknown;
+      momentId?: unknown;
+    } | null;
+  };
+
+  return normalizeText(
+    candidate.moment?.id ??
+      candidate.moment?.momentId ??
+      candidate.momentId ??
+      candidate.id ??
+      ""
+  );
+}
+
 function buildFamilyConfidence(params: {
   size: number;
   strongestScore: number;
@@ -160,7 +181,7 @@ export function buildInspectorFamilyView(
 
     const familyMembers: InspectorFamilyMemberRow[] = family.members
       .map((member) => {
-        const momentId = normalizeText(member.momentId);
+        const momentId = getMomentIdFromFamilyMember(member);
         const driftMember = driftMembersByMomentId.get(momentId);
 
         return {
