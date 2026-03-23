@@ -13,6 +13,9 @@ type RuntimeSignals = {
   actionCount?: number;
 };
 
+type RuntimeTrustLevel =
+  Parameters<typeof buildPlayerMomentIntelligenceRuntime>[0]["trustLevel"];
+
 type TrustState = {
   trustScore?: number;
   recoveryScore?: number;
@@ -38,6 +41,15 @@ function normalizePercentLike(value: unknown): number | null {
   if (n <= 0) return 0;
   if (n >= 100) return 100;
   return n;
+}
+
+function normalizeTrustLevel(value: unknown): RuntimeTrustLevel {
+  if (typeof value !== "string") return null;
+
+  const clean = value.trim();
+  if (!clean) return null;
+
+  return clean as RuntimeTrustLevel;
 }
 
 export function buildMomentInspectorIntelligenceRuntime(params: {
@@ -150,7 +162,7 @@ export function buildMomentInspectorIntelligenceRuntime(params: {
     trustScore: selectedTrustState?.trustScore ?? null,
     recoveryScore: selectedTrustState?.recoveryScore ?? null,
     volatilityScore: selectedTrustState?.volatilityScore ?? null,
-    trustLevel: selectedTrustState?.trustLevel ?? null,
+    trustLevel: normalizeTrustLevel(selectedTrustState?.trustLevel),
     strongestTrustReason: selectedTrustState?.strongestReason ?? null,
     trustReasons: selectedTrustState?.reasons ?? [],
   });
