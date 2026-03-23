@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack } from "./playerTypes";
-import { listLinkedProjectTrackIds } from "../../../lib/projectTracksApi";
+import { listLinkedProjectTrackIds } from "../lib/projectTracksApi";
 import {
   readProjectOrder,
   stableMergeOrder,
