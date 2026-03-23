@@ -16,15 +16,43 @@ type MomentInspectorWorkspacePanelSectionRendererProps = {
 type LocalHeaderBlockProps = {
   title?: string | null;
   subtitle?: string | null;
-  summary?: string | null;
+  summary?: unknown;
 };
+
+function getDisplayText(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (!value || typeof value !== "object") return "";
+
+  const record = value as Record<string, unknown>;
+
+  const preferredKeys = [
+    "summary",
+    "label",
+    "title",
+    "description",
+    "text",
+    "value",
+  ] as const;
+
+  for (const key of preferredKeys) {
+    const candidate = record[key];
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return "";
+}
 
 function LocalMomentInspectorWorkspacePanelHeaderBlock(
   props: LocalHeaderBlockProps
 ) {
-  const title = String(props.title ?? "").trim();
-  const subtitle = String(props.subtitle ?? "").trim();
-  const summary = String(props.summary ?? "").trim();
+  const title = getDisplayText(props.title);
+  const subtitle = getDisplayText(props.subtitle);
+  const summary = getDisplayText(props.summary);
 
   if (!title && !subtitle && !summary) return null;
 
