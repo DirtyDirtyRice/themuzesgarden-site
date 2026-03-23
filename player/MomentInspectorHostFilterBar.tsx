@@ -7,6 +7,21 @@ import type {
 } from "./momentInspectorHostFilter.types";
 import { getRuntimeVerdictFilterChipLabel } from "./momentInspectorHostFilter.utils";
 
+type HostFilterOptionLike = {
+  value?: MomentInspectorRuntimeVerdictFilter | string | null;
+  description?: string | null;
+};
+
+function normalizeVerdict(
+  value: unknown
+): MomentInspectorRuntimeVerdictFilter {
+  if (value === "stable") return "stable";
+  if (value === "watch") return "watch";
+  if (value === "repair") return "repair";
+  if (value === "blocked") return "blocked";
+  return "all";
+}
+
 function getButtonTone(params: {
   value: MomentInspectorRuntimeVerdictFilter;
   selectedValue: MomentInspectorRuntimeVerdictFilter;
@@ -46,27 +61,38 @@ export default function MomentInspectorHostFilterBar(props: {
 }) {
   const { selectedVerdict, counts, visibleCount, totalCount, onChange } = props;
 
+  const safeOptions = (
+    Array.isArray(MOMENT_INSPECTOR_HOST_FILTER_OPTIONS)
+      ? MOMENT_INSPECTOR_HOST_FILTER_OPTIONS
+      : []
+  ) as HostFilterOptionLike[];
+
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white/90 p-3">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          {MOMENT_INSPECTOR_HOST_FILTER_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onChange(option.value)}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${getButtonTone(
-                {
-                  value: option.value,
-                  selectedValue: selectedVerdict,
-                }
-              )}`}
-              title={option.description}
-              aria-pressed={option.value === selectedVerdict}
-            >
-              {getRuntimeVerdictFilterChipLabel(option.value, counts)}
-            </button>
-          ))}
+          {safeOptions.map((option, index) => {
+            const optionValue = normalizeVerdict(option?.value);
+            const optionDescription = String(option?.description ?? "");
+
+            return (
+              <button
+                key={`${optionValue}-${index}`}
+                type="button"
+                onClick={() => onChange(optionValue)}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${getButtonTone(
+                  {
+                    value: optionValue,
+                    selectedValue: selectedVerdict,
+                  }
+                )}`}
+                title={optionDescription}
+                aria-pressed={optionValue === selectedVerdict}
+              >
+                {getRuntimeVerdictFilterChipLabel(optionValue, counts)}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-600">
