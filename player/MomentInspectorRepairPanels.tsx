@@ -60,7 +60,11 @@ export default function MomentInspectorRepairPanels(props: {
     ? intendedActionView.actionsByFamilyId[selectedActionPlan.familyId] ?? []
     : [];
 
-  const selectedPhraseDriftFamily = similarityState.selectedPhraseDriftFamily;
+  const selectedPhraseDriftFamily = similarityState.selectedPhraseDriftFamily
+    ? phraseDriftView.byFamilyId[
+        similarityState.selectedPhraseDriftFamily.familyId
+      ] ?? null
+    : null;
 
   const selectedPhraseDriftMembers = selectedPhraseDriftFamily
     ? phraseDriftView.membersByFamily[selectedPhraseDriftFamily.familyId] ?? []
@@ -103,12 +107,12 @@ export default function MomentInspectorRepairPanels(props: {
       />
 
       <MomentInspectorRepeatPlanPanel
-        row={selectedIntendedPlan}
+        row={selectedIntendedPlan as any}
         placements={selectedIntendedPlacements}
       />
 
       <MomentInspectorActionPanel
-        row={selectedActionPlan}
+        row={selectedActionPlan as any}
         actions={selectedActionRows}
       />
 
