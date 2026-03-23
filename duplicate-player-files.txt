@@ -1,0 +1,1440 @@
+export { buildFamilyRepair } from .playerMomentFamilyRepair.builders.txt
+  C:\Users\muzes\themuzesgarden-site\player\export { buildFamilyRepair } from .playerMomentFamilyRepair.builders.txt
+  C:\Users\muzes\themuzesgarden-site\app\components\player\export { buildFamilyRepair } from .playerMomentFamilyRepair.builders.txt
+
+metadataClarification.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\metadataClarification.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\metadataClarification.builders.ts
+
+metadataClarification.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\metadataClarification.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\metadataClarification.shared.ts
+
+metadataClarification.ts
+  C:\Users\muzes\themuzesgarden-site\player\metadataClarification.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\metadataClarification.ts
+
+metadataClarification.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\metadataClarification.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\metadataClarification.types.ts
+
+metadataClarificationView.ts
+  C:\Users\muzes\themuzesgarden-site\player\metadataClarificationView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\metadataClarificationView.ts
+
+MetadataPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MetadataPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MetadataPanel.tsx
+
+MomentDensityBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentDensityBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentDensityBar.tsx
+
+MomentInspector.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspector.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspector.tsx
+
+MomentInspectorActionPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorActionPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorActionPanel.tsx
+
+momentInspectorActionSummary.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorActionSummary.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorActionSummary.ts
+
+MomentInspectorActionSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorActionSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorActionSummaryPanel.tsx
+
+momentInspectorBookmarks.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorBookmarks.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorBookmarks.types.ts
+
+momentInspectorBookmarks.utils.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorBookmarks.utils.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorBookmarks.utils.ts
+
+MomentInspectorBookmarksBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorBookmarksBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorBookmarksBar.tsx
+
+momentInspectorBookmarksState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorBookmarksState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorBookmarksState.ts
+
+momentInspectorBookmarksStorage.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorBookmarksStorage.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorBookmarksStorage.ts
+
+momentInspectorBuildIntelligenceRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorBuildIntelligenceRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorBuildIntelligenceRuntime.ts
+
+momentInspectorCompare.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorCompare.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorCompare.types.ts
+
+momentInspectorCompare.utils.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorCompare.utils.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorCompare.utils.ts
+
+MomentInspectorCompareBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorCompareBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorCompareBar.tsx
+
+MomentInspectorComparePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorComparePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorComparePanel.tsx
+
+momentInspectorCompareState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorCompareState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorCompareState.ts
+
+momentInspectorConfidenceHistoryView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorConfidenceHistoryView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorConfidenceHistoryView.ts
+
+MomentInspectorDiagnosticsNotes.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorDiagnosticsNotes.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorDiagnosticsNotes.tsx
+
+MomentInspectorDiagnosticsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorDiagnosticsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorDiagnosticsPanel.tsx
+
+MomentInspectorDiscoveryStatus.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorDiscoveryStatus.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorDiscoveryStatus.tsx
+
+MomentInspectorDriftPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorDriftPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorDriftPanel.tsx
+
+MomentInspectorDriftSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorDriftSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorDriftSummaryPanel.tsx
+
+MomentInspectorFamilyDecisionStrip.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyDecisionStrip.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyDecisionStrip.tsx
+
+MomentInspectorFamilyDetailRow.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyDetailRow.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyDetailRow.tsx
+
+MomentInspectorFamilyMissingSignalsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyMissingSignalsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyMissingSignalsPanel.tsx
+
+momentInspectorFamilyOptions.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorFamilyOptions.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorFamilyOptions.ts
+
+MomentInspectorFamilyPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyPanels.tsx
+
+MomentInspectorFamilyPriorityPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyPriorityPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyPriorityPanel.tsx
+
+MomentInspectorFamilyReasoningPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyReasoningPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyReasoningPanel.tsx
+
+MomentInspectorFamilyRepairReadinessPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyRepairReadinessPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyRepairReadinessPanel.tsx
+
+MomentInspectorFamilyRuntimeHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyRuntimeHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyRuntimeHeader.tsx
+
+MomentInspectorFamilySelectorBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilySelectorBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilySelectorBar.tsx
+
+MomentInspectorFamilySignalCountsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilySignalCountsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilySignalCountsPanel.tsx
+
+MomentInspectorFamilyStatusMatrix.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilyStatusMatrix.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilyStatusMatrix.tsx
+
+MomentInspectorFamilySummaryColumns.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorFamilySummaryColumns.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorFamilySummaryColumns.tsx
+
+momentInspectorFamilyView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorFamilyView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorFamilyView.ts
+
+momentInspectorHealth.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHealth.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHealth.ts
+
+MomentInspectorHealthPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHealthPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHealthPanel.tsx
+
+momentInspectorHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHelpers.ts
+
+MomentInspectorHostClosedState.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostClosedState.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostClosedState.tsx
+
+MomentInspectorHostControlStack.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostControlStack.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostControlStack.tsx
+
+momentInspectorHostControlStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostControlStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostControlStack.types.ts
+
+MomentInspectorHostEmptyState.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostEmptyState.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostEmptyState.tsx
+
+momentInspectorHostFilter.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostFilter.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostFilter.types.ts
+
+momentInspectorHostFilter.utils.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostFilter.utils.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostFilter.utils.ts
+
+MomentInspectorHostFilterBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostFilterBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostFilterBar.tsx
+
+momentInspectorHostFilterOptions.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostFilterOptions.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostFilterOptions.ts
+
+momentInspectorHostFilterState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostFilterState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostFilterState.ts
+
+MomentInspectorHostHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostHeader.tsx
+
+MomentInspectorHostIntelligenceStack.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostIntelligenceStack.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostIntelligenceStack.tsx
+
+momentInspectorHostIntelligenceStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostIntelligenceStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostIntelligenceStack.types.ts
+
+momentInspectorHostOptionHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostOptionHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostOptionHelpers.ts
+
+momentInspectorHostShared.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostShared.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostShared.types.ts
+
+MomentInspectorHostSummaryStack.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostSummaryStack.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostSummaryStack.tsx
+
+momentInspectorHostSummaryStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostSummaryStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostSummaryStack.types.ts
+
+MomentInspectorHostTimelineStack.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostTimelineStack.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostTimelineStack.tsx
+
+momentInspectorHostTimelineStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorHostTimelineStack.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorHostTimelineStack.types.ts
+
+MomentInspectorHostWorkspaceStack.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorHostWorkspaceStack.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorHostWorkspaceStack.tsx
+
+MomentInspectorIntelligenceHealthPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorIntelligenceHealthPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorIntelligenceHealthPanel.tsx
+
+MomentInspectorIntelligencePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorIntelligencePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorIntelligencePanel.tsx
+
+MomentInspectorIntelligenceSection.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorIntelligenceSection.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorIntelligenceSection.tsx
+
+momentInspectorIntelligenceView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorIntelligenceView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorIntelligenceView.ts
+
+momentInspectorIntendedActionView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorIntendedActionView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorIntendedActionView.ts
+
+momentInspectorIntendedRepeatView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorIntendedRepeatView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorIntendedRepeatView.ts
+
+momentInspectorLineageTimelineView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorLineageTimelineView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorLineageTimelineView.ts
+
+momentInspectorPhraseDriftView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorPhraseDriftView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorPhraseDriftView.ts
+
+MomentInspectorPhraseFamilyHealthBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorPhraseFamilyHealthBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorPhraseFamilyHealthBar.tsx
+
+momentInspectorPhraseFamilyState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorPhraseFamilyState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorPhraseFamilyState.ts
+
+momentInspectorPhraseStabilityView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorPhraseStabilityView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorPhraseStabilityView.ts
+
+MomentInspectorPinnedBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorPinnedBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorPinnedBar.tsx
+
+momentInspectorPinnedFamilies.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorPinnedFamilies.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorPinnedFamilies.types.ts
+
+momentInspectorPinnedFamilies.utils.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorPinnedFamilies.utils.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorPinnedFamilies.utils.ts
+
+momentInspectorPinnedFamiliesState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorPinnedFamiliesState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorPinnedFamiliesState.ts
+
+momentInspectorPinnedFamiliesStorage.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorPinnedFamiliesStorage.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorPinnedFamiliesStorage.ts
+
+MomentInspectorRepairFocusPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRepairFocusPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRepairFocusPanel.tsx
+
+MomentInspectorRepairPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRepairPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRepairPanels.tsx
+
+MomentInspectorRepairQueuePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRepairQueuePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRepairQueuePanel.tsx
+
+momentInspectorRepairQueueView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRepairQueueView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRepairQueueView.ts
+
+MomentInspectorRepairSimulationPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRepairSimulationPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRepairSimulationPanel.tsx
+
+MomentInspectorRepeatPlanPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRepeatPlanPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRepeatPlanPanel.tsx
+
+MomentInspectorRepeatSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRepeatSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRepeatSummaryPanel.tsx
+
+momentInspectorRuntimeAccess.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRuntimeAccess.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRuntimeAccess.ts
+
+momentInspectorRuntimeBridge.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRuntimeBridge.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRuntimeBridge.ts
+
+momentInspectorRuntimeDiagnostics.decisions.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRuntimeDiagnostics.decisions.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRuntimeDiagnostics.decisions.ts
+
+momentInspectorRuntimeDiagnostics.scoring.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRuntimeDiagnostics.scoring.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRuntimeDiagnostics.scoring.ts
+
+momentInspectorRuntimeDiagnostics.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRuntimeDiagnostics.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRuntimeDiagnostics.shared.ts
+
+momentInspectorRuntimeDiagnostics.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRuntimeDiagnostics.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRuntimeDiagnostics.ts
+
+momentInspectorRuntimeDiagnostics.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorRuntimeDiagnostics.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorRuntimeDiagnostics.types.ts
+
+MomentInspectorRuntimeLegendPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRuntimeLegendPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRuntimeLegendPanel.tsx
+
+MomentInspectorRuntimeMetricsGrid.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRuntimeMetricsGrid.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRuntimeMetricsGrid.tsx
+
+MomentInspectorRuntimeNextActionsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRuntimeNextActionsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRuntimeNextActionsPanel.tsx
+
+MomentInspectorRuntimeScoreBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRuntimeScoreBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRuntimeScoreBar.tsx
+
+MomentInspectorRuntimeSnapshotPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRuntimeSnapshotPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRuntimeSnapshotPanel.tsx
+
+MomentInspectorRuntimeSummaryChips.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorRuntimeSummaryChips.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorRuntimeSummaryChips.tsx
+
+MomentInspectorSectionRows.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSectionRows.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSectionRows.tsx
+
+MomentInspectorSections.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSections.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSections.tsx
+
+MomentInspectorSelectedFamilyConfidenceExplainer.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyConfidenceExplainer.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyConfidenceExplainer.tsx
+
+MomentInspectorSelectedFamilyDecisionStrip.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyDecisionStrip.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyDecisionStrip.tsx
+
+MomentInspectorSelectedFamilyDiagnostics.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyDiagnostics.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyDiagnostics.tsx
+
+MomentInspectorSelectedFamilyEngineVerdictPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyEngineVerdictPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyEngineVerdictPanel.tsx
+
+MomentInspectorSelectedFamilyNextStepsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyNextStepsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyNextStepsPanel.tsx
+
+MomentInspectorSelectedFamilyPinBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyPinBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyPinBar.tsx
+
+MomentInspectorSelectedFamilyReadinessPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyReadinessPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyReadinessPanel.tsx
+
+MomentInspectorSelectedFamilyRepairGuidance.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyRepairGuidance.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyRepairGuidance.tsx
+
+MomentInspectorSelectedFamilyRiskFactorsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyRiskFactorsPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyRiskFactorsPanel.tsx
+
+MomentInspectorSelectedFamilySignalSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilySignalSummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilySignalSummaryPanel.tsx
+
+MomentInspectorSelectedFamilyStack.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSelectedFamilyStack.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSelectedFamilyStack.tsx
+
+momentInspectorSelectedFamilyState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSelectedFamilyState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSelectedFamilyState.ts
+
+momentInspectorSelectionSync.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSelectionSync.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSelectionSync.ts
+
+momentInspectorSimilarity.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSimilarity.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSimilarity.builders.ts
+
+momentInspectorSimilarity.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSimilarity.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSimilarity.shared.ts
+
+momentInspectorSimilarity.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSimilarity.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSimilarity.ts
+
+momentInspectorSimilarity.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSimilarity.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSimilarity.types.ts
+
+MomentInspectorSimilarityOverview.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSimilarityOverview.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSimilarityOverview.tsx
+
+MomentInspectorSimilarityPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSimilarityPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSimilarityPanel.tsx
+
+momentInspectorSnapshot.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSnapshot.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSnapshot.types.ts
+
+momentInspectorSnapshot.utils.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSnapshot.utils.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSnapshot.utils.ts
+
+MomentInspectorSnapshotBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSnapshotBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSnapshotBar.tsx
+
+momentInspectorSnapshotExport.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSnapshotExport.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSnapshotExport.ts
+
+MomentInspectorStabilityPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorStabilityPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorStabilityPanel.tsx
+
+MomentInspectorStabilitySummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorStabilitySummaryPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorStabilitySummaryPanel.tsx
+
+momentInspectorStats.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorStats.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorStats.ts
+
+momentInspectorSummary.discovery.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSummary.discovery.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSummary.discovery.ts
+
+momentInspectorSummary.metadata.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSummary.metadata.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSummary.metadata.ts
+
+momentInspectorSummary.readiness.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSummary.readiness.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSummary.readiness.ts
+
+MomentInspectorSummary.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorSummary.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorSummary.tsx
+
+momentInspectorSummary.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorSummary.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorSummary.types.ts
+
+MomentInspectorTagPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorTagPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorTagPanels.tsx
+
+MomentInspectorTimeline.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorTimeline.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorTimeline.tsx
+
+MomentInspectorTimelinePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorTimelinePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorTimelinePanel.tsx
+
+MomentInspectorTrackControls.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorTrackControls.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorTrackControls.tsx
+
+momentInspectorTrackState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorTrackState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorTrackState.ts
+
+momentInspectorTrackViewData.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorTrackViewData.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorTrackViewData.ts
+
+momentInspectorViewState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorViewState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorViewState.ts
+
+momentInspectorWorkspace.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspace.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspace.types.ts
+
+momentInspectorWorkspace.utils.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspace.utils.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspace.utils.ts
+
+MomentInspectorWorkspaceActionRow.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceActionRow.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceActionRow.tsx
+
+momentInspectorWorkspaceActions.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceActions.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceActions.ts
+
+momentInspectorWorkspaceAdapter.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceAdapter.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceAdapter.ts
+
+MomentInspectorWorkspaceBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceBar.tsx
+
+MomentInspectorWorkspaceBatchActionBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceBatchActionBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceBatchActionBar.tsx
+
+momentInspectorWorkspaceBatchActions.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceBatchActions.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceBatchActions.ts
+
+MomentInspectorWorkspaceContent.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceContent.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceContent.tsx
+
+momentInspectorWorkspaceController.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceController.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceController.ts
+
+momentInspectorWorkspaceCounts.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceCounts.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceCounts.ts
+
+momentInspectorWorkspaceDebug.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceDebug.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceDebug.ts
+
+momentInspectorWorkspaceDerivedView.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceDerivedView.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceDerivedView.ts
+
+MomentInspectorWorkspaceEmptyState.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceEmptyState.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceEmptyState.tsx
+
+momentInspectorWorkspaceEmptyStateMessages.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceEmptyStateMessages.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceEmptyStateMessages.ts
+
+momentInspectorWorkspaceExport.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceExport.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceExport.ts
+
+MomentInspectorWorkspaceFamilyCard.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceFamilyCard.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceFamilyCard.tsx
+
+MomentInspectorWorkspaceFilterBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceFilterBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceFilterBar.tsx
+
+momentInspectorWorkspaceFilters.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceFilters.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceFilters.ts
+
+momentInspectorWorkspaceGrouping.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceGrouping.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceGrouping.ts
+
+MomentInspectorWorkspaceGroupSection.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceGroupSection.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceGroupSection.tsx
+
+MomentInspectorWorkspaceHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceHeader.tsx
+
+momentInspectorWorkspaceHostBridge.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceHostBridge.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceHostBridge.ts
+
+momentInspectorWorkspaceLaneMeta.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceLaneMeta.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceLaneMeta.ts
+
+MomentInspectorWorkspaceLegend.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceLegend.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceLegend.tsx
+
+MomentInspectorWorkspaceMiniStat.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceMiniStat.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceMiniStat.tsx
+
+momentInspectorWorkspaceNoteSummary.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceNoteSummary.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceNoteSummary.ts
+
+MomentInspectorWorkspaceNoteSummaryBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceNoteSummaryBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceNoteSummaryBar.tsx
+
+MomentInspectorWorkspacePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePanel.tsx
+
+momentInspectorWorkspacePanel.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanel.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanel.types.ts
+
+momentInspectorWorkspacePanelComposer.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelComposer.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelComposer.ts
+
+momentInspectorWorkspacePanelContext.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelContext.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelContext.ts
+
+momentInspectorWorkspacePanelHeaderBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelHeaderBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelHeaderBlock.tsx
+
+momentInspectorWorkspacePanelLayout.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelLayout.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelLayout.ts
+
+MomentInspectorWorkspacePanelQueueBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePanelQueueBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePanelQueueBlock.tsx
+
+momentInspectorWorkspacePanelResolver.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelResolver.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelResolver.ts
+
+MomentInspectorWorkspacePanelScaffold.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePanelScaffold.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePanelScaffold.tsx
+
+MomentInspectorWorkspacePanelSectionRenderer.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePanelSectionRenderer.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePanelSectionRenderer.tsx
+
+MomentInspectorWorkspacePanelSections.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePanelSections.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePanelSections.tsx
+
+momentInspectorWorkspacePanelSectionVisibility.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelSectionVisibility.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelSectionVisibility.ts
+
+MomentInspectorWorkspacePanelSelectionBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePanelSelectionBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePanelSelectionBlock.tsx
+
+momentInspectorWorkspacePanelState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelState.ts
+
+momentInspectorWorkspacePanelSummary.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelSummary.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelSummary.ts
+
+MomentInspectorWorkspacePanelToolbarBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePanelToolbarBlock.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePanelToolbarBlock.tsx
+
+momentInspectorWorkspacePanelViewModel.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePanelViewModel.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePanelViewModel.ts
+
+momentInspectorWorkspacePresenters.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePresenters.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePresenters.ts
+
+momentInspectorWorkspacePriorityBuckets.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspacePriorityBuckets.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspacePriorityBuckets.ts
+
+MomentInspectorWorkspacePriorityChip.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspacePriorityChip.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspacePriorityChip.tsx
+
+MomentInspectorWorkspaceQueueBody.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceQueueBody.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceQueueBody.tsx
+
+MomentInspectorWorkspaceQueueHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceQueueHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceQueueHeader.tsx
+
+momentInspectorWorkspaceQueueStats.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceQueueStats.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceQueueStats.ts
+
+MomentInspectorWorkspaceQueueStatsBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceQueueStatsBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceQueueStatsBar.tsx
+
+momentInspectorWorkspaceReady.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceReady.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceReady.ts
+
+momentInspectorWorkspaceSearchTokens.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceSearchTokens.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceSearchTokens.ts
+
+MomentInspectorWorkspaceSelectableFamilyCard.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceSelectableFamilyCard.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceSelectableFamilyCard.tsx
+
+momentInspectorWorkspaceSelection.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceSelection.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceSelection.ts
+
+MomentInspectorWorkspaceSelectionBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceSelectionBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceSelectionBar.tsx
+
+momentInspectorWorkspaceSelectionSummary.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceSelectionSummary.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceSelectionSummary.ts
+
+momentInspectorWorkspaceSelectors.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceSelectors.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceSelectors.ts
+
+momentInspectorWorkspaceSources.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceSources.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceSources.ts
+
+momentInspectorWorkspaceState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceState.ts
+
+MomentInspectorWorkspaceStatusBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceStatusBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceStatusBar.tsx
+
+momentInspectorWorkspaceSummary.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceSummary.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceSummary.ts
+
+MomentInspectorWorkspaceSummaryBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceSummaryBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceSummaryBar.tsx
+
+MomentInspectorWorkspaceSummarySection.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceSummarySection.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceSummarySection.tsx
+
+MomentInspectorWorkspaceToolbar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceToolbar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceToolbar.tsx
+
+momentInspectorWorkspaceToolbarState.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceToolbarState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceToolbarState.ts
+
+MomentInspectorWorkspaceViewBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\MomentInspectorWorkspaceViewBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\MomentInspectorWorkspaceViewBar.tsx
+
+momentInspectorWorkspaceViewOptions.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceViewOptions.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceViewOptions.ts
+
+momentInspectorWorkspaceVisibleStats.ts
+  C:\Users\muzes\themuzesgarden-site\player\momentInspectorWorkspaceVisibleStats.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\momentInspectorWorkspaceVisibleStats.ts
+
+playerConstants.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerConstants.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerConstants.ts
+
+playerDiscoveryAdapter.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryAdapter.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryAdapter.ts
+
+playerDiscoveryBuild.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryBuild.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryBuild.ts
+
+playerDiscoveryClusters.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryClusters.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryClusters.ts
+
+playerDiscoveryHeat.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryHeat.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryHeat.ts
+
+playerDiscoveryIndex.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryIndex.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryIndex.ts
+
+playerDiscoveryPatterns.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryPatterns.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryPatterns.ts
+
+playerDiscoveryQuery.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryQuery.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryQuery.ts
+
+playerDiscoveryRuntime.selectors.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryRuntime.selectors.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryRuntime.selectors.ts
+
+playerDiscoveryRuntime.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryRuntime.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryRuntime.shared.ts
+
+playerDiscoveryRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryRuntime.ts
+
+playerDiscoveryRuntime.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryRuntime.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryRuntime.types.ts
+
+playerDiscoveryTypes.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerDiscoveryTypes.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerDiscoveryTypes.ts
+
+playerEvents.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerEvents.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerEvents.ts
+
+PlayerHeaderBar.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerHeaderBar.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerHeaderBar.tsx
+
+playerMetadataLinker.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMetadataLinker.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMetadataLinker.ts
+
+playerMetadataRegistry.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMetadataRegistry.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMetadataRegistry.ts
+
+PlayerModeSummary.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerModeSummary.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerModeSummary.tsx
+
+playerMomentConfidenceHistory.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentConfidenceHistory.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentConfidenceHistory.builders.ts
+
+playerMomentConfidenceHistory.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentConfidenceHistory.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentConfidenceHistory.shared.ts
+
+playerMomentConfidenceHistory.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentConfidenceHistory.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentConfidenceHistory.ts
+
+playerMomentConfidenceHistory.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentConfidenceHistory.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentConfidenceHistory.types.ts
+
+playerMomentEngine.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentEngine.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentEngine.ts
+
+playerMomentFamilyDiscovery.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyDiscovery.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyDiscovery.builders.ts
+
+playerMomentFamilyDiscovery.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyDiscovery.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyDiscovery.shared.ts
+
+playerMomentFamilyDiscovery.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyDiscovery.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyDiscovery.ts
+
+playerMomentFamilyDiscovery.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyDiscovery.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyDiscovery.types.ts
+
+playerMomentFamilyEngine.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyEngine.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyEngine.ts
+
+playerMomentFamilyExecutionQueue.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyExecutionQueue.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyExecutionQueue.builders.ts
+
+playerMomentFamilyExecutionQueue.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyExecutionQueue.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyExecutionQueue.shared.ts
+
+playerMomentFamilyExecutionQueue.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyExecutionQueue.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyExecutionQueue.ts
+
+playerMomentFamilyExecutionQueue.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyExecutionQueue.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyExecutionQueue.types.ts
+
+playerMomentFamilyLearning.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLearning.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLearning.builders.ts
+
+playerMomentFamilyLearning.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLearning.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLearning.shared.ts
+
+playerMomentFamilyLearning.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLearning.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLearning.ts
+
+playerMomentFamilyLearning.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLearning.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLearning.types.ts
+
+playerMomentFamilyLineage.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLineage.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLineage.builders.ts
+
+playerMomentFamilyLineage.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLineage.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLineage.shared.ts
+
+playerMomentFamilyLineage.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLineage.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLineage.ts
+
+playerMomentFamilyLineage.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyLineage.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyLineage.types.ts
+
+playerMomentFamilyOrchestrator.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOrchestrator.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOrchestrator.builders.ts
+
+playerMomentFamilyOrchestrator.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOrchestrator.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOrchestrator.shared.ts
+
+playerMomentFamilyOrchestrator.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOrchestrator.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOrchestrator.ts
+
+playerMomentFamilyOrchestrator.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOrchestrator.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOrchestrator.types.ts
+
+playerMomentFamilyOutcome.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOutcome.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOutcome.builders.ts
+
+playerMomentFamilyOutcome.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOutcome.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOutcome.shared.ts
+
+playerMomentFamilyOutcome.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOutcome.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOutcome.ts
+
+playerMomentFamilyOutcome.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyOutcome.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyOutcome.types.ts
+
+playerMomentFamilyPlanning.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPlanning.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPlanning.builders.ts
+
+playerMomentFamilyPlanning.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPlanning.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPlanning.shared.ts
+
+playerMomentFamilyPlanning.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPlanning.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPlanning.ts
+
+playerMomentFamilyPlanning.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPlanning.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPlanning.types.ts
+
+playerMomentFamilyPortfolio.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPortfolio.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPortfolio.builders.ts
+
+playerMomentFamilyPortfolio.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPortfolio.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPortfolio.shared.ts
+
+playerMomentFamilyPortfolio.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPortfolio.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPortfolio.ts
+
+playerMomentFamilyPortfolio.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyPortfolio.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyPortfolio.types.ts
+
+playerMomentFamilyRecommendation.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRecommendation.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRecommendation.builders.ts
+
+playerMomentFamilyRecommendation.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRecommendation.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRecommendation.shared.ts
+
+playerMomentFamilyRecommendation.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRecommendation.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRecommendation.ts
+
+playerMomentFamilyRecommendation.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRecommendation.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRecommendation.types.ts
+
+playerMomentFamilyRepair.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRepair.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRepair.builders.ts
+
+playerMomentFamilyRepair.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRepair.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRepair.shared.ts
+
+playerMomentFamilyRepair.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRepair.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRepair.ts
+
+playerMomentFamilyRepair.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyRepair.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyRepair.types.ts
+
+playerMomentFamilySelfOptimization.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySelfOptimization.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySelfOptimization.builders.ts
+
+playerMomentFamilySelfOptimization.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySelfOptimization.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySelfOptimization.shared.ts
+
+playerMomentFamilySelfOptimization.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySelfOptimization.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySelfOptimization.ts
+
+playerMomentFamilySelfOptimization.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySelfOptimization.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySelfOptimization.types.ts
+
+playerMomentFamilySignal.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySignal.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySignal.builders.ts
+
+playerMomentFamilySignal.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySignal.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySignal.shared.ts
+
+playerMomentFamilySignal.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySignal.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySignal.ts
+
+playerMomentFamilySignal.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilySignal.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilySignal.types.ts
+
+playerMomentFamilyStrategy.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyStrategy.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyStrategy.builders.ts
+
+playerMomentFamilyStrategy.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyStrategy.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyStrategy.shared.ts
+
+playerMomentFamilyStrategy.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyStrategy.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyStrategy.ts
+
+playerMomentFamilyStrategy.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyStrategy.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyStrategy.types.ts
+
+playerMomentFamilyTrustState.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyTrustState.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyTrustState.builders.ts
+
+playerMomentFamilyTrustState.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyTrustState.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyTrustState.shared.ts
+
+playerMomentFamilyTrustState.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyTrustState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyTrustState.ts
+
+playerMomentFamilyTrustState.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentFamilyTrustState.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentFamilyTrustState.types.ts
+
+playerMomentIndex.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentIndex.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentIndex.ts
+
+playerMomentIntelligenceRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentIntelligenceRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentIntelligenceRuntime.ts
+
+playerMomentIntendedActions.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentIntendedActions.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentIntendedActions.ts
+
+playerMomentIntendedRepeat.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentIntendedRepeat.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentIntendedRepeat.ts
+
+playerMomentMetadata.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentMetadata.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentMetadata.ts
+
+playerMomentPhraseDrift.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseDrift.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseDrift.builders.ts
+
+playerMomentPhraseDrift.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseDrift.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseDrift.shared.ts
+
+playerMomentPhraseDrift.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseDrift.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseDrift.ts
+
+playerMomentPhraseDrift.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseDrift.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseDrift.types.ts
+
+playerMomentPhraseStability.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseStability.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseStability.builders.ts
+
+playerMomentPhraseStability.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseStability.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseStability.shared.ts
+
+playerMomentPhraseStability.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseStability.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseStability.ts
+
+playerMomentPhraseStability.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentPhraseStability.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentPhraseStability.types.ts
+
+playerMomentRepairImpact.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairImpact.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairImpact.builders.ts
+
+playerMomentRepairImpact.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairImpact.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairImpact.shared.ts
+
+playerMomentRepairImpact.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairImpact.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairImpact.ts
+
+playerMomentRepairImpact.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairImpact.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairImpact.types.ts
+
+playerMomentRepairSimulation.builders.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairSimulation.builders.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairSimulation.builders.ts
+
+playerMomentRepairSimulation.shared.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairSimulation.shared.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairSimulation.shared.ts
+
+playerMomentRepairSimulation.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairSimulation.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairSimulation.ts
+
+playerMomentRepairSimulation.types.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairSimulation.types.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairSimulation.types.ts
+
+playerMomentRepairSimulationViewBridge.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairSimulationViewBridge.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairSimulationViewBridge.ts
+
+playerMomentRepairSimulationViewHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairSimulationViewHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairSimulationViewHelpers.ts
+
+playerMomentRepairSimulationViewTypes.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepairSimulationViewTypes.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepairSimulationViewTypes.ts
+
+playerMomentRepeatPlanner.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentRepeatPlanner.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentRepeatPlanner.ts
+
+playerMomentSearch.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentSearch.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentSearch.ts
+
+playerMomentSimilarity.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentSimilarity.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentSimilarity.ts
+
+playerMomentSimilarityTypes.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerMomentSimilarityTypes.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerMomentSimilarityTypes.ts
+
+PlayerNowPlayingPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerNowPlayingPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerNowPlayingPanel.tsx
+
+PlayerPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerPanel.tsx
+
+PlayerProjectHelpPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerProjectHelpPanels.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerProjectHelpPanels.tsx
+
+PlayerSearchHelpPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerSearchHelpPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerSearchHelpPanel.tsx
+
+playerSearchScoring.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerSearchScoring.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerSearchScoring.ts
+
+PlayerSearchStatusPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerSearchStatusPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerSearchStatusPanel.tsx
+
+PlayerStatusBadges.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerStatusBadges.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerStatusBadges.tsx
+
+playerStorage.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerStorage.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerStorage.ts
+
+PlayerTagIntelligencePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerTagIntelligencePanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerTagIntelligencePanel.tsx
+
+PlayerTimeline.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerTimeline.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerTimeline.tsx
+
+playerTrackMetadata.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerTrackMetadata.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerTrackMetadata.ts
+
+PlayerTransportControls.tsx
+  C:\Users\muzes\themuzesgarden-site\player\PlayerTransportControls.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\PlayerTransportControls.tsx
+
+playerTypes.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerTypes.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerTypes.ts
+
+playerUtils.ts
+  C:\Users\muzes\themuzesgarden-site\player\playerUtils.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\playerUtils.ts
+
+ProjectSelectedTrackPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\player\ProjectSelectedTrackPanel.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\ProjectSelectedTrackPanel.tsx
+
+ProjectTab.tsx
+  C:\Users\muzes\themuzesgarden-site\player\ProjectTab.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\ProjectTab.tsx
+
+ProjectTabHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\player\ProjectTabHeader.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\ProjectTabHeader.tsx
+
+projectTabHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\player\projectTabHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\projectTabHelpers.ts
+
+ProjectTrackRow.tsx
+  C:\Users\muzes\themuzesgarden-site\player\ProjectTrackRow.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\ProjectTrackRow.tsx
+
+ProjectTrackTags.tsx
+  C:\Users\muzes\themuzesgarden-site\player\ProjectTrackTags.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\ProjectTrackTags.tsx
+
+searchQueryParser.ts
+  C:\Users\muzes\themuzesgarden-site\player\searchQueryParser.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\searchQueryParser.ts
+
+SearchResultCard.tsx
+  C:\Users\muzes\themuzesgarden-site\player\SearchResultCard.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\SearchResultCard.tsx
+
+SearchTab.tsx
+  C:\Users\muzes\themuzesgarden-site\player\SearchTab.tsx
+  C:\Users\muzes\themuzesgarden-site\app\components\player\SearchTab.tsx
+
+searchTabHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\player\searchTabHelpers.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\searchTabHelpers.ts
+
+useAllTracks.ts
+  C:\Users\muzes\themuzesgarden-site\player\useAllTracks.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useAllTracks.ts
+
+useAudioEngine.ts
+  C:\Users\muzes\themuzesgarden-site\player\useAudioEngine.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useAudioEngine.ts
+
+useMomentInspectorBookmarksRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorBookmarksRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorBookmarksRuntime.ts
+
+useMomentInspectorCompareRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorCompareRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorCompareRuntime.ts
+
+useMomentInspectorHostFilters.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorHostFilters.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorHostFilters.ts
+
+useMomentInspectorHostIntelligenceProps.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorHostIntelligenceProps.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorHostIntelligenceProps.ts
+
+useMomentInspectorHostRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorHostRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorHostRuntime.ts
+
+useMomentInspectorHostShellState.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorHostShellState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorHostShellState.ts
+
+useMomentInspectorHostStackProps.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorHostStackProps.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorHostStackProps.ts
+
+useMomentInspectorHostSummaryProps.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorHostSummaryProps.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorHostSummaryProps.ts
+
+useMomentInspectorHostTimelineProps.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorHostTimelineProps.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorHostTimelineProps.ts
+
+useMomentInspectorSectionFilterState.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorSectionFilterState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorSectionFilterState.ts
+
+useMomentInspectorSnapshotRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorSnapshotRuntime.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorSnapshotRuntime.ts
+
+useMomentInspectorTrackState.ts
+  C:\Users\muzes\themuzesgarden-site\player\useMomentInspectorTrackState.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useMomentInspectorTrackState.ts
+
+useProjectContext.ts
+  C:\Users\muzes\themuzesgarden-site\player\useProjectContext.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useProjectContext.ts
+
+useProjectSetlist.ts
+  C:\Users\muzes\themuzesgarden-site\player\useProjectSetlist.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useProjectSetlist.ts
+
+useWarmMomentEngineSnapshot.ts
+  C:\Users\muzes\themuzesgarden-site\player\useWarmMomentEngineSnapshot.ts
+  C:\Users\muzes\themuzesgarden-site\app\components\player\useWarmMomentEngineSnapshot.ts
+
