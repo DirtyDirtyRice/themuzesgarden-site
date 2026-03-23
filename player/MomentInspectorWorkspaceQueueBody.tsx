@@ -5,13 +5,31 @@ import MomentInspectorWorkspaceContent from "./MomentInspectorWorkspaceContent";
 import MomentInspectorWorkspaceNoteSummaryBar from "./MomentInspectorWorkspaceNoteSummaryBar";
 import MomentInspectorWorkspaceQueueHeader from "./MomentInspectorWorkspaceQueueHeader";
 import MomentInspectorWorkspaceQueueStatsBar from "./MomentInspectorWorkspaceQueueStatsBar";
-import type { MomentInspectorWorkspacePanelViewModel } from "./momentInspectorWorkspacePanelViewModel";
 import type { MomentInspectorWorkspaceLane } from "./momentInspectorWorkspace.types";
+
+type QueueStatsLike = {
+  visibleCount: number;
+};
+
+type VisibleStatsLike = {
+  queueStats: QueueStatsLike;
+  noteSummary: unknown;
+};
+
+type SelectionSummaryLike = {
+  selectedCount: number;
+};
+
+type DerivedViewLike = unknown;
 
 type MomentInspectorWorkspaceQueueBodyProps = {
   lane: MomentInspectorWorkspaceLane;
   searchQuery: string;
-  viewModel: MomentInspectorWorkspacePanelViewModel;
+  viewModel: {
+    visibleStats: VisibleStatsLike;
+    selectionSummary: SelectionSummaryLike;
+    derivedView: DerivedViewLike;
+  };
   selectedFamilyIds: string[];
   onToggleSelected: (familyId: string) => void;
 };
