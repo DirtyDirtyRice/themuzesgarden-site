@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AnyTrack, TrackSection } from "./playerTypes";
-import { getSupabaseTracks } from "../../../lib/getSupabaseTracks";
+import { getSupabaseTracks } from "../lib/getSupabaseTracks";
 
 function normalizeSection(section: unknown, index: number): TrackSection | null {
   if (!section || typeof section !== "object") return null;
