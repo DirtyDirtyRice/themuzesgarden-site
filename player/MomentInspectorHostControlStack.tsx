@@ -1,11 +1,10 @@
 "use client";
 
 import MomentInspectorTrackControls from "./MomentInspectorTrackControls";
-
-type MomentInspectorHostControlStackProps = Record<string, any>;
+import type MomentInspectorHostControlStackProps from "./momentInspectorHostControlStack.types";
 
 export default function MomentInspectorHostControlStack(
   props: MomentInspectorHostControlStackProps
 ) {
-  return <MomentInspectorTrackControls {...(props as any)} />;
+  return <MomentInspectorTrackControls {...props} />;
 }
