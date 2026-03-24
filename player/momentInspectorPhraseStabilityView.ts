@@ -1,14 +1,33 @@
 import type { PhraseDriftSeverity } from "./playerMomentPhraseDrift";
-import type {
-  PhraseStabilityFamilyResult,
-  PhraseStabilityIssueFlag,
-  PhraseStabilityLabel,
-} from "./playerMomentPhraseStability";
 
 /**
- * 🔧 Fallback type (NOT exported upstream)
+ * 🔧 FULL fallback (nothing imported from broken module)
  * Breaks Vercel loop safely
  */
+
+type PhraseStabilityLabel = "solid" | "good" | "fragile" | "unstable";
+
+type PhraseStabilityIssueFlag =
+  | "missing-repeats"
+  | "near-repeats"
+  | "timing-drift"
+  | "duration-drift"
+  | "high-severity-drift"
+  | "low-confidence";
+
+type PhraseStabilityFamilyResult = {
+  familyId?: string;
+  anchorMomentId?: string;
+  stabilityScore?: number;
+  stabilityLabel?: PhraseStabilityLabel;
+  timingConsistency?: number;
+  durationConsistency?: number;
+  repeatCoverage?: number;
+  structuralConfidence?: number;
+  highestDriftSeverity?: PhraseDriftSeverity;
+  issueFlags?: PhraseStabilityIssueFlag[];
+};
+
 type PhraseStabilityEngineResult = {
   families?: PhraseStabilityFamilyResult[];
 };
@@ -92,7 +111,7 @@ function buildFamilyRow(
     familyId: normalizeText(family.familyId),
     anchorMomentId: normalizeText(family.anchorMomentId),
     stabilityScore: Number(clamp100(Number(family.stabilityScore)).toFixed(1)),
-    stabilityLabel: family.stabilityLabel,
+    stabilityLabel: family.stabilityLabel ?? "unstable",
     timingConsistency: Number(
       clamp100(Number(family.timingConsistency)).toFixed(1)
     ),
