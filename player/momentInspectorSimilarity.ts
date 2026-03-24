@@ -130,9 +130,12 @@ export function buildMomentInspectorSimilarity(
     engineFamiliesById
   );
 
-  const stableFamilyDiagnostics = buildStableFamilyDiagnostics(stableFamilies);
+  // ✅ SAFE FALLBACK FIX (CRITICAL)
+  const stableFamilyDiagnostics =
+    buildStableFamilyDiagnostics(stableFamilies) as unknown as InspectorStableFamilyDiagnostics[];
 
-  const repeatDiagnostics = buildRepeatDiagnostics(stableFamilies);
+  const repeatDiagnostics =
+    buildRepeatDiagnostics(stableFamilies) as unknown as InspectorRepeatDiagnostics[];
 
   const intendedRepeatMetadata = buildIntendedRepeatMetadata({
     families: stableFamilies,
