@@ -1,4 +1,4 @@
-import type { ComparableMoment } from "./playerMomentSimilarityTypes";
+import type { MomentSimilarityComparable } from "./playerMomentSimilarityTypes";
 import type { MomentFamilyEngineFamily } from "./playerMomentFamilyEngine";
 import type {
   PhraseDriftFamilyResult,
@@ -223,7 +223,7 @@ export function buildConfidenceScore(params: {
 
 export function buildPhraseDriftFamilyResult(params: {
   family: MomentFamilyEngineFamily;
-  orderedMembers: ComparableMoment[];
+  orderedMembers: MomentSimilarityComparable[];
   earlyLateTolerance: number;
   durationTolerance: number;
   mediumTimingThreshold: number;
