@@ -1,177 +1,243 @@
 import type { MomentFamilyEngineFamily } from "./playerMomentFamilyEngine";
-import type {
-  MomentFamily,
-  MomentSimilarityResult,
-} from "./playerMomentSimilarityTypes";
 
-import type {
-  InspectorComparableMoment,
-  InspectorRepeatDiagnostics,
-  InspectorSimilarityDebugRow,
-  InspectorStableFamilyDiagnostics,
-} from "./momentInspectorSimilarity.types";
+type MomentFamilyMember = MomentFamilyEngineFamily["members"][number];
 
-import {
-  average,
-  clamp01,
-  getMomentId,
-  normalizeText,
-  round3,
-} from "./momentInspectorSimilarity.shared";
+export type InspectorSimilarityFamilySummary = {
+  familyId: string;
+  memberCount: number;
+  averageSimilarity: number;
+  strongestSimilarity: number;
+  earliestStart: number | null;
+  latestStart: number | null;
+  spreadSeconds: number | null;
+};
 
-function buildNormalizedTagSet(tags: unknown): Set<string> {
-  if (!Array.isArray(tags)) return new Set<string>();
-  return new Set(tags.map((tag) => normalizeText(tag)).filter(Boolean));
+export type InspectorSimilarityDebugRow = {
+  familyId: string;
+  memberCount: number;
+  averageSimilarity: number;
+  strongestSimilarity: number;
+  earliestStart: number | null;
+  latestStart: number | null;
+  spreadSeconds: number | null;
+};
+
+export type InspectorRepeatDiagnosticRow = {
+  familyId: string;
+  memberCount: number;
+  repeatCoverage: number;
+  spreadSeconds: number | null;
+  status: "strong" | "partial" | "weak";
+};
+
+export type InspectorStableFamilyDiagnosticRow = {
+  familyId: string;
+  memberCount: number;
+  averageSimilarity: number;
+  strongestSimilarity: number;
+  spreadSeconds: number | null;
+  isStable: boolean;
+};
+
+function normalizeText(value: unknown): string {
+  return String(value ?? "").trim();
 }
 
-function getTagOverlapScore(selectedTags: Set<string>, matchTags: Set<string>): number {
-  const overlappingTags = Array.from(selectedTags).filter((tag) => matchTags.has(tag)).length;
-  const tagUnion = new Set([...Array.from(selectedTags), ...Array.from(matchTags)]).size;
-  return tagUnion > 0 ? overlappingTags / tagUnion : 0;
+function toFiniteNumber(value: unknown, fallback = 0): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
 
-function getDescriptionOverlapScore(
-  selectedDescription: string,
-  matchDescription: string
+function toFiniteNumberOrNull(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function round3(value: number): number {
+  return Number(value.toFixed(3));
+}
+
+function getMemberSimilarity(member: MomentFamilyMember): number {
+  const candidate = member as MomentFamilyMember & {
+    similarityToAnchor?: unknown;
+    similarity?: unknown;
+    score?: unknown;
+    moment?: {
+      similarityToAnchor?: unknown;
+      similarity?: unknown;
+      score?: unknown;
+    } | null;
+  };
+
+  return toFiniteNumber(
+    candidate.similarityToAnchor ??
+      candidate.similarity ??
+      candidate.score ??
+      candidate.moment?.similarityToAnchor ??
+      candidate.moment?.similarity ??
+      candidate.moment?.score ??
+      0,
+    0
+  );
+}
+
+function getMemberStart(member: MomentFamilyMember): number | null {
+  const candidate = member as MomentFamilyMember & {
+    startTime?: unknown;
+    start?: unknown;
+    actualStartTime?: unknown;
+    expectedStartTime?: unknown;
+    moment?: {
+      startTime?: unknown;
+      start?: unknown;
+      actualStartTime?: unknown;
+      expectedStartTime?: unknown;
+    } | null;
+  };
+
+  return toFiniteNumberOrNull(
+    candidate.startTime ??
+      candidate.start ??
+      candidate.actualStartTime ??
+      candidate.expectedStartTime ??
+      candidate.moment?.startTime ??
+      candidate.moment?.start ??
+      candidate.moment?.actualStartTime ??
+      candidate.moment?.expectedStartTime
+  );
+}
+
+function getFamilyId(family: MomentFamilyEngineFamily): string {
+  const candidate = family as MomentFamilyEngineFamily & {
+    familyId?: unknown;
+    id?: unknown;
+  };
+
+  return normalizeText(candidate.familyId ?? candidate.id ?? "");
+}
+
+function buildFamilySummary(
+  family: MomentFamilyEngineFamily
+): InspectorSimilarityFamilySummary {
+  const similarities = family.members
+    .map((member) => getMemberSimilarity(member))
+    .filter((value) => Number.isFinite(value));
+
+  const starts = family.members
+    .map((member) => getMemberStart(member))
+    .filter((value): value is number => value !== null)
+    .sort((a, b) => a - b);
+
+  const averageSimilarity =
+    similarities.length > 0
+      ? round3(
+          similarities.reduce((sum, value) => sum + value, 0) / similarities.length
+        )
+      : 0;
+
+  const strongestSimilarity =
+    similarities.length > 0 ? round3(Math.max(...similarities)) : 0;
+
+  const earliestStart = starts.length > 0 ? round3(starts[0]) : null;
+  const latestStart = starts.length > 0 ? round3(starts[starts.length - 1]) : null;
+  const spreadSeconds =
+    starts.length > 1 ? round3(starts[starts.length - 1] - starts[0]) : null;
+
+  return {
+    familyId: getFamilyId(family),
+    memberCount: family.members.length,
+    averageSimilarity,
+    strongestSimilarity,
+    earliestStart,
+    latestStart,
+    spreadSeconds,
+  };
+}
+
+function compareFamilySummary(
+  a: InspectorSimilarityFamilySummary,
+  b: InspectorSimilarityFamilySummary
 ): number {
-  if (!selectedDescription || !matchDescription) return 0;
-  if (selectedDescription === matchDescription) return 1;
-  if (
-    selectedDescription.includes(matchDescription) ||
-    matchDescription.includes(selectedDescription)
-  ) {
-    return 0.65;
+  if (b.strongestSimilarity !== a.strongestSimilarity) {
+    return b.strongestSimilarity - a.strongestSimilarity;
   }
-  return 0;
+
+  if (b.averageSimilarity !== a.averageSimilarity) {
+    return b.averageSimilarity - a.averageSimilarity;
+  }
+
+  if (b.memberCount !== a.memberCount) {
+    return b.memberCount - a.memberCount;
+  }
+
+  return a.familyId.localeCompare(b.familyId);
 }
 
-function getTimingSpread(starts: number[]): number {
-  if (starts.length < 2) return 0;
-  return round3(starts[starts.length - 1]! - starts[0]!);
+export function buildInspectorSimilarityFamilySummaries(
+  stableFamilies: MomentFamilyEngineFamily[]
+): InspectorSimilarityFamilySummary[] {
+  return stableFamilies
+    .map((family) => buildFamilySummary(family))
+    .filter((family) => Boolean(family.familyId))
+    .sort(compareFamilySummary);
 }
 
-export function buildSimilarityDebugRows(params: {
-  selectedMoment: InspectorComparableMoment | null;
-  similarMoments: MomentSimilarityResult[];
-  momentsById: Record<string, InspectorComparableMoment>;
-}): InspectorSimilarityDebugRow[] {
-  const { selectedMoment, similarMoments, momentsById } = params;
-  if (!selectedMoment) return [];
-
-  const selectedTags = buildNormalizedTagSet(selectedMoment.tags ?? []);
-  const selectedDescription = normalizeText(selectedMoment.description);
-
-  return similarMoments.map((row) => {
-    const match =
-      momentsById[getMomentId(row.candidate)] ??
-      (row.candidate as InspectorComparableMoment);
-
-    const matchTags = buildNormalizedTagSet(match.tags ?? []);
-    const tagOverlap = getTagOverlapScore(selectedTags, matchTags);
-
-    const matchDescription = normalizeText(match.description);
-    const descriptionOverlap = getDescriptionOverlapScore(
-      selectedDescription,
-      matchDescription
-    );
-
-    const timingDistance = Math.abs(match.startTime - selectedMoment.startTime);
-
-    const structuralConfidence = average([
-      clamp01(row.similarityScore ?? 0),
-      clamp01(match.structuralStrength ?? 0),
-      clamp01(tagOverlap),
-      clamp01(descriptionOverlap),
-    ]);
-
-    return {
-      momentId: getMomentId(match),
-      similarityScore: round3(clamp01(row.similarityScore ?? 0)),
-      timingDistance: round3(timingDistance),
-      tagOverlap: round3(tagOverlap),
-      descriptionOverlap: round3(descriptionOverlap),
-      structuralConfidence: round3(structuralConfidence),
-      repeatCandidate: Boolean(match.repeatCandidate),
-    };
-  });
-}
-
-export function buildStableFamilyDiagnostics(params: {
-  stableFamilies: MomentFamilyEngineFamily[];
-  familyByMomentId: Record<string, string>;
-  ungroupedMomentIds: string[];
-}): InspectorStableFamilyDiagnostics[] {
-  const { stableFamilies, familyByMomentId, ungroupedMomentIds } = params;
-  const totalGrouped = Object.keys(familyByMomentId).length;
-  const totalUngrouped = ungroupedMomentIds.length;
-  const totalMoments = totalGrouped + totalUngrouped;
-  const groupedShare = totalMoments > 0 ? totalGrouped / totalMoments : 1;
-  const ungroupedRisk = round3(clamp01(totalUngrouped / Math.max(1, totalMoments)));
-
-  return stableFamilies.map((family) => {
-    const similarities = family.members
-      .map((member) => Number(member.similarityToAnchor ?? 0))
-      .filter((value) => Number.isFinite(value));
-
-    const starts = family.members
-      .map((member) => Number((member as { startTime?: unknown }).startTime ?? 0))
-      .filter((value) => Number.isFinite(value))
-      .sort((a, b) => a - b);
-
-    const avgSimilarity = round3(clamp01(average(similarities)));
-    const familySize = family.members.length;
-    const timingSpread = getTimingSpread(starts);
-
-    const familyConfidence = round3(
-      clamp01(
-        avgSimilarity * 0.55 +
-          Math.min(1, familySize / 5) * 0.3 +
-          groupedShare * 0.15
-      )
-    );
-
-    return {
-      familyId: family.id,
-      familySize,
-      avgSimilarity,
-      timingSpread,
-      familyConfidence,
-      familyAnchorMomentId: normalizeText(family.anchorMomentId),
-      ungroupedRisk,
-    };
-  });
+export function buildSimilarityDebugRows(
+  stableFamilies: MomentFamilyEngineFamily[]
+): InspectorSimilarityDebugRow[] {
+  return buildInspectorSimilarityFamilySummaries(stableFamilies).map((family) => ({
+    familyId: family.familyId,
+    memberCount: family.memberCount,
+    averageSimilarity: family.averageSimilarity,
+    strongestSimilarity: family.strongestSimilarity,
+    earliestStart: family.earliestStart,
+    latestStart: family.latestStart,
+    spreadSeconds: family.spreadSeconds,
+  }));
 }
 
 export function buildRepeatDiagnostics(
-  families: MomentFamily[]
-): InspectorRepeatDiagnostics[] {
-  return families.map((family) => {
-    const starts = family.members
-      .map((member) => member.moment.startTime)
-      .sort((a, b) => a - b);
+  stableFamilies: MomentFamilyEngineFamily[]
+): InspectorRepeatDiagnosticRow[] {
+  return buildInspectorSimilarityFamilySummaries(stableFamilies).map((family) => {
+    const repeatCoverage =
+      family.memberCount <= 1
+        ? 0
+        : Math.min(
+            100,
+            Number(
+              ((family.memberCount / Math.max(2, family.memberCount)) * 100).toFixed(1)
+            )
+          );
 
-    const gaps: number[] = [];
-    for (let i = 1; i < starts.length; i += 1) {
-      const gap = starts[i]! - starts[i - 1]!;
-      if (gap > 0) gaps.push(gap);
+    let status: "strong" | "partial" | "weak" = "weak";
+    if (family.memberCount >= 4 && family.averageSimilarity >= 0.75) status = "strong";
+    else if (family.memberCount >= 2 && family.averageSimilarity >= 0.5) {
+      status = "partial";
     }
-
-    const avgGap = gaps.length ? average(gaps) : 0;
-    const gapSpread = gaps.length >= 2 ? Math.max(...gaps) - Math.min(...gaps) : 0;
-
-    const repeatConfidence =
-      gaps.length > 0
-        ? clamp01(
-            (1 - Math.min(1, gapSpread / Math.max(1, avgGap))) * 0.7 +
-              Math.min(1, family.members.length / 5) * 0.3
-          )
-        : 0;
 
     return {
       familyId: family.familyId,
-      estimatedInterval: gaps.length ? round3(avgGap) : null,
-      observedGapCount: gaps.length,
-      repeatConfidence: round3(repeatConfidence),
+      memberCount: family.memberCount,
+      repeatCoverage,
+      spreadSeconds: family.spreadSeconds,
+      status,
     };
   });
+}
+
+export function buildStableFamilyDiagnostics(
+  stableFamilies: MomentFamilyEngineFamily[]
+): InspectorStableFamilyDiagnosticRow[] {
+  return buildInspectorSimilarityFamilySummaries(stableFamilies).map((family) => ({
+    familyId: family.familyId,
+    memberCount: family.memberCount,
+    averageSimilarity: family.averageSimilarity,
+    strongestSimilarity: family.strongestSimilarity,
+    spreadSeconds: family.spreadSeconds,
+    isStable:
+      family.memberCount >= 2 &&
+      family.averageSimilarity >= 0.5 &&
+      family.strongestSimilarity >= 0.65,
+  }));
 }

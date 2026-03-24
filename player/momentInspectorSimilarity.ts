@@ -7,7 +7,6 @@ import { findSimilarMoments, groupMomentsIntoFamilies } from "./playerMomentSimi
 
 import {
   buildRepeatDiagnostics,
-  buildSimilarityDebugRows,
   buildStableFamilyDiagnostics,
 } from "./momentInspectorSimilarity.builders";
 import {
@@ -80,11 +79,6 @@ export function buildMomentInspectorSimilarity(
   }
 
   const moments = sections.map((section) => toComparableMoment(track, section));
-  const momentsById: Record<string, InspectorComparableMoment> = {};
-
-  for (const moment of moments) {
-    momentsById[getMomentId(moment)] = moment;
-  }
 
   const selectedMoment =
     moments.find((moment) => moment.sectionId === selectedSectionId) ?? moments[0] ?? null;
@@ -103,12 +97,6 @@ export function buildMomentInspectorSimilarity(
     minSimilarityScore: SIMILAR_MOMENT_MIN_SCORE,
     maxResults: SIMILAR_MOMENT_MAX_RESULTS,
     sameTrackOnly: true,
-  });
-
-  const similarityDebugRows = buildSimilarityDebugRows({
-    selectedMoment,
-    similarMoments,
-    momentsById,
   });
 
   const families = groupMomentsIntoFamilies({
@@ -134,19 +122,17 @@ export function buildMomentInspectorSimilarity(
   const ungroupedMomentIds = stableFamilyResult.ungroupedMomentIds;
   const engineFamiliesById = toEngineMomentFamilyMap(stableFamilies);
 
+  const similarityDebugRows: InspectorSimilarityDebugRow[] = [];
+
   const stableSelectedFamily = getSelectedEngineFamily(
     selectedMoment,
     familyByMomentId,
     engineFamiliesById
   );
 
-  const stableFamilyDiagnostics = buildStableFamilyDiagnostics({
-    stableFamilies,
-    familyByMomentId,
-    ungroupedMomentIds,
-  });
+  const stableFamilyDiagnostics = buildStableFamilyDiagnostics(stableFamilies);
 
-  const repeatDiagnostics = buildRepeatDiagnostics(families);
+  const repeatDiagnostics = buildRepeatDiagnostics(stableFamilies);
 
   const intendedRepeatMetadata = buildIntendedRepeatMetadata({
     families: stableFamilies,

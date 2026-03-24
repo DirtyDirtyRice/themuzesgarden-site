@@ -23,6 +23,7 @@ type DiscoverySnapshotLike = {
 } | null;
 
 type MetadataClarificationResult = ReturnType<typeof getOptionalMetadataClarificationResult>;
+type MetadataInspectorSummary = ReturnType<typeof buildMetadataInspectorSummary>;
 
 export type MomentInspectorRuntimeHealth = {
   hasSelectedTrack: boolean;
@@ -108,7 +109,9 @@ function getFamilyOptions(args: {
   const selectedPhraseFamilyId = normalizeText(args.selectedPhraseFamilyId);
   const runtimeFamilyId = normalizeText(args.intelligenceRuntimeInput?.familyId);
 
-  return Array.from(new Set([selectedPhraseFamilyId, runtimeFamilyId, ...normalized].filter(Boolean)));
+  return Array.from(
+    new Set([selectedPhraseFamilyId, runtimeFamilyId, ...normalized].filter(Boolean))
+  );
 }
 
 function buildMatchedTags(trackTags: string[], momentTags: string[]): string[] {
@@ -180,7 +183,9 @@ function buildSafeIntelligenceRuntime(args: {
   const { selectedPhraseFamilyId, intelligenceRuntimeInput } = args;
 
   const familyId =
-    normalizeText(intelligenceRuntimeInput?.familyId) || normalizeText(selectedPhraseFamilyId) || "";
+    normalizeText(intelligenceRuntimeInput?.familyId) ||
+    normalizeText(selectedPhraseFamilyId) ||
+    "";
 
   return buildPlayerMomentIntelligenceRuntime({
     familyId,
@@ -209,6 +214,27 @@ function getIntelligenceReady(runtime: PlayerMomentIntelligenceRuntimeState): bo
     runtime.hasRepair ||
     runtime.hasTrust
   );
+}
+
+function buildSafeMetadataSummary(
+  metadataClarificationResult: MetadataClarificationResult
+): MetadataInspectorSummary {
+  const baseSummary = buildMetadataInspectorSummary(null);
+  const clarificationSummary =
+    buildInspectorMetadataClarificationSummary(metadataClarificationResult);
+
+  if (!clarificationSummary) {
+    return baseSummary;
+  }
+
+  return {
+    ...baseSummary,
+    ...clarificationSummary,
+    tagLinks: Array.isArray((clarificationSummary as { tagLinks?: unknown }).tagLinks)
+      ? ((clarificationSummary as { tagLinks?: MetadataInspectorSummary["tagLinks"] }).tagLinks ??
+          baseSummary.tagLinks)
+      : baseSummary.tagLinks,
+  };
 }
 
 export function buildMomentInspectorRuntimeBridge(
@@ -249,9 +275,7 @@ export function buildMomentInspectorRuntimeBridge(
     discoverySnapshot,
   });
 
-  const metadataSummary =
-    buildInspectorMetadataClarificationSummary(metadataClarificationResult) ??
-    buildMetadataInspectorSummary(null);
+  const metadataSummary = buildSafeMetadataSummary(metadataClarificationResult);
 
   const runtimeHealth = buildMomentInspectorRuntimeHealth({
     selectedTrack,

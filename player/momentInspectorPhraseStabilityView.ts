@@ -140,7 +140,9 @@ export function buildInspectorPhraseStabilityView(
 ): InspectorPhraseStabilityView {
   const familyRows = (stabilityResult?.families ?? [])
     .map(buildFamilyRow)
-    .filter((row) => Boolean(row.familyId))
+    .filter(
+      (row: InspectorPhraseStabilityFamilyRow) => Boolean(row.familyId)
+    )
     .sort(compareRows);
 
   const byFamilyId: Record<string, InspectorPhraseStabilityFamilyRow> = {};
