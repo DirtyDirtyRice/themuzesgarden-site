@@ -1,6 +1,18 @@
 import type { IntendedActionPlan } from "./playerMomentIntendedActions";
 import type { PhraseDriftEngineResult } from "./playerMomentPhraseDrift";
-import type { PhraseStabilityEngineResult } from "./playerMomentPhraseStability";
+
+/**
+ * 🔧 FULL fallback (not exported upstream)
+ * Breaks Vercel loop safely
+ */
+type PhraseStabilityEngineResult = {
+  byFamilyId?: Record<
+    string,
+    {
+      stabilityScore?: number | null;
+    }
+  >;
+};
 
 export type InspectorRepairQueueRow = {
   familyId: string;
