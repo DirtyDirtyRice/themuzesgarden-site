@@ -1,3 +1,4 @@
+export type MomentInspectorRuntimeVerdictFilter =
   | "all"
   | "stable"
   | "watch"
