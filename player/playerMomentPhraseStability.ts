@@ -6,16 +6,6 @@ import type {
   PhraseStabilityEngineInput,
   PhraseStabilityEngineResult,
   PhraseStabilityFamilyResult,
-  PhraseStabilityIssueFlag,
-  PhraseStabilityLabel,
-} from "./playerMomentPhraseStability.types";
-
-export type {
-  PhraseStabilityEngineInput,
-  PhraseStabilityEngineResult,
-  PhraseStabilityFamilyResult,
-  PhraseStabilityIssueFlag,
-  PhraseStabilityLabel,
 } from "./playerMomentPhraseStability.types";
 
 function normalizeText(value: unknown): string {
