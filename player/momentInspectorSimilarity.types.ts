@@ -6,7 +6,7 @@ import type {
 } from "./playerMomentIntendedActions";
 import type {
   IntendedRepeatFamilyPlan,
-  IntendedRepeatMetadataResult,
+  IntendedRepeatResult,
 } from "./playerMomentIntendedRepeat";
 import type {
   PhraseDriftEngineResult,
@@ -74,7 +74,7 @@ export type BuildMomentInspectorSimilarityResult = {
   ungroupedMomentIds: string[];
   stableFamilyDiagnostics: InspectorStableFamilyDiagnostics[];
   repeatDiagnostics: InspectorRepeatDiagnostics[];
-  intendedRepeatMetadata: IntendedRepeatMetadataResult;
+  intendedRepeatMetadata: IntendedRepeatResult;
   selectedIntendedPlan: IntendedRepeatFamilyPlan | null;
   intendedActionResult: IntendedActionResult;
   selectedIntendedActionPlan: IntendedActionPlan | null;
