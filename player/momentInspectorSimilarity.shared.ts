@@ -6,7 +6,7 @@ import type {
 } from "./playerMomentIntendedActions";
 import type {
   IntendedRepeatFamilyPlan,
-  IntendedRepeatMetadataResult,
+  IntendedRepeatResult,
 } from "./playerMomentIntendedRepeat";
 import type {
   PhraseDriftEngineResult,
@@ -191,10 +191,10 @@ export function buildMomentLookups(moments: MomentSimilarityComparable[]) {
 
 export function getSelectedIntendedPlan(
   stableSelectedFamily: MomentFamilyEngineFamily | null,
-  intendedRepeatMetadata: IntendedRepeatMetadataResult
+  intendedRepeatMetadata: IntendedRepeatResult
 ): IntendedRepeatFamilyPlan | null {
   if (!stableSelectedFamily) return null;
-  return intendedRepeatMetadata.plansByFamilyId[stableSelectedFamily.id] ?? null;
+  return intendedRepeatMetadata.byFamilyId[stableSelectedFamily.id] ?? null;
 }
 
 export function getSelectedIntendedActionPlan(
@@ -258,7 +258,7 @@ export function buildEmptyMomentInspectorSimilarityResult(params: {
     repeatDiagnostics: [],
     intendedRepeatMetadata: {
       plans: [],
-      plansByFamilyId: {},
+      byFamilyId: {},
     },
     selectedIntendedPlan: null,
     intendedActionResult: {
