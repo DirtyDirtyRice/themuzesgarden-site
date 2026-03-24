@@ -1,4 +1,4 @@
-import type { ComparableMoment } from "./playerMomentSimilarityTypes";
+import type { MomentSimilarityComparable } from "./playerMomentSimilarityTypes";
 import type { MomentFamilyEngineFamily } from "./playerMomentFamilyEngine";
 
 export type PhraseDriftLabel =
@@ -40,7 +40,7 @@ export type PhraseDriftFamilyResult = {
 };
 
 export type PhraseDriftEngineInput = {
-  moments: ComparableMoment[];
+  moments: MomentSimilarityComparable[];
   families: MomentFamilyEngineFamily[];
   earlyLateTolerance?: number;
   durationTolerance?: number;
