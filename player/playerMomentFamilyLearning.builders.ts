@@ -35,7 +35,8 @@ export function buildFamilyLearning(
     trustDelta,
   });
 
-  const learningLabel = getLearningLabel(learningScore);
+  const learningLabel =
+    getLearningLabel(learningScore) as FamilyLearningResult["learningLabel"];
 
   const reinforceStrategy =
     signalConfirmed && (learningScore ?? 0) >= 0.65;
@@ -46,11 +47,9 @@ export function buildFamilyLearning(
   const reinforceRepeat =
     repeatReinforced && (learningScore ?? 0) >= 0.6;
 
-  const adjustPlanning =
-    (learningScore ?? 0) < 0.5;
+  const adjustPlanning = (learningScore ?? 0) < 0.5;
 
-  const avoidStrategy =
-    (learningScore ?? 0) < 0.3;
+  const avoidStrategy = (learningScore ?? 0) < 0.3;
 
   const trustAcceleration =
     trustDelta !== null && trustDelta > 0 ? 0.1 : null;
