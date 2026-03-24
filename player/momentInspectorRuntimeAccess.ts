@@ -1,7 +1,6 @@
 import type { AnyTrack } from "./playerTypes";
 import type { IntendedActionPlan } from "./playerMomentIntendedActions";
 import type { PhraseDriftEngineResult } from "./playerMomentPhraseDrift";
-import type { PhraseStabilityEngineResult } from "./playerMomentPhraseStability";
 import type { RepairSimulationResult } from "./playerMomentRepairSimulation";
 
 import type {
@@ -11,6 +10,15 @@ import type {
 import type { FamilyLineageResult } from "./playerMomentFamilyLineage";
 import type { ConfidenceHistoryResult } from "./playerMomentConfidenceHistory";
 import type { MetadataClarificationResult } from "./metadataClarification";
+
+/**
+ * 🔧 FULL fallback (not exported upstream)
+ * Breaks Vercel loop safely
+ */
+type PhraseStabilityEngineResult = {
+  families?: unknown[];
+  byFamilyId?: Record<string, unknown>;
+};
 
 export function normalizeInspectorText(value: unknown): string {
   return String(value ?? "").trim();
