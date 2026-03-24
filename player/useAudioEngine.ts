@@ -654,7 +654,9 @@ export function useAudioEngine(args: {
 
     function onPlaying() {
       errorSkipGuardRef.current = 0;
-      setStatusTime(fmtTime(el.currentTime));
+      const audio = audioRef.current;
+      if (!audio) return;
+      setStatusTime(fmtTime(audio.currentTime));
     }
 
     el.addEventListener("ended", onEnded);
