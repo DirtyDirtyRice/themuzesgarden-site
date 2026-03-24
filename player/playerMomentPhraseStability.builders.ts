@@ -1,4 +1,4 @@
-import type { IntendedRepeatMetadataResult } from "./playerMomentIntendedRepeat";
+import type { IntendedRepeatResult } from "./playerMomentIntendedRepeat";
 import type {
   PhraseDriftFamilyResult,
 } from "./playerMomentPhraseDrift";
@@ -71,10 +71,10 @@ export function buildDurationConsistency(family: PhraseDriftFamilyResult): numbe
 
 export function buildRepeatCoverage(params: {
   familyId: string;
-  intendedRepeatMetadata?: IntendedRepeatMetadataResult | null;
+  intendedRepeatMetadata?: IntendedRepeatResult | null;
   family: PhraseDriftFamilyResult;
 }): number {
-  const plan = params.intendedRepeatMetadata?.plansByFamilyId?.[params.familyId];
+  const plan = params.intendedRepeatMetadata?.byFamilyId?.[params.familyId];
   const memberCount = getFamilyMemberCount(params.family);
 
   if (!plan) {
@@ -122,14 +122,14 @@ export function buildStructuralConfidence(
 
 export function buildIssueFlags(params: {
   family: PhraseDriftFamilyResult;
-  intendedRepeatMetadata?: IntendedRepeatMetadataResult | null;
+  intendedRepeatMetadata?: IntendedRepeatResult | null;
   timingConsistency: number;
   durationConsistency: number;
   repeatCoverage: number;
   structuralConfidence: number;
 }): PhraseStabilityIssueFlag[] {
   const flags = new Set<PhraseStabilityIssueFlag>();
-  const plan = params.intendedRepeatMetadata?.plansByFamilyId?.[params.family.familyId];
+  const plan = params.intendedRepeatMetadata?.byFamilyId?.[params.family.familyId];
 
   if ((plan?.missingCount ?? 0) > 0 || params.repeatCoverage < 0.6) {
     flags.add("missing-repeats");
@@ -167,7 +167,7 @@ export function buildIssueFlags(params: {
 
 export function buildFamilyResult(params: {
   family: PhraseDriftFamilyResult;
-  intendedRepeatMetadata?: IntendedRepeatMetadataResult | null;
+  intendedRepeatMetadata?: IntendedRepeatResult | null;
 }): PhraseStabilityFamilyResult {
   const { family, intendedRepeatMetadata } = params;
 
