@@ -1,6 +1,7 @@
 import { buildFamilyResult } from "./playerMomentPhraseStability.builders";
 import { getSeveritySortRank } from "./playerMomentPhraseStability.shared";
 
+import type { PhraseDriftFamilyResult } from "./playerMomentPhraseDrift";
 import type {
   PhraseStabilityEngineInput,
   PhraseStabilityEngineResult,
@@ -46,12 +47,14 @@ function comparePhraseStabilityFamilies(
 export function buildMomentPhraseStability(
   input: PhraseStabilityEngineInput
 ): PhraseStabilityEngineResult {
-  const sourceFamilies = Array.isArray(input.phraseDriftResult?.families)
-    ? input.phraseDriftResult.families
+  const sourceFamilies: PhraseDriftFamilyResult[] = Array.isArray(
+    input.phraseDriftResult?.families
+  )
+    ? (input.phraseDriftResult.families as PhraseDriftFamilyResult[])
     : [];
 
   const families = sourceFamilies
-    .map((family) =>
+    .map((family: PhraseDriftFamilyResult) =>
       buildFamilyResult({
         family,
         intendedRepeatMetadata: input.intendedRepeatMetadata,
