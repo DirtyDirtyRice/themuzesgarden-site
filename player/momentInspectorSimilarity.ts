@@ -1,6 +1,6 @@
 import { buildMomentFamilies } from "./playerMomentFamilyEngine";
 import { buildIntendedActionPlans } from "./playerMomentIntendedActions";
-import { buildIntendedRepeatMetadata } from "./playerMomentIntendedRepeat";
+import { buildIntendedRepeat } from "./playerMomentIntendedRepeat";
 import { buildMomentPhraseDrift } from "./playerMomentPhraseDrift";
 import { buildMomentPhraseStability } from "./playerMomentPhraseStability";
 import { findSimilarMoments, groupMomentsIntoFamilies } from "./playerMomentSimilarity";
@@ -130,17 +130,14 @@ export function buildMomentInspectorSimilarity(
     engineFamiliesById
   );
 
-  // ✅ SAFE FALLBACK FIX (CRITICAL)
   const stableFamilyDiagnostics =
     buildStableFamilyDiagnostics(stableFamilies) as unknown as InspectorStableFamilyDiagnostics[];
 
   const repeatDiagnostics =
     buildRepeatDiagnostics(stableFamilies) as unknown as InspectorRepeatDiagnostics[];
 
-  const intendedRepeatMetadata = buildIntendedRepeatMetadata({
+  const intendedRepeatMetadata = buildIntendedRepeat({
     families: stableFamilies,
-    momentLookups: buildMomentLookups(moments),
-    minFamilySize: 2,
   });
 
   const selectedIntendedPlan = getSelectedIntendedPlan(
