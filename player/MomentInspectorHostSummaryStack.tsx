@@ -1,12 +1,15 @@
 "use client";
 
-import MomentInspectorDiagnosticsPanel from "./MomentInspectorDiagnosticsPanel";
+import MomentInspectorSummary from "./MomentInspectorSummary";
 import MomentInspectorDiscoveryStatus from "./MomentInspectorDiscoveryStatus";
 import MomentInspectorSimilarityPanel from "./MomentInspectorSimilarityPanel";
-import MomentInspectorSummary from "./MomentInspectorSummary";
 import MomentInspectorTagPanels from "./MomentInspectorTagPanels";
+import MomentInspectorDiagnosticsPanel from "./MomentInspectorDiagnosticsPanel";
+import type MomentInspectorHostSummaryStackProps from "./momentInspectorHostSummaryStack.types";
 
-export default function MomentInspectorHostSummaryStack(props: any) {
+export default function MomentInspectorHostSummaryStack(
+  props: MomentInspectorHostSummaryStackProps
+) {
   return (
     <>
       <MomentInspectorSummary {...props.summaryProps} />
