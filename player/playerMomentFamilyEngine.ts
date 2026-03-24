@@ -246,16 +246,51 @@ function getSimilarityScore(result: SimilarityResultLike): number {
   return 0;
 }
 
+function getDifferencePercent(result: SimilarityResultLike): number {
+  const direct = toNumber(result.differencePercent);
+  if (direct !== null) return direct;
+
+  const score = toNumber(result.score);
+  if (score !== null) return Number(((1 - clamp01(score)) * 100).toFixed(2));
+
+  const similarityPercent = toNumber(result.similarityPercent);
+  if (similarityPercent !== null) {
+    return Number((100 - clamp01(similarityPercent / 100) * 100).toFixed(2));
+  }
+
+  return 100;
+}
+
+function getMomentSimilarityResult(
+  a: ComparableMoment,
+  b: ComparableMoment
+): SimilarityResultLike {
+  return scoreMomentSimilarity(
+    toMomentSimilarityComparable(a) as any,
+    toMomentSimilarityComparable(b) as any
+  ) as SimilarityResultLike;
+}
+
 function getMomentSimilarityScore(
   a: ComparableMoment,
   b: ComparableMoment
 ): number {
-  return getSimilarityScore(
-    scoreMomentSimilarity(
-      toMomentSimilarityComparable(a) as any,
-      toMomentSimilarityComparable(b) as any
-    ) as SimilarityResultLike
-  );
+  return getSimilarityScore(getMomentSimilarityResult(a, b));
+}
+
+function buildMomentFamilyMember(
+  referenceMoment: ComparableMoment,
+  moment: ComparableMoment
+): MomentFamilyMember {
+  const similarityResult = getMomentSimilarityResult(referenceMoment, moment);
+
+  return {
+    moment: toMomentSimilarityComparable(moment) as any,
+    similarityScoreToReference: clamp01(getSimilarityScore(similarityResult)),
+    differencePercentToReference: getDifferencePercent(similarityResult),
+    matchKind:
+      getMomentId(referenceMoment) === getMomentId(moment) ? "reference" : "similar",
+  } as MomentFamilyMember;
 }
 
 function collectPairMatches(
@@ -388,10 +423,9 @@ export function buildMomentFamilies(
     const anchorMoment = members[0];
     const id = makeStableFamilyId(members);
 
-    const memberRows: MomentFamilyMember[] = members.map((moment) => ({
-      momentId: getMomentId(moment),
-      similarityToAnchor: clamp01(getMomentSimilarityScore(anchorMoment, moment)),
-    }));
+    const memberRows: MomentFamilyMember[] = members.map((moment) =>
+      buildMomentFamilyMember(anchorMoment, moment)
+    );
 
     const builtFamily: MomentFamilyEngineFamily = {
       id,
