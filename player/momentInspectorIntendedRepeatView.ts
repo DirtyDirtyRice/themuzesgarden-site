@@ -83,13 +83,18 @@ function getRepeatPriority(row: InspectorIntendedRepeatSummaryRow): number {
 }
 
 function toPlacementRow(
+  familyId: string,
   placement: IntendedRepeatPlacement
 ): InspectorIntendedRepeatPlacementRow {
+  const placementLike = placement as unknown as {
+    nearestActualStart?: unknown;
+  };
+
   return {
-    familyId: normalizeText(placement.familyId),
+    familyId,
     expectedAt: Number(placement.expectedAt ?? 0),
     nearestMomentId: normalizeText(placement.nearestMomentId) || null,
-    nearestActualStart: round3(toNumberOrNull(placement.nearestActualStart)),
+    nearestActualStart: round3(toNumberOrNull(placementLike.nearestActualStart)),
     deltaFromExpected: round3(toNumberOrNull(placement.deltaFromExpected)),
     status: placement.status,
     confidence: clamp01(placement.confidence),
@@ -106,21 +111,28 @@ export function buildInspectorIntendedRepeatView(
     const familyId = normalizeText(plan.familyId);
     if (!familyId) continue;
 
+    const planLike = plan as unknown as {
+      memberCount?: unknown;
+      repeatInterval?: unknown;
+      strongestScore?: unknown;
+      averageScore?: unknown;
+    };
+
     const summaryRow: InspectorIntendedRepeatSummaryRow = {
       familyId,
-      memberCount: Math.max(0, Number(plan.memberCount ?? 0)),
-      repeatInterval: round3(toNumberOrNull(plan.repeatInterval)),
+      memberCount: Math.max(0, Number(planLike.memberCount ?? 0)),
+      repeatInterval: round3(toNumberOrNull(planLike.repeatInterval)),
       presentCount: Math.max(0, Number(plan.presentCount ?? 0)),
       nearCount: Math.max(0, Number(plan.nearCount ?? 0)),
       missingCount: Math.max(0, Number(plan.missingCount ?? 0)),
-      strongestScore: clamp01(plan.strongestScore),
-      averageScore: clamp01(plan.averageScore),
+      strongestScore: clamp01(planLike.strongestScore),
+      averageScore: clamp01(planLike.averageScore),
     };
 
     summaryRows.push(summaryRow);
 
     placementsByFamilyId[familyId] = Array.isArray(plan.expectedPlacements)
-      ? plan.expectedPlacements.map(toPlacementRow)
+      ? plan.expectedPlacements.map((placement) => toPlacementRow(familyId, placement))
       : [];
   }
 
