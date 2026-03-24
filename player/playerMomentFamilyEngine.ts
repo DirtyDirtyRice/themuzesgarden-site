@@ -284,13 +284,15 @@ function buildMomentFamilyMember(
 ): MomentFamilyMember {
   const similarityResult = getMomentSimilarityResult(referenceMoment, moment);
 
-  return {
+  const member = {
     moment: toMomentSimilarityComparable(moment) as any,
     similarityScoreToReference: clamp01(getSimilarityScore(similarityResult)),
     differencePercentToReference: getDifferencePercent(similarityResult),
     matchKind:
       getMomentId(referenceMoment) === getMomentId(moment) ? "reference" : "similar",
-  } as MomentFamilyMember;
+  };
+
+  return member as unknown as MomentFamilyMember;
 }
 
 function collectPairMatches(
