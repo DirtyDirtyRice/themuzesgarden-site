@@ -265,13 +265,20 @@ function collectPairMatches(
 ): Map<string, PairMatch[]> {
   const pairMap = new Map<string, PairMatch[]>();
 
+  const comparableCandidates = orderedMoments.map((item) =>
+    toMomentSimilarityComparable(item)
+  );
+
   for (const moment of orderedMoments) {
     const momentId = getMomentId(moment);
 
-    const matches = findSimilarMoments(
-      toMomentSimilarityComparable(moment) as any,
-      orderedMoments.map((item) => toMomentSimilarityComparable(item) as any)
-    )
+    const matches = findSimilarMoments({
+      reference: toMomentSimilarityComparable(moment) as any,
+      candidates: comparableCandidates as any,
+      minSimilarityScore: similarityThreshold,
+      maxResults: maxMatchesPerMoment,
+      sameTrackOnly: false,
+    })
       .map((result) => ({
         id: getMomentId((result as SimilarityResultLike).moment as ComparableMoment),
         score: getSimilarityScore(result as SimilarityResultLike),
