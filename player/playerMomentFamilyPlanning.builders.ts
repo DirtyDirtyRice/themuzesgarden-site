@@ -16,6 +16,9 @@ import {
   sortPlanningItems,
 } from "./playerMomentFamilyPlanning.shared";
 
+type StrategyResultLike = NonNullable<BuildFamilyPlanningParams["strategyResult"]>;
+type StrategyItemLike = StrategyResultLike["items"][number];
+
 function getUrgencyScore(params: {
   strategyScore: number | null;
   timingScore: number | null;
@@ -204,13 +207,13 @@ function getItemStrongestReason(params: {
 
 function buildPlanningItem(params: {
   itemRank: number;
-  strategyItem: FamilyStrategyResult["items"][number];
+  strategyItem: StrategyItemLike;
   portfolioHealth: string | null;
 }): FamilyPlanningItem {
   const strategyItem = params.strategyItem;
   const portfolioItem =
     strategyItem.familyId &&
-    strategyItem; // keeps local naming simple, no assumption beyond inspected structure
+    strategyItem;
 
   const recommendationResult =
     strategyItem.familyId &&
@@ -260,6 +263,11 @@ function buildPlanningItem(params: {
     executionValueScore,
   });
 
+  const pointCount = Array.isArray(strategyItem.reasons) &&
+    strategyItem.reasons.includes("proof-base-thin")
+      ? 1
+      : 2;
+
   const reasons = buildItemReasons({
     itemRank: params.itemRank,
     planScore,
@@ -270,7 +278,7 @@ function buildPlanningItem(params: {
     strategyAction: strategyItem.strategyAction ?? null,
     strategyStrongestReason: strategyItem.strongestReason ?? null,
     portfolioHealth: params.portfolioHealth,
-    pointCount: strategyItem.reasons.includes("proof-base-thin") ? 1 : 2,
+    pointCount,
   });
 
   const strongestReason = getItemStrongestReason({
@@ -280,7 +288,7 @@ function buildPlanningItem(params: {
     protectionNeedScore,
     readinessScore,
     urgencyScore,
-    pointCount: strategyItem.reasons.includes("proof-base-thin") ? 1 : 2,
+    pointCount,
   });
 
   const planningAction = getPlanningAction({
