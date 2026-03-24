@@ -1,7 +1,6 @@
 import type {
   MomentFamily,
   MomentFamilyMember,
-  SimilarityResult,
 } from "./playerMomentSimilarityTypes";
 import { findSimilarMoments, scoreMomentSimilarity } from "./playerMomentSimilarity";
 
@@ -13,6 +12,13 @@ type ComparableMoment = Record<string, unknown> & {
   title?: unknown;
   trackId?: unknown;
   sourceTrackId?: unknown;
+};
+
+type SimilarityResultLike = {
+  score?: unknown;
+  similarityPercent?: unknown;
+  differencePercent?: unknown;
+  moment?: unknown;
 };
 
 export type MomentFamilyEngineInput = {
@@ -207,18 +213,14 @@ function mergeFamilies(target: InternalFamily, source: InternalFamily) {
   target.scores.push(...source.scores);
 }
 
-function getSimilarityScore(result: SimilarityResult): number {
-  const direct = toNumber((result as { score?: unknown }).score);
+function getSimilarityScore(result: SimilarityResultLike): number {
+  const direct = toNumber(result.score);
   if (direct !== null) return clamp01(direct);
 
-  const percent = toNumber(
-    (result as { similarityPercent?: unknown }).similarityPercent
-  );
+  const percent = toNumber(result.similarityPercent);
   if (percent !== null) return clamp01(percent / 100);
 
-  const diff = toNumber(
-    (result as { differencePercent?: unknown }).differencePercent
-  );
+  const diff = toNumber(result.differencePercent);
   if (diff !== null) return clamp01(1 - diff / 100);
 
   return 0;
@@ -228,7 +230,7 @@ function getMomentSimilarityScore(
   a: ComparableMoment,
   b: ComparableMoment
 ): number {
-  return getSimilarityScore(scoreMomentSimilarity(a, b) as SimilarityResult);
+  return getSimilarityScore(scoreMomentSimilarity(a, b) as SimilarityResultLike);
 }
 
 function collectPairMatches(
@@ -243,8 +245,8 @@ function collectPairMatches(
 
     const matches = findSimilarMoments(moment, orderedMoments)
       .map((result) => ({
-        id: getMomentId(result.moment as ComparableMoment),
-        score: getSimilarityScore(result as SimilarityResult),
+        id: getMomentId((result as SimilarityResultLike).moment as ComparableMoment),
+        score: getSimilarityScore(result as SimilarityResultLike),
       }))
       .filter((result) => {
         if (!result.id || result.id === momentId) return false;
@@ -280,7 +282,9 @@ export function buildMomentFamilies(
   );
 
   const orderedMoments = getOrderedMoments(input.moments ?? []);
-  const byId = new Map(orderedMoments.map((moment) => [getMomentId(moment), moment]));
+  const byId = new Map(
+    orderedMoments.map((moment) => [getMomentId(moment), moment] as const)
+  );
   const pairMap = collectPairMatches(
     orderedMoments,
     similarityThreshold,
