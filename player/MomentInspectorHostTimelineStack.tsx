@@ -1,8 +1,10 @@
-import type { AnyRecord } from "./momentInspectorHostShared.types";
+"use client";
 
-type MomentInspectorHostTimelineStackProps = {
-  timelineProps: AnyRecord;
-};
+import MomentInspectorTimelinePanel from "./MomentInspectorTimelinePanel";
+import type MomentInspectorHostTimelineStackProps from "./momentInspectorHostTimelineStack.types";
 
-export default MomentInspectorHostTimelineStackProps;
-export type { MomentInspectorHostTimelineStackProps };
+export default function MomentInspectorHostTimelineStack(
+  props: MomentInspectorHostTimelineStackProps
+) {
+  return <MomentInspectorTimelinePanel {...props.timelineProps} />;
+}

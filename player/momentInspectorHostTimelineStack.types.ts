@@ -1,7 +1,8 @@
-import type { AnyRecord } from "./momentInspectorHostShared.types";
+import type { ComponentProps } from "react";
+import MomentInspectorTimelinePanel from "./MomentInspectorTimelinePanel";
 
 type MomentInspectorHostTimelineStackProps = {
-  timelineProps: AnyRecord;
+  timelineProps: ComponentProps<typeof MomentInspectorTimelinePanel>;
 };
 
 export default MomentInspectorHostTimelineStackProps;
