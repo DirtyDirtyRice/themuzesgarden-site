@@ -4,7 +4,16 @@ import type {
   IntendedRepeatPlacement,
 } from "./playerMomentIntendedRepeat";
 import type { PhraseDriftEngineResult } from "./playerMomentPhraseDrift";
-import type { PhraseStabilityEngineResult } from "./playerMomentPhraseStability";
+
+type PhraseStabilityEngineResult = {
+  byFamilyId?: Record<
+    string,
+    {
+      stabilityScore?: number | null;
+      stabilityLabel?: string | null;
+    }
+  >;
+};
 
 export type IntendedActionType =
   | "fill-missing-occurrence"
