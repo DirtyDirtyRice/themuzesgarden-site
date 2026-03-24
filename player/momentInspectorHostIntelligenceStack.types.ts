@@ -7,7 +7,7 @@ import MomentInspectorBookmarksBar from "./MomentInspectorBookmarksBar";
 import MomentInspectorCompareBar from "./MomentInspectorCompareBar";
 import MomentInspectorComparePanel from "./MomentInspectorComparePanel";
 import MomentInspectorIntelligencePanel from "./MomentInspectorIntelligencePanel";
-import type { MomentInspectorHostIntelligenceStackProps } from "./momentInspectorHostIntelligenceStack.types";
+import type MomentInspectorHostIntelligenceStackProps from "./momentInspectorHostIntelligenceStack.types";
 
 export default function MomentInspectorHostIntelligenceStack(
   props: MomentInspectorHostIntelligenceStackProps
