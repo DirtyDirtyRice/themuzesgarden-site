@@ -1,10 +1,19 @@
 import type {
-  ComparableMoment,
   MomentFamily,
   MomentFamilyMember,
   SimilarityResult,
 } from "./playerMomentSimilarityTypes";
 import { findSimilarMoments, scoreMomentSimilarity } from "./playerMomentSimilarity";
+
+type ComparableMoment = Record<string, unknown> & {
+  id?: unknown;
+  startTime?: unknown;
+  start?: unknown;
+  label?: unknown;
+  title?: unknown;
+  trackId?: unknown;
+  sourceTrackId?: unknown;
+};
 
 export type MomentFamilyEngineInput = {
   moments: ComparableMoment[];
@@ -60,30 +69,30 @@ function getMomentId(moment: ComparableMoment): string {
 }
 
 function getMomentStart(moment: ComparableMoment): number | null {
-  const direct = toNumber((moment as { startTime?: unknown }).startTime);
+  const direct = toNumber(moment.startTime);
   if (direct !== null) return direct;
 
-  const alt = toNumber((moment as { start?: unknown }).start);
+  const alt = toNumber(moment.start);
   if (alt !== null) return alt;
 
   return null;
 }
 
 function getMomentLabel(moment: ComparableMoment): string {
-  const direct = normalizeText((moment as { label?: unknown }).label);
+  const direct = normalizeText(moment.label);
   if (direct) return direct;
 
-  const alt = normalizeText((moment as { title?: unknown }).title);
+  const alt = normalizeText(moment.title);
   if (alt) return alt;
 
   return getMomentId(moment);
 }
 
 function getTrackId(moment: ComparableMoment): string {
-  const direct = normalizeText((moment as { trackId?: unknown }).trackId);
+  const direct = normalizeText(moment.trackId);
   if (direct) return direct;
 
-  const alt = normalizeText((moment as { sourceTrackId?: unknown }).sourceTrackId);
+  const alt = normalizeText(moment.sourceTrackId);
   if (alt) return alt;
 
   return "track";
@@ -234,8 +243,8 @@ function collectPairMatches(
 
     const matches = findSimilarMoments(moment, orderedMoments)
       .map((result) => ({
-        id: getMomentId(result.moment),
-        score: getSimilarityScore(result),
+        id: getMomentId(result.moment as ComparableMoment),
+        score: getSimilarityScore(result as SimilarityResult),
       }))
       .filter((result) => {
         if (!result.id || result.id === momentId) return false;
