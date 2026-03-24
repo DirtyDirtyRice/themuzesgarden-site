@@ -39,7 +39,7 @@ export function getMomentInspectorWorkspaceLaneMeta(
       lane,
       label: "Workspace",
       shortLabel: "Workspace",
-      description: "Workspace lane",
+      description: "Workspace lane.",
     }
   );
 }
