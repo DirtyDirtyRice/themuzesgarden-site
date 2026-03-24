@@ -1,20 +1,8 @@
-"use client";
+import type { AnyRecord } from "./momentInspectorHostShared.types";
 
-import MomentInspectorTimelinePanel from "./MomentInspectorTimelinePanel";
-import MomentInspectorSelectedFamilyStack from "./MomentInspectorSelectedFamilyStack";
-import MomentInspectorFamilySummaryColumns from "./MomentInspectorFamilySummaryColumns";
-import MomentInspectorSectionRows from "./MomentInspectorSectionRows";
-import type { MomentInspectorHostTimelineStackProps } from "./momentInspectorHostTimelineStack.types";
+type MomentInspectorHostTimelineStackProps = {
+  timelineProps: AnyRecord;
+};
 
-export default function MomentInspectorHostTimelineStack(
-  props: MomentInspectorHostTimelineStackProps
-) {
-  return (
-    <>
-      <MomentInspectorTimelinePanel {...props.timelineProps} />
-      <MomentInspectorSelectedFamilyStack {...props.selectedProps} />
-      <MomentInspectorFamilySummaryColumns {...props.columnsProps} />
-      <MomentInspectorSectionRows {...props.sectionsProps} />
-    </>
-  );
-}
+export default MomentInspectorHostTimelineStackProps;
+export type { MomentInspectorHostTimelineStackProps };
