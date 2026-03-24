@@ -37,6 +37,12 @@ type TrustSummaryRow = {
   reasonCount: number;
 };
 
+type InspectorPhraseStabilityInput =
+  Parameters<typeof buildInspectorPhraseStabilityView>[0];
+
+type InspectorRepairQueueParams =
+  Parameters<typeof buildInspectorRepairQueueView>[0];
+
 function normalizeText(value: unknown): string {
   return String(value ?? "").trim();
 }
@@ -55,7 +61,9 @@ function getUniqueFamilyIds(values: unknown[]): string[] {
   return result;
 }
 
-function indexRowsByFamilyId<RowType extends FamilyIdRow>(rows: RowType[]): Record<string, RowType> {
+function indexRowsByFamilyId<RowType extends FamilyIdRow>(
+  rows: RowType[]
+): Record<string, RowType> {
   return Object.fromEntries(
     rows
       .map((row) => {
@@ -86,13 +94,16 @@ export function buildMomentInspectorPhraseFamilyState(params: PhraseFamilyParams
   const inspectorHealth = buildMomentInspectorHealth(actionSummaryRows);
 
   const driftView = buildInspectorPhraseDriftView(phraseDriftResult);
-  const stabilityView = buildInspectorPhraseStabilityView(phraseStabilityResult);
+  const stabilityView = buildInspectorPhraseStabilityView(
+    phraseStabilityResult as unknown as InspectorPhraseStabilityInput
+  );
   const actionView = buildInspectorIntendedActionView(intendedActionPlans);
 
   const repairQueueView = buildInspectorRepairQueueView({
     intendedPlans: intendedActionPlans,
     phraseDriftResult,
-    phraseStabilityResult,
+    phraseStabilityResult:
+      phraseStabilityResult as unknown as InspectorRepairQueueParams["phraseStabilityResult"],
   });
 
   const familyOptions = buildMomentInspectorFamilyOptions({
