@@ -293,9 +293,7 @@ export function useAudioEngine(args: {
       el.removeAttribute("src");
       try {
         el.load();
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
 
     setNowId(null);
@@ -396,18 +394,14 @@ export function useAudioEngine(args: {
 
       try {
         el.currentTime = 0;
-      } catch {
-        // ignore
-      }
+      } catch {}
 
       const applyStartTime = () => {
         if (seq !== playSeqRef.current) return;
 
         try {
           el.currentTime = resolvedStartTime;
-        } catch {
-          // ignore
-        }
+        } catch {}
 
         setStatusTime(fmtTime(resolvedStartTime));
 
@@ -433,37 +427,25 @@ export function useAudioEngine(args: {
     [clearResumeMetaHandler, logProjectPlayIfPossible]
   );
 
-  const playTrack = useCallback(
-    (t: AnyTrack) => {
-      playTarget({ track: t, startTime: 0, sectionId: null });
-    },
-    [playTarget]
-  );
+  const playTrack = useCallback((t: AnyTrack) => {
+    playTarget({ track: t, startTime: 0, sectionId: null });
+  }, [playTarget]);
 
-  const playTrackAtTime = useCallback(
-    (t: AnyTrack, startTime: number) => {
-      playTarget({ track: t, startTime, sectionId: null });
-    },
-    [playTarget]
-  );
+  const playTrackAtTime = useCallback((t: AnyTrack, startTime: number) => {
+    playTarget({ track: t, startTime, sectionId: null });
+  }, [playTarget]);
 
-  const playSection = useCallback(
-    (t: AnyTrack, sectionId: string) => {
-      playTarget({ track: t, sectionId });
-    },
-    [playTarget]
-  );
+  const playSection = useCallback((t: AnyTrack, sectionId: string) => {
+    playTarget({ track: t, sectionId });
+  }, [playTarget]);
 
-  const playFromHere = useCallback(
-    (t: AnyTrack) => {
-      if (onProjectPageRef.current) {
-        setTab("project");
-      }
-      setShuffle(false);
-      playTarget({ track: t, startTime: 0, sectionId: null });
-    },
-    [playTarget, setTab]
-  );
+  const playFromHere = useCallback((t: AnyTrack) => {
+    if (onProjectPageRef.current) {
+      setTab("project");
+    }
+    setShuffle(false);
+    playTarget({ track: t, startTime: 0, sectionId: null });
+  }, [playTarget, setTab]);
 
   const togglePlayPause = useCallback(() => {
     const el = audioRef.current;
@@ -675,12 +657,17 @@ export function useAudioEngine(args: {
     if (!el) return;
 
     function onVolume() {
-      const v = Math.max(0, Math.min(1, el.volume));
+      const audio = audioRef.current;
+      if (!audio) return;
+      const v = Math.max(0, Math.min(1, audio.volume));
       writePersisted({ volume: v });
       setStatusVolPct(Math.round(v * 100));
     }
 
     function onTime() {
+      const audio = audioRef.current;
+      if (!audio) return;
+
       const now = Date.now();
       if (now - lastTimeSavedRef.current < 500) return;
       lastTimeSavedRef.current = now;
@@ -689,7 +676,7 @@ export function useAudioEngine(args: {
       if (
         typeof sectionEnd === "number" &&
         Number.isFinite(sectionEnd) &&
-        el.currentTime >= sectionEnd
+        audio.currentTime >= sectionEnd
       ) {
         if (loopRef.current && currentSectionIdRef.current && nowIdRef.current) {
           const curTrack =
@@ -709,12 +696,10 @@ export function useAudioEngine(args: {
         }
 
         try {
-          el.currentTime = sectionEnd;
-        } catch {
-          // ignore
-        }
+          audio.currentTime = sectionEnd;
+        } catch {}
 
-        el.pause();
+        audio.pause();
         setStatusTime(fmtTime(sectionEnd));
 
         writePersisted({
@@ -729,14 +714,14 @@ export function useAudioEngine(args: {
       }
 
       writePersisted({
-        currentTime: el.currentTime,
+        currentTime: audio.currentTime,
         currentSectionId: currentSectionIdRef.current,
         sectionStartTime: currentSectionStartRef.current,
         lastMatchedSectionId: currentSectionIdRef.current,
         lastMatchedSectionStartTime: currentSectionStartRef.current,
       });
 
-      setStatusTime(fmtTime(el.currentTime));
+      setStatusTime(fmtTime(audio.currentTime));
     }
 
     el.addEventListener("volumechange", onVolume);
