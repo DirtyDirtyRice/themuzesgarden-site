@@ -24,7 +24,9 @@ export function round3(value: number): number {
 }
 
 export function getMomentId(moment: MomentSimilarityComparable | null | undefined): string {
-  return String((moment as { momentId?: unknown })?.momentId ?? moment?.sectionId ?? "").trim();
+  return String(
+    (moment as { momentId?: unknown })?.momentId ?? moment?.sectionId ?? ""
+  ).trim();
 }
 
 export function getMomentStart(
@@ -173,12 +175,29 @@ export function buildFallbackRepeatInterval(
   return round3(avgObserved);
 }
 
+function getFamilyMemberMomentId(member: unknown): string {
+  const direct = String((member as { momentId?: unknown })?.momentId ?? "").trim();
+  if (direct) return direct;
+
+  const nestedMomentId = String(
+    (member as { moment?: { momentId?: unknown; id?: unknown; sectionId?: unknown } | null })
+      ?.moment?.momentId ??
+      (member as { moment?: { momentId?: unknown; id?: unknown; sectionId?: unknown } | null })
+        ?.moment?.id ??
+      (member as { moment?: { momentId?: unknown; id?: unknown; sectionId?: unknown } | null })
+        ?.moment?.sectionId ??
+      ""
+  ).trim();
+
+  return nestedMomentId;
+}
+
 export function sortFamilyMembers(
   family: MomentFamilyEngineFamily,
   momentsById: Map<string, MomentSimilarityComparable>
 ): MomentSimilarityComparable[] {
   return family.members
-    .map((member) => momentsById.get(String(member.momentId ?? "").trim()))
+    .map((member) => momentsById.get(getFamilyMemberMomentId(member)))
     .filter((moment): moment is MomentSimilarityComparable => Boolean(moment))
     .sort((a, b) => {
       const startA = getMomentStart(a);
