@@ -77,7 +77,9 @@ function toSafeTime(value: unknown): number {
 }
 
 function getFamilyMembers(family: MomentFamilyEngineFamily): FamilyMemberLike[] {
-  return Array.isArray(family.members) ? (family.members as FamilyMemberLike[]) : [];
+  return Array.isArray(family.members)
+    ? (family.members as unknown as FamilyMemberLike[])
+    : [];
 }
 
 function getMemberSeverityPenalty(severity: string): number {
