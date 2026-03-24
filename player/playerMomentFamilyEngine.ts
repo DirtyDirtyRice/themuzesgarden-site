@@ -295,6 +295,16 @@ function buildMomentFamilyMember(
   return member as unknown as MomentFamilyMember;
 }
 
+function getMemberSimilarityScore(member: MomentFamilyMember): number {
+  return clamp01(
+    toNumber((member as any)?.similarityScoreToReference) ?? 0
+  );
+}
+
+function getMemberDifferencePercent(member: MomentFamilyMember): number {
+  return toNumber((member as any)?.differencePercentToReference) ?? 100;
+}
+
 function collectPairMatches(
   orderedMoments: ComparableMoment[],
   similarityThreshold: number,
@@ -429,13 +439,24 @@ export function buildMomentFamilies(
       buildMomentFamilyMember(anchorMoment, moment)
     );
 
+    const averageSimilarityScore = Number(
+      average(memberRows.map((member) => getMemberSimilarityScore(member))).toFixed(3)
+    );
+
+    const averageDifferencePercent = Number(
+      average(memberRows.map((member) => getMemberDifferencePercent(member))).toFixed(2)
+    );
+
     const builtFamily: MomentFamilyEngineFamily = {
       id,
       familyId: id,
+      reference: toMomentSimilarityComparable(anchorMoment) as any,
       size: members.length,
       anchorMomentId: getMomentId(anchorMoment),
       averageScore: Number(average(family.scores).toFixed(3)),
       strongestScore: Number(strongest(family.scores).toFixed(3)),
+      averageSimilarityScore,
+      averageDifferencePercent,
       repeatIntervalHint: buildRepeatIntervalHint(members),
       members: memberRows,
     };
