@@ -13,10 +13,6 @@ import type {
   PhraseDriftFamilyResult,
 } from "./playerMomentPhraseDrift";
 import type {
-  PhraseStabilityEngineResult,
-  PhraseStabilityFamilyResult,
-} from "./playerMomentPhraseStability";
-import type {
   MomentFamily,
   MomentSimilarityComparable,
   RepeatPlan,
@@ -28,6 +24,34 @@ import type {
   BuildMomentInspectorSimilarityResult,
   InspectorComparableMoment,
 } from "./momentInspectorSimilarity.types";
+
+type PhraseStabilityLabel = "solid" | "good" | "fragile" | "unstable";
+
+type PhraseStabilityIssueFlag =
+  | "missing-repeats"
+  | "near-repeats"
+  | "timing-drift"
+  | "duration-drift"
+  | "high-severity-drift"
+  | "low-confidence";
+
+type PhraseStabilityFamilyResult = {
+  familyId: string;
+  anchorMomentId: string;
+  stabilityScore: number;
+  stabilityLabel: PhraseStabilityLabel;
+  timingConsistency: number;
+  durationConsistency: number;
+  repeatCoverage: number;
+  structuralConfidence: number;
+  highestDriftSeverity: "none" | "low" | "medium" | "high";
+  issueFlags: PhraseStabilityIssueFlag[];
+};
+
+type PhraseStabilityEngineResult = {
+  families: PhraseStabilityFamilyResult[];
+  byFamilyId: Record<string, PhraseStabilityFamilyResult>;
+};
 
 export function normalizeText(value: unknown): string {
   return String(value ?? "").trim();
@@ -203,7 +227,11 @@ export function getSelectedIntendedActionPlan(
 ): IntendedActionPlan | null {
   if (!stableSelectedFamily) return null;
 
-  return intendedActionResult.plans.find((plan) => plan.familyId === stableSelectedFamily.id) ?? null;
+  return (
+    intendedActionResult.plans.find(
+      (plan) => plan.familyId === stableSelectedFamily.id
+    ) ?? null
+  );
 }
 
 export function getEmptyDriftResult(): PhraseDriftEngineResult {
