@@ -1,10 +1,17 @@
 import type { PhraseDriftSeverity } from "./playerMomentPhraseDrift";
 import type {
-  PhraseStabilityEngineResult,
   PhraseStabilityFamilyResult,
   PhraseStabilityIssueFlag,
   PhraseStabilityLabel,
 } from "./playerMomentPhraseStability";
+
+/**
+ * 🔧 Fallback type (NOT exported upstream)
+ * Breaks Vercel loop safely
+ */
+type PhraseStabilityEngineResult = {
+  families?: PhraseStabilityFamilyResult[];
+};
 
 export type InspectorPhraseStabilityFamilyRow = {
   familyId: string;
@@ -116,7 +123,8 @@ function compareRows(
   if (labelCompare !== 0) return labelCompare;
 
   const severityCompare =
-    getSeverityRank(b.highestDriftSeverity) - getSeverityRank(a.highestDriftSeverity);
+    getSeverityRank(b.highestDriftSeverity) -
+    getSeverityRank(a.highestDriftSeverity);
 
   if (severityCompare !== 0) return severityCompare;
 
