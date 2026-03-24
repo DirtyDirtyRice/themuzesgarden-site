@@ -6,6 +6,7 @@ import { findSimilarMoments, scoreMomentSimilarity } from "./playerMomentSimilar
 
 type ComparableMoment = Record<string, unknown> & {
   id?: unknown;
+  sectionId?: unknown;
   startTime?: unknown;
   start?: unknown;
   label?: unknown;
@@ -19,6 +20,10 @@ type SimilarityResultLike = {
   similarityPercent?: unknown;
   differencePercent?: unknown;
   moment?: unknown;
+};
+
+type MomentSimilarityComparableLike = ComparableMoment & {
+  sectionId: string;
 };
 
 export type MomentFamilyEngineInput = {
@@ -71,7 +76,13 @@ function clamp01(value: number): number {
 }
 
 function getMomentId(moment: ComparableMoment): string {
-  return String(moment?.id ?? "").trim();
+  const directId = String(moment?.id ?? "").trim();
+  if (directId) return directId;
+
+  const sectionId = String(moment?.sectionId ?? "").trim();
+  if (sectionId) return sectionId;
+
+  return "";
 }
 
 function getMomentStart(moment: ComparableMoment): number | null {
@@ -102,6 +113,15 @@ function getTrackId(moment: ComparableMoment): string {
   if (alt) return alt;
 
   return "track";
+}
+
+function toMomentSimilarityComparable(
+  moment: ComparableMoment
+): MomentSimilarityComparableLike {
+  return {
+    ...moment,
+    sectionId: String(moment.sectionId ?? moment.id ?? "").trim(),
+  };
 }
 
 function compareOrderedMoments(
@@ -230,7 +250,12 @@ function getMomentSimilarityScore(
   a: ComparableMoment,
   b: ComparableMoment
 ): number {
-  return getSimilarityScore(scoreMomentSimilarity(a, b) as SimilarityResultLike);
+  return getSimilarityScore(
+    scoreMomentSimilarity(
+      toMomentSimilarityComparable(a) as any,
+      toMomentSimilarityComparable(b) as any
+    ) as SimilarityResultLike
+  );
 }
 
 function collectPairMatches(
@@ -243,7 +268,10 @@ function collectPairMatches(
   for (const moment of orderedMoments) {
     const momentId = getMomentId(moment);
 
-    const matches = findSimilarMoments(moment, orderedMoments)
+    const matches = findSimilarMoments(
+      toMomentSimilarityComparable(moment) as any,
+      orderedMoments.map((item) => toMomentSimilarityComparable(item) as any)
+    )
       .map((result) => ({
         id: getMomentId((result as SimilarityResultLike).moment as ComparableMoment),
         score: getSimilarityScore(result as SimilarityResultLike),
