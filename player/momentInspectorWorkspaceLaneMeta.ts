@@ -7,10 +7,7 @@ export type MomentInspectorWorkspaceLaneMeta = {
   description: string;
 };
 
-const LANE_META: Record<
-  MomentInspectorWorkspaceLane,
-  MomentInspectorWorkspaceLaneMeta
-> = {
+const LANE_META = {
   watch: {
     lane: "watch",
     label: "Watch Families",
@@ -29,13 +26,13 @@ const LANE_META: Record<
     shortLabel: "Blocked",
     description: "Families that are blocked and cannot proceed yet.",
   },
-} as Record<MomentInspectorWorkspaceLane, MomentInspectorWorkspaceLaneMeta>;
+} as any;
 
 export function getMomentInspectorWorkspaceLaneMeta(
   lane: MomentInspectorWorkspaceLane
 ): MomentInspectorWorkspaceLaneMeta {
   return (
-    (LANE_META as Record<string, MomentInspectorWorkspaceLaneMeta>)[lane] ?? {
+    LANE_META?.[lane] ?? {
       lane,
       label: "Workspace",
       shortLabel: "Workspace",
