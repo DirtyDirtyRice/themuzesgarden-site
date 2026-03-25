@@ -56,22 +56,41 @@ function mergeWorkspaceFamilies(candidates: unknown[]): GenericRecord[] {
 export function useMomentInspectorHostStackProps(params: {
   runtime: any;
 }) {
-  const { runtime } = params;
+  const { runtime } = params ?? {};
 
   return useMemo(() => {
-    const {
-      selectedPhraseFamilyId,
-      similarityState,
-      intelligenceRuntime,
-      compareRuntime,
-      bookmarksRuntime,
-      snapshotRuntime,
-      shellState,
-      healthState,
-      bridgeState,
-      phraseState,
-      hostFilters,
-    } = runtime;
+    const safeRuntime = (runtime ?? {}) as any;
+
+    const selectedPhraseFamilyId =
+      safeRuntime?.selectedPhraseFamilyId ?? null;
+
+    const similarityState = safeRuntime?.similarityState ?? {};
+
+    const intelligenceRuntime = safeRuntime?.intelligenceRuntime ?? {};
+    const compareRuntime = safeRuntime?.compareRuntime ?? {
+      compareResult: { summary: {} },
+      compareState: {},
+    };
+
+    const bookmarksRuntime = safeRuntime?.bookmarksRuntime ?? {};
+    const snapshotRuntime = safeRuntime?.snapshotRuntime ?? {};
+
+    const shellState = safeRuntime?.shellState ?? {};
+    const healthState = safeRuntime?.healthState ?? {
+      sectionStats: {},
+      densityStats: {},
+      filteredStats: {},
+    };
+
+    const bridgeState = safeRuntime?.bridgeState ?? {};
+    const phraseState = safeRuntime?.phraseState ?? {};
+
+    const hostFilters = safeRuntime?.hostFilters ?? {
+      hostFilterState: {},
+      hostFilterResult: {},
+      pinnedResult: {},
+      pinnedState: { pinnedFamilyIds: [] },
+    };
 
     const workspaceFamilies = mergeWorkspaceFamilies([
       phraseState?.repairQueueView?.rows,
@@ -90,42 +109,47 @@ export function useMomentInspectorHostStackProps(params: {
     ]);
 
     const controlStackProps = {
-      selectedTrack: shellState.selectedTrack,
-      sortedTracks: shellState.sortedTracks,
-      setTrackId: shellState.setTrackId,
-      filter: shellState.filter,
-      setFilter: shellState.setFilter,
-      trimmedFilter: shellState.trimmedFilter,
-      filteredSections: shellState.filteredSections,
-      focusSections: shellState.focusSections,
+      selectedTrack: shellState?.selectedTrack,
+      sortedTracks: shellState?.sortedTracks ?? [],
+      setTrackId: shellState?.setTrackId ?? (() => {}),
+      filter: shellState?.filter ?? "",
+      setFilter: shellState?.setFilter ?? (() => {}),
+      trimmedFilter: shellState?.trimmedFilter ?? "",
+      filteredSections: shellState?.filteredSections ?? [],
+      focusSections: shellState?.focusSections ?? [],
       similaritySelectedSectionId:
-        similarityState.selectedMoment?.sectionId ?? "",
-      setSelectedSectionId: shellState.setSelectedSectionId,
+        similarityState?.selectedMoment?.sectionId ?? "",
+      setSelectedSectionId:
+        shellState?.setSelectedSectionId ?? (() => {}),
     };
 
     const summaryStackProps = {
       summaryProps: {
-        selectedTrackLabel: shellState.selectedTrackLabel,
-        selectedTrackId: String(shellState.selectedTrack?.id ?? ""),
-        selectedTrackPath: getTrackDisplayPath(shellState.selectedTrack),
-        healthTone: healthState.healthTone,
-        healthScore: healthState.healthScore,
-        trackTagsCount: shellState.trackTags.length,
-        momentTagsCount: shellState.momentTags.length,
-        descriptionsCount: shellState.descriptions.length,
-        sectionsCount: shellState.sections.length,
-        sectionsWithTags: healthState.sectionStats.sectionsWithTags,
+        selectedTrackLabel: shellState?.selectedTrackLabel ?? "",
+        selectedTrackId: String(shellState?.selectedTrack?.id ?? ""),
+        selectedTrackPath: getTrackDisplayPath(
+          shellState?.selectedTrack ?? null
+        ),
+        healthTone: healthState?.healthTone ?? "",
+        healthScore: healthState?.healthScore ?? 0,
+        trackTagsCount: shellState?.trackTags?.length ?? 0,
+        momentTagsCount: shellState?.momentTags?.length ?? 0,
+        descriptionsCount: shellState?.descriptions?.length ?? 0,
+        sectionsCount: shellState?.sections?.length ?? 0,
+        sectionsWithTags:
+          healthState?.sectionStats?.sectionsWithTags ?? 0,
         sectionsWithDescription:
-          healthState.sectionStats.sectionsWithDescription,
-        sectionsWithStart: healthState.sectionStats.sectionsWithStart,
-        densityStats: healthState.densityStats,
-        dataWarnings: healthState.dataWarnings,
-        discoverySummary: bridgeState.discoverySummary,
-        metadataSummary: bridgeState.metadataSummary,
+          healthState?.sectionStats?.sectionsWithDescription ?? 0,
+        sectionsWithStart:
+          healthState?.sectionStats?.sectionsWithStart ?? 0,
+        densityStats: healthState?.densityStats ?? {},
+        dataWarnings: healthState?.dataWarnings ?? [],
+        discoverySummary: bridgeState?.discoverySummary ?? {},
+        metadataSummary: bridgeState?.metadataSummary ?? {},
       },
 
       discoveryProps: {
-        discoverySnapshot: bridgeState.discoverySnapshot,
+        discoverySnapshot: bridgeState?.discoverySnapshot ?? {},
       },
 
       similarityProps: {
@@ -133,76 +157,115 @@ export function useMomentInspectorHostStackProps(params: {
       },
 
       tagProps: {
-        trackTags: shellState.trackTags,
-        momentTagFrequency: healthState.momentTagFrequency,
-        descriptions: shellState.descriptions,
-        duplicateTrackTags: healthState.duplicateTrackTags,
-        duplicateMomentTags: healthState.duplicateMomentTags,
-        duplicateSectionIds: healthState.sectionStats.duplicateSectionIds,
+        trackTags: shellState?.trackTags ?? [],
+        momentTagFrequency:
+          healthState?.momentTagFrequency ?? {},
+        descriptions: shellState?.descriptions ?? [],
+        duplicateTrackTags:
+          healthState?.duplicateTrackTags ?? [],
+        duplicateMomentTags:
+          healthState?.duplicateMomentTags ?? [],
+        duplicateSectionIds:
+          healthState?.sectionStats?.duplicateSectionIds ?? [],
       },
 
       diagnosticsProps: {
-        actionRows: phraseState.actionSummaryRows,
-        health: phraseState.inspectorHealth,
+        actionRows: phraseState?.actionSummaryRows ?? [],
+        health: phraseState?.inspectorHealth ?? {},
       },
     };
 
     const intelligenceStackProps = {
       filterProps: {
-        selectedVerdict: hostFilters.hostFilterState.selectedVerdict,
-        counts: hostFilters.hostFilterResult.counts,
-        visibleCount: hostFilters.hostFilterResult.visibleCount,
-        totalCount: hostFilters.hostFilterResult.totalCount,
-        onChange: hostFilters.handleChangeHostVerdictFilter,
+        selectedVerdict:
+          hostFilters?.hostFilterState?.selectedVerdict ?? "",
+        counts: hostFilters?.hostFilterResult?.counts ?? {},
+        visibleCount:
+          hostFilters?.hostFilterResult?.visibleCount ?? 0,
+        totalCount:
+          hostFilters?.hostFilterResult?.totalCount ?? 0,
+        onChange:
+          hostFilters?.handleChangeHostVerdictFilter ??
+          (() => {}),
       },
 
       pinnedProps: {
-        pinnedCount: hostFilters.pinnedResult.pinnedCount,
-        totalCount: hostFilters.pinnedResult.totalCount,
-        visibleCount: hostFilters.pinnedResult.visibleCount,
-        pinnedOnly: hostFilters.pinnedState.pinnedOnly,
-        onTogglePinnedOnly: hostFilters.handleTogglePinnedOnly,
-        onResetPins: hostFilters.handleResetPins,
+        pinnedCount:
+          hostFilters?.pinnedResult?.pinnedCount ?? 0,
+        totalCount:
+          hostFilters?.pinnedResult?.totalCount ?? 0,
+        visibleCount:
+          hostFilters?.pinnedResult?.visibleCount ?? 0,
+        pinnedOnly:
+          hostFilters?.pinnedState?.pinnedOnly ?? false,
+        onTogglePinnedOnly:
+          hostFilters?.handleTogglePinnedOnly ?? (() => {}),
+        onResetPins:
+          hostFilters?.handleResetPins ?? (() => {}),
       },
 
       pinProps: {
         selectedPhraseFamilyId,
-        isSelectedFamilyPinned: hostFilters.isSelectedFamilyPinned,
+        isSelectedFamilyPinned:
+          hostFilters?.isSelectedFamilyPinned ?? false,
         onToggleSelectedFamilyPin:
-          hostFilters.handleToggleSelectedFamilyPin,
+          hostFilters?.handleToggleSelectedFamilyPin ??
+          (() => {}),
       },
 
       bookmarkProps: {
-        bookmarkOptions: bookmarksRuntime.bookmarkOptions,
-        onSaveBookmark: bookmarksRuntime.saveBookmark,
-        onLoadBookmark: bookmarksRuntime.loadBookmark,
-        onDeleteBookmark: bookmarksRuntime.deleteBookmark,
+        bookmarkOptions:
+          bookmarksRuntime?.bookmarkOptions ?? [],
+        onSaveBookmark:
+          bookmarksRuntime?.saveBookmark ?? (() => {}),
+        onLoadBookmark:
+          bookmarksRuntime?.loadBookmark ?? (() => {}),
+        onDeleteBookmark:
+          bookmarksRuntime?.deleteBookmark ?? (() => {}),
       },
 
       snapshotProps: {
-        filename: snapshotRuntime.snapshotFilename,
-        selectedTrackId: String(shellState.selectedTrack?.id ?? ""),
+        filename: snapshotRuntime?.snapshotFilename ?? "",
+        selectedTrackId: String(
+          shellState?.selectedTrack?.id ?? ""
+        ),
         selectedPhraseFamilyId,
-        selectedVerdict: hostFilters.hostFilterState.selectedVerdict,
-        pinnedCount: hostFilters.pinnedState.pinnedFamilyIds.length,
-        pinnedOnly: hostFilters.pinnedState.pinnedOnly,
-        compareReady: compareRuntime.compareResult.summary.ready,
-        onExportSnapshot: snapshotRuntime.handleExportSnapshot,
+        selectedVerdict:
+          hostFilters?.hostFilterState?.selectedVerdict ?? "",
+        pinnedCount:
+          hostFilters?.pinnedState?.pinnedFamilyIds?.length ??
+          0,
+        pinnedOnly:
+          hostFilters?.pinnedState?.pinnedOnly ?? false,
+        compareReady:
+          compareRuntime?.compareResult?.summary?.ready ??
+          false,
+        onExportSnapshot:
+          snapshotRuntime?.handleExportSnapshot ??
+          (() => {}),
       },
 
       compareBarProps: {
-        familyOptions: hostFilters.compareFamilyOptions,
-        compareState: compareRuntime.compareState,
-        ready: compareRuntime.compareResult.summary.ready,
-        reasons: compareRuntime.compareResult.summary.reasons,
+        familyOptions:
+          hostFilters?.compareFamilyOptions ?? [],
+        compareState:
+          compareRuntime?.compareState ?? {},
+        ready:
+          compareRuntime?.compareResult?.summary?.ready ??
+          false,
+        reasons:
+          compareRuntime?.compareResult?.summary?.reasons ??
+          [],
         onChangePrimaryFamilyId:
-          compareRuntime.handleChangePrimaryFamilyId,
+          compareRuntime?.handleChangePrimaryFamilyId ??
+          (() => {}),
         onChangeSecondaryFamilyId:
-          compareRuntime.handleChangeSecondaryFamilyId,
+          compareRuntime?.handleChangeSecondaryFamilyId ??
+          (() => {}),
       },
 
       comparePanelProps: {
-        result: compareRuntime.compareResult,
+        result: compareRuntime?.compareResult ?? {},
       },
 
       workspaceProps: {
@@ -210,98 +273,134 @@ export function useMomentInspectorHostStackProps(params: {
       },
 
       intelligenceProps: {
-        hasMomentIntelligence: phraseState.hasMomentIntelligence,
+        hasMomentIntelligence:
+          phraseState?.hasMomentIntelligence ?? false,
         intelligenceRuntime,
-        familyOptions: hostFilters.filteredFamilyOptions,
+        familyOptions:
+          hostFilters?.filteredFamilyOptions ?? [],
         selectedPhraseFamilyId,
         onChangeSelectedPhraseFamilyId:
-          runtime.setSelectedPhraseFamilyId,
-        selectedRepairQueueRow: phraseState.selectedRepairQueueRow,
+          safeRuntime?.setSelectedPhraseFamilyId ??
+          (() => {}),
+        selectedRepairQueueRow:
+          phraseState?.selectedRepairQueueRow ?? null,
         repairQueueRows:
-          phraseState.repairQueueView?.rows ??
-          phraseState.repairQueueRows ??
+          phraseState?.repairQueueView?.rows ??
+          phraseState?.repairQueueRows ??
           [],
-        repairSimulationResult: phraseState.repairSimulationResult,
+        repairSimulationResult:
+          phraseState?.repairSimulationResult ?? {},
         actionSummaryRows:
-          phraseState.actionView?.summaryRows ??
-          phraseState.actionSummaryRows ??
+          phraseState?.actionView?.summaryRows ??
+          phraseState?.actionSummaryRows ??
           [],
         driftFamilyRows:
-          phraseState.driftView?.familyRows ??
-          phraseState.driftFamilyRows ??
+          phraseState?.driftView?.familyRows ??
+          phraseState?.driftFamilyRows ??
           [],
         stabilityFamilyRows:
-          phraseState.stabilityView?.familyRows ??
-          phraseState.stabilityFamilyRows ??
+          phraseState?.stabilityView?.familyRows ??
+          phraseState?.stabilityFamilyRows ??
           [],
-        selectedActionSummaryRow: phraseState.selectedActionSummaryRow,
-        selectedActionRows: phraseState.selectedActionRows,
-        selectedDriftFamily: phraseState.selectedDriftFamily,
-        selectedDriftMembers: phraseState.selectedDriftMembers,
-        selectedStabilityFamily: phraseState.selectedStabilityFamily,
-        selectedTrustStateResult: phraseState.selectedTrustState,
+        selectedActionSummaryRow:
+          phraseState?.selectedActionSummaryRow ?? null,
+        selectedActionRows:
+          phraseState?.selectedActionRows ?? [],
+        selectedDriftFamily:
+          phraseState?.selectedDriftFamily ?? null,
+        selectedDriftMembers:
+          phraseState?.selectedDriftMembers ?? [],
+        selectedStabilityFamily:
+          phraseState?.selectedStabilityFamily ?? null,
+        selectedTrustStateResult:
+          phraseState?.selectedTrustState ?? null,
         selectedConfidenceHistoryResult:
-          phraseState.selectedConfidenceHistoryResult,
+          phraseState?.selectedConfidenceHistoryResult ??
+          null,
       },
     };
 
     const timelineStackProps = {
       timelineProps: {
-        trimmedFilter: shellState.trimmedFilter,
-        filteredSections: shellState.filteredSections,
-        sections: shellState.sections,
-        filteredStats: healthState.filteredStats,
-        sectionStats: healthState.sectionStats,
-        selectedLineageResult: phraseState.selectedLineageResult,
+        trimmedFilter: shellState?.trimmedFilter ?? "",
+        filteredSections:
+          shellState?.filteredSections ?? [],
+        sections: shellState?.sections ?? [],
+        filteredStats:
+          healthState?.filteredStats ?? {},
+        sectionStats:
+          healthState?.sectionStats ?? {},
+        selectedLineageResult:
+          phraseState?.selectedLineageResult ?? null,
         selectedConfidenceHistoryResult:
-          phraseState.selectedConfidenceHistoryResult,
+          phraseState?.selectedConfidenceHistoryResult ??
+          null,
       },
 
       selectedProps: {
         selectedPhraseFamilyId,
-        selectedActionSummaryRow: phraseState.selectedActionSummaryRow,
-        selectedRepairQueueRow: phraseState.selectedRepairQueueRow,
-        selectedDriftFamily: phraseState.selectedDriftFamily,
-        selectedStabilityFamily: phraseState.selectedStabilityFamily,
-        selectedTrustStateResult: phraseState.selectedTrustState,
+        selectedActionSummaryRow:
+          phraseState?.selectedActionSummaryRow ?? null,
+        selectedRepairQueueRow:
+          phraseState?.selectedRepairQueueRow ?? null,
+        selectedDriftFamily:
+          phraseState?.selectedDriftFamily ?? null,
+        selectedStabilityFamily:
+          phraseState?.selectedStabilityFamily ?? null,
+        selectedTrustStateResult:
+          phraseState?.selectedTrustState ?? null,
         selectedConfidenceHistoryResult:
-          phraseState.selectedConfidenceHistoryResult,
-        selectedLineageResult: phraseState.selectedLineageResult,
+          phraseState?.selectedConfidenceHistoryResult ??
+          null,
+        selectedLineageResult:
+          phraseState?.selectedLineageResult ?? null,
       },
 
       columnsProps: {
-        selectedRepairQueueRow: phraseState.selectedRepairQueueRow,
+        selectedRepairQueueRow:
+          phraseState?.selectedRepairQueueRow ?? null,
         repairQueueRows:
-          phraseState.repairQueueView?.rows ??
-          phraseState.repairQueueRows ??
+          phraseState?.repairQueueView?.rows ??
+          phraseState?.repairQueueRows ??
           [],
         actionSummaryRows:
-          phraseState.actionView?.summaryRows ??
-          phraseState.actionSummaryRows ??
+          phraseState?.actionView?.summaryRows ??
+          phraseState?.actionSummaryRows ??
           [],
         driftFamilyRows:
-          phraseState.driftView?.familyRows ??
-          phraseState.driftFamilyRows ??
+          phraseState?.driftView?.familyRows ??
+          phraseState?.driftFamilyRows ??
           [],
         stabilityFamilyRows:
-          phraseState.stabilityView?.familyRows ??
-          phraseState.stabilityFamilyRows ??
+          phraseState?.stabilityView?.familyRows ??
+          phraseState?.stabilityFamilyRows ??
           [],
-        trustSummaryRows: phraseState.trustSummaryRows,
+        trustSummaryRows:
+          phraseState?.trustSummaryRows ?? [],
         selectedConfidenceHistoryResult:
-          phraseState.selectedConfidenceHistoryResult,
-        selectedLineageResult: phraseState.selectedLineageResult,
+          phraseState?.selectedConfidenceHistoryResult ??
+          null,
+        selectedLineageResult:
+          phraseState?.selectedLineageResult ?? null,
       },
 
       sectionsProps: {
-        filteredSections: shellState.filteredSections,
-        trimmedFilter: shellState.trimmedFilter,
-        filteredWithStart: healthState.filteredStats.filteredWithStart,
+        filteredSections:
+          shellState?.filteredSections ?? [],
+        trimmedFilter: shellState?.trimmedFilter ?? "",
+        filteredWithStart:
+          healthState?.filteredStats?.filteredWithStart ??
+          0,
         filteredOutOfOrderCount:
-          healthState.filteredStats.filteredOutOfOrderCount,
-        sectionsWithStart: healthState.sectionStats.sectionsWithStart,
-        outOfOrderCount: healthState.sectionStats.outOfOrderCount,
-        sectionsLength: shellState.sections.length,
+          healthState?.filteredStats
+            ?.filteredOutOfOrderCount ?? 0,
+        sectionsWithStart:
+          healthState?.sectionStats?.sectionsWithStart ??
+          0,
+        outOfOrderCount:
+          healthState?.sectionStats?.outOfOrderCount ?? 0,
+        sectionsLength:
+          shellState?.sections?.length ?? 0,
       },
     };
 
