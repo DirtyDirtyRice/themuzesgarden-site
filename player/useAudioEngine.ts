@@ -657,15 +657,14 @@ export function useAudioEngine(args: {
     if (!el) return;
 
     function onVolume() {
-      const audio = audioRef.current;
-      if (!audio) return;
-      const v = Math.max(0, Math.min(1, audio.volume));
+      const audio = audioRef.current as HTMLAudioElement | null;
+      const v = Math.max(0, Math.min(1, audio?.volume ?? 0));
       writePersisted({ volume: v });
       setStatusVolPct(Math.round(v * 100));
     }
 
     function onTime() {
-      const audio = audioRef.current;
+      const audio = audioRef.current as HTMLAudioElement | null;
       if (!audio) return;
 
       const now = Date.now();
