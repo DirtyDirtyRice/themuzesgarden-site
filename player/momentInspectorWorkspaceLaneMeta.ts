@@ -29,13 +29,13 @@ const LANE_META: Record<
     shortLabel: "Blocked",
     description: "Families that are blocked and cannot proceed yet.",
   },
-};
+} as Record<MomentInspectorWorkspaceLane, MomentInspectorWorkspaceLaneMeta>;
 
 export function getMomentInspectorWorkspaceLaneMeta(
   lane: MomentInspectorWorkspaceLane
 ): MomentInspectorWorkspaceLaneMeta {
   return (
-    LANE_META[lane] ?? {
+    (LANE_META as Record<string, MomentInspectorWorkspaceLaneMeta>)[lane] ?? {
       lane,
       label: "Workspace",
       shortLabel: "Workspace",
