@@ -78,18 +78,33 @@ function getRuntimeWorkspaceFamilies(runtime: unknown): GenericRecord[] {
 export function useMomentInspectorHostShellState(params: {
   allTracks: AnyTrack[];
 }) {
-  const runtime = useMomentInspectorHostRuntime({
+  const runtimeSource = useMomentInspectorHostRuntime({
     allTracks: params.allTracks,
-  });
+  }) as any;
 
-  const baseStackProps = useMomentInspectorHostStackProps({
-    runtime,
-  });
+  const runtime = {
+    open: Boolean(runtimeSource?.open),
+    setOpen:
+      typeof runtimeSource?.setOpen === "function"
+        ? runtimeSource.setOpen
+        : (() => {}),
+    shellState:
+      runtimeSource?.shellState && typeof runtimeSource.shellState === "object"
+        ? runtimeSource.shellState
+        : {},
+    ...((runtimeSource ?? {}) as any),
+  } as any;
+
+  const baseStackProps =
+    (useMomentInspectorHostStackProps({
+      runtime,
+    }) as any) ?? {};
 
   const workspaceFamilies = getRuntimeWorkspaceFamilies(runtime);
-  const workspaceSources = buildMomentInspectorWorkspaceHostBridge({
-    families: workspaceFamilies,
-  });
+  const workspaceSources =
+    (buildMomentInspectorWorkspaceHostBridge({
+      families: workspaceFamilies,
+    }) as any) ?? [];
 
   const stackProps = {
     ...baseStackProps,
@@ -99,10 +114,10 @@ export function useMomentInspectorHostShellState(params: {
       title: "Inspector Repair / Watchlist Workspace",
       subtitle: "Review and act on families that need attention.",
     },
-  };
+  } as any;
 
   return {
     runtime,
     stackProps,
-  };
+  } as any;
 }
