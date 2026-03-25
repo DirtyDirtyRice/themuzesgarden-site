@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 type AnyFn = (...args: any[]) => any;
 
-export default function useMomentInspectorHostRuntime(props: any) {
+export function useMomentInspectorHostRuntime(props: any) {
   const {
     filteredFamilyOptions,
     selectedPhraseFamilyId,
@@ -29,3 +29,5 @@ export default function useMomentInspectorHostRuntime(props: any) {
 
   return {};
 }
+
+export default useMomentInspectorHostRuntime;
