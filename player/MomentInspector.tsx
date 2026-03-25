@@ -11,11 +11,17 @@ import { useMomentInspectorHostShellState } from "./useMomentInspectorHostShellS
 import type { AnyTrack } from "./playerTypes";
 
 export default function MomentInspector(props: { allTracks: AnyTrack[] }) {
-  const { runtime, stackProps } = useMomentInspectorHostShellState({
+  const shell = useMomentInspectorHostShellState({
     allTracks: props.allTracks,
-  });
+  }) as any;
 
-  const { open, setOpen, shellState } = runtime;
+  const runtime = (shell?.runtime ?? {}) as any;
+  const stackProps = (shell?.stackProps ?? {}) as any;
+
+  const open = Boolean(runtime?.open);
+  const setOpen =
+    typeof runtime?.setOpen === "function" ? runtime.setOpen : (() => {}) as any;
+  const shellState = (runtime?.shellState ?? {}) as any;
 
   return (
     <div className="rounded-xl border bg-zinc-50 px-3 py-2">
@@ -29,19 +35,19 @@ export default function MomentInspector(props: { allTracks: AnyTrack[] }) {
       ) : (
         <div className="mt-3 space-y-3">
           <MomentInspectorHostControlStack
-            {...stackProps.controlStackProps}
+            {...((stackProps?.controlStackProps ?? {}) as any)}
           />
 
-          {shellState.selectedTrack ? (
+          {shellState?.selectedTrack ? (
             <>
               <MomentInspectorHostSummaryStack
-                {...stackProps.summaryStackProps}
+                {...((stackProps?.summaryStackProps ?? {}) as any)}
               />
               <MomentInspectorHostIntelligenceStack
-                {...stackProps.intelligenceStackProps}
+                {...((stackProps?.intelligenceStackProps ?? {}) as any)}
               />
               <MomentInspectorHostTimelineStack
-                {...stackProps.timelineStackProps}
+                {...((stackProps?.timelineStackProps ?? {}) as any)}
               />
             </>
           ) : (
