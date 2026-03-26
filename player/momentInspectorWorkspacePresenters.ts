@@ -1,6 +1,21 @@
-import { groupWorkspaceByPriority } from "./momentInspectorWorkspaceGrouping";
 import type { MomentInspectorWorkspaceDerivedState } from "./momentInspectorWorkspace.types";
 import type { MomentInspectorWorkspaceGroupMode } from "./momentInspectorWorkspaceViewOptions";
+
+type WorkspacePriorityGroup = {
+  id: string;
+  label: string;
+  items: unknown[];
+};
+
+function groupWorkspaceByPriority(items: unknown[]): WorkspacePriorityGroup[] {
+  return [
+    {
+      id: "all",
+      label: "All",
+      items: items ?? [],
+    },
+  ];
+}
 
 export type MomentInspectorWorkspacePresentation =
   | {
@@ -8,7 +23,7 @@ export type MomentInspectorWorkspacePresentation =
     }
   | {
       mode: "grouped";
-      groups: ReturnType<typeof groupWorkspaceByPriority>;
+      groups: WorkspacePriorityGroup[];
     };
 
 export function buildMomentInspectorWorkspacePresentation(params: {
