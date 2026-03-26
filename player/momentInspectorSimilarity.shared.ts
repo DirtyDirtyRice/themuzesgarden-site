@@ -270,9 +270,11 @@ export function buildEmptyMomentInspectorSimilarityResult(params: {
   selectedMoment?: InspectorComparableMoment | null;
   ungroupedMomentIds?: string[];
 }): BuildMomentInspectorSimilarityResult {
+  const safeSelectedMoment = params.selectedMoment ?? null;
+
   return {
     moments: params.moments ?? [],
-    selectedMoment: params.selectedMoment ?? null,
+    selectedMoment: safeSelectedMoment,
     similarMoments: [],
     similarityDebugRows: [],
     families: [],
