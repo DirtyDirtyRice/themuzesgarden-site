@@ -444,7 +444,7 @@ export function buildMomentFamilies(
     );
 
     const averageDifferencePercent = Number(
-      average(memberRows.map((member) => getMemberDifferencePercent(member))).toFixed(2)
+      average(memberRows.map((member) => getMemberDifferencePercent(member))).toFixed(2))
     );
 
     const builtFamily: MomentFamilyEngineFamily = {
