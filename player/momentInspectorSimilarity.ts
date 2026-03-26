@@ -11,7 +11,6 @@ import {
 } from "./momentInspectorSimilarity.builders";
 import {
   buildEmptyMomentInspectorSimilarityResult,
-  buildMomentLookups,
   getEstimatedRepeatPlan,
   getMomentId,
   getSelectedEngineFamily,
@@ -58,21 +57,32 @@ const PHRASE_DRIFT_CONFIG = {
 
 function getSelectedLegacyFamily(params: {
   families: BuildMomentInspectorSimilarityResult["families"];
-  selectedMoment: InspectorComparableMoment;
+  selectedMoment: InspectorComparableMoment | null;
 }) {
   const { families, selectedMoment } = params;
 
+  if (!selectedMoment) return null;
+
   return (
     families.find((family) =>
-      family.members.some((member) => member.moment.sectionId === selectedMoment.sectionId)
+      family.members.some(
+        (member) => member?.moment?.sectionId === selectedMoment.sectionId
+      )
     ) ?? null
   );
 }
 
 export function buildMomentInspectorSimilarity(
-  params: BuildMomentInspectorSimilarityParams
+  params: BuildMomentInspectorSimilarityParams | null | undefined
 ): BuildMomentInspectorSimilarityResult {
-  const { track, sections, selectedSectionId } = params;
+  if (!params || typeof params !== "object") {
+    return buildEmptyMomentInspectorSimilarityResult({});
+  }
+
+  const track = params.track ?? null;
+  const sections = Array.isArray(params.sections) ? params.sections : [];
+  const selectedSectionId =
+    typeof params.selectedSectionId === "string" ? params.selectedSectionId : "";
 
   if (!track) {
     return buildEmptyMomentInspectorSimilarityResult({});
@@ -81,7 +91,9 @@ export function buildMomentInspectorSimilarity(
   const moments = sections.map((section) => toComparableMoment(track, section));
 
   const selectedMoment =
-    moments.find((moment) => moment.sectionId === selectedSectionId) ?? moments[0] ?? null;
+    moments.find((moment) => moment.sectionId === selectedSectionId) ??
+    moments[0] ??
+    null;
 
   if (!selectedMoment) {
     return buildEmptyMomentInspectorSimilarityResult({
@@ -117,9 +129,14 @@ export function buildMomentInspectorSimilarity(
     maxMatchesPerMoment: STABLE_FAMILY_MAX_MATCHES_PER_MOMENT,
   });
 
-  const stableFamilies = stableFamilyResult.families;
-  const familyByMomentId = stableFamilyResult.familyByMomentId;
-  const ungroupedMomentIds = stableFamilyResult.ungroupedMomentIds;
+  const stableFamilies = Array.isArray(stableFamilyResult?.families)
+    ? stableFamilyResult.families
+    : [];
+  const familyByMomentId =
+    (stableFamilyResult?.familyByMomentId as Record<string, string> | undefined) ?? {};
+  const ungroupedMomentIds = Array.isArray(stableFamilyResult?.ungroupedMomentIds)
+    ? stableFamilyResult.ungroupedMomentIds
+    : [];
   const engineFamiliesById = toEngineMomentFamilyMap(stableFamilies);
 
   const similarityDebugRows: InspectorSimilarityDebugRow[] = [];
