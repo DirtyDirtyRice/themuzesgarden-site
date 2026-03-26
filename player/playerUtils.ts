@@ -62,15 +62,17 @@ export {
 
 export function looksLikeUuid(v: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    v
+    String(v ?? "")
   );
 }
 
 export function pickUrl(t: AnyTrack): string {
-  const u = String(t?.url ?? "").trim();
+  const safe = (t ?? {}) as any;
+
+  const u = String(safe?.url ?? "").trim();
   if (u) return u;
 
-  const p = String(t?.path ?? "").trim();
+  const p = String(safe?.path ?? "").trim();
   if (p.startsWith("http")) return p;
 
   return "";
@@ -90,16 +92,18 @@ export function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 export function emitTagSearch(tag: string): string {
-  const clean = String(tag).trim();
+  const clean = String(tag ?? "").trim();
   if (!clean) return "";
 
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(
-      new CustomEvent(MUZES_SEARCH_TAG_EVENT, {
-        detail: { tag: clean },
-      })
-    );
-  }
+  try {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent(MUZES_SEARCH_TAG_EVENT, {
+          detail: { tag: clean },
+        })
+      );
+    }
+  } catch {}
 
   return clean;
 }
@@ -118,22 +122,27 @@ export function debugMomentPlayback(payload: {
   startTime?: number | null;
   source?: string | null;
 }) {
-  if (typeof window === "undefined") return;
-  if (process.env.NODE_ENV === "production") return;
+  try {
+    if (typeof window === "undefined") return;
+    if (process.env.NODE_ENV === "production") return;
 
-  const trackId = String(payload.trackId ?? "").trim() || "(none)";
-  const sectionId = String(payload.sectionId ?? "").trim() || "(none)";
-  const source = String(payload.source ?? "").trim() || "unknown";
-  const startTime =
-    typeof payload.startTime === "number" && Number.isFinite(payload.startTime)
-      ? payload.startTime
-      : null;
+    const safe = (payload ?? {}) as any;
 
-  console.log("[MomentPlayback]", {
-    source,
-    trackId,
-    sectionId,
-    startTime,
-    startLabel: startTime === null ? "(none)" : formatMomentTime(startTime),
-  });
+    const trackId = String(safe.trackId ?? "").trim() || "(none)";
+    const sectionId = String(safe.sectionId ?? "").trim() || "(none)";
+    const source = String(safe.source ?? "").trim() || "unknown";
+    const startTime =
+      typeof safe.startTime === "number" && Number.isFinite(safe.startTime)
+        ? safe.startTime
+        : null;
+
+    console.log("[MomentPlayback]", {
+      source,
+      trackId,
+      sectionId,
+      startTime,
+      startLabel:
+        startTime === null ? "(none)" : formatMomentTime(startTime),
+    });
+  } catch {}
 }
