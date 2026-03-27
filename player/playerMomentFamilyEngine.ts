@@ -1,3 +1,4 @@
+// TEMP MARKER 12345
 import type {
   MomentFamily,
   MomentFamilyMember,
@@ -225,17 +226,43 @@ function mergeFamilies(target: InternalFamily, source: InternalFamily): void {
   target.scores.push(...source.scores);
 }
 
+function readResultField(
+  result: MomentSimilarityResult,
+  key: string
+): unknown {
+  return (result as Record<string, unknown>)[key];
+}
+
 function getSimilarityScore(result: MomentSimilarityResult): number {
-  return clamp01(toNumber(result.score) ?? 0);
+  const similarityScore = toNumber(readResultField(result, "similarityScore"));
+  if (similarityScore !== null) {
+    return clamp01(similarityScore);
+  }
+
+  const similarity = toNumber(readResultField(result, "similarity"));
+  if (similarity !== null) {
+    return clamp01(similarity);
+  }
+
+  const percent = toNumber(readResultField(result, "similarityPercent"));
+  if (percent !== null) {
+    return clamp01(percent / 100);
+  }
+
+  return 0;
 }
 
 function getDifferencePercent(result: MomentSimilarityResult): number {
-  const direct = toNumber(result.differencePercent);
+  const direct = toNumber(readResultField(result, "differencePercent"));
   if (direct !== null) return direct;
+
+  const differenceScore = toNumber(readResultField(result, "differenceScore"));
+  if (differenceScore !== null) {
+    return Number((clamp01(differenceScore) * 100).toFixed(2));
+  }
 
   return Number(((1 - getSimilarityScore(result)) * 100).toFixed(2));
 }
-
 function getMomentSimilarityResult(
   a: ComparableMoment,
   b: ComparableMoment
@@ -305,7 +332,7 @@ function collectPairMatches(
       }))
       .filter((result) => {
         if (!result.id || result.id === momentId) return false;
-        return result.score >= similarityThreshold;
+    return getSimilarityScore(result) >= similarityThreshold;
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, maxMatchesPerMoment);
@@ -460,9 +487,7 @@ Failed to compile.
 ./player/playerMomentFamilyEngine.ts:229:34
 Type error: Property 'score' does not exist on type 'MomentSimilarityResult'.
   227 |
-  228 | function getSimilarityScore(result: MomentSimilarityResult): number {
-> 229 |   return clamp01(toNumber(result.score) ?? 0);
-      |                                  ^
+     |                                  ^
   230 | }
   231 |                                             
   232 | function getDifferencePercent(result: MomentSimilarityResult): number {
@@ -803,7 +828,7 @@ function collectPairMatches(
       }))
       .filter((result) => {
         if (!result.id || result.id === momentId) return false;
-        return result.score >= similarityThreshold;
+      return getSimilarityScore(result) >= similarityThreshold;
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, maxMatchesPerMoment);
