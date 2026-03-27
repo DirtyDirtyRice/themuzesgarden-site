@@ -332,7 +332,7 @@ function collectPairMatches(
       }))
       .filter((result) => {
         if (!result.id || result.id === momentId) return false;
-    return getSimilarityScore(result) >= similarityThreshold;
+     return result.score >= similarityThreshold;
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, maxMatchesPerMoment);
