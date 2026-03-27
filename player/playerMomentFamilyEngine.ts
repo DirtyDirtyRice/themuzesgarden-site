@@ -2,7 +2,10 @@ import type {
   MomentFamily,
   MomentFamilyMember,
 } from "./playerMomentSimilarityTypes";
-import { findSimilarMoments, scoreMomentSimilarity } from "./playerMomentSimilarity";
+import {
+  findSimilarMoments,
+  scoreMomentSimilarity,
+} from "./playerMomentSimilarity";
 
 type ComparableMoment = Record<string, unknown> & {
   id?: unknown;
@@ -49,7 +52,6 @@ export type MomentFamilyEngineResult = {
 };
 
 type InternalFamily = {
-  rootId: string;
   memberIds: Set<string>;
   scores: number[];
 };
@@ -157,7 +159,7 @@ function compareFamilyMoments(
 
 function getOrderedMoments(moments: ComparableMoment[]): ComparableMoment[] {
   return [...moments]
-    .filter((moment) => getMomentId(moment))
+    .filter((moment) => Boolean(getMomentId(moment)))
     .sort(compareOrderedMoments);
 }
 
@@ -222,13 +224,12 @@ function buildRepeatIntervalHint(members: ComparableMoment[]): number | null {
 
 function createInternalFamily(rootId: string): InternalFamily {
   return {
-    rootId,
     memberIds: new Set([rootId]),
     scores: [],
   };
 }
 
-function mergeFamilies(target: InternalFamily, source: InternalFamily) {
+function mergeFamilies(target: InternalFamily, source: InternalFamily): void {
   source.memberIds.forEach((id) => target.memberIds.add(id));
   target.scores.push(...source.scores);
 }
@@ -251,7 +252,9 @@ function getDifferencePercent(result: SimilarityResultLike): number {
   if (direct !== null) return direct;
 
   const score = toNumber(result.score);
-  if (score !== null) return Number(((1 - clamp01(score)) * 100).toFixed(2));
+  if (score !== null) {
+    return Number(((1 - clamp01(score)) * 100).toFixed(2));
+  }
 
   const similarityPercent = toNumber(result.similarityPercent);
   if (similarityPercent !== null) {
@@ -289,16 +292,16 @@ function buildMomentFamilyMember(
     similarityScoreToReference: clamp01(getSimilarityScore(similarityResult)),
     differencePercentToReference: getDifferencePercent(similarityResult),
     matchKind:
-      getMomentId(referenceMoment) === getMomentId(moment) ? "reference" : "similar",
+      getMomentId(referenceMoment) === getMomentId(moment)
+        ? "reference"
+        : "similar",
   };
 
   return member as unknown as MomentFamilyMember;
 }
 
 function getMemberSimilarityScore(member: MomentFamilyMember): number {
-  return clamp01(
-    toNumber((member as any)?.similarityScoreToReference) ?? 0
-  );
+  return clamp01(toNumber((member as any)?.similarityScoreToReference) ?? 0);
 }
 
 function getMemberDifferencePercent(member: MomentFamilyMember): number {
@@ -326,10 +329,13 @@ function collectPairMatches(
       maxResults: maxMatchesPerMoment,
       sameTrackOnly: false,
     })
-      .map((result) => ({
-        id: getMomentId((result as SimilarityResultLike).moment as ComparableMoment),
-        score: getSimilarityScore(result as SimilarityResultLike),
-      }))
+      .map((result) => {
+        const typedResult = result as SimilarityResultLike;
+        return {
+          id: getMomentId((typedResult.moment as ComparableMoment) ?? {}),
+          score: getSimilarityScore(typedResult),
+        };
+      })
       .filter((result) => {
         if (!result.id || result.id === momentId) return false;
         return result.score >= similarityThreshold;
@@ -377,6 +383,7 @@ export function buildMomentFamilies(
 
   for (const moment of orderedMoments) {
     const momentId = getMomentId(moment);
+
     if (!familyMap.has(momentId)) {
       familyMap.set(momentId, createInternalFamily(momentId));
     }
@@ -440,7 +447,9 @@ export function buildMomentFamilies(
     );
 
     const averageSimilarityScore = Number(
-      average(memberRows.map((member) => getMemberSimilarityScore(member))).toFixed(3)
+      average(
+        memberRows.map((member) => getMemberSimilarityScore(member))
+      ).toFixed(3)
     );
 
     const averageDifferencePercent = Number(
@@ -477,4 +486,3 @@ export function buildMomentFamilies(
     familyByMomentId,
     ungroupedMomentIds: ungroupedMomentIds.sort(),
   };
-}
