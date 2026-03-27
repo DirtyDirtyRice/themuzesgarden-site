@@ -8,3 +8,7 @@ export type PinnedFamily = {
 export function getPinnedFamilies(): PinnedFamily[] {
   return [];
 }
+
+export function pinFamily(id: string): PinnedFamily {
+  return { id };
+}
