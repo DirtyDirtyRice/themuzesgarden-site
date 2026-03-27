@@ -290,10 +290,10 @@ function buildMomentFamilyMember(
     moment: toMomentSimilarityComparable(moment),
     similarityScoreToReference: clamp01(getSimilarityScore(similarityResult)),
     differencePercentToReference: getDifferencePercent(similarityResult),
-    matchKind:
-      getMomentId(referenceMoment) === getMomentId(moment)
-        ? "reference"
-        : "similar",
+  matchKind:
+  getMomentId(referenceMoment) === getMomentId(moment)
+    ? "exact"
+    : "near",
   };
 }
 
