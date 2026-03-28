@@ -62,3 +62,18 @@ export function getLinksTo(targetId: string): MetadataLink[] {
 
   return METADATA_LINKS.filter((l) => l.targetId === clean);
 }
+
+export function getMetadataContext(id: string) {
+  const entry = getMetadataById(id);
+
+  if (!entry) {
+    return null;
+  }
+
+  return {
+    entry,
+    children: getMetadataChildren(id),
+    linksFrom: getLinksFrom(id),
+    linksTo: getLinksTo(id),
+  };
+}
