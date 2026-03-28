@@ -1,13 +1,10 @@
 "use client";
 
-import { getMetadataByTarget } from "./metadataApi";
-import type { MetadataTargetType } from "./metadataTypes";
-
-type MetadataItemLike = {
-  id: string;
-  label?: string | null;
-  description?: string | null;
-};
+import {
+  getMetadataByTarget,
+  getMetadataContext,
+} from "./metadataApi";
+import type { MetadataTargetType, MetadataEntry } from "./metadataTypes";
 
 type Props = {
   targetType: MetadataTargetType;
@@ -15,7 +12,7 @@ type Props = {
 };
 
 export default function MetadataPanel({ targetType, targetId }: Props) {
-  const items = (getMetadataByTarget(targetType, targetId) ?? []) as MetadataItemLike[];
+  const items = getMetadataByTarget(targetType, targetId);
 
   if (!items.length) return null;
 
@@ -23,18 +20,45 @@ export default function MetadataPanel({ targetType, targetId }: Props) {
     <div className="mt-3 rounded-lg border bg-white p-3 text-sm">
       <div className="mb-2 font-semibold text-gray-700">Metadata</div>
 
-      <div className="space-y-2">
-        {items.map((m) => (
-          <div key={String(m.id)} className="rounded border p-2">
-            <div className="font-medium">{String(m.label ?? "Untitled")}</div>
+      <div className="space-y-3">
+        {items.map((m) => {
+          const ctx = getMetadataContext(m.id);
 
-            {m.description ? (
-              <div className="mt-1 text-xs text-gray-600">
-                {String(m.description)}
-              </div>
-            ) : null}
-          </div>
-        ))}
+          return (
+            <div key={m.id} className="rounded border p-2">
+              <div className="font-medium">{m.label}</div>
+
+              {m.description ? (
+                <div className="mt-1 text-xs text-gray-600">
+                  {m.description}
+                </div>
+              ) : null}
+
+              {/* Parent */}
+              {ctx?.parent ? (
+                <div className="mt-2 text-xs text-gray-500">
+                  Parent: {ctx.parent.label}
+                </div>
+              ) : null}
+
+              {/* Children */}
+              {ctx?.children?.length ? (
+                <div className="mt-2 text-xs text-gray-500">
+                  Children:{" "}
+                  {ctx.children.map((c) => c.label).join(", ")}
+                </div>
+              ) : null}
+
+              {/* Links */}
+              {ctx?.linksFrom?.length ? (
+                <div className="mt-2 text-xs text-gray-500">
+                  Related:{" "}
+                  {ctx.linksFrom.map((l) => l.targetId).join(", ")}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -49,6 +49,13 @@ export function getMetadataChildren(parentId: string): MetadataEntry[] {
   return METADATA_REGISTRY.filter((m) => m.parentId === clean);
 }
 
+export function getMetadataParent(id: string): MetadataEntry | null {
+  const entry = getMetadataById(id);
+  if (!entry?.parentId) return null;
+
+  return getMetadataById(entry.parentId);
+}
+
 export function getLinksFrom(sourceId: string): MetadataLink[] {
   const clean = String(sourceId ?? "").trim();
   if (!clean) return [];
@@ -66,12 +73,11 @@ export function getLinksTo(targetId: string): MetadataLink[] {
 export function getMetadataContext(id: string) {
   const entry = getMetadataById(id);
 
-  if (!entry) {
-    return null;
-  }
+  if (!entry) return null;
 
   return {
     entry,
+    parent: getMetadataParent(id),
     children: getMetadataChildren(id),
     linksFrom: getLinksFrom(id),
     linksTo: getLinksTo(id),
