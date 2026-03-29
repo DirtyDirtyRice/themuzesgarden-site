@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { looksLikeUuid } from "./playerUtils";
 
 export function useProjectContext() {
   const pathname = usePathname();
@@ -15,10 +14,11 @@ export function useProjectContext() {
     return String(id);
   }, [pathname]);
 
+  // ✅ RELAXED + RELIABLE CHECK
   const onProjectPage =
     typeof pathname === "string" &&
-    pathname.includes("/workspace/projects/") &&
-    looksLikeUuid(projectId);
+    pathname.startsWith("/workspace/projects/") &&
+    projectId.length > 0;
 
   return { pathname, projectId, onProjectPage };
 }

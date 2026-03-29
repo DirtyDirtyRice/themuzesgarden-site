@@ -24,6 +24,7 @@ import PlayerSearchHelpPanel from "./PlayerSearchHelpPanel";
 import PlayerProjectHelpPanels from "./PlayerProjectHelpPanels";
 
 const LS_COMPACT_KEY = "muzes.globalPlayer.compact.v1";
+const ENABLE_Q_TRACE = process.env.NODE_ENV !== "production";
 
 function emitTagSearch(tag: string) {
   const clean = String(tag).trim();
@@ -52,6 +53,23 @@ function getHeatBucket(score: number, matchedMomentCount: number): "hot" | "warm
 function getSearchModeLabel(query: string): string {
   if (!query) return "Idle";
   return "Heat Ranked";
+}
+
+function formatTraceTime(): string {
+  const now = new Date();
+  return now.toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }) + `.${String(now.getMilliseconds()).padStart(3, "0")}`;
+}
+
+function logQTrace(source: string, prevValue: string, nextValue: string) {
+  if (!ENABLE_Q_TRACE) return;
+  console.log(
+    `[Q TRACE ${formatTraceTime()}] ${source} | prev=${JSON.stringify(prevValue)} | next=${JSON.stringify(nextValue)}`
+  );
 }
 
 export default function PlayerPanel(props: {
@@ -149,6 +167,20 @@ export default function PlayerPanel(props: {
     allTracks,
     onPlayTrack,
   } = props;
+
+  const lastQRef = useRef(q);
+
+  function tracedSetQ(source: string, nextValue: string) {
+    logQTrace(source, lastQRef.current, nextValue);
+    setQ(nextValue);
+  }
+
+  useEffect(() => {
+    if (lastQRef.current !== q) {
+      logQTrace("prop:q observed", lastQRef.current, q);
+      lastQRef.current = q;
+    }
+  }, [q]);
 
   const trackCount = tab === "project" ? projectTracks.length : allTracks.length;
   const trackCountLabel = tab === "project" ? `Setlist ${trackCount}` : `Library ${trackCount}`;
@@ -431,7 +463,12 @@ export default function PlayerPanel(props: {
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           <div className="space-y-3">
             {isSearchTab && !compact ? (
-              <SearchTab q={q} setQ={setQ} allTracks={allTracks} onPlay={onPlayTrack} />
+              <SearchTab
+                q={q}
+                setQ={(nextValue) => tracedSetQ("SearchTab:setQ", nextValue)}
+                allTracks={allTracks}
+                onPlay={onPlayTrack}
+              />
             ) : null}
 
             <PlayerStatusBadges
@@ -476,8 +513,8 @@ export default function PlayerPanel(props: {
               topTags={topTags}
               onTagClick={(tag) => {
                 setTab("search");
-                setQ(tag);
-                emitTagSearch(tag);
+                tracedSetQ("PlayerTagIntelligencePanel:onTagClick", tag);
+              
               }}
             />
 

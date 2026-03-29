@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlayerTab } from "../../player/playerTypes";
 import { readPersisted, writePersisted } from "../../player/playerStorage";
 import { useAllTracks } from "../../player/useAllTracks";
@@ -10,13 +10,14 @@ import { useAudioEngine } from "../../player/useAudioEngine";
 import PlayerPanel from "../../player/PlayerPanel";
 
 export default function GlobalPlayer() {
+  const { onProjectPage, projectId } = useProjectContext();
+
   const [tab, setTab] = useState<PlayerTab>("search");
   const [q, setQState] = useState("");
 
-  const restoredSearchRef = useRef(false);
+  const restoredTabRef = useRef(false);
 
   const { allTracks } = useAllTracks();
-  const { onProjectPage, projectId } = useProjectContext();
 
   const {
     projectTracks,
@@ -44,27 +45,31 @@ export default function GlobalPlayer() {
     projectTracks,
   });
 
-  function setQ(nextValue: string) {
+  const setQ = useCallback((nextValue: string) => {
     const clean = String(nextValue ?? "");
     setQState(clean);
+  }, []);
 
-    const trimmed = clean.trim();
-    writePersisted({
-      lastSearchQuery: trimmed || undefined,
-    });
-  }
+  // ✅ FORCE CORRECT TAB BASED ON ROUTE
+  useEffect(() => {
+    if (onProjectPage) {
+      setTab("project");
+    } else {
+      setTab("search");
+    }
+  }, [onProjectPage]);
 
   useEffect(() => {
-    if (restoredSearchRef.current) return;
-    restoredSearchRef.current = true;
+    if (restoredTabRef.current) return;
+    restoredTabRef.current = true;
 
     const persisted = readPersisted();
-    const savedQuery = String(persisted.lastSearchQuery ?? "").trim();
+    const savedTab = persisted.tab;
 
-    if (savedQuery) {
-      setQState(savedQuery);
+    if (!onProjectPage && (savedTab === "project" || savedTab === "search")) {
+      setTab(savedTab);
     }
-  }, []);
+  }, [onProjectPage]);
 
   useEffect(() => {
     writePersisted({ tab });
@@ -102,7 +107,7 @@ export default function GlobalPlayer() {
         onSearchTag as EventListener
       );
     };
-  }, []);
+  }, [setQ]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -129,10 +134,10 @@ export default function GlobalPlayer() {
     };
   }, [engine]);
 
-  const jumpIfPossible = () => {
+  const jumpIfPossible = useCallback(() => {
     if (!engine.nowId) return;
     jumpToNow(engine.nowId);
-  };
+  }, [engine.nowId, jumpToNow]);
 
   return (
     <PlayerPanel

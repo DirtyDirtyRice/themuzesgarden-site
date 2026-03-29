@@ -1,6 +1,7 @@
 "use client";
 
 import ProjectActivityPanel from "./ProjectActivityPanel";
+import MetadataPanel from "../../../../player/MetadataPanel";
 import { logProjectActivity } from "../../../../lib/projectActivity";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -1650,14 +1651,15 @@ export default function ProjectDetailsPage() {
                               ) : null}
                               {t.title ?? "Untitled"}
                             </div>
-                            {t.artist ? <div className="text-xs text-zinc-500 truncate">{t.artist}</div> : null}
+                           {t.artist ? <div className="text-xs text-zinc-500 truncate">{t.artist}</div> : null}
+                           <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                            <MetadataPanel targetType="track" targetId={tid} />
+                           </div>
                           </div>
-
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button className="rounded border px-3 py-2 text-xs" onClick={() => playTrackById(tid)}>
                               Play
                             </button>
-
                             <button
                               className="rounded border px-3 py-2 text-xs disabled:opacity-60"
                               onClick={() => unlinkTrack(tid)}

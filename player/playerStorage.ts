@@ -110,8 +110,11 @@ function sanitizePersisted(value: unknown): Persisted {
     }
   }
 
-  const lastSearchQuery = asString(raw.lastSearchQuery);
-  if (lastSearchQuery) sanitized.lastSearchQuery = lastSearchQuery;
+  // Intentionally do not restore lastSearchQuery.
+  // The persisted search text was causing the player to get stuck in Search mode
+  // and repeatedly re-apply stale input like a single "t".
+  // We leave this field out of the sanitized payload so reads ignore it and
+  // subsequent writes naturally drop it from storage.
 
   if (raw.lastMatchedSectionId === null) sanitized.lastMatchedSectionId = null;
   else {

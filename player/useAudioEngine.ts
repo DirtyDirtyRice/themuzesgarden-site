@@ -113,6 +113,18 @@ function buildNowLabel(track: AnyTrack, section: TrackSection | null, startTime?
   return labelBase;
 }
 
+function getEditableHost(node: EventTarget | null): HTMLElement | null {
+  if (!(node instanceof HTMLElement)) return null;
+
+  if (isTypingTarget(node)) return node;
+
+  const editableAncestor = node.closest(
+    'input, textarea, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"], [role="textbox"], [role="searchbox"], [role="combobox"]'
+  );
+
+  return editableAncestor instanceof HTMLElement ? editableAncestor : null;
+}
+
 type PlaybackTarget = {
   track: AnyTrack;
   startTime?: number;
@@ -735,7 +747,16 @@ export function useAudioEngine(args: {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!open) return;
-      if (isTypingTarget(e.target)) return;
+      if (e.defaultPrevented) return;
+      if (e.isComposing) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const eventEditable = getEditableHost(e.target);
+      const activeEditable = getEditableHost(document.activeElement);
+
+      if (eventEditable || activeEditable) {
+        return;
+      }
 
       const k = e.key;
 
@@ -761,13 +782,13 @@ export function useAudioEngine(args: {
         return;
       }
 
-      if (k.toLowerCase() === "r") {
+      if (k === "r" || k === "R") {
         e.preventDefault();
         resumeLastSession();
         return;
       }
 
-      if (k.toLowerCase() === "s") {
+      if (k === "s" || k === "S") {
         if (tabRef.current === "project") {
           e.preventDefault();
           setShuffle((v) => !v);
@@ -775,7 +796,7 @@ export function useAudioEngine(args: {
         return;
       }
 
-      if (k.toLowerCase() === "l") {
+      if (k === "l" || k === "L") {
         if (tabRef.current === "project") {
           e.preventDefault();
           setLoop((v) => !v);

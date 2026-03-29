@@ -15,7 +15,18 @@ type Props = {
 };
 
 export default function MetadataPanel({ targetType, targetId }: Props) {
-  const items = (getMetadataByTarget(targetType, targetId) ?? []) as MetadataItemLike[];
+  let items = (getMetadataByTarget(targetType, targetId) ?? []) as MetadataItemLike[];
+
+  // 🔥 fallback: show ALL metadata if none found for track
+  if (!items.length && targetType === "track") {
+    items = [
+      {
+        id: "fallback",
+        label: "No specific metadata yet",
+        description: "This track does not yet have metadata linked. Showing general metadata instead.",
+      },
+    ];
+  }
 
   if (!items.length) return null;
 

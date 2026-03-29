@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack } from "./playerTypes";
-import { readPersisted, writePersisted } from "./playerStorage";
+import { writePersisted } from "./playerStorage";
 import { emitTagSearch, isTypingTarget } from "./playerUtils";
 import SearchResultCard from "./SearchResultCard";
 import { useWarmMomentEngineSnapshot } from "./useWarmMomentEngineSnapshot";
@@ -63,7 +63,6 @@ export default function SearchTab(props: {
   const [restoredQuery, setRestoredQuery] = useState(false);
   const [momentsOnly, setMomentsOnly] = useState(false);
 
-  const restoredOnceRef = useRef(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const resultRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -96,7 +95,6 @@ export default function SearchTab(props: {
 
   function persistTrackPlayContext() {
     writePersisted({
-      lastSearchQuery: trimmedQuery || undefined,
       lastMatchedSectionId: null,
       lastMatchedSectionStartTime: null,
     });
@@ -158,26 +156,6 @@ export default function SearchTab(props: {
   useEffect(() => {
     focusSearchInput();
   }, []);
-
-  useEffect(() => {
-    if (restoredOnceRef.current) return;
-    restoredOnceRef.current = true;
-
-    if (trimmedQuery) return;
-
-    const persisted = readPersisted();
-    const savedQuery = String(persisted.lastSearchQuery ?? "").trim();
-    if (!savedQuery) return;
-
-    setQ(savedQuery);
-    setRestoredQuery(true);
-  }, [trimmedQuery, setQ]);
-
-  useEffect(() => {
-    if (trimmedQuery) {
-      writePersisted({ lastSearchQuery: trimmedQuery });
-    }
-  }, [trimmedQuery]);
 
   useEffect(() => {
     if (!trimmedQuery) {

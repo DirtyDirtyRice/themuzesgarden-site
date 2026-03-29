@@ -58,4 +58,16 @@ export const METADATA_REGISTRY: MetadataEntry[] = [
     createdAt: new Date().toISOString(),
     tags: ["chord", "harmony", "jazz"],
   },
+
+  {
+    id: "track-danny-rocker-keeper",
+    targetType: "track",
+    targetId:
+      "sb:audio:uploads/danny da destroyer2 ROCKER KEEPER - Copy-c60c9a62-59f1-49f5-8246-eeeaa27dcb29.mp3",
+    label: "Rocker Keeper",
+    description:
+      "High-energy rock track with aggressive tone and driving rhythm. Likely a core performance piece.",
+    createdAt: new Date().toISOString(),
+    tags: ["rock", "energy", "keeper"],
+  },
 ];
