@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 
-function safeDecode(value: string) {
+function safeDecode(value: string): string {
   try {
     return decodeURIComponent(value);
   } catch {
@@ -11,38 +11,32 @@ function safeDecode(value: string) {
   }
 }
 
-function normalize(path: string) {
-  if (!path) return "";
-  let p = path.split("#")[0] ?? "";
-  p = p.split("?")[0] ?? "";
-  p = p.trim();
-  if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
-  return p;
+function normalizePathname(pathname: string | null): string {
+  if (typeof pathname !== "string") return "";
+
+  const noHash = pathname.split("#")[0] ?? "";
+  const noQuery = noHash.split("?")[0] ?? "";
+  const trimmed = noQuery.trim();
+
+  if (!trimmed) return "";
+
+  if (trimmed.length > 1 && trimmed.endsWith("/")) {
+    return trimmed.slice(0, -1);
+  }
+
+  return trimmed;
 }
 
 export function useProjectContext() {
-  const nextPathname = usePathname();
+  const pathname = usePathname();
 
-  const [resolvedPath, setResolvedPath] = useState("");
-
-  // ✅ FIX: resolve from BOTH sources
-  useEffect(() => {
-    const fromNext = normalize(nextPathname ?? "");
-    const fromWindow =
-      typeof window !== "undefined"
-        ? normalize(window.location.pathname)
-        : "";
-
-    // prefer window if mismatch (Vercel hydration fix)
-    const finalPath =
-      fromWindow && fromWindow !== fromNext ? fromWindow : fromNext;
-
-    setResolvedPath(finalPath);
-  }, [nextPathname]);
+  const normalizedPathname = useMemo(() => {
+    return normalizePathname(pathname);
+  }, [pathname]);
 
   const parts = useMemo(() => {
-    return resolvedPath.split("/").filter(Boolean);
-  }, [resolvedPath]);
+    return normalizedPathname.split("/").filter(Boolean);
+  }, [normalizedPathname]);
 
   const projectId = useMemo(() => {
     const idx = parts.indexOf("projects");
@@ -51,11 +45,11 @@ export function useProjectContext() {
   }, [parts]);
 
   const onProjectPage = useMemo(() => {
-    return parts.includes("projects") && projectId.length > 0;
+    return parts.includes("workspace") && parts.includes("projects") && projectId.length > 0;
   }, [parts, projectId]);
 
   return {
-    pathname: resolvedPath,
+    pathname: normalizedPathname,
     projectId,
     onProjectPage,
   };
