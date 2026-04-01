@@ -43,7 +43,10 @@ function getTagOriginLabel(trackCount: number, sectionCount: number): string {
   return "Track";
 }
 
-function getHeatBucket(score: number, matchedMomentCount: number): "hot" | "warm" | "none" {
+function getHeatBucket(
+  score: number,
+  matchedMomentCount: number
+): "hot" | "warm" | "none" {
   if (matchedMomentCount <= 0) return "none";
   if (score >= 220) return "hot";
   if (score >= 140) return "warm";
@@ -57,12 +60,14 @@ function getSearchModeLabel(query: string): string {
 
 function formatTraceTime(): string {
   const now = new Date();
-  return now.toLocaleTimeString("en-US", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }) + `.${String(now.getMilliseconds()).padStart(3, "0")}`;
+  return (
+    now.toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }) + `.${String(now.getMilliseconds()).padStart(3, "0")}`
+  );
 }
 
 function logQTrace(source: string, prevValue: string, nextValue: string) {
@@ -171,8 +176,15 @@ export default function PlayerPanel(props: {
   const lastQRef = useRef(q);
 
   function tracedSetQ(source: string, nextValue: string) {
-    logQTrace(source, lastQRef.current, nextValue);
-    setQ(nextValue);
+    const clean = String(nextValue ?? "");
+
+    if (clean === lastQRef.current) {
+      return;
+    }
+
+    logQTrace(source, lastQRef.current, clean);
+    lastQRef.current = clean;
+    setQ(clean);
   }
 
   useEffect(() => {
@@ -182,8 +194,10 @@ export default function PlayerPanel(props: {
     }
   }, [q]);
 
-  const trackCount = tab === "project" ? projectTracks.length : allTracks.length;
-  const trackCountLabel = tab === "project" ? `Setlist ${trackCount}` : `Library ${trackCount}`;
+  const trackCount =
+    tab === "project" ? projectTracks.length : allTracks.length;
+  const trackCountLabel =
+    tab === "project" ? `Setlist ${trackCount}` : `Library ${trackCount}`;
 
   const hasNow = Boolean(nowId);
   const isProjectTab = tab === "project";
@@ -241,7 +255,9 @@ export default function PlayerPanel(props: {
 
   const upNextIdx = nowIdx >= 0 ? nowIdx + 1 : -1;
   const remainingCount =
-    nowIdx >= 0 ? Math.max(0, projectTracks.length - (nowIdx + 1)) : projectTracks.length;
+    nowIdx >= 0
+      ? Math.max(0, projectTracks.length - (nowIdx + 1))
+      : projectTracks.length;
 
   const atProjectStart = isProjectTab && hasNow && nowIdx === 0 && !shuffle;
   const atProjectEnd =
@@ -304,7 +320,9 @@ export default function PlayerPanel(props: {
         if (b[1].sectionCount !== a[1].sectionCount) {
           return b[1].sectionCount - a[1].sectionCount;
         }
-        return a[0].localeCompare(b[0], undefined, { sensitivity: "base" });
+        return a[0].localeCompare(b[0], undefined, {
+          sensitivity: "base",
+        });
       })
       .slice(0, 18)
       .map(([tag, meta]) => ({
@@ -514,11 +532,12 @@ export default function PlayerPanel(props: {
               onTagClick={(tag) => {
                 setTab("search");
                 tracedSetQ("PlayerTagIntelligencePanel:onTagClick", tag);
-              
               }}
             />
 
-            {!compact && isSearchTab && <MomentInspector allTracks={allTracks} />}
+            {!compact && isSearchTab ? (
+              <MomentInspector allTracks={allTracks} />
+            ) : null}
 
             <PlayerNowPlayingPanel
               nowLabel={nowLabel}
@@ -557,13 +576,17 @@ export default function PlayerPanel(props: {
               projectTracksLength={projectTracks.length}
               nowId={nowId}
               onPrevWrapped={() => {
-                if (tab === "project") setNavTick((s) => ({ ...s, prev: s.prev + 1 }));
+                if (tab === "project") {
+                  setNavTick((s) => ({ ...s, prev: s.prev + 1 }));
+                }
                 onPrev();
               }}
               onToggle={onToggle}
               onStop={onStop}
               onNextWrapped={() => {
-                if (tab === "project") setNavTick((s) => ({ ...s, next: s.next + 1 }));
+                if (tab === "project") {
+                  setNavTick((s) => ({ ...s, next: s.next + 1 }));
+                }
                 onNext();
               }}
               onResume={onResume}
