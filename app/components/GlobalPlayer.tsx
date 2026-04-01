@@ -9,6 +9,8 @@ import { useProjectSetlist } from "../../player/useProjectSetlist";
 import { useAudioEngine } from "../../player/useAudioEngine";
 import PlayerPanel from "../../player/PlayerPanel";
 
+const SEARCH_QUERY_STORAGE_KEY = "muzesgarden-global-player-q";
+
 export default function GlobalPlayer() {
   const { onProjectPage, projectId } = useProjectContext();
 
@@ -16,6 +18,7 @@ export default function GlobalPlayer() {
   const [q, setQState] = useState("");
 
   const restoredTabRef = useRef(false);
+  const restoredQRef = useRef(false);
 
   const { allTracks } = useAllTracks();
 
@@ -47,7 +50,11 @@ export default function GlobalPlayer() {
 
   const setQ = useCallback((nextValue: string) => {
     const clean = String(nextValue ?? "");
-    setQState(clean);
+    setQState((prev) => (prev === clean ? prev : clean));
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(SEARCH_QUERY_STORAGE_KEY, clean);
+    }
   }, []);
 
   // ✅ FORCE CORRECT TAB BASED ON ROUTE
@@ -70,6 +77,18 @@ export default function GlobalPlayer() {
       setTab(savedTab);
     }
   }, [onProjectPage]);
+
+  useEffect(() => {
+    if (restoredQRef.current) return;
+    restoredQRef.current = true;
+
+    if (typeof window === "undefined") return;
+
+    const savedQ = window.sessionStorage.getItem(SEARCH_QUERY_STORAGE_KEY);
+    if (savedQ == null) return;
+
+    setQState((prev) => (prev === savedQ ? prev : savedQ));
+  }, []);
 
   useEffect(() => {
     writePersisted({ tab });
