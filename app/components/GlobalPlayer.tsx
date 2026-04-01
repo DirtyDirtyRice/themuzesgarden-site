@@ -57,13 +57,13 @@ export default function GlobalPlayer() {
     }
   }, []);
 
-  // ✅ FORCE CORRECT TAB BASED ON ROUTE
+  // ✅ FIXED: ONLY CHANGE TAB IF DIFFERENT
   useEffect(() => {
-    if (onProjectPage) {
-      setTab("project");
-    } else {
-      setTab("search");
-    }
+    setTab((prev) => {
+      if (onProjectPage && prev !== "project") return "project";
+      if (!onProjectPage && prev !== "search") return "search";
+      return prev;
+    });
   }, [onProjectPage]);
 
   useEffect(() => {
