@@ -60,11 +60,11 @@ export default function SearchTab(props: {
 
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
-  const [restoredQuery, setRestoredQuery] = useState(false);
   const [momentsOnly, setMomentsOnly] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const resultRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const didInitialFocusRef = useRef(false);
 
   const trimmedQuery = q.trim();
   const normalizedQuery = trimmedQuery.toLowerCase();
@@ -124,6 +124,7 @@ export default function SearchTab(props: {
   function focusSearchInput() {
     const input = inputRef.current;
     if (!input) return;
+
     input.focus();
   }
 
@@ -138,7 +139,9 @@ export default function SearchTab(props: {
   }
 
   function nextResult() {
-    setSelectedIdx((idx) => (suggestions.length ? (idx + 1) % suggestions.length : 0));
+    setSelectedIdx((idx) =>
+      suggestions.length ? (idx + 1) % suggestions.length : 0
+    );
   }
 
   function prevResult() {
@@ -148,20 +151,30 @@ export default function SearchTab(props: {
   }
 
   function applyPreset(preset: SearchPreset) {
-    setRestoredQuery(false);
     setQ(preset.query);
     focusSearchInput();
   }
 
   useEffect(() => {
-    focusSearchInput();
+    if (didInitialFocusRef.current) return;
+    didInitialFocusRef.current = true;
+
+    const input = inputRef.current;
+    if (!input) return;
+
+    const active = document.activeElement;
+    const nothingFocused =
+      !active || active === document.body || active === document.documentElement;
+
+    if (nothingFocused || active === input) {
+      input.focus();
+    }
   }, []);
 
   useEffect(() => {
     if (!trimmedQuery) {
       setSelectedTrackId(null);
       setSelectedIdx(0);
-      setRestoredQuery(false);
       return;
     }
 
@@ -260,10 +273,11 @@ export default function SearchTab(props: {
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <input
+          id="player-search"
+          name="player-search"
           ref={inputRef}
           value={q}
           onChange={(e) => {
-            setRestoredQuery(false);
             setQ(e.target.value);
           }}
           className="w-full rounded border px-3 py-2 text-sm"
@@ -275,7 +289,6 @@ export default function SearchTab(props: {
             type="button"
             className="shrink-0 rounded border px-3 py-2 text-xs"
             onClick={() => {
-              setRestoredQuery(false);
               setQ("");
               focusSearchInput();
             }}
@@ -409,7 +422,6 @@ export default function SearchTab(props: {
                   onPlayTrack={() => playTrack(row.t)}
                   onPlayMoment={(moment) => emitMomentPlaybackTarget(row.t, moment)}
                   onTagClick={(tag) => {
-                    setRestoredQuery(false);
                     setQ(tag);
                     emitTagSearch(tag);
                   }}
