@@ -38,20 +38,19 @@ export function useProjectContext() {
     return normalizedPathname.split("/").filter(Boolean);
   }, [normalizedPathname]);
 
-  const projectId = useMemo(() => {
-    const workspaceIdx = parts.indexOf("workspace");
-    const projectsIdx = parts.indexOf("projects");
-
-    if (workspaceIdx !== 0) return "";
-    if (projectsIdx !== 1) return "";
-
-    const rawId = parts[2] ?? "";
-    return safeDecode(String(rawId).trim());
+  const projectsIdx = useMemo(() => {
+    return parts.indexOf("projects");
   }, [parts]);
 
+  const projectId = useMemo(() => {
+    if (projectsIdx < 0) return "";
+    const rawId = parts[projectsIdx + 1] ?? "";
+    return safeDecode(String(rawId).trim());
+  }, [parts, projectsIdx]);
+
   const onProjectPage = useMemo(() => {
-    return parts[0] === "workspace" && parts[1] === "projects" && projectId.length > 0;
-  }, [parts, projectId]);
+    return projectsIdx >= 0 && projectId.length > 0;
+  }, [projectsIdx, projectId]);
 
   return {
     pathname: normalizedPathname,
