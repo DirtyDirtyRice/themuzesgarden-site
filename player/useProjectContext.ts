@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 
-function safeDecode(value: string): string {
+function safeDecode(value: string) {
   try {
     return decodeURIComponent(value);
   } catch {
@@ -11,49 +11,51 @@ function safeDecode(value: string): string {
   }
 }
 
-function normalizePathname(pathname: string | null): string {
-  if (typeof pathname !== "string") return "";
-
-  const noHash = pathname.split("#")[0] ?? "";
-  const noQuery = noHash.split("?")[0] ?? "";
-  const trimmed = noQuery.trim();
-
-  if (!trimmed) return "";
-
-  if (trimmed.length > 1 && trimmed.endsWith("/")) {
-    return trimmed.slice(0, -1);
-  }
-
-  return trimmed;
+function normalize(path: string) {
+  if (!path) return "";
+  let p = path.split("#")[0] ?? "";
+  p = p.split("?")[0] ?? "";
+  p = p.trim();
+  if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+  return p;
 }
 
 export function useProjectContext() {
-  const pathname = usePathname();
+  const nextPathname = usePathname();
 
-  const normalizedPathname = useMemo(() => {
-    return normalizePathname(pathname);
-  }, [pathname]);
+  const [resolvedPath, setResolvedPath] = useState("");
+
+  // ✅ FIX: resolve from BOTH sources
+  useEffect(() => {
+    const fromNext = normalize(nextPathname ?? "");
+    const fromWindow =
+      typeof window !== "undefined"
+        ? normalize(window.location.pathname)
+        : "";
+
+    // prefer window if mismatch (Vercel hydration fix)
+    const finalPath =
+      fromWindow && fromWindow !== fromNext ? fromWindow : fromNext;
+
+    setResolvedPath(finalPath);
+  }, [nextPathname]);
 
   const parts = useMemo(() => {
-    return normalizedPathname.split("/").filter(Boolean);
-  }, [normalizedPathname]);
-
-  const projectsIdx = useMemo(() => {
-    return parts.indexOf("projects");
-  }, [parts]);
+    return resolvedPath.split("/").filter(Boolean);
+  }, [resolvedPath]);
 
   const projectId = useMemo(() => {
-    if (projectsIdx < 0) return "";
-    const rawId = parts[projectsIdx + 1] ?? "";
-    return safeDecode(String(rawId).trim());
-  }, [parts, projectsIdx]);
+    const idx = parts.indexOf("projects");
+    if (idx < 0) return "";
+    return safeDecode(String(parts[idx + 1] ?? "").trim());
+  }, [parts]);
 
   const onProjectPage = useMemo(() => {
-    return projectsIdx >= 0 && projectId.length > 0;
-  }, [projectsIdx, projectId]);
+    return parts.includes("projects") && projectId.length > 0;
+  }, [parts, projectId]);
 
   return {
-    pathname: normalizedPathname,
+    pathname: resolvedPath,
     projectId,
     onProjectPage,
   };
