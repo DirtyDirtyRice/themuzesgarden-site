@@ -57,15 +57,6 @@ export default function GlobalPlayer() {
     }
   }, []);
 
-  // ✅ FIXED: ONLY CHANGE TAB IF DIFFERENT
-  useEffect(() => {
-    setTab((prev) => {
-      if (onProjectPage && prev !== "project") return "project";
-      if (!onProjectPage && prev !== "search") return "search";
-      return prev;
-    });
-  }, [onProjectPage]);
-
   useEffect(() => {
     if (restoredTabRef.current) return;
     restoredTabRef.current = true;
