@@ -38,7 +38,7 @@ export function useProjectSetlist(args: {
   projectId: string;
   allTracks: AnyTrack[];
 }) {
-  const { onProjectPage, projectId, allTracks } = args;
+  const { projectId, allTracks } = args;
 
   const [projectTrackIds, setProjectTrackIds] = useState<string[]>([]);
   const [loadingProject, setLoadingProject] = useState(false);
@@ -63,7 +63,6 @@ export function useProjectSetlist(args: {
 
   const loadProjectIds = useCallback(
     async (mode: "apply-saved" | "linked-truth" = "apply-saved") => {
-      if (!onProjectPage) return;
       if (!cleanProjectId) return;
 
       const seq = ++refreshSeqRef.current;
@@ -87,13 +86,12 @@ export function useProjectSetlist(args: {
       } catch (e: any) {
         if (seq !== refreshSeqRef.current) return;
         setProjectErr(e?.message ?? "Failed to load project setlist");
-        setProjectTrackIds([]);
       } finally {
         if (seq !== refreshSeqRef.current) return;
         setLoadingProject(false);
       }
     },
-    [onProjectPage, cleanProjectId]
+    [cleanProjectId]
   );
 
   const refreshProjectIds = useCallback(async () => {
@@ -101,7 +99,7 @@ export function useProjectSetlist(args: {
   }, [loadProjectIds]);
 
   function persistNextOrder(next: string[]) {
-    if (onProjectPage && cleanProjectId) {
+    if (cleanProjectId) {
       writeProjectOrder(cleanProjectId, next);
     }
   }
@@ -138,7 +136,10 @@ export function useProjectSetlist(args: {
       if (fromIndex < 0) return prev;
       if (!Number.isFinite(toIndex)) return prev;
 
-      const clampedIndex = Math.max(0, Math.min(prev.length - 1, Math.floor(toIndex)));
+      const clampedIndex = Math.max(
+        0,
+        Math.min(prev.length - 1, Math.floor(toIndex))
+      );
       if (fromIndex === clampedIndex) return prev;
 
       const next = [...prev];
@@ -171,19 +172,12 @@ export function useProjectSetlist(args: {
   }
 
   useEffect(() => {
-    if (!onProjectPage || !cleanProjectId) {
-      setLoadingProject(false);
-      setProjectErr(null);
-      setProjectTrackIds([]);
-      return;
-    }
-
+    if (!cleanProjectId) return;
     refreshProjectIds();
-  }, [onProjectPage, cleanProjectId, refreshProjectIds]);
+  }, [cleanProjectId, refreshProjectIds]);
 
   useEffect(() => {
     function onSync() {
-      if (!onProjectPage) return;
       if (!cleanProjectId) return;
       refreshProjectIds();
     }
@@ -200,7 +194,7 @@ export function useProjectSetlist(args: {
         );
       }
     };
-  }, [onProjectPage, cleanProjectId, refreshProjectIds]);
+  }, [cleanProjectId, refreshProjectIds]);
 
   return {
     projectTrackIds,
