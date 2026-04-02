@@ -30,14 +30,13 @@ export default function PlayerHeaderBar(props: {
               className={[
                 "rounded border px-2 py-1 text-xs",
                 tab === "project" ? "bg-black text-white" : "bg-white",
-                !onProjectPage ? "opacity-50" : "",
               ].join(" ")}
-              onClick={() => {
-                if (!onProjectPage) return;
-                setTab("project");
-              }}
-              disabled={!onProjectPage}
-              title={onProjectPage ? "Project setlist" : "Open a project page to enable Project tab"}
+              onClick={() => setTab("project")}
+              title={
+                onProjectPage
+                  ? "Project setlist"
+                  : "Diagnostic mode: force Project tab even if route detection says no"
+              }
             >
               Project
             </button>
