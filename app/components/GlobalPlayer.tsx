@@ -9,13 +9,13 @@ import { useProjectSetlist } from "../../player/useProjectSetlist";
 import { useAudioEngine } from "../../player/useAudioEngine";
 import PlayerPanel from "../../player/PlayerPanel";
 
+let GLOBAL_PLAYER_Q_MEMORY = "";
+
 export default function GlobalPlayer() {
   const { onProjectPage, projectId } = useProjectContext();
 
   const [tab, setTab] = useState<PlayerTab>("search");
-
-  const qRef = useRef<string>("");
-  const [q, setQState] = useState(() => qRef.current || "");
+  const [q, setQState] = useState(() => GLOBAL_PLAYER_Q_MEMORY);
 
   const restoredTabRef = useRef(false);
 
@@ -49,7 +49,7 @@ export default function GlobalPlayer() {
 
   const setQ = useCallback((nextValue: string) => {
     const clean = String(nextValue ?? "");
-    qRef.current = clean;
+    GLOBAL_PLAYER_Q_MEMORY = clean;
     setQState((prev) => (prev === clean ? prev : clean));
   }, []);
 
