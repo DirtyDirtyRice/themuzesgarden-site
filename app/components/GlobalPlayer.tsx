@@ -9,13 +9,13 @@ import { useProjectSetlist } from "../../player/useProjectSetlist";
 import { useAudioEngine } from "../../player/useAudioEngine";
 import PlayerPanel from "../../player/PlayerPanel";
 
-const SEARCH_QUERY_STORAGE_KEY = "muzesgarden-global-player-q";
-
 export default function GlobalPlayer() {
   const { onProjectPage, projectId } = useProjectContext();
 
   const [tab, setTab] = useState<PlayerTab>("search");
-  const [q, setQState] = useState("");
+
+  const qRef = useRef<string>("");
+  const [q, setQState] = useState(() => qRef.current || "");
 
   const restoredTabRef = useRef(false);
 
@@ -49,11 +49,8 @@ export default function GlobalPlayer() {
 
   const setQ = useCallback((nextValue: string) => {
     const clean = String(nextValue ?? "");
+    qRef.current = clean;
     setQState((prev) => (prev === clean ? prev : clean));
-
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(SEARCH_QUERY_STORAGE_KEY, clean);
-    }
   }, []);
 
   useEffect(() => {
