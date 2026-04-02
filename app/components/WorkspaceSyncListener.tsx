@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { onProjectTracksChanged } from "../../lib/appEvents";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -28,7 +28,6 @@ function setGlobalSyncDebug(partial: {
 
 export default function WorkspaceSyncListener() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const refreshTimerRef = useRef<number | null>(null);
   const realtimeCleanupRef = useRef<null | (() => void)>(null);
@@ -49,21 +48,22 @@ export default function WorkspaceSyncListener() {
 
     setGlobalSyncDebug({ projectId });
 
-    const scheduleRefresh = (source: "event" | "realtime") => {
+    const markSync = (source: "event" | "realtime") => {
       const now = Date.now();
-      if (source === "event") setGlobalSyncDebug({ lastEventTs: now });
-      if (source === "realtime") setGlobalSyncDebug({ lastRealtimeTs: now });
+      if (source === "event") {
+        setGlobalSyncDebug({ lastEventTs: now });
+      } else {
+        setGlobalSyncDebug({ lastRealtimeTs: now });
+      }
 
       if (refreshTimerRef.current) return;
 
       refreshTimerRef.current = window.setTimeout(() => {
         refreshTimerRef.current = null;
         setGlobalSyncDebug({ lastRefreshTs: Date.now() });
-        router.refresh();
       }, 75);
     };
 
-    // 1) App-level event (QuickLinkHelper emits this)
     const offEvent = onProjectTracksChanged((detail) => {
       if (detail?.projectId && detail.projectId !== projectId) return;
 
@@ -74,10 +74,9 @@ export default function WorkspaceSyncListener() {
 
       if (!stillOnProjectPage) return;
 
-      scheduleRefresh("event");
+      markSync("event");
     });
 
-    // 2) Realtime subscription (covers mega-file changes like Unlink)
     let mode: SyncMode = "event-only";
     try {
       if (supabase?.channel) {
@@ -93,7 +92,7 @@ export default function WorkspaceSyncListener() {
               filter: `project_id=eq.${projectId}`,
             },
             () => {
-              scheduleRefresh("realtime");
+              markSync("realtime");
             }
           )
           .subscribe();
@@ -125,7 +124,7 @@ export default function WorkspaceSyncListener() {
         realtimeCleanupRef.current = null;
       }
     };
-  }, [pathname, projectId, router]);
+  }, [pathname, projectId]);
 
   return null;
 }
