@@ -305,7 +305,9 @@ export default function PlayerPanel(props: {
     try {
       const raw = localStorage.getItem(LS_COMPACT_KEY);
       setCompact(raw === "1");
-    } catch {}
+    } catch {
+      // ignore
+    }
   }, []);
 
   function toggleCompact() {
@@ -314,7 +316,9 @@ export default function PlayerPanel(props: {
       if (typeof window !== "undefined") {
         try {
           localStorage.setItem(LS_COMPACT_KEY, next ? "1" : "0");
-        } catch {}
+        } catch {
+          // ignore
+        }
       }
       return next;
     });
@@ -348,6 +352,7 @@ export default function PlayerPanel(props: {
       const d = Number.isFinite(audio.duration) ? audio.duration : 0;
       const c = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
       setDurSec(d > 0 ? d : 0);
+
       if (!isSeeking) setCurSec(c >= 0 ? c : 0);
     }
 
@@ -374,7 +379,9 @@ export default function PlayerPanel(props: {
     try {
       el.currentTime = clamped;
       setCurSec(clamped);
-    } catch {}
+    } catch {
+      // ignore
+    }
   }
 
   function finishSeek() {
@@ -441,7 +448,136 @@ export default function PlayerPanel(props: {
               />
             ) : null}
 
-            {/* rest of file unchanged */}
+            <PlayerStatusBadges
+              isSearchTab={isSearchTab}
+              isProjectTab={isProjectTab}
+              hasNow={hasNow}
+              compact={compact}
+              trimmedQuery={trimmedQuery}
+              getSearchModeLabel={getSearchModeLabel}
+            />
+
+            <PlayerModeSummary
+              tab={tab}
+              shuffle={shuffle}
+              loop={loop}
+              statusVolPct={statusVolPct}
+              statusTime={statusTime}
+              trackCountLabel={trackCountLabel}
+            />
+
+            <PlayerSearchStatusPanel
+              compact={compact}
+              isSearchTab={isSearchTab}
+              trimmedQuery={trimmedQuery}
+              searchResultCount={searchResultCount}
+              searchInsights={searchInsights}
+            />
+
+            <PlayerSearchHelpPanel compact={compact} isSearchTab={isSearchTab} />
+
+            <PlayerProjectHelpPanels
+              compact={compact}
+              tab={tab}
+              onProjectPage={onProjectPage}
+              canUseProject={canUseProject}
+              hasProjectTracks={hasProjectTracks}
+            />
+
+            <PlayerTagIntelligencePanel
+              compact={compact}
+              tab={tab}
+              topTags={topTags}
+              onTagClick={(tag) => {
+                setTab("search");
+                setQ(tag);
+              }}
+            />
+
+            {!compact && isSearchTab ? (
+              <MomentInspector allTracks={allTracks} />
+            ) : null}
+
+            <PlayerNowPlayingPanel
+              nowLabel={nowLabel}
+              nowId={nowId}
+              compact={compact}
+              tab={tab}
+              trackCountLabel={trackCountLabel}
+              hasNow={hasNow}
+              canUseProject={canUseProject}
+              hasProjectTracks={hasProjectTracks}
+              nowIdx={nowIdx}
+              upNextIdx={upNextIdx}
+              projectTracksLength={projectTracks.length}
+              remainingCount={remainingCount}
+              trimmedQuery={trimmedQuery}
+            />
+
+            <div ref={audioHostRef}>{audioEl}</div>
+
+            <PlayerTimeline
+              durSec={durSec}
+              curSec={curSec}
+              isSeeking={isSeeking}
+              seekSec={seekSec}
+              setIsSeeking={setIsSeeking}
+              setSeekSec={setSeekSec}
+              finishSeek={finishSeek}
+            />
+
+            <PlayerTransportControls
+              tab={tab}
+              hasNow={hasNow}
+              atProjectStart={atProjectStart}
+              atProjectEnd={atProjectEnd}
+              compact={compact}
+              projectTracksLength={projectTracks.length}
+              nowId={nowId}
+              onPrevWrapped={() => {
+                if (tab === "project") {
+                  setNavTick((s) => ({ ...s, prev: s.prev + 1 }));
+                }
+                onPrev();
+              }}
+              onToggle={onToggle}
+              onStop={onStop}
+              onNextWrapped={() => {
+                if (tab === "project") {
+                  setNavTick((s) => ({ ...s, next: s.next + 1 }));
+                }
+                onNext();
+              }}
+              onResume={onResume}
+              onPlayAll={onPlayAll}
+              onJumpToNow={onJumpToNow}
+              onClearNow={onClearNow}
+            />
+
+            {!compact && tab === "project" ? (
+              <ProjectTab
+                onProjectPage={onProjectPage}
+                projectTracks={projectTracks}
+                loadingProject={loadingProject}
+                projectErr={projectErr}
+                nowId={nowId}
+                shuffle={shuffle}
+                setShuffle={setShuffle}
+                loop={loop}
+                setLoop={setLoop}
+                onRefresh={onRefreshProject}
+                onPlay={onPlayTrack}
+                onPlayFromHere={onPlayFromHere}
+                onMoveUp={onMoveUp}
+                onMoveDown={onMoveDown}
+                onMoveToIndex={onMoveToIndex}
+                onResetOrder={onResetOrder}
+                onJumpToNow={onJumpToNow}
+                listRef={listRef}
+                navPrevTick={navTick.prev}
+                navNextTick={navTick.next}
+              />
+            ) : null}
           </div>
         </div>
       </div>
