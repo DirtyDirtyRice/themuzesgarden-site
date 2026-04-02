@@ -243,17 +243,6 @@ export function useAudioEngine(args: {
   useEffect(() => writePersisted({ tab }), [tab]);
   useEffect(() => writePersisted({ shuffle, loop }), [shuffle, loop]);
 
-  const autoSwitchedRef = useRef(false);
-  useEffect(() => {
-    if (!onProjectPage) {
-      autoSwitchedRef.current = false;
-      return;
-    }
-    if (autoSwitchedRef.current) return;
-    autoSwitchedRef.current = true;
-    setTab("project");
-  }, [onProjectPage, setTab]);
-
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
