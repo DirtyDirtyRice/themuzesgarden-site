@@ -66,7 +66,6 @@ export default function SearchTab(props: {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const resultRefs = useRef<(HTMLDivElement | null)[]>([]);
   const didInitialFocusRef = useRef(false);
-  const inputFocusedRef = useRef(false);
   const lastSentQueryRef = useRef(q);
 
   const trimmedQuery = draftQ.trim();
@@ -186,23 +185,6 @@ export default function SearchTab(props: {
   }, []);
 
   useEffect(() => {
-    const inputIsActive = document.activeElement === inputRef.current;
-    const userIsEditing = inputFocusedRef.current || inputIsActive;
-
-    if (userIsEditing) {
-      if (q === lastSentQueryRef.current && q !== draftQ) {
-        setDraftQ(q);
-      }
-      return;
-    }
-
-    if (q !== draftQ) {
-      lastSentQueryRef.current = q;
-      setDraftQ(q);
-    }
-  }, [q, draftQ]);
-
-  useEffect(() => {
     if (!trimmedQuery) {
       setSelectedTrackId(null);
       setSelectedIdx(0);
@@ -307,12 +289,6 @@ export default function SearchTab(props: {
           name="player-search"
           ref={inputRef}
           value={draftQ}
-          onFocus={() => {
-            inputFocusedRef.current = true;
-          }}
-          onBlur={() => {
-            inputFocusedRef.current = false;
-          }}
           onChange={(e) => {
             setQueryValue(e.target.value);
           }}
