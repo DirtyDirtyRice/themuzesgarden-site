@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 function safeDecode(value: string): string {
   try {
@@ -27,26 +27,29 @@ function normalizePathname(pathname: string | null): string {
   return trimmed;
 }
 
+function firstParamValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+  return "";
+}
+
 export function useProjectContext() {
   const pathname = usePathname();
+  const params = useParams();
 
   const normalizedPathname = useMemo(() => {
     return normalizePathname(pathname);
   }, [pathname]);
 
-  const parts = useMemo(() => {
-    return normalizedPathname.split("/").filter(Boolean);
-  }, [normalizedPathname]);
-
   const projectId = useMemo(() => {
-    const idx = parts.indexOf("projects");
-    if (idx < 0) return "";
-    return safeDecode(String(parts[idx + 1] ?? "").trim());
-  }, [parts]);
+    const raw = firstParamValue((params as Record<string, unknown> | null)?.id);
+    return safeDecode(String(raw ?? "").trim());
+  }, [params]);
 
   const onProjectPage = useMemo(() => {
-    return parts.includes("workspace") && parts.includes("projects") && projectId.length > 0;
-  }, [parts, projectId]);
+    if (!projectId) return false;
+    return normalizedPathname.includes("/projects/");
+  }, [normalizedPathname, projectId]);
 
   return {
     pathname: normalizedPathname,
