@@ -155,6 +155,7 @@ export function useAudioEngine(args: {
 
   const lastTimeSavedRef = useRef<number>(0);
   const errorSkipGuardRef = useRef<number>(0);
+  const didInitRef = useRef(false);
 
   const tabRef = useRef<PlayerTab>(tab);
   const nowIdRef = useRef<string | null>(nowId);
@@ -214,6 +215,9 @@ export function useAudioEngine(args: {
   }, []);
 
   useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+
     const p = readPersisted();
 
     if (p.tab === "project" || p.tab === "search") setTab(p.tab);
