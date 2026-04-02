@@ -61,15 +61,37 @@ export default function SearchTab(props: {
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [momentsOnly, setMomentsOnly] = useState(false);
+  const [draftQ, setDraftQ] = useState(q);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const resultRefs = useRef<(HTMLDivElement | null)[]>([]);
   const didInitialFocusRef = useRef(false);
+  const inputFocusedRef = useRef(false);
+  const lastSentQueryRef = useRef(q);
 
-  const trimmedQuery = q.trim();
+  const trimmedQuery = draftQ.trim();
   const normalizedQuery = trimmedQuery.toLowerCase();
 
   useWarmMomentEngineSnapshot(allTracks);
+
+  function focusSearchInput() {
+    const input = inputRef.current;
+    if (!input) return;
+
+    input.focus();
+  }
+
+  function setQueryValue(nextValue: string, options?: { focus?: boolean }) {
+    lastSentQueryRef.current = nextValue;
+    setDraftQ(nextValue);
+    setQ(nextValue);
+
+    if (options?.focus) {
+      requestAnimationFrame(() => {
+        focusSearchInput();
+      });
+    }
+  }
 
   const suggestions = useMemo(() => {
     const rows = buildSearchSuggestions(allTracks, normalizedQuery);
@@ -121,13 +143,6 @@ export default function SearchTab(props: {
     emitMomentPlaybackTarget(row.t, primaryMoment);
   }
 
-  function focusSearchInput() {
-    const input = inputRef.current;
-    if (!input) return;
-
-    input.focus();
-  }
-
   function scrollSelectedIntoView() {
     const el = resultRefs.current[selectedIdx];
     if (!el) return;
@@ -151,8 +166,7 @@ export default function SearchTab(props: {
   }
 
   function applyPreset(preset: SearchPreset) {
-    setQ(preset.query);
-    focusSearchInput();
+    setQueryValue(preset.query, { focus: true });
   }
 
   useEffect(() => {
@@ -172,6 +186,23 @@ export default function SearchTab(props: {
   }, []);
 
   useEffect(() => {
+    const inputIsActive = document.activeElement === inputRef.current;
+    const userIsEditing = inputFocusedRef.current || inputIsActive;
+
+    if (userIsEditing) {
+      if (q === lastSentQueryRef.current && q !== draftQ) {
+        setDraftQ(q);
+      }
+      return;
+    }
+
+    if (q !== draftQ) {
+      lastSentQueryRef.current = q;
+      setDraftQ(q);
+    }
+  }, [q, draftQ]);
+
+  useEffect(() => {
     if (!trimmedQuery) {
       setSelectedTrackId(null);
       setSelectedIdx(0);
@@ -179,7 +210,7 @@ export default function SearchTab(props: {
     }
 
     setSelectedIdx(0);
-  }, [q, trimmedQuery]);
+  }, [draftQ, trimmedQuery]);
 
   useEffect(() => {
     if (!suggestions.length) {
@@ -260,8 +291,7 @@ export default function SearchTab(props: {
 
       if (e.key === "Escape") {
         e.preventDefault();
-        setQ("");
-        focusSearchInput();
+        setQueryValue("", { focus: true });
       }
     }
 
@@ -276,9 +306,15 @@ export default function SearchTab(props: {
           id="player-search"
           name="player-search"
           ref={inputRef}
-          value={q}
+          value={draftQ}
+          onFocus={() => {
+            inputFocusedRef.current = true;
+          }}
+          onBlur={() => {
+            inputFocusedRef.current = false;
+          }}
           onChange={(e) => {
-            setQ(e.target.value);
+            setQueryValue(e.target.value);
           }}
           className="w-full rounded border px-3 py-2 text-sm"
           placeholder='Search or use query syntax like title:"out of tune" or +soft -hard'
@@ -289,8 +325,7 @@ export default function SearchTab(props: {
             type="button"
             className="shrink-0 rounded border px-3 py-2 text-xs"
             onClick={() => {
-              setQ("");
-              focusSearchInput();
+              setQueryValue("", { focus: true });
             }}
           >
             Clear
@@ -422,7 +457,7 @@ export default function SearchTab(props: {
                   onPlayTrack={() => playTrack(row.t)}
                   onPlayMoment={(moment) => emitMomentPlaybackTarget(row.t, moment)}
                   onTagClick={(tag) => {
-                    setQ(tag);
+                    setQueryValue(tag);
                     emitTagSearch(tag);
                   }}
                 />
