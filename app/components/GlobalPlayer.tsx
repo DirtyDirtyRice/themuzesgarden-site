@@ -10,14 +10,20 @@ import { useAudioEngine } from "../../player/useAudioEngine";
 import PlayerPanel from "../../player/PlayerPanel";
 
 let GLOBAL_PLAYER_Q_MEMORY = "";
+let GLOBAL_PLAYER_TAB_MEMORY: PlayerTab = "search";
 
 export default function GlobalPlayer() {
   const { onProjectPage, projectId } = useProjectContext();
 
-  const [tab, setTab] = useState<PlayerTab>("search");
+  const [tab, setTabState] = useState<PlayerTab>(() => {
+    if (onProjectPage) return "project";
+    return GLOBAL_PLAYER_TAB_MEMORY;
+  });
+
   const [q, setQState] = useState(() => GLOBAL_PLAYER_Q_MEMORY);
 
   const restoredTabRef = useRef(false);
+  const previousOnProjectPageRef = useRef(onProjectPage);
 
   const { allTracks } = useAllTracks();
 
@@ -38,6 +44,11 @@ export default function GlobalPlayer() {
     allTracks,
   });
 
+  const setTab = useCallback((nextValue: PlayerTab) => {
+    GLOBAL_PLAYER_TAB_MEMORY = nextValue;
+    setTabState((prev) => (prev === nextValue ? prev : nextValue));
+  }, []);
+
   const engine = useAudioEngine({
     tab,
     setTab,
@@ -57,15 +68,44 @@ export default function GlobalPlayer() {
     if (restoredTabRef.current) return;
     restoredTabRef.current = true;
 
+    if (onProjectPage) {
+      GLOBAL_PLAYER_TAB_MEMORY = "project";
+      setTabState((prev) => (prev === "project" ? prev : "project"));
+      return;
+    }
+
     const persisted = readPersisted();
     const savedTab = persisted.tab;
 
-    if (!onProjectPage && (savedTab === "project" || savedTab === "search")) {
-      setTab(savedTab);
+    if (savedTab === "project" || savedTab === "search") {
+      GLOBAL_PLAYER_TAB_MEMORY = savedTab;
+      setTabState((prev) => (prev === savedTab ? prev : savedTab));
     }
   }, [onProjectPage]);
 
   useEffect(() => {
+    const previousOnProjectPage = previousOnProjectPageRef.current;
+
+    if (previousOnProjectPage !== onProjectPage) {
+      previousOnProjectPageRef.current = onProjectPage;
+
+      if (onProjectPage) {
+        GLOBAL_PLAYER_TAB_MEMORY = "project";
+        setTabState((prev) => (prev === "project" ? prev : "project"));
+      } else {
+        const nextTab =
+          GLOBAL_PLAYER_TAB_MEMORY === "project"
+            ? "search"
+            : GLOBAL_PLAYER_TAB_MEMORY;
+
+        GLOBAL_PLAYER_TAB_MEMORY = nextTab;
+        setTabState((prev) => (prev === nextTab ? prev : nextTab));
+      }
+    }
+  }, [onProjectPage]);
+
+  useEffect(() => {
+    GLOBAL_PLAYER_TAB_MEMORY = tab;
     writePersisted({ tab });
   }, [tab]);
 
@@ -101,7 +141,7 @@ export default function GlobalPlayer() {
         onSearchTag as EventListener
       );
     };
-  }, [setQ]);
+  }, [setQ, setTab]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
