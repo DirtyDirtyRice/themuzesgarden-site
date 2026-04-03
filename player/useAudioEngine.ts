@@ -1,4 +1,4 @@
-its in the last paste
+
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -244,7 +244,7 @@ export function useAudioEngine(args: {
     }
   }, []);
 
-  useEffect(() => writePersisted({ tab }), [tab]);
+ 
   useEffect(() => writePersisted({ shuffle, loop }), [shuffle, loop]);
 
   useEffect(() => {
