@@ -124,6 +124,17 @@ export default function GlobalPlayer() {
     function onSearchTag(event: Event) {
       const custom = event as CustomEvent<{ tag?: string }>;
       const nextTag = String(custom.detail?.tag ?? "").trim();
+
+      console.log("[GlobalPlayer] muzesgarden-search-tag fired", {
+        nextTag,
+        pathname: window.location.pathname,
+        tabBefore: tab,
+        qBefore: q,
+        onProjectPage,
+        projectId,
+        time: new Date().toISOString(),
+      });
+
       if (!nextTag) return;
 
       setTab("search");
@@ -141,7 +152,18 @@ export default function GlobalPlayer() {
         onSearchTag as EventListener
       );
     };
-  }, [setQ, setTab]);
+  }, [onProjectPage, projectId, q, setQ, setTab, tab]);
+
+  useEffect(() => {
+    console.log("[GlobalPlayer] state changed", {
+      tab,
+      q,
+      onProjectPage,
+      projectId,
+      pathname: typeof window !== "undefined" ? window.location.pathname : "",
+      time: new Date().toISOString(),
+    });
+  }, [tab, q, onProjectPage, projectId]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
