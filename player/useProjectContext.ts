@@ -33,6 +33,33 @@ function firstParamValue(value: unknown): string {
   return "";
 }
 
+function getProjectIdFromPath(pathname: string): string {
+  if (!pathname) return "";
+
+  const parts = pathname.split("/").filter(Boolean);
+  const projectsIndex = parts.indexOf("projects");
+
+  if (projectsIndex === -1) return "";
+
+  const nextPart = parts[projectsIndex + 1] ?? "";
+  return safeDecode(String(nextPart).trim());
+}
+
+function isProjectPath(pathname: string): boolean {
+  if (!pathname) return false;
+
+  const parts = pathname.split("/").filter(Boolean);
+  const workspaceIndex = parts.indexOf("workspace");
+  const projectsIndex = parts.indexOf("projects");
+
+  if (projectsIndex === -1) return false;
+  if (workspaceIndex !== -1 && projectsIndex !== workspaceIndex + 1) {
+    return false;
+  }
+
+  return Boolean(parts[projectsIndex + 1]);
+}
+
 export function useProjectContext() {
   const pathname = usePathname();
   const params = useParams();
@@ -41,15 +68,27 @@ export function useProjectContext() {
     return normalizePathname(pathname);
   }, [pathname]);
 
-  const projectId = useMemo(() => {
+  const routeProjectId = useMemo(() => {
+    return getProjectIdFromPath(normalizedPathname);
+  }, [normalizedPathname]);
+
+  const paramProjectId = useMemo(() => {
     const raw = firstParamValue((params as Record<string, unknown> | null)?.id);
     return safeDecode(String(raw ?? "").trim());
   }, [params]);
 
+  const projectId = useMemo(() => {
+    if (paramProjectId) return paramProjectId;
+    if (routeProjectId) return routeProjectId;
+    return "";
+  }, [paramProjectId, routeProjectId]);
+
   const onProjectPage = useMemo(() => {
-    if (!projectId) return false;
-    return normalizedPathname.includes("/projects/");
-  }, [normalizedPathname, projectId]);
+    if (isProjectPath(normalizedPathname)) return true;
+    if (routeProjectId) return true;
+    if (paramProjectId) return true;
+    return false;
+  }, [normalizedPathname, routeProjectId, paramProjectId]);
 
   return {
     pathname: normalizedPathname,
