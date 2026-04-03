@@ -1,3 +1,4 @@
+its in the last paste
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -139,7 +140,7 @@ export function useAudioEngine(args: {
   allTracks: AnyTrack[];
   projectTracks: AnyTrack[];
 }) {
-  const { tab, setTab, onProjectPage, projectId, allTracks, projectTracks } = args;
+  const { tab, onProjectPage, projectId, allTracks, projectTracks } = args;
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -220,7 +221,6 @@ export function useAudioEngine(args: {
 
     const p = readPersisted();
 
-    if (p.tab === "project" || p.tab === "search") setTab(p.tab);
     if (typeof p.shuffle === "boolean") setShuffle(p.shuffle);
     if (typeof p.loop === "boolean") setLoop(p.loop);
     if (typeof p.nowId === "string" || p.nowId === null) setNowId(p.nowId ?? null);
@@ -242,7 +242,7 @@ export function useAudioEngine(args: {
     if (typeof p.volume === "number" && Number.isFinite(p.volume)) {
       setStatusVolPct(Math.round(Math.max(0, Math.min(1, p.volume)) * 100));
     }
-  }, [setTab]);
+  }, []);
 
   useEffect(() => writePersisted({ tab }), [tab]);
   useEffect(() => writePersisted({ shuffle, loop }), [shuffle, loop]);
@@ -445,12 +445,9 @@ export function useAudioEngine(args: {
   }, [playTarget]);
 
   const playFromHere = useCallback((t: AnyTrack) => {
-    if (onProjectPageRef.current) {
-      setTab("project");
-    }
     setShuffle(false);
     playTarget({ track: t, startTime: 0, sectionId: null });
-  }, [playTarget, setTab]);
+  }, [playTarget]);
 
   const togglePlayPause = useCallback(() => {
     const el = audioRef.current;
@@ -816,7 +813,6 @@ export function useAudioEngine(args: {
 
       if (!track) return;
 
-      setTab("project");
       setShuffle(false);
       playTrack(track);
     }
@@ -834,7 +830,6 @@ export function useAudioEngine(args: {
       if (!targetTrackId) return;
 
       const targetProjectId = String(custom.detail?.projectId ?? "").trim();
-      const preferProjectTab = Boolean(custom.detail?.preferProjectTab);
       const sectionId = String(custom.detail?.sectionId ?? "").trim() || null;
       const startTime =
         typeof custom.detail?.startTime === "number" &&
@@ -857,10 +852,6 @@ export function useAudioEngine(args: {
         onProjectPageRef.current &&
         String(projectIdRef.current) === targetProjectId
       ) {
-        setTab("project");
-        setShuffle(false);
-      } else if (preferProjectTab && onProjectPageRef.current) {
-        setTab("project");
         setShuffle(false);
       }
 
@@ -900,7 +891,6 @@ export function useAudioEngine(args: {
     togglePlayPause,
     playTarget,
     playTrack,
-    setTab,
   ]);
 
   useEffect(() => {
