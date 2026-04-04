@@ -439,14 +439,14 @@ export default function PlayerPanel(props: {
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           <div className="space-y-3">
-            {isSearchTab && !compact ? (
+            <div style={{ display: isSearchTab && !compact ? "block" : "none" }}>
               <SearchTab
                 q={q}
                 setQ={setQ}
                 allTracks={allTracks}
                 onPlay={onPlayTrack}
               />
-            ) : null}
+            </div>
 
             <PlayerStatusBadges
               isSearchTab={isSearchTab}
