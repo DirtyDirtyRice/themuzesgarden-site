@@ -86,21 +86,17 @@ export default function GlobalPlayer() {
   useEffect(() => {
     const previousOnProjectPage = previousOnProjectPageRef.current;
 
+    // Only react to stable transitions INTO a project page.
+    // Do not force-tab back to search on transient route flickers or exit transitions.
+    if (!previousOnProjectPage && onProjectPage) {
+      previousOnProjectPageRef.current = onProjectPage;
+      GLOBAL_PLAYER_TAB_MEMORY = "project";
+      setTabState((prev) => (prev === "project" ? prev : "project"));
+      return;
+    }
+
     if (previousOnProjectPage !== onProjectPage) {
       previousOnProjectPageRef.current = onProjectPage;
-
-      if (onProjectPage) {
-        GLOBAL_PLAYER_TAB_MEMORY = "project";
-        setTabState((prev) => (prev === "project" ? prev : "project"));
-      } else {
-        const nextTab =
-          GLOBAL_PLAYER_TAB_MEMORY === "project"
-            ? "search"
-            : GLOBAL_PLAYER_TAB_MEMORY;
-
-        GLOBAL_PLAYER_TAB_MEMORY = nextTab;
-        setTabState((prev) => (prev === nextTab ? prev : nextTab));
-      }
     }
   }, [onProjectPage]);
 
