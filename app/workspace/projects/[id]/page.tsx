@@ -314,6 +314,64 @@ export default function ProjectDetailsPage() {
     return playbackTracks[idx + 1] ?? null;
   }, [nowPlayingId, playbackTracks, playbackIndex, loopMode]);
 
+  const previewTrack = useMemo(() => {
+    if (!previewTrackId) return null;
+    return orderedLinkedTracks.find(
+      (t: any) => String(t.id) === String(previewTrackId)
+    ) ?? null;
+  }, [previewTrackId, orderedLinkedTracks]);
+  
+  const topLinkedTracks = useMemo(() => {
+    return orderedLinkedTracks.slice(0, 5);
+  }, [orderedLinkedTracks]);
+
+  const overviewSuggestions = useMemo(() => {
+    const q = overviewQuery.trim().toLowerCase();
+    if (!q) return [];
+
+    let list = Array.isArray(allTracks) ? allTracks : [];
+    list = list.filter((t: any) => {
+      const title = String(t?.title ?? "").toLowerCase();
+      const artist = String(t?.artist ?? "").toLowerCase();
+      const path = String(t?.path ?? "").toLowerCase();
+      const tid = String(t?.id ?? "").toLowerCase();
+      return title.includes(q) || artist.includes(q) || path.includes(q) || tid.includes(q);
+    });
+
+    list = list.filter((t: any) => !linkedTrackIds.has(String(t?.id)));
+    return list.slice(0, 6);
+  }, [overviewQuery, allTracks, linkedTrackIds]);
+
+  const activeNote = useMemo(() => {
+    if (!activeNoteId) return null;
+    return notes.find((n) => n.id === activeNoteId) ?? null;
+  }, [notes, activeNoteId]);
+
+  const filteredNotes = useMemo(() => {
+    const q = notesQuery.trim().toLowerCase();
+    if (!q) return notes;
+
+    return notes.filter((n) => {
+      const t = (n.title ?? "").toLowerCase();
+      const b = (n.body ?? "").toLowerCase();
+      return t.includes(q) || b.includes(q);
+    });
+  }, [notes, notesQuery]);
+
+  const displayNotes = useMemo(() => {
+    const list = [...filteredNotes];
+    list.sort((a, b) => {
+      const ap = a.pinned ? 1 : 0;
+      const bp = b.pinned ? 1 : 0;
+      if (ap !== bp) return bp - ap;
+      const ad = Date.parse(a.updated_at || "") || 0;
+      const bd = Date.parse(b.updated_at || "") || 0;
+      return bd - ad;
+    });
+    return list;
+  }, [filteredNotes]);
+
+  
   const topLinkedTracks = useMemo(() => {
     return orderedLinkedTracks.slice(0, 5);
   }, [orderedLinkedTracks]);
@@ -917,6 +975,14 @@ export default function ProjectDetailsPage() {
     return () => window.removeEventListener("scroll", onScroll as any);
   }, [tab]);
 
+  useEffect(() => {
+    if (tab !== "overview") return;
+    if (previewTrackId) return;
+    if (!orderedLinkedTracks.length) return;
+
+    setPreviewTrackId(String(orderedLinkedTracks[0].id));
+  }, [tab, previewTrackId, orderedLinkedTracks]);
+
   // Keep duration/elapsed updated from audio element
   useEffect(() => {
     const el = audioRef.current;
@@ -1450,7 +1516,7 @@ export default function ProjectDetailsPage() {
         </div>
       ) : null}
 
-      {/* Floating Mini Player (Performance Mode) */}
+     {/* Floating Mini Player (Performance Mode) */}
       {tab === "overview" && miniVisible ? (
         <div className="fixed bottom-4 left-1/2 z-50 w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2">
           <div className="rounded-2xl border bg-white shadow-lg p-3 space-y-2">
@@ -1633,15 +1699,16 @@ export default function ProjectDetailsPage() {
                     {linkedTracks.map((t: any) => {
                       const tid = String(t.id);
                       const isNow = nowPlayingId === tid;
+                      const isPreview = previewTrack ? String(previewTrack.id) === tid : false;
 
                       return (
                         <div
                           key={tid}
                           className={`rounded border p-3 flex items-center justify-between gap-3 cursor-pointer ${
-                            isNow ? "bg-zinc-50 border-black" : "bg-white"
+                            isPreview ? "bg-zinc-50 border-black" : "bg-white"
                           }`}
-                          onClick={() => playTrackById(tid)}
-                          title="Click anywhere to play this track"
+                          onClick={() => setPreviewTrackId(tid)}
+                          title="Click anywhere to inspect this track"
                         >
                           <div className="min-w-0">
                             <div className="text-sm font-medium truncate">
@@ -1651,14 +1718,25 @@ export default function ProjectDetailsPage() {
                               ) : null}
                               {t.title ?? "Untitled"}
                             </div>
-                           {t.artist ? <div className="text-xs text-zinc-500 truncate">{t.artist}</div> : null}
-                           <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                            <MetadataPanel targetType="track" targetId={tid} />
-                           </div>
+                            {t.artist ? <div className="text-xs text-zinc-500 truncate">{t.artist}</div> : null}
+                            {isPreview ? (
+                              <div className="mt-1 text-[11px] text-zinc-500">Selected for metadata</div>
+                            ) : null}
+                            {isPreview ? (
+                              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                <MetadataPanel targetType="track" targetId={String(previewTrack?.id ?? tid)} />
+                              </div>
+                            ) : null}
                           </div>
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button className="rounded border px-3 py-2 text-xs" onClick={() => playTrackById(tid)}>
                               Play
+                            </button>
+                            <button
+                              className="rounded border px-3 py-2 text-xs"
+                              onClick={() => setPreviewTrackId(tid)}
+                            >
+                              Inspect
                             </button>
                             <button
                               className="rounded border px-3 py-2 text-xs disabled:opacity-60"
