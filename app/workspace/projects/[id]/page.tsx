@@ -320,58 +320,7 @@ export default function ProjectDetailsPage() {
       (t: any) => String(t.id) === String(previewTrackId)
     ) ?? null;
   }, [previewTrackId, orderedLinkedTracks]);
-  
-  const topLinkedTracks = useMemo(() => {
-    return orderedLinkedTracks.slice(0, 5);
-  }, [orderedLinkedTracks]);
 
-  const overviewSuggestions = useMemo(() => {
-    const q = overviewQuery.trim().toLowerCase();
-    if (!q) return [];
-
-    let list = Array.isArray(allTracks) ? allTracks : [];
-    list = list.filter((t: any) => {
-      const title = String(t?.title ?? "").toLowerCase();
-      const artist = String(t?.artist ?? "").toLowerCase();
-      const path = String(t?.path ?? "").toLowerCase();
-      const tid = String(t?.id ?? "").toLowerCase();
-      return title.includes(q) || artist.includes(q) || path.includes(q) || tid.includes(q);
-    });
-
-    list = list.filter((t: any) => !linkedTrackIds.has(String(t?.id)));
-    return list.slice(0, 6);
-  }, [overviewQuery, allTracks, linkedTrackIds]);
-
-  const activeNote = useMemo(() => {
-    if (!activeNoteId) return null;
-    return notes.find((n) => n.id === activeNoteId) ?? null;
-  }, [notes, activeNoteId]);
-
-  const filteredNotes = useMemo(() => {
-    const q = notesQuery.trim().toLowerCase();
-    if (!q) return notes;
-
-    return notes.filter((n) => {
-      const t = (n.title ?? "").toLowerCase();
-      const b = (n.body ?? "").toLowerCase();
-      return t.includes(q) || b.includes(q);
-    });
-  }, [notes, notesQuery]);
-
-  const displayNotes = useMemo(() => {
-    const list = [...filteredNotes];
-    list.sort((a, b) => {
-      const ap = a.pinned ? 1 : 0;
-      const bp = b.pinned ? 1 : 0;
-      if (ap !== bp) return bp - ap;
-      const ad = Date.parse(a.updated_at || "") || 0;
-      const bd = Date.parse(b.updated_at || "") || 0;
-      return bd - ad;
-    });
-    return list;
-  }, [filteredNotes]);
-
-  
   const topLinkedTracks = useMemo(() => {
     return orderedLinkedTracks.slice(0, 5);
   }, [orderedLinkedTracks]);
