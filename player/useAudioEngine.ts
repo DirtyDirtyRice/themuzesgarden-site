@@ -217,6 +217,10 @@ export function useAudioEngine(args: {
     resumeMetaHandlerRef.current = null;
   }, []);
 
+  const setQueueSourceFromCurrentContext = useCallback(() => {
+    playbackQueueSourceRef.current = tabRef.current === "project" ? "project" : "search";
+  }, []);
+
   useEffect(() => {
     if (didInitRef.current) return;
     didInitRef.current = true;
@@ -437,26 +441,26 @@ export function useAudioEngine(args: {
 
   const playTrack = useCallback(
     (t: AnyTrack) => {
-      playbackQueueSourceRef.current = "search";
+      setQueueSourceFromCurrentContext();
       playTarget({ track: t, startTime: 0, sectionId: null });
     },
-    [playTarget]
+    [playTarget, setQueueSourceFromCurrentContext]
   );
 
   const playTrackAtTime = useCallback(
     (t: AnyTrack, startTime: number) => {
-      playbackQueueSourceRef.current = "search";
+      setQueueSourceFromCurrentContext();
       playTarget({ track: t, startTime, sectionId: null });
     },
-    [playTarget]
+    [playTarget, setQueueSourceFromCurrentContext]
   );
 
   const playSection = useCallback(
     (t: AnyTrack, sectionId: string) => {
-      playbackQueueSourceRef.current = "search";
+      setQueueSourceFromCurrentContext();
       playTarget({ track: t, sectionId });
     },
-    [playTarget]
+    [playTarget, setQueueSourceFromCurrentContext]
   );
 
   const playFromHere = useCallback(
