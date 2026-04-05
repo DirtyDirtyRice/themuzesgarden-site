@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../components/AuthProvider";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseProjects } from "../../../lib/getSupabaseProjects";
@@ -61,6 +62,7 @@ function clampTitle(s: string) {
 }
 
 export default function WorkspaceProjectsPage() {
+  const router = useRouter();
   const { user, loading } = useAuth();
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -151,13 +153,15 @@ export default function WorkspaceProjectsPage() {
       });
 
       await loadProjects({ keepSelection: true });
-      setSelectedId(created.id); // ✅ auto-open new project
 
       // reset form
       setNewTitle("");
       setNewDesc("");
       setNewKind("music");
       setNewVis("private");
+
+      // navigate into the real project details route
+      router.push(`/workspace/projects/${created.id}`);
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Create failed");
     } finally {
@@ -354,7 +358,7 @@ export default function WorkspaceProjectsPage() {
                 className="rounded border px-3 py-2 text-sm"
                 onClick={() => setSelectedId(null)}
               >
-                Close Project
+                Close Selected
               </button>
             ) : null}
 
@@ -387,7 +391,15 @@ export default function WorkspaceProjectsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
-                    <div className="font-medium">{p.title}</div>
+                    <button
+                      type="button"
+                      className="text-left font-medium underline-offset-2 hover:underline"
+                      onClick={() => router.push(`/workspace/projects/${p.id}`)}
+                      title="Open project details"
+                    >
+                      {p.title}
+                    </button>
+
                     {p.description ? (
                       <div className="text-sm text-zinc-600">{p.description}</div>
                     ) : null}
@@ -401,9 +413,17 @@ export default function WorkspaceProjectsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         className="rounded bg-black px-3 py-2 text-sm text-white"
+                        onClick={() => router.push(`/workspace/projects/${p.id}`)}
+                        title="Open project details"
+                      >
+                        Open
+                      </button>
+
+                      <button
+                        className="rounded border px-3 py-2 text-sm"
                         onClick={() => setSelectedId(p.id)}
                       >
-                        {isActive ? "Opened" : "Open"}
+                        {isActive ? "Selected" : "Select"}
                       </button>
 
                       <button
@@ -435,7 +455,7 @@ export default function WorkspaceProjectsPage() {
 
         {!selectedProject ? (
           <div className="text-sm text-zinc-600">
-            Open a project above to view/edit its workspace.
+            Select a project above to view/edit it here, or use Open to enter the full project page.
           </div>
         ) : (
           <div className="space-y-4">
@@ -509,10 +529,10 @@ export default function WorkspaceProjectsPage() {
             </div>
 
             <div className="rounded-lg border p-4 space-y-2">
-              <div className="font-medium">Next safe build step</div>
+              <div className="font-medium">Project details route</div>
               <div className="text-sm text-zinc-600">
-                Add “Project Sections” (Overview, Notes, Project-linked Library)
-                in a new route: /workspace/projects/[id]
+                Open sends you to the full project page at
+                <code className="px-1">/workspace/projects/[id]</code>.
               </div>
             </div>
           </div>
