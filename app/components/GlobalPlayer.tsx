@@ -86,8 +86,6 @@ export default function GlobalPlayer() {
   useEffect(() => {
     const previousOnProjectPage = previousOnProjectPageRef.current;
 
-    // Only react to stable transitions INTO a project page.
-    // Do not force-tab back to search on transient route flickers or exit transitions.
     if (!previousOnProjectPage && onProjectPage) {
       previousOnProjectPageRef.current = onProjectPage;
       GLOBAL_PLAYER_TAB_MEMORY = "project";
@@ -188,8 +186,14 @@ export default function GlobalPlayer() {
 
   const jumpIfPossible = useCallback(() => {
     if (!engine.nowId) return;
-    jumpToNow(engine.nowId);
-  }, [engine.nowId, jumpToNow]);
+    if (!onProjectPage) return;
+
+    setTab("project");
+
+    window.setTimeout(() => {
+      jumpToNow(engine.nowId!);
+    }, 0);
+  }, [engine.nowId, jumpToNow, onProjectPage, setTab]);
 
   return (
     <PlayerPanel
