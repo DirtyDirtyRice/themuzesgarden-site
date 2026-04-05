@@ -131,6 +131,8 @@ type PlaybackTarget = {
   sectionId?: string | null;
 };
 
+type PlaybackQueueSource = "project" | "search";
+
 export function useAudioEngine(args: {
   tab: PlayerTab;
   setTab: (t: PlayerTab) => void;
@@ -165,6 +167,7 @@ export function useAudioEngine(args: {
   const allTracksRef = useRef<AnyTrack[]>(allTracks);
   const onProjectPageRef = useRef<boolean>(onProjectPage);
   const projectIdRef = useRef<string>(projectId);
+  const playbackQueueSourceRef = useRef<PlaybackQueueSource>("project");
 
   const playSeqRef = useRef<number>(0);
   const resumeMetaHandlerRef = useRef<(() => void) | null>(null);
@@ -241,6 +244,8 @@ export function useAudioEngine(args: {
     if (typeof p.volume === "number" && Number.isFinite(p.volume)) {
       setStatusVolPct(Math.round(Math.max(0, Math.min(1, p.volume)) * 100));
     }
+
+    playbackQueueSourceRef.current = p.tab === "search" ? "search" : "project";
   }, []);
 
   useEffect(() => writePersisted({ shuffle, loop }), [shuffle, loop]);
@@ -430,22 +435,38 @@ export function useAudioEngine(args: {
     [clearResumeMetaHandler, logProjectPlayIfPossible]
   );
 
-  const playTrack = useCallback((t: AnyTrack) => {
-    playTarget({ track: t, startTime: 0, sectionId: null });
-  }, [playTarget]);
+  const playTrack = useCallback(
+    (t: AnyTrack) => {
+      playbackQueueSourceRef.current = "search";
+      playTarget({ track: t, startTime: 0, sectionId: null });
+    },
+    [playTarget]
+  );
 
-  const playTrackAtTime = useCallback((t: AnyTrack, startTime: number) => {
-    playTarget({ track: t, startTime, sectionId: null });
-  }, [playTarget]);
+  const playTrackAtTime = useCallback(
+    (t: AnyTrack, startTime: number) => {
+      playbackQueueSourceRef.current = "search";
+      playTarget({ track: t, startTime, sectionId: null });
+    },
+    [playTarget]
+  );
 
-  const playSection = useCallback((t: AnyTrack, sectionId: string) => {
-    playTarget({ track: t, sectionId });
-  }, [playTarget]);
+  const playSection = useCallback(
+    (t: AnyTrack, sectionId: string) => {
+      playbackQueueSourceRef.current = "search";
+      playTarget({ track: t, sectionId });
+    },
+    [playTarget]
+  );
 
-  const playFromHere = useCallback((t: AnyTrack) => {
-    setShuffle(false);
-    playTarget({ track: t, startTime: 0, sectionId: null });
-  }, [playTarget]);
+  const playFromHere = useCallback(
+    (t: AnyTrack) => {
+      playbackQueueSourceRef.current = "project";
+      setShuffle(false);
+      playTarget({ track: t, startTime: 0, sectionId: null });
+    },
+    [playTarget]
+  );
 
   const togglePlayPause = useCallback(() => {
     const el = audioRef.current;
@@ -461,10 +482,9 @@ export function useAudioEngine(args: {
   }, []);
 
   const getActiveQueue = useCallback((): AnyTrack[] => {
-    if (tabRef.current === "search") {
-      return allTracksRef.current;
-    }
-    return projectTracksRef.current;
+    return playbackQueueSourceRef.current === "search"
+      ? allTracksRef.current
+      : projectTracksRef.current;
   }, []);
 
   const safeIndexOfNow = useCallback((): number => {
@@ -489,7 +509,7 @@ export function useAudioEngine(args: {
       const r = Math.floor(Math.random() * pickFrom.length);
       const picked = pickFrom[r];
       if (!picked) return;
-      playTrack(picked);
+      playTarget({ track: picked, startTime: 0, sectionId: null });
       return;
     }
 
@@ -497,8 +517,8 @@ export function useAudioEngine(args: {
     const nextIdx = idx >= 0 ? (idx + 1) % list.length : 0;
     const picked = list[nextIdx];
     if (!picked) return;
-    playTrack(picked);
-  }, [getActiveQueue, playTrack, safeIndexOfNow]);
+    playTarget({ track: picked, startTime: 0, sectionId: null });
+  }, [getActiveQueue, playTarget, safeIndexOfNow]);
 
   const prev = useCallback(() => {
     const list = getActiveQueue();
@@ -517,12 +537,14 @@ export function useAudioEngine(args: {
     const prevIdx = idx >= 0 ? (idx - 1 + list.length) % list.length : 0;
     const picked = list[prevIdx];
     if (!picked) return;
-    playTrack(picked);
-  }, [getActiveQueue, next, playTrack, safeIndexOfNow]);
+    playTarget({ track: picked, startTime: 0, sectionId: null });
+  }, [getActiveQueue, next, playTarget, safeIndexOfNow]);
 
   const playAll = useCallback(() => {
     const list = projectTracksRef.current;
     if (!list.length) return;
+
+    playbackQueueSourceRef.current = "project";
 
     currentSectionIdRef.current = null;
     currentSectionStartRef.current = null;
@@ -532,14 +554,14 @@ export function useAudioEngine(args: {
       const r = Math.floor(Math.random() * list.length);
       const picked = list[r];
       if (!picked) return;
-      playTrack(picked);
+      playTarget({ track: picked, startTime: 0, sectionId: null });
       return;
     }
 
     const first = list[0];
     if (!first) return;
-    playTrack(first);
-  }, [playTrack]);
+    playTarget({ track: first, startTime: 0, sectionId: null });
+  }, [playTarget]);
 
   const resumeLastSession = useCallback(() => {
     const p = readPersisted();
@@ -576,6 +598,8 @@ export function useAudioEngine(args: {
         ? clampNonNegative(section.start)
         : 0;
 
+    playbackQueueSourceRef.current = p.tab === "search" ? "search" : "project";
+
     playTarget({
       track,
       startTime: seekTo,
@@ -595,7 +619,7 @@ export function useAudioEngine(args: {
       const exists = list.some((t) => String(t.id) === nid);
 
       if (!exists) {
-        if (tabRef.current === "project") {
+        if (playbackQueueSourceRef.current === "project") {
           playAll();
         }
         return;
@@ -616,7 +640,7 @@ export function useAudioEngine(args: {
             return;
           }
 
-          playTrack(cur);
+          playTarget({ track: cur, startTime: 0, sectionId: null });
           return;
         }
       }
@@ -655,7 +679,7 @@ export function useAudioEngine(args: {
       el.removeEventListener("error", onError);
       el.removeEventListener("playing", onPlaying);
     };
-  }, [getActiveQueue, next, playAll, playTarget, playTrack, stop]);
+  }, [getActiveQueue, next, playAll, playTarget, stop]);
 
   useEffect(() => {
     const el = audioRef.current;
@@ -778,7 +802,7 @@ export function useAudioEngine(args: {
       }
 
       if (k === "s" || k === "S") {
-        if (tabRef.current === "project") {
+        if (playbackQueueSourceRef.current === "project") {
           e.preventDefault();
           setShuffle((v) => !v);
         }
@@ -786,7 +810,7 @@ export function useAudioEngine(args: {
       }
 
       if (k === "l" || k === "L") {
-        if (tabRef.current === "project") {
+        if (playbackQueueSourceRef.current === "project") {
           e.preventDefault();
           setLoop((v) => !v);
         }
@@ -812,8 +836,9 @@ export function useAudioEngine(args: {
 
       if (!track) return;
 
+      playbackQueueSourceRef.current = "project";
       setShuffle(false);
-      playTrack(track);
+      playTarget({ track, startTime: 0, sectionId: null });
     }
 
     function onPlaybackTarget(event: Event) {
@@ -851,7 +876,10 @@ export function useAudioEngine(args: {
         onProjectPageRef.current &&
         String(projectIdRef.current) === targetProjectId
       ) {
+        playbackQueueSourceRef.current = "project";
         setShuffle(false);
+      } else {
+        playbackQueueSourceRef.current = "search";
       }
 
       playTarget({
@@ -889,7 +917,8 @@ export function useAudioEngine(args: {
     resumeLastSession,
     togglePlayPause,
     playTarget,
-    playTrack,
+    stop,
+    playAll,
   ]);
 
   useEffect(() => {
