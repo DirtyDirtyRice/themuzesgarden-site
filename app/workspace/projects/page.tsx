@@ -90,6 +90,11 @@ export default function WorkspaceProjectsPage() {
   const [editKind, setEditKind] = useState<ProjectKind>("music");
   const [editVis, setEditVis] = useState<ProjectVisibility>("private");
 
+  function goToProject(id: string) {
+    if (!id) return;
+    window.location.href = `/workspace/projects/${id}`;
+  }
+
   // When selection changes, load edit fields
   useEffect(() => {
     if (!selectedProject) return;
@@ -139,7 +144,7 @@ export default function WorkspaceProjectsPage() {
 
     setCreating(true);
     try {
-      await createSupabaseProject({
+      const created = await createSupabaseProject({
         title,
         description: newDesc.trim() ? newDesc.trim() : undefined,
         kind: newKind,
@@ -152,6 +157,8 @@ export default function WorkspaceProjectsPage() {
       setNewDesc("");
       setNewKind("music");
       setNewVis("private");
+
+      goToProject(created.id);
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Create failed");
     } finally {
@@ -257,7 +264,6 @@ export default function WorkspaceProjectsPage() {
         <p className="text-sm text-zinc-600">Project space for {user.email}</p>
       </header>
 
-      {/* CREATE */}
       <section className="rounded-xl border p-5 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="font-medium">Create Project</div>
@@ -330,7 +336,6 @@ export default function WorkspaceProjectsPage() {
         ) : null}
       </section>
 
-      {/* LIST */}
       <section className="rounded-xl border p-5 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="font-medium">
@@ -376,13 +381,14 @@ export default function WorkspaceProjectsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
-                    <Link
-                      href={`/workspace/projects/${p.id}`}
-                      className="font-medium underline-offset-2 hover:underline"
+                    <button
+                      type="button"
+                      className="text-left font-medium underline-offset-2 hover:underline"
+                      onClick={() => goToProject(p.id)}
                       title="Open project details"
                     >
                       {p.title}
-                    </Link>
+                    </button>
 
                     {p.description ? (
                       <div className="text-sm text-zinc-600">{p.description}</div>
@@ -395,13 +401,13 @@ export default function WorkspaceProjectsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Link
-                        href={`/workspace/projects/${p.id}`}
+                      <button
                         className="rounded bg-black px-3 py-2 text-sm text-white"
+                        onClick={() => goToProject(p.id)}
                         title="Open project details"
                       >
                         Open
-                      </Link>
+                      </button>
 
                       <button
                         className="rounded border px-3 py-2 text-sm"
@@ -433,7 +439,6 @@ export default function WorkspaceProjectsPage() {
         </div>
       </section>
 
-      {/* SELECTED PROJECT */}
       <section className="rounded-xl border p-5 space-y-4">
         <div className="font-medium">Project Workspace</div>
 
@@ -521,7 +526,6 @@ export default function WorkspaceProjectsPage() {
         )}
       </section>
 
-      {/* NAV */}
       <section className="rounded-xl border p-5">
         <Link href="/workspace" className="rounded border px-3 py-2 text-sm">
           Back to Workspace
