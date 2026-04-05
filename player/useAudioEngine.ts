@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -244,7 +243,6 @@ export function useAudioEngine(args: {
     }
   }, []);
 
- 
   useEffect(() => writePersisted({ shuffle, loop }), [shuffle, loop]);
 
   useEffect(() => {
@@ -462,15 +460,22 @@ export function useAudioEngine(args: {
     }
   }, []);
 
-  const safeProjectIndexOfNow = useCallback((): number => {
-    const list = projectTracksRef.current;
+  const getActiveQueue = useCallback((): AnyTrack[] => {
+    if (tabRef.current === "search") {
+      return allTracksRef.current;
+    }
+    return projectTracksRef.current;
+  }, []);
+
+  const safeIndexOfNow = useCallback((): number => {
+    const list = getActiveQueue();
     if (!list.length) return -1;
     const nid = String(nowIdRef.current ?? "");
     return list.findIndex((t) => String(t.id) === nid);
-  }, []);
+  }, [getActiveQueue]);
 
   const next = useCallback(() => {
-    const list = projectTracksRef.current;
+    const list = getActiveQueue();
     if (!list.length) return;
 
     currentSectionIdRef.current = null;
@@ -488,15 +493,15 @@ export function useAudioEngine(args: {
       return;
     }
 
-    const idx = safeProjectIndexOfNow();
+    const idx = safeIndexOfNow();
     const nextIdx = idx >= 0 ? (idx + 1) % list.length : 0;
     const picked = list[nextIdx];
     if (!picked) return;
     playTrack(picked);
-  }, [playTrack, safeProjectIndexOfNow]);
+  }, [getActiveQueue, playTrack, safeIndexOfNow]);
 
   const prev = useCallback(() => {
-    const list = projectTracksRef.current;
+    const list = getActiveQueue();
     if (!list.length) return;
 
     currentSectionIdRef.current = null;
@@ -508,12 +513,12 @@ export function useAudioEngine(args: {
       return;
     }
 
-    const idx = safeProjectIndexOfNow();
+    const idx = safeIndexOfNow();
     const prevIdx = idx >= 0 ? (idx - 1 + list.length) % list.length : 0;
     const picked = list[prevIdx];
     if (!picked) return;
     playTrack(picked);
-  }, [next, playTrack, safeProjectIndexOfNow]);
+  }, [getActiveQueue, next, playTrack, safeIndexOfNow]);
 
   const playAll = useCallback(() => {
     const list = projectTracksRef.current;
@@ -583,16 +588,16 @@ export function useAudioEngine(args: {
     if (!el) return;
 
     function onEnded() {
-      if (tabRef.current !== "project") return;
-
-      const list = projectTracksRef.current;
+      const list = getActiveQueue();
       if (!list.length) return;
 
       const nid = String(nowIdRef.current ?? "");
       const exists = list.some((t) => String(t.id) === nid);
 
       if (!exists) {
-        playAll();
+        if (tabRef.current === "project") {
+          playAll();
+        }
         return;
       }
 
@@ -620,9 +625,7 @@ export function useAudioEngine(args: {
     }
 
     function onError() {
-      if (tabRef.current !== "project") return;
-
-      const list = projectTracksRef.current;
+      const list = getActiveQueue();
       if (!list.length) return;
 
       errorSkipGuardRef.current += 1;
@@ -652,7 +655,7 @@ export function useAudioEngine(args: {
       el.removeEventListener("error", onError);
       el.removeEventListener("playing", onPlaying);
     };
-  }, [next, playAll, playTarget, playTrack, stop]);
+  }, [getActiveQueue, next, playAll, playTarget, playTrack, stop]);
 
   useEffect(() => {
     const el = audioRef.current;
@@ -757,18 +760,14 @@ export function useAudioEngine(args: {
       }
 
       if (k === "ArrowRight") {
-        if (tabRef.current === "project") {
-          e.preventDefault();
-          next();
-        }
+        e.preventDefault();
+        next();
         return;
       }
 
       if (k === "ArrowLeft") {
-        if (tabRef.current === "project") {
-          e.preventDefault();
-          prev();
-        }
+        e.preventDefault();
+        prev();
         return;
       }
 
