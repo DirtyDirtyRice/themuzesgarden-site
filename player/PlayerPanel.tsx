@@ -393,7 +393,6 @@ export default function PlayerPanel(props: {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!open) return;
-      if (tab !== "project") return;
       if (isTypingTarget(e.target)) return;
 
       if (e.key.toLowerCase() === "j") {
@@ -404,7 +403,7 @@ export default function PlayerPanel(props: {
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, tab, onJumpToNow]);
+  }, [open, onJumpToNow]);
 
   if (!open) {
     return (
