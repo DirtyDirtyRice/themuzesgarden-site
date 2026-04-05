@@ -190,9 +190,11 @@ export default function GlobalPlayer() {
 
     setTab("project");
 
-    window.setTimeout(() => {
-      jumpToNow(engine.nowId!);
-    }, 0);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        jumpToNow(engine.nowId);
+      });
+    });
   }, [engine.nowId, jumpToNow, onProjectPage, setTab]);
 
   return (
