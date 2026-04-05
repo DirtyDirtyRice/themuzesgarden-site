@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "../../components/AuthProvider";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseProjects } from "../../../lib/getSupabaseProjects";
@@ -62,7 +61,6 @@ function clampTitle(s: string) {
 }
 
 export default function WorkspaceProjectsPage() {
-  const router = useRouter();
   const { user, loading } = useAuth();
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -99,7 +97,7 @@ export default function WorkspaceProjectsPage() {
     setEditDesc(selectedProject.description ?? "");
     setEditKind(selectedProject.kind);
     setEditVis(selectedProject.visibility);
-  }, [selectedProject?.id]); // intentionally keyed by id
+  }, [selectedProject?.id]);
 
   async function loadProjects(opts?: { keepSelection?: boolean }) {
     setErrorMsg(null);
@@ -112,11 +110,8 @@ export default function WorkspaceProjectsPage() {
 
       if (!opts?.keepSelection) {
         setSelectedId(null);
-      } else {
-        // if selection no longer exists, close it
-        if (selectedId && !list.some((p) => p.id === selectedId)) {
-          setSelectedId(null);
-        }
+      } else if (selectedId && !list.some((p) => p.id === selectedId)) {
+        setSelectedId(null);
       }
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Failed to load projects");
@@ -126,7 +121,6 @@ export default function WorkspaceProjectsPage() {
   }
 
   useEffect(() => {
-    // Only attempt loading when auth is resolved
     if (loading) return;
     if (!user) return;
 
@@ -145,7 +139,7 @@ export default function WorkspaceProjectsPage() {
 
     setCreating(true);
     try {
-      const created = await createSupabaseProject({
+      await createSupabaseProject({
         title,
         description: newDesc.trim() ? newDesc.trim() : undefined,
         kind: newKind,
@@ -154,14 +148,10 @@ export default function WorkspaceProjectsPage() {
 
       await loadProjects({ keepSelection: true });
 
-      // reset form
       setNewTitle("");
       setNewDesc("");
       setNewKind("music");
       setNewVis("private");
-
-      // navigate into the real project details route
-      router.push(`/workspace/projects/${created.id}`);
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Create failed");
     } finally {
@@ -212,9 +202,7 @@ export default function WorkspaceProjectsPage() {
   async function onDelete(id: string) {
     setErrorMsg(null);
 
-    const ok = window.confirm(
-      "Delete this project? This cannot be undone."
-    );
+    const ok = window.confirm("Delete this project? This cannot be undone.");
     if (!ok) return;
 
     if (!supabase) {
@@ -227,7 +215,6 @@ export default function WorkspaceProjectsPage() {
       const { error } = await supabase.from("projects").delete().eq("id", id);
       if (error) throw new Error(error.message);
 
-      // If we deleted the selected project, close it
       if (selectedId === id) setSelectedId(null);
 
       await loadProjects({ keepSelection: true });
@@ -326,9 +313,7 @@ export default function WorkspaceProjectsPage() {
               <select
                 className="w-full rounded border px-3 py-2 text-sm"
                 value={newVis}
-                onChange={(e) =>
-                  setNewVis(e.target.value as ProjectVisibility)
-                }
+                onChange={(e) => setNewVis(e.target.value as ProjectVisibility)}
               >
                 <option value="private">Private</option>
                 <option value="shared">Shared</option>
@@ -391,14 +376,13 @@ export default function WorkspaceProjectsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
-                    <button
-                      type="button"
-                      className="text-left font-medium underline-offset-2 hover:underline"
-                      onClick={() => router.push(`/workspace/projects/${p.id}`)}
+                    <Link
+                      href={`/workspace/projects/${p.id}`}
+                      className="font-medium underline-offset-2 hover:underline"
                       title="Open project details"
                     >
                       {p.title}
-                    </button>
+                    </Link>
 
                     {p.description ? (
                       <div className="text-sm text-zinc-600">{p.description}</div>
@@ -411,13 +395,13 @@ export default function WorkspaceProjectsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button
+                      <Link
+                        href={`/workspace/projects/${p.id}`}
                         className="rounded bg-black px-3 py-2 text-sm text-white"
-                        onClick={() => router.push(`/workspace/projects/${p.id}`)}
                         title="Open project details"
                       >
                         Open
-                      </button>
+                      </Link>
 
                       <button
                         className="rounded border px-3 py-2 text-sm"
@@ -511,9 +495,7 @@ export default function WorkspaceProjectsPage() {
                   <select
                     className="w-full rounded border px-3 py-2 text-sm"
                     value={editVis}
-                    onChange={(e) =>
-                      setEditVis(e.target.value as ProjectVisibility)
-                    }
+                    onChange={(e) => setEditVis(e.target.value as ProjectVisibility)}
                   >
                     <option value="private">Private</option>
                     <option value="shared">Shared</option>
