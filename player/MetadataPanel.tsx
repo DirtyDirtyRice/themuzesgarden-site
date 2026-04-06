@@ -22,8 +22,6 @@ function formatTargetTypeLabel(targetType: MetadataTargetType): string {
       return "Section";
     case "moment":
       return "Moment";
-    case "project":
-      return "Project";
     default:
       return "Metadata";
   }

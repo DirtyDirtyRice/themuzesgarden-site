@@ -997,13 +997,13 @@ export default function ProjectDetailsPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowPlayingId, loopMode, tab]);
-
   // If loop mode changes while playing, keep audio element in sync
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
     el.loop = loopMode === "track";
   }, [loopMode]);
+
   // Apply volume/mute to audio element whenever UI changes
   useEffect(() => {
     const el = audioRef.current;
@@ -1160,7 +1160,8 @@ export default function ProjectDetailsPage() {
     function onKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
-      const isTyping = tag === "input" || tag === "textarea" || (target as any)?.isContentEditable;
+      const isTyping =
+        tag === "input" || tag === "textarea" || (target as any)?.isContentEditable;
 
       if (isTyping) return;
 
@@ -1183,6 +1184,7 @@ export default function ProjectDetailsPage() {
         prevTrack();
         return;
       }
+
       if (k === "k" || e.key === "ArrowRight") {
         e.preventDefault();
         nextTrack({ wrapIfSetlistLoop: true });
@@ -1277,7 +1279,10 @@ export default function ProjectDetailsPage() {
 
       if (!opts?.silent) setSavingNote(true);
 
-      const { error } = await supabase.from("project_notes").update({ title, body }).eq("id", activeNote.id);
+      const { error } = await supabase
+        .from("project_notes")
+        .update({ title, body })
+        .eq("id", activeNote.id);
 
       if (error) throw new Error(error.message);
 
@@ -1298,7 +1303,10 @@ export default function ProjectDetailsPage() {
     try {
       if (!supabase) throw new Error("Supabase client not found.");
 
-      const { error } = await supabase.from("project_notes").update({ pinned: !note.pinned }).eq("id", note.id);
+      const { error } = await supabase
+        .from("project_notes")
+        .update({ pinned: !note.pinned })
+        .eq("id", note.id);
 
       if (error) throw new Error(error.message);
       await loadNotes();
@@ -1327,7 +1335,10 @@ export default function ProjectDetailsPage() {
       if (!supabase) throw new Error("Supabase client not found.");
       setRenamingBusy(true);
 
-      const { error } = await supabase.from("project_notes").update({ title }).eq("id", noteId);
+      const { error } = await supabase
+        .from("project_notes")
+        .update({ title })
+        .eq("id", noteId);
 
       if (error) throw new Error(error.message);
 
@@ -1354,7 +1365,10 @@ export default function ProjectDetailsPage() {
 
       const deletedTitle = activeNote.title ?? "Note";
 
-      const { error } = await supabase.from("project_notes").delete().eq("id", activeNote.id);
+      const { error } = await supabase
+        .from("project_notes")
+        .delete()
+        .eq("id", activeNote.id);
 
       if (error) throw new Error(error.message);
 
@@ -1380,7 +1394,9 @@ export default function ProjectDetailsPage() {
       <main className="mx-auto max-w-2xl p-6 space-y-4">
         <h1 className="text-2xl font-bold">Project</h1>
         <div className="rounded-xl border p-5 space-y-2">
-          <div className="text-sm text-zinc-600">You must be signed in to view this project.</div>
+          <div className="text-sm text-zinc-600">
+            You must be signed in to view this project.
+          </div>
           <Link href="/members" className="inline-block rounded bg-black px-4 py-2 text-white">
             Go to Members Sign In
           </Link>
@@ -1436,11 +1452,14 @@ export default function ProjectDetailsPage() {
 
       {/* Keyboard shortcuts overlay (Performance Mode) */}
       {tab === "overview" && showKeys ? (
-        <div className="fixed inset-0 z-[60] bg-black/30 flex items-center justify-center p-4">
-          <div className="w-[min(42rem,calc(100vw-2rem))] rounded-2xl border bg-white shadow-lg p-4 space-y-3">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4">
+          <div className="w-[min(42rem,calc(100vw-2rem))] rounded-2xl border bg-white p-4 shadow-lg space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="text-sm font-medium">Performance Shortcuts</div>
-              <button className="rounded border px-2 py-1 text-xs" onClick={() => setShowKeys(false)}>
+              <button
+                className="rounded border px-2 py-1 text-xs"
+                onClick={() => setShowKeys(false)}
+              >
                 Close
               </button>
             </div>
@@ -1449,16 +1468,16 @@ export default function ProjectDetailsPage() {
               Use these anywhere on Overview (when not typing in an input).
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
               <div className="rounded border p-2">
-                <div className="font-medium text-xs text-zinc-600 mb-1">Playback</div>
+                <div className="mb-1 text-xs font-medium text-zinc-600">Playback</div>
                 <div>Space: Play / Pause</div>
                 <div>J or ←: Previous</div>
                 <div>K or →: Next</div>
                 <div>M: Mute</div>
               </div>
               <div className="rounded border p-2">
-                <div className="font-medium text-xs text-zinc-600 mb-1">Modes</div>
+                <div className="mb-1 text-xs font-medium text-zinc-600">Modes</div>
                 <div>S: Shuffle</div>
                 <div>L: Loop (Off → Track → Setlist)</div>
                 <div>H or ?: Toggle this help</div>
@@ -1473,14 +1492,14 @@ export default function ProjectDetailsPage() {
         </div>
       ) : null}
 
-    {/* Floating Mini Player (Performance Mode) */}
+      {/* Floating Mini Player (Performance Mode) */}
       {tab === "overview" && miniVisible ? (
-        <div className="fixed bottom-4 left-1/2 z-50 w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2">
-          <div className="rounded-2xl border bg-white shadow-lg p-3 space-y-2">
+        <div className="fixed bottom-4 left-1/2 z-50 w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 space-y-2">
+          <div className="rounded-2xl border bg-white p-3 shadow-lg space-y-2">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <button
-                  className="text-left min-w-0"
+                  className="min-w-0 text-left"
                   onClick={() => {
                     nowPlayingCardRef.current?.scrollIntoView({
                       behavior: "smooth",
@@ -1489,9 +1508,12 @@ export default function ProjectDetailsPage() {
                   }}
                   title="Jump to Now Playing"
                 >
-                  <div className="text-sm font-medium truncate">▶ {nowPlayingTrack?.title ?? "Untitled"}</div>
+                  <div className="truncate text-sm font-medium">
+                    ▶ {nowPlayingTrack?.title ?? "Untitled"}
+                  </div>
                 </button>
-                <div className="text-xs text-zinc-500 truncate">
+
+                <div className="truncate text-xs text-zinc-500">
                   {nowPlayingTrack?.artist ?? "Supabase"}
                   {playbackIndex >= 0 ? (
                     <>
@@ -1502,11 +1524,17 @@ export default function ProjectDetailsPage() {
                 </div>
               </div>
 
-              <div className="text-xs text-zinc-500 truncate">Up next: {upNextTrack?.title ?? "—"}</div>
+              <div className="truncate text-xs text-zinc-500">
+                Up next: {upNextTrack?.title ?? "—"}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="rounded border px-2 py-1 text-xs" onClick={() => setShowKeys(true)} title="Show keyboard shortcuts (H / ?)">
+              <button
+                className="rounded border px-2 py-1 text-xs"
+                onClick={() => setShowKeys(true)}
+                title="Show keyboard shortcuts (H / ?)"
+              >
                 Keys
               </button>
 
@@ -1518,7 +1546,11 @@ export default function ProjectDetailsPage() {
                 {miniPlayerPinned ? "Unpin" : "Pin"}
               </button>
 
-              <button className="rounded border px-2 py-1 text-xs" onClick={toggleShuffle} title="Shuffle (S)">
+              <button
+                className="rounded border px-2 py-1 text-xs"
+                onClick={toggleShuffle}
+                title="Shuffle (S)"
+              >
                 {shuffleOn ? "Shuffle: On" : "Shuffle: Off"}
               </button>
 
@@ -1530,6 +1562,7 @@ export default function ProjectDetailsPage() {
               >
                 Prev
               </button>
+
               <button
                 className="rounded border px-2 py-1 text-xs disabled:opacity-60"
                 onClick={() => nextTrack({ wrapIfSetlistLoop: true })}
@@ -1542,211 +1575,253 @@ export default function ProjectDetailsPage() {
               >
                 Next
               </button>
-              <button className="rounded border px-2 py-1 text-xs disabled:opacity-60" onClick={togglePlayPause} disabled={!nowPlayingId} title="Space">
+
+              <button
+                className="rounded border px-2 py-1 text-xs disabled:opacity-60"
+                onClick={togglePlayPause}
+                disabled={!nowPlayingId}
+                title="Space"
+              >
                 {isPaused ? "Resume" : "Pause"}
               </button>
-              <button className="rounded border px-2 py-1 text-xs disabled:opacity-60" onClick={stopPlayer} disabled={!nowPlayingId}>
+
+              <button
+                className="rounded border px-2 py-1 text-xs disabled:opacity-60"
+                onClick={stopPlayer}
+                disabled={!nowPlayingId}
+              >
                 Stop
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2 text-xs text-zinc-600">
-            <div>
-              {fmtTime(elapsedSec)} / {fmtTime(durationSec)}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button className="rounded border px-2 py-1 text-xs" onClick={() => setMuted((v) => !v)} title="Mute (M)">
-                {muted ? "Muted" : "Mute"}
-              </button>
-
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={Math.round(volume01 * 100)}
-                onChange={(e) => {
-                  const v = Number(e.target.value) || 0;
-                  setVolume01(clamp01(v / 100));
-                }}
-                className="w-24"
-                title="Volume"
-              />
-
-              <button className="rounded border px-2 py-1 text-xs" onClick={toggleLoop} title="Loop mode cycles: Off → Track → Setlist (L)">
-                Loop: {loopMode === "off" ? "Off" : loopMode === "track" ? "Track" : "Setlist"}
-              </button>
-            </div>
-          </div>
-
-          <input
-            type="range"
-            min={0}
-            max={1000}
-            value={durationSec > 0 ? Math.round((elapsedSec / durationSec) * 1000) : 0}
-            onMouseDown={() => setSeeking(true)}
-            onMouseUp={() => setSeeking(false)}
-            onTouchStart={() => setSeeking(true)}
-            onTouchEnd={() => setSeeking(false)}
-            onChange={(e) => {
-              const v = Number(e.target.value) || 0;
-              const pct = v / 1000;
-              setElapsedSec(pct * (durationSec || 0));
-              seekTo(pct);
-            }}
-            className="w-full"
-          />
-        </div>
-      </div>
-    ) : null}
-
-    {/* Main card */}
-    <section className="rounded-xl border p-5 space-y-3">
-      {loadingProj ? (
-        <div className="text-sm text-zinc-600">Loading project…</div>
-      ) : errorMsg ? (
-        <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{errorMsg}</div>
-      ) : !proj ? (
-        <div className="text-sm text-zinc-600">Project not found.</div>
-      ) : tab === "overview" ? (
-        <div className="space-y-4">
-          <div className="text-sm text-zinc-600">
-            Overview section unchanged — your previous content should remain.
-          </div>
-        </div>
-      ) : tab === "notes" ? (
-        <div className="text-sm text-zinc-600">
-          Notes section unchanged — your previous content should remain.
-        </div>
-      ) : tab === "library" ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="font-medium">Project Library</div>
-            <button
-              className="rounded border px-3 py-2 text-sm disabled:opacity-60"
-              onClick={loadLibrary}
-              disabled={loadingLibrary}
-              title="Refresh"
-            >
-              {loadingLibrary ? "Refreshing…" : "Refresh"}
-            </button>
-          </div>
-
-          {libraryErr ? (
-            <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{libraryErr}</div>
-          ) : null}
-
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {/* Linked */}
-            <div className="rounded-lg border p-3 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-medium">Linked Tracks</div>
-                <div className="text-xs text-zinc-500">Linked: {linkedTrackIds.size}</div>
+          <div className="rounded-2xl border bg-white p-3 shadow-lg space-y-2">
+            <div className="flex items-center justify-between gap-2 text-xs text-zinc-600">
+              <div>
+                {fmtTime(elapsedSec)} / {fmtTime(durationSec)}
               </div>
 
-              {linkedTracks.length === 0 ? (
-                <div className="text-sm text-zinc-600">No tracks linked yet. Use the Library list to link.</div>
-              ) : (
-                <div className="space-y-2">
-                  {linkedTracks.map((t: any) => {
-                    const tid = String(t.id);
-                    const isNow = nowPlayingId === tid;
-                    const isPreview = previewTrack ? String(previewTrack.id) === tid : false;
-                    const isMetadataSelected =
-                      metadataTargetType === "track" && metadataTargetId === tid;
+              <div className="flex items-center gap-2">
+                <button
+                  className="rounded border px-2 py-1 text-xs"
+                  onClick={() => setMuted((v) => !v)}
+                  title="Mute (M)"
+                >
+                  {muted ? "Muted" : "Mute"}
+                </button>
 
-                    return (
-                      <div
-                        key={tid}
-                        className={`rounded border p-3 flex items-center justify-between gap-3 cursor-pointer ${
-                          isPreview ? "bg-zinc-50 border-black" : "bg-white"
-                        }`}
-                        onClick={() => {
-                          setPreviewTrackId(tid);
-                          selectTrackMetadataTarget(tid);
-                        }}
-                        title="Click anywhere to inspect this track"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">
-                            {isNow ? "▶ " : ""}
-                            {isNow ? (
-                              <span className="mr-2 rounded bg-black px-2 py-0.5 text-[10px] text-white">NOW</span>
-                            ) : null}
-                            {t.title ?? "Untitled"}
-                          </div>
-                          {t.artist ? <div className="text-xs text-zinc-500 truncate">{t.artist}</div> : null}
-                          {isMetadataSelected ? (
-                            <div className="mt-1 text-[11px] text-zinc-500">Selected for metadata</div>
-                          ) : null}
-                          {isMetadataSelected ? (
-                            <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                              <MetadataPanel
-                                targetType={metadataTargetType}
-                                targetId={metadataTargetId ?? tid}
-                              />
-                            </div>
-                          ) : null}
-                        </div>
-                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <button className="rounded border px-3 py-2 text-xs" onClick={() => playTrackById(tid)}>
-                            Play
-                          </button>
-                          <button
-                            className="rounded border px-3 py-2 text-xs"
-                            onClick={() => {
-                              setPreviewTrackId(tid);
-                              selectTrackMetadataTarget(tid);
-                            }}
-                          >
-                            Inspect
-                          </button>
-                          <button
-                            className="rounded border px-3 py-2 text-xs disabled:opacity-60"
-                            onClick={() => unlinkTrack(tid)}
-                            disabled={linkBusyId === tid}
-                          >
-                            {linkBusyId === tid ? "..." : "Unlink"}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={Math.round(volume01 * 100)}
+                  onChange={(e) => {
+                    const v = Number(e.target.value) || 0;
+                    setVolume01(clamp01(v / 100));
+                  }}
+                  className="w-24"
+                  title="Volume"
+                />
+
+                <button
+                  className="rounded border px-2 py-1 text-xs"
+                  onClick={toggleLoop}
+                  title="Loop mode cycles: Off → Track → Setlist (L)"
+                >
+                  Loop: {loopMode === "off" ? "Off" : loopMode === "track" ? "Track" : "Setlist"}
+                </button>
+              </div>
             </div>
 
-            <ProjectLibraryPanel
-              allTracks={allTracks as any[]}
-              linkedTrackIds={linkedTrackIds}
-              loadingLibrary={loadingLibrary}
-              linkBusyId={linkBusyId}
-              linkTrack={linkTrack}
-              unlinkTrack={unlinkTrack}
+            <input
+              type="range"
+              min={0}
+              max={1000}
+              value={durationSec > 0 ? Math.round((elapsedSec / durationSec) * 1000) : 0}
+              onMouseDown={() => setSeeking(true)}
+              onMouseUp={() => setSeeking(false)}
+              onTouchStart={() => setSeeking(true)}
+              onTouchEnd={() => setSeeking(false)}
+              onChange={(e) => {
+                const v = Number(e.target.value) || 0;
+                const pct = v / 1000;
+                setElapsedSec(pct * (durationSec || 0));
+                seekTo(pct);
+              }}
+              className="w-full"
             />
           </div>
+        </div>
+      ) : null}
 
-          <div className="rounded-lg border p-4 space-y-1">
-            <div className="font-medium text-sm">Safe architecture</div>
+      {/* Main card */}
+      <section className="rounded-xl border p-5 space-y-3">
+        {loadingProj ? (
+          <div className="text-sm text-zinc-600">Loading project…</div>
+        ) : errorMsg ? (
+          <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {errorMsg}
+          </div>
+        ) : !proj ? (
+          <div className="text-sm text-zinc-600">Project not found.</div>
+        ) : tab === "overview" ? (
+          <div className="space-y-4">
             <div className="text-sm text-zinc-600">
-              This uses <code className="px-1">project_tracks</code> as a join table. Library stays global and unchanged.
-              Track IDs are the storage-based ids returned by <code className="px-1">getSupabaseTracks()</code>.
+              Overview section unchanged — your previous content should remain.
             </div>
           </div>
-        </div>
-      ) : (
-        <ProjectActivityPanel />
-      )}
-    </section>
+        ) : tab === "notes" ? (
+          <div className="text-sm text-zinc-600">
+            Notes section unchanged — your previous content should remain.
+          </div>
+        ) : tab === "library" ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-medium">Project Library</div>
+              <button
+                className="rounded border px-3 py-2 text-sm disabled:opacity-60"
+                onClick={loadLibrary}
+                disabled={loadingLibrary}
+              >
+                {loadingLibrary ? "Refreshing…" : "Refresh"}
+              </button>
+            </div>
 
-    <section className="rounded-xl border p-5">
-      <Link href="/workspace/projects" className="rounded border px-3 py-2 text-sm">
-        Back to Projects
-      </Link>
-    </section>
+            {libraryErr ? (
+              <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {libraryErr}
+              </div>
+            ) : null}
 
-    <PlaybackHelper />
-  </main>
-);
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {/* Linked */}
+              <div className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-medium">Linked Tracks</div>
+                  <div className="text-xs text-zinc-500">Linked: {linkedTrackIds.size}</div>
+                </div>
+
+                {linkedTracks.length === 0 ? (
+                  <div className="text-sm text-zinc-600">
+                    No tracks linked yet. Use the Library list to link.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {linkedTracks.map((t: any) => {
+                      const tid = String(t.id);
+                      const isNow = nowPlayingId === tid;
+                      const isPreview = previewTrack ? String(previewTrack.id) === tid : false;
+                      const isMetadataSelected =
+                        metadataTargetType === "track" && metadataTargetId === tid;
+
+                      return (
+                        <div
+                          key={tid}
+                          className={`rounded border p-3 flex items-center justify-between gap-3 cursor-pointer ${
+                            isPreview ? "bg-zinc-50 border-black" : "bg-white"
+                          }`}
+                          onClick={() => {
+                            setPreviewTrackId(tid);
+                            selectTrackMetadataTarget(tid);
+                          }}
+                        >
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium truncate">
+                              {isNow ? "▶ " : ""}
+                              {isNow && (
+                                <span className="mr-2 rounded bg-black px-2 py-0.5 text-[10px] text-white">
+                                  NOW
+                                </span>
+                              )}
+                              {t.title ?? "Untitled"}
+                            </div>
+
+                            {t.artist && (
+                              <div className="text-xs text-zinc-500 truncate">{t.artist}</div>
+                            )}
+
+                            {isMetadataSelected && (
+                              <div className="mt-1 text-[11px] text-zinc-500">
+                                Selected for metadata
+                              </div>
+                            )}
+
+                            {isMetadataSelected && (
+                              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                <MetadataPanel
+                                  targetType={metadataTargetType}
+                                  targetId={metadataTargetId ?? tid}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="rounded border px-3 py-2 text-xs"
+                              onClick={() => playTrackById(tid)}
+                            >
+                              Play
+                            </button>
+
+                            <button
+                              className="rounded border px-3 py-2 text-xs"
+                              onClick={() => {
+                                setPreviewTrackId(tid);
+                                selectTrackMetadataTarget(tid);
+                              }}
+                            >
+                              Inspect
+                            </button>
+
+                            <button
+                              className="rounded border px-3 py-2 text-xs disabled:opacity-60"
+                              onClick={() => unlinkTrack(tid)}
+                              disabled={linkBusyId === tid}
+                            >
+                              {linkBusyId === tid ? "..." : "Unlink"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <ProjectLibraryPanel
+                allTracks={allTracks as any[]}
+                linkedTrackIds={linkedTrackIds}
+                loadingLibrary={loadingLibrary}
+                linkBusyId={linkBusyId}
+                linkTrack={linkTrack}
+                unlinkTrack={unlinkTrack}
+              />
+            </div>
+
+            <div className="rounded-lg border p-4 space-y-1">
+              <div className="font-medium text-sm">Safe architecture</div>
+              <div className="text-sm text-zinc-600">
+                This uses <code className="px-1">project_tracks</code> as a join table.
+                Library stays global and unchanged.
+              </div>
+            </div>
+          </div>
+        ) : (
+          <ProjectActivityPanel />
+        )}
+      </section>
+
+      <section className="rounded-xl border p-5">
+        <Link href="/workspace/projects" className="rounded border px-3 py-2 text-sm">
+          Back to Projects
+        </Link>
+      </section>
+
+      <PlaybackHelper />
+    </main>
+  );
 }
