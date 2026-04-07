@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 import {
   getFullMetadataContext,
   getMetadataByTarget,
-} from "../lib/metadata/metadataApi";
+} from "./metadataApi";
 import type {
   MetadataEntry,
   MetadataTargetType,
-} from "../lib/metadata/metadataTypes";
+} from "./metadataTypes";
 
 function cleanText(v: unknown) {
   return String(v ?? "").trim();
