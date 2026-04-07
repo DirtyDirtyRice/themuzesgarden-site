@@ -414,11 +414,15 @@ export default function ProjectDetailsPage() {
       if (!id) throw new Error("Missing project id.");
       if (!looksLikeUuid(id)) throw new Error("Invalid project id format.");
 
-      const { data, error } = await supabase
+          const { data, error } = await supabase
         .from("projects")
         .select("id, owner_id, title, description, kind, visibility, created_at, updated_at")
         .eq("id", id)
-        .single();
+        .maybeSingle();
+
+      if (error) throw new Error(error.message);
+      if (!data) throw new Error("Project not found.");
+      setProj(data as Project);
 
       if (error) throw new Error(error.message);
       setProj(data as Project);
