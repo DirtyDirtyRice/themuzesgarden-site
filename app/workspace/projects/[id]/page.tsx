@@ -149,6 +149,33 @@ function buildShuffleOrder(ids: string[], keepFirstId?: string | null) {
   return [keep, ...shuffled(rest)];
 }
 
+type ProjectPlayerBridgeState = {
+  projectId: string;
+  projectTitle: string;
+  trackIds: string[];
+  trackCount: number;
+  updatedAt: string;
+  source: "project-page";
+};
+
+const PROJECT_PLAYER_BRIDGE_KEY = "muzesgarden:project-player-bridge";
+const PROJECT_PLAYER_BRIDGE_EVENT = "muzesgarden:project-player-bridge-changed";
+
+function writeProjectPlayerBridge(state: ProjectPlayerBridgeState) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(PROJECT_PLAYER_BRIDGE_KEY, JSON.stringify(state));
+    window.dispatchEvent(
+      new CustomEvent(PROJECT_PLAYER_BRIDGE_EVENT, {
+        detail: state,
+      })
+    );
+  } catch {
+    // ignore storage/event bridge errors
+  }
+}
+
 export default function ProjectDetailsPage() {
   const { user, loading } = useAuth();
   const params = useParams();
@@ -212,7 +239,9 @@ export default function ProjectDetailsPage() {
   const [overviewQuery, setOverviewQuery] = useState("");
   const [setlistOrder, setSetlistOrder] = useState<string[]>([]);
   const [previewTrackId, setPreviewTrackId] = useState<string | null>(null);
-  const [metadataTargetType, setMetadataTargetType] = useState<"track" | "section" | "moment" | "project">("track");
+  const [metadataTargetType, setMetadataTargetType] = useState<
+    "track" | "section" | "moment" | "project"
+  >("track");
   const [metadataTargetId, setMetadataTargetId] = useState<string | null>(null);
 
   // Phase 3: Project Player Mode
@@ -446,7 +475,10 @@ export default function ProjectDetailsPage() {
     if (!supabase) throw new Error("Supabase client not found.");
     if (!looksLikeUuid(id)) throw new Error("Invalid project id format.");
 
-    const { data, error } = await supabase.from("project_tracks").select("track_id").eq("project_id", id);
+    const { data, error } = await supabase
+      .from("project_tracks")
+      .select("track_id")
+      .eq("project_id", id);
 
     if (error) throw new Error(error.message);
 
@@ -537,7 +569,9 @@ export default function ProjectDetailsPage() {
         return;
       }
 
-      const { error } = await supabase.from("project_tracks").insert({ project_id: id, track_id: trackId });
+      const { error } = await supabase
+        .from("project_tracks")
+        .insert({ project_id: id, track_id: trackId });
 
       if (error) throw new Error(error.message);
 
@@ -905,6 +939,27 @@ export default function ProjectDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  // Project -> Global Player bridge (step 1)
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return;
+    if (!looksLikeUuid(id)) return;
+    if (!proj) return;
+
+    const trackIds = orderedLinkedTracks
+      .map((t: any) => String(t?.id ?? ""))
+      .filter(Boolean);
+
+    writeProjectPlayerBridge({
+      projectId: String(id),
+      projectTitle: String(proj.title ?? "Untitled Project"),
+      trackIds,
+      trackCount: trackIds.length,
+      updatedAt: new Date().toISOString(),
+      source: "project-page",
+    });
+  }, [loading, user?.id, id, proj?.title, orderedLinkedTracks]);
+
   // When active note changes, load into editor (and clear dirty)
   useEffect(() => {
     if (!activeNote) {
@@ -997,6 +1052,7 @@ export default function ProjectDetailsPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowPlayingId, loopMode, tab]);
+
   // If loop mode changes while playing, keep audio element in sync
   useEffect(() => {
     const el = audioRef.current;

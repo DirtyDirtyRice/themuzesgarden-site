@@ -9,8 +9,48 @@ import { useProjectSetlist } from "../../player/useProjectSetlist";
 import { useAudioEngine } from "../../player/useAudioEngine";
 import PlayerPanel from "../../player/PlayerPanel";
 
+type ProjectPlayerBridgeState = {
+  projectId: string;
+  projectTitle: string;
+  trackIds: string[];
+  trackCount: number;
+  updatedAt: string;
+  source: "project-page";
+};
+
+const PROJECT_PLAYER_BRIDGE_KEY = "muzesgarden:project-player-bridge";
+const PROJECT_PLAYER_BRIDGE_EVENT = "muzesgarden:project-player-bridge-changed";
+
 let GLOBAL_PLAYER_Q_MEMORY = "";
 let GLOBAL_PLAYER_TAB_MEMORY: PlayerTab = "search";
+
+function readProjectPlayerBridge(): ProjectPlayerBridgeState | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(PROJECT_PLAYER_BRIDGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<ProjectPlayerBridgeState> | null;
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const projectId = String(parsed.projectId ?? "").trim();
+    if (!projectId) return null;
+
+    return {
+      projectId,
+      projectTitle: String(parsed.projectTitle ?? "Untitled Project"),
+      trackIds: Array.isArray(parsed.trackIds)
+        ? parsed.trackIds.map((x) => String(x ?? "")).filter(Boolean)
+        : [],
+      trackCount: Number(parsed.trackCount ?? 0) || 0,
+      updatedAt: String(parsed.updatedAt ?? ""),
+      source: "project-page",
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default function GlobalPlayer() {
   const { onProjectPage, projectId } = useProjectContext();
@@ -102,6 +142,54 @@ export default function GlobalPlayer() {
     GLOBAL_PLAYER_TAB_MEMORY = tab;
     writePersisted({ tab });
   }, [tab]);
+
+  useEffect(() => {
+    if (!onProjectPage) return;
+    if (!projectId) return;
+
+    const bridge = readProjectPlayerBridge();
+    if (!bridge) return;
+    if (String(bridge.projectId) !== String(projectId)) return;
+
+    setTab("project");
+    refreshProjectIds();
+  }, [onProjectPage, projectId, refreshProjectIds, setTab]);
+
+  useEffect(() => {
+    function applyBridge(bridge: ProjectPlayerBridgeState | null) {
+      if (!bridge) return;
+      if (!onProjectPage) return;
+      if (!projectId) return;
+      if (String(bridge.projectId) !== String(projectId)) return;
+
+      setTab("project");
+      refreshProjectIds();
+    }
+
+    function onBridgeChanged(event: Event) {
+      const custom = event as CustomEvent<ProjectPlayerBridgeState>;
+      applyBridge(custom.detail ?? null);
+    }
+
+    function onStorage(event: StorageEvent) {
+      if (event.key !== PROJECT_PLAYER_BRIDGE_KEY) return;
+      applyBridge(readProjectPlayerBridge());
+    }
+
+    window.addEventListener(
+      PROJECT_PLAYER_BRIDGE_EVENT,
+      onBridgeChanged as EventListener
+    );
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener(
+        PROJECT_PLAYER_BRIDGE_EVENT,
+        onBridgeChanged as EventListener
+      );
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [onProjectPage, projectId, refreshProjectIds, setTab]);
 
   useEffect(() => {
     if (!onProjectPage) return;

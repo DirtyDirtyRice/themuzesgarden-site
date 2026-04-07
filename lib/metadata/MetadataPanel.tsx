@@ -1,65 +1,115 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
+  getFullMetadataContext,
   getMetadataByTarget,
-  getMetadataContext,
-} from "./metadataApi";
-import type { MetadataTargetType, MetadataEntry } from "./metadataTypes";
+} from "../lib/metadata/metadataApi";
+import type {
+  MetadataEntry,
+  MetadataTargetType,
+} from "../lib/metadata/metadataTypes";
 
-type Props = {
+function cleanText(v: unknown) {
+  return String(v ?? "").trim();
+}
+
+export default function MetadataPanel({ targetType, targetId }: {
   targetType: MetadataTargetType;
   targetId: string;
-};
+}) {
+  const [activeId, setActiveId] = useState("");
 
-export default function MetadataPanel({ targetType, targetId }: Props) {
   const items = getMetadataByTarget(targetType, targetId);
 
-  if (!items.length) return null;
+  const activeContext = useMemo(() => {
+    if (!activeId) return null;
+    return getFullMetadataContext(activeId);
+  }, [activeId]);
+
+  if (!items.length) {
+    return (
+      <div className="mt-3 border p-3 text-sm">
+        No metadata yet for this {targetType}
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-3 rounded-lg border bg-white p-3 text-sm">
-      <div className="mb-2 font-semibold text-gray-700">Metadata</div>
+    <div className="mt-3 space-y-3 text-sm">
+      {items.map((item) => {
+        const ctx = getFullMetadataContext(item.id);
+        if (!ctx) return null;
 
-      <div className="space-y-3">
-        {items.map((m) => {
-          const ctx = getMetadataContext(m.id);
+        return (
+          <div key={item.id} className="border p-3">
 
-          return (
-            <div key={m.id} className="rounded border p-2">
-              <div className="font-medium">{m.label}</div>
-
-              {m.description ? (
-                <div className="mt-1 text-xs text-gray-600">
-                  {m.description}
-                </div>
-              ) : null}
-
-              {/* Parent */}
-              {ctx?.parent ? (
-                <div className="mt-2 text-xs text-gray-500">
-                  Parent: {ctx.parent.label}
-                </div>
-              ) : null}
-
-              {/* Children */}
-              {ctx?.children?.length ? (
-                <div className="mt-2 text-xs text-gray-500">
-                  Children:{" "}
-                  {ctx.children.map((c) => c.label).join(", ")}
-                </div>
-              ) : null}
-
-              {/* Links */}
-              {ctx?.linksFrom?.length ? (
-                <div className="mt-2 text-xs text-gray-500">
-                  Related:{" "}
-                  {ctx.linksFrom.map((l) => l.targetId).join(", ")}
-                </div>
-              ) : null}
+            <div className="font-medium">
+              {cleanText(item.label)}
             </div>
-          );
-        })}
-      </div>
+
+            <div className="text-xs text-gray-600">
+              {cleanText(item.description)}
+            </div>
+
+            {/* RELATED */}
+            {ctx.related.length > 0 && (
+              <div className="mt-2 text-xs text-gray-500">
+                Related:
+                {ctx.related.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setActiveId(r.id)}
+                    className="ml-2 underline"
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* CHILDREN */}
+            {ctx.children.length > 0 && (
+              <div className="mt-2 text-xs">
+                Children:
+                {ctx.children.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setActiveId(c.id)}
+                    className="ml-2 underline"
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+          </div>
+        );
+      })}
+
+      {/* ACTIVE PREVIEW */}
+      {activeContext && (
+        <div className="border p-3 bg-white">
+          <div className="font-medium">
+            {activeContext.entry.label}
+          </div>
+          <div className="text-xs text-gray-600">
+            {activeContext.entry.description}
+          </div>
+
+          {activeContext.related.length > 0 && (
+            <div className="mt-2 text-xs">
+              Related:
+              {activeContext.related.map((r) => (
+                <span key={r.id} className="ml-2">
+                  {r.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
