@@ -1,7 +1,8 @@
 "use client";
 
 import MetadataPanel from "../../../../player/MetadataPanel";
-import type { MetadataTargetType, Project } from "./projectDetailsTypes";
+import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
+import type { Project } from "./projectDetailsTypes";
 
 type TrackLike = {
   id: string;
