@@ -15,6 +15,8 @@ type UploadedItem = {
   trackId?: string;
 };
 
+type UploadVisibility = "shared" | "private";
+
 function makeSafeFileName(original: string) {
   const cleaned = original
     .trim()
@@ -32,7 +34,6 @@ function makeSafeFileName(original: string) {
 }
 
 function titleFromFileName(name: string) {
-  // remove extension
   const base = name.replace(/\.[^/.]+$/, "");
   return base.trim() || "Untitled";
 }
@@ -60,6 +61,8 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [items, setItems] = useState<UploadedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState<UploadVisibility>("shared");
+  const [userId, setUserId] = useState<string | null>(null);
 
   const accept = useMemo(() => ".mp3,audio/mpeg", []);
 
@@ -76,6 +79,10 @@ export default function UploadPage() {
         if (!session) {
           router.replace("/members");
           return;
+        }
+
+        if (mounted) {
+          setUserId(session.user?.id ?? null);
         }
       } catch {
         // If anything goes wrong, fail safe: send to members page
@@ -147,6 +154,8 @@ export default function UploadPage() {
       artist: "The Muzes Garden",
       url: it.publicUrl,
       tags: ["uploaded"],
+      visibility,
+      ownerId: userId ?? undefined,
       createdAt: new Date().toISOString(),
     };
 
@@ -191,36 +200,58 @@ export default function UploadPage() {
         </p>
 
         <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="text-sm font-medium">Select MP3 files</div>
-              <div className="mt-1 text-xs text-zinc-600">
-                Bucket: <span className="font-mono">{BUCKET}</span> · Folder:{" "}
-                <span className="font-mono">{FOLDER}</span>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="text-sm font-medium">Select MP3 files</div>
+                <div className="mt-1 text-xs text-zinc-600">
+                  Bucket: <span className="font-mono">{BUCKET}</span> · Folder:{" "}
+                  <span className="font-mono">{FOLDER}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept={accept}
+                  multiple
+                  onChange={onPickFiles}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => inputRef.current?.click()}
+                  disabled={isUploading}
+                  className={[
+                    "rounded-xl border px-4 py-2 text-sm transition",
+                    isUploading
+                      ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                      : "border-zinc-900 bg-zinc-900 text-white hover:opacity-90",
+                  ].join(" ")}
+                >
+                  {isUploading ? "Uploading..." : "Choose files"}
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <input
-                ref={inputRef}
-                type="file"
-                accept={accept}
-                multiple
-                onChange={onPickFiles}
-                className="hidden"
-              />
-              <button
-                onClick={() => inputRef.current?.click()}
-                disabled={isUploading}
-                className={[
-                  "rounded-xl border px-4 py-2 text-sm transition",
-                  isUploading
-                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                    : "border-zinc-900 bg-zinc-900 text-white hover:opacity-90",
-                ].join(" ")}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="upload-visibility" className="text-sm font-medium">
+                Visibility
+              </label>
+              <select
+                id="upload-visibility"
+                value={visibility}
+                onChange={(e) =>
+                  setVisibility(e.target.value as UploadVisibility)
+                }
+                className="w-full max-w-xs rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm"
               >
-                {isUploading ? "Uploading..." : "Choose files"}
-              </button>
+                <option value="shared">Shared</option>
+                <option value="private">Private</option>
+              </select>
+              <div className="text-xs text-zinc-600">
+                New tracks added to Library from this upload screen will use this visibility.
+              </div>
             </div>
           </div>
 
@@ -292,7 +323,8 @@ export default function UploadPage() {
 
                   {it.addedToLibrary && (
                     <div className="mt-2 text-xs text-zinc-600">
-                      Tag added: <span className="font-mono">uploaded</span>
+                      Tag added: <span className="font-mono">uploaded</span> • Visibility:{" "}
+                      <span className="font-mono">{visibility}</span>
                     </div>
                   )}
                 </div>

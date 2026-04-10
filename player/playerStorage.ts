@@ -66,7 +66,6 @@ function sanitizePersisted(value: unknown): Persisted {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
 
   const raw = value as Record<string, unknown>;
-
   const sanitized: Persisted = {};
 
   const tab = asPlayerTab(raw.tab);
@@ -110,12 +109,6 @@ function sanitizePersisted(value: unknown): Persisted {
     }
   }
 
-  // Intentionally do not restore lastSearchQuery.
-  // The persisted search text was causing the player to get stuck in Search mode
-  // and repeatedly re-apply stale input like a single "t".
-  // We leave this field out of the sanitized payload so reads ignore it and
-  // subsequent writes naturally drop it from storage.
-
   if (raw.lastMatchedSectionId === null) sanitized.lastMatchedSectionId = null;
   else {
     const lastMatchedSectionId = asString(raw.lastMatchedSectionId);
@@ -148,10 +141,6 @@ export function readPersisted(): Persisted {
   }
 }
 
-/**
- * Writes only if the resulting JSON payload actually changes.
- * This prevents churn (and avoids needless "storage write" side effects).
- */
 export function writePersisted(patch: Partial<Persisted>) {
   if (typeof window === "undefined") return;
 
@@ -167,9 +156,7 @@ export function writePersisted(patch: Partial<Persisted>) {
 
   try {
     localStorage.setItem(LS_KEY, nextStr);
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 export function readProjectOrder(projectId: string): string[] | undefined {
@@ -219,28 +206,36 @@ export function stableMergeOrder(
   existingIds: string[],
   savedOrder: string[] | undefined
 ): string[] {
+  // 🔥 HARD FILTER: only real existing IDs survive
   const normalizedExistingIds = existingIds
     .map((id) => String(id ?? "").trim())
     .filter(Boolean);
 
   const existingSet = new Set(normalizedExistingIds);
+
   const seen = new Set<string>();
   const out: string[] = [];
 
+  // 🔥 Step 1: keep only valid saved IDs
   if (Array.isArray(savedOrder)) {
     for (const id of savedOrder) {
       const sid = String(id ?? "").trim();
       if (!sid) continue;
+
+      // 🔥 CRITICAL FILTER
       if (!existingSet.has(sid)) continue;
+
       if (seen.has(sid)) continue;
+
       seen.add(sid);
       out.push(sid);
     }
   }
 
+  // 🔥 Step 2: add missing real IDs
   for (const id of normalizedExistingIds) {
     if (seen.has(id)) continue;
-    if (!existingSet.has(id)) continue;
+
     seen.add(id);
     out.push(id);
   }

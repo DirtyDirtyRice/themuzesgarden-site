@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { AnyTrack, TrackSection } from "./playerTypes";
 import { getSupabaseTracks } from "../lib/getSupabaseTracks";
 
@@ -46,8 +46,14 @@ function normalizeTrack(track: unknown): AnyTrack | null {
 
   const raw = track as Record<string, unknown>;
 
+  const rawId = raw.id;
   const id =
-    typeof raw.id === "string" && raw.id.trim() ? raw.id.trim() : "";
+    typeof rawId === "string"
+      ? rawId.trim()
+      : typeof rawId === "number" && Number.isFinite(rawId)
+      ? String(rawId)
+      : "";
+
   if (!id) return null;
 
   const title =
@@ -83,6 +89,14 @@ function normalizeTrack(track: unknown): AnyTrack | null {
         .filter((section): section is TrackSection => Boolean(section))
     : undefined;
 
+  // 🔥 NEW: visibility passthrough
+  const visibility =
+    raw.visibility === "private" ||
+    raw.visibility === "public" ||
+    raw.visibility === "shared"
+      ? raw.visibility
+      : "shared";
+
   return {
     id,
     title,
@@ -91,35 +105,115 @@ function normalizeTrack(track: unknown): AnyTrack | null {
     path,
     tags,
     sections,
+    visibility, // 🔥 added
   };
+}
+
+async function wait(ms: number) {
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 export function useAllTracks() {
   const [allTracks, setAllTracks] = useState<AnyTrack[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadTracks = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
 
-    async function load() {
+    let lastError: unknown = null;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const tracks = await getSupabaseTracks();
+
         const safe = Array.isArray(tracks)
           ? tracks
               .map((track) => normalizeTrack(track))
               .filter((track): track is AnyTrack => Boolean(track))
           : [];
 
-        if (!cancelled) setAllTracks(safe);
-      } catch {
-        if (!cancelled) setAllTracks([]);
+        setAllTracks(safe);
+        setIsLoading(false);
+        setLoadError(null);
+        return;
+      } catch (error) {
+        lastError = error;
+
+        if (attempt === 0) {
+          await wait(350);
+        }
       }
     }
 
-    load();
+    setAllTracks([]);
+    setIsLoading(false);
+    setLoadError(
+      lastError instanceof Error && lastError.message.trim()
+        ? lastError.message
+        : "Failed to load tracks."
+    );
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      setIsLoading(true);
+      setLoadError(null);
+
+      let lastError: unknown = null;
+
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const tracks = await getSupabaseTracks();
+
+          const safe = Array.isArray(tracks)
+            ? tracks
+                .map((track) => normalizeTrack(track))
+                .filter((track): track is AnyTrack => Boolean(track))
+            : [];
+
+          if (!cancelled) {
+            setAllTracks(safe);
+            setIsLoading(false);
+            setLoadError(null);
+          }
+          return;
+        } catch (error) {
+          lastError = error;
+
+          if (attempt === 0) {
+            await wait(350);
+          }
+        }
+      }
+
+      if (!cancelled) {
+        setAllTracks([]);
+        setIsLoading(false);
+        setLoadError(
+          lastError instanceof Error && lastError.message.trim()
+            ? lastError.message
+            : "Failed to load tracks."
+        );
+      }
+    }
+
+    run();
+
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return { allTracks };
+  return {
+    allTracks,
+    isLoading,
+    loadError,
+    reloadTracks: loadTracks,
+  };
 }

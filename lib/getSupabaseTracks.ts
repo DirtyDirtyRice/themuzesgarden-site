@@ -1,5 +1,7 @@
 import * as supabaseClientModule from "./supabaseClient";
 
+export type TrackVisibility = "private" | "shared" | "public";
+
 export type SupabaseTrack = {
   id: string; // stable id
   title: string;
@@ -8,6 +10,7 @@ export type SupabaseTrack = {
   tags: string[];
   path: string; // storage path
   bucket: string;
+  visibility: TrackVisibility;
   updatedAt?: string;
 };
 
@@ -68,6 +71,30 @@ function tagsFromPath(path: string) {
       return true;
     })
   );
+}
+
+function inferVisibilityFromPath(path: string): TrackVisibility {
+  const clean = String(path ?? "").trim().toLowerCase();
+
+  if (!clean) return "shared";
+
+  if (
+    clean === "private" ||
+    clean.startsWith("private/") ||
+    clean.includes("/private/")
+  ) {
+    return "private";
+  }
+
+  if (
+    clean === "public" ||
+    clean.startsWith("public/") ||
+    clean.includes("/public/")
+  ) {
+    return "public";
+  }
+
+  return "shared";
 }
 
 function compareTracks(a: SupabaseTrack, b: SupabaseTrack) {
@@ -146,6 +173,7 @@ export async function getSupabaseTracksClient(options?: {
       tags: tagsFromPath(f.path),
       path: f.path,
       bucket,
+      visibility: inferVisibilityFromPath(f.path),
       updatedAt: f.updatedAt,
     };
   });

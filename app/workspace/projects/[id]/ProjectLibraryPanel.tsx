@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  getProjectTrackSourceLabel,
+  getProjectTrackVisibilityLabel,
+} from "./projectTrackDecorators";
 
 type AnyTrack = {
   id: string;
@@ -12,6 +16,7 @@ type AnyTrack = {
   file_path?: string;
   mp3?: string;
   tags?: string[];
+  visibility?: "private" | "shared" | "public";
 };
 
 type FilterMode = "all" | "linked" | "unlinked";
@@ -86,7 +91,7 @@ export default function ProjectLibraryPanel(props: {
   linkTrack: (trackId: string) => void;
   unlinkTrack: (trackId: string) => void;
 
-  playTrack: (track: AnyTrack) => void;
+  onPlayTrackById: (trackId: string) => void;
 }) {
   const {
     allTracks,
@@ -95,17 +100,25 @@ export default function ProjectLibraryPanel(props: {
     linkBusyId,
     linkTrack,
     unlinkTrack,
-    playTrack,
+    onPlayTrackById,
   } = props;
 
   const [q, setQ] = useState("");
   const [mode, setMode] = useState<FilterMode>("all");
   const [selectedIdx, setSelectedIdx] = useState(0);
 
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  const visibleTracks = useMemo(() => {
+    return (Array.isArray(allTracks) ? allTracks : []).filter(
+      (t) => t.visibility !== "private"
+    );
+  }, [allTracks]);
+
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
 
-    let list = Array.isArray(allTracks) ? allTracks : [];
+    let list = visibleTracks;
 
     if (mode === "linked") {
       list = list.filter((t) => linkedTrackIds.has(String(t?.id)));
@@ -157,12 +170,16 @@ export default function ProjectLibraryPanel(props: {
         });
         if (byTitle !== 0) return byTitle;
 
-        return String(a.t?.id ?? "").localeCompare(String(b.t?.id ?? ""), undefined, {
-          sensitivity: "base",
-        });
+        return String(a.t?.id ?? "").localeCompare(
+          String(b.t?.id ?? ""),
+          undefined,
+          {
+            sensitivity: "base",
+          }
+        );
       })
       .map((x) => x.t);
-  }, [allTracks, linkedTrackIds, q, mode]);
+  }, [visibleTracks, linkedTrackIds, q, mode]);
 
   useEffect(() => {
     setSelectedIdx(0);
@@ -174,6 +191,18 @@ export default function ProjectLibraryPanel(props: {
       return Math.max(0, Math.min(prev, filtered.length - 1));
     });
   }, [filtered]);
+
+  useEffect(() => {
+    const listEl = listRef.current;
+    if (!listEl) return;
+
+    const row = listEl.children[selectedIdx] as HTMLElement | undefined;
+    if (!row) return;
+
+    row.scrollIntoView({
+      block: "nearest",
+    });
+  }, [selectedIdx, filtered]);
 
   const linkedCount = linkedTrackIds.size;
   const showingCount = filtered.length;
@@ -197,7 +226,11 @@ export default function ProjectLibraryPanel(props: {
   function handlePlayTrack(track: AnyTrack | null | undefined) {
     if (!track) return;
     if (!hasPlayableSource(track)) return;
-    playTrack(track);
+
+    const tid = String(track?.id ?? "");
+    if (!tid) return;
+
+    onPlayTrackById(tid);
   }
 
   return (
@@ -212,7 +245,11 @@ export default function ProjectLibraryPanel(props: {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            <button type="button" className={chip("All", mode === "all")} onClick={() => setMode("all")}>
+            <button
+              type="button"
+              className={chip("All", mode === "all")}
+              onClick={() => setMode("all")}
+            >
               All
             </button>
             <button
@@ -248,13 +285,19 @@ export default function ProjectLibraryPanel(props: {
 
             if (e.key === "ArrowDown") {
               e.preventDefault();
-              setSelectedIdx((prev) => Math.min(filtered.length - 1, prev + 1));
+              setSelectedIdx((prev) =>
+                filtered.length <= 0 ? 0 : (prev + 1) % filtered.length
+              );
               return;
             }
 
             if (e.key === "ArrowUp") {
               e.preventDefault();
-              setSelectedIdx((prev) => Math.max(0, prev - 1));
+              setSelectedIdx((prev) =>
+                filtered.length <= 0
+                  ? 0
+                  : (prev - 1 + filtered.length) % filtered.length
+              );
               return;
             }
 
@@ -281,20 +324,25 @@ export default function ProjectLibraryPanel(props: {
         />
 
         <div className="text-[11px] text-zinc-500">
-          Keys: ↑ ↓ select • Enter link/unlink • P play selected • Esc clear search
+          Keys: ↑ ↓ select • Enter link/unlink • P play selected • Esc clear
+          search
         </div>
       </div>
 
-      {loadingLibrary && allTracks.length === 0 ? (
+      {loadingLibrary && visibleTracks.length === 0 ? (
         <div className="text-sm text-zinc-600">Loading…</div>
-      ) : allTracks.length === 0 ? (
+      ) : visibleTracks.length === 0 ? (
         <div className="text-sm text-zinc-600">No tracks found in Library.</div>
       ) : showingCount === 0 ? (
         <div className="text-sm text-zinc-600">
-          No matches{mode !== "all" ? ` for ${mode}` : ""}. Try a different search.
+          No matches{mode !== "all" ? ` for ${mode}` : ""}. Try a different
+          search.
         </div>
       ) : (
-        <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+        <div
+          ref={listRef}
+          className="space-y-2 max-h-[420px] overflow-y-auto pr-1"
+        >
           {filtered.map((t, idx) => {
             const tid = String(t.id);
             const isLinked = linkedTrackIds.has(tid);
@@ -307,7 +355,9 @@ export default function ProjectLibraryPanel(props: {
                 key={tid}
                 className={[
                   "rounded border p-3 flex items-center justify-between gap-3",
-                  isSelected ? "ring-2 ring-blue-200 border-blue-300 bg-blue-50/40" : "",
+                  isSelected
+                    ? "ring-2 ring-blue-200 border-blue-300 bg-blue-50/40"
+                    : "",
                 ].join(" ")}
                 onMouseEnter={() => setSelectedIdx(idx)}
               >
@@ -322,8 +372,15 @@ export default function ProjectLibraryPanel(props: {
                   </div>
 
                   {t.artist ? (
-                    <div className="text-xs text-zinc-500 truncate">{t.artist}</div>
+                    <div className="text-xs text-zinc-500 truncate">
+                      {t.artist}
+                    </div>
                   ) : null}
+
+                  <div className="mt-1 text-[10px] text-zinc-400">
+                    Source: {getProjectTrackSourceLabel(t)} • Visibility:{" "}
+                    {getProjectTrackVisibilityLabel(t)}
+                  </div>
 
                   {tags.length > 0 ? (
                     <div className="mt-1 flex flex-wrap gap-1">
@@ -345,13 +402,20 @@ export default function ProjectLibraryPanel(props: {
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex items-center gap-2 shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     type="button"
                     className="rounded border px-3 py-2 text-xs disabled:opacity-50"
                     onClick={() => handlePlayTrack(t)}
                     disabled={!playable}
-                    title={playable ? "Play in Global Player" : "This track has no playable source"}
+                    title={
+                      playable
+                        ? "Play in Global Player"
+                        : "This track has no playable source"
+                    }
                   >
                     Play
                   </button>

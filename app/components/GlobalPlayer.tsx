@@ -192,17 +192,6 @@ export default function GlobalPlayer() {
   }, [onProjectPage, projectId, refreshProjectIds, setTab]);
 
   useEffect(() => {
-    if (!onProjectPage) return;
-    if (!engine.nowId) return;
-
-    const t = window.setTimeout(() => {
-      jumpToNow(engine.nowId);
-    }, 0);
-
-    return () => window.clearTimeout(t);
-  }, [onProjectPage, engine.nowId, jumpToNow]);
-
-  useEffect(() => {
     function onSearchTag(event: Event) {
       const custom = event as CustomEvent<{ tag?: string }>;
       const nextTag = String(custom.detail?.tag ?? "").trim();

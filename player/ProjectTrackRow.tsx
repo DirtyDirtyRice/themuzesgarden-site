@@ -1,12 +1,9 @@
 import type { AnyTrack } from "./playerTypes";
 import MetadataPanel from "./MetadataPanel";
-import { formatMomentTime, getDiscoveryTagBreakdown } from "./playerUtils";
+import { getDiscoveryTagBreakdown } from "./playerUtils";
 import ProjectTrackTags from "./ProjectTrackTags";
 import {
-  emitProjectMomentPlaybackTarget,
-  getMomentDensityChipClass,
   getMomentDensityLabel,
-  getMomentLabel,
   getSectionDescriptionSummary,
   getSortedTrackSections,
 } from "./projectTabHelpers";
@@ -62,17 +59,16 @@ export default function ProjectTrackRow(props: {
   const atTop = realIdx === 0;
   const atBottom = realIdx === projectTrackCount - 1;
 
-  const { trackTags, sectionTags, combinedTags } = getDiscoveryTagBreakdown(track);
+  const { combinedTags } = getDiscoveryTagBreakdown(track);
   const firstSectionDescription = getSectionDescriptionSummary(track);
   const sections = getSortedTrackSections(track);
   const sectionCount = sections.length;
-  const previewSections = sections.slice(0, 3);
-  const primaryMoment = previewSections[0] ?? null;
   const densityLabel = getMomentDensityLabel(sectionCount);
 
   return (
     <div
       data-trackid={tid}
+      draggable={!loadingProject}
       className={[
         "rounded border px-2 py-2 cursor-pointer transition-all duration-300",
         isNow ? "border-black bg-zinc-50 ring-2 ring-black/25" : "",
@@ -92,14 +88,13 @@ export default function ProjectTrackRow(props: {
         onSelectTrack(tid);
         onPlayFromHere(track);
       }}
-      onMouseEnter={() => onSelectTrack(tid)}
+      onDragStart={() => onDragStart(tid)}
       onDragOver={(e) => onDragOverTrack(tid, e)}
       onDrop={(e) => onDropOnTrack(tid, e)}
       onDragEnd={onClearDragState}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-
           <div className="text-sm font-medium truncate">
             {track.title ?? "Untitled"}
           </div>
@@ -108,18 +103,17 @@ export default function ProjectTrackRow(props: {
             {track.artist ?? "Supabase"}
           </div>
 
-          {/* 🔥 METADATA INSERTED HERE */}
           <div className="mt-2" onClick={(e) => e.stopPropagation()}>
             <MetadataPanel targetType="track" targetId={tid} />
           </div>
 
-          {firstSectionDescription && (
+          {firstSectionDescription ? (
             <div className="mt-1 text-[11px] text-zinc-600 truncate">
               First moment: {firstSectionDescription}
             </div>
-          )}
+          ) : null}
 
-          {sectionCount > 0 && (
+          {sectionCount > 0 ? (
             <div className="mt-1 flex flex-wrap gap-1">
               <span className="rounded border bg-white px-2 py-0.5 text-[10px]">
                 Indexed moments: {sectionCount}
@@ -128,22 +122,57 @@ export default function ProjectTrackRow(props: {
                 {densityLabel}
               </span>
             </div>
-          )}
+          ) : null}
 
-          {combinedTags.length > 0 && (
+          {combinedTags.length > 0 ? (
             <ProjectTrackTags track={track} tags={combinedTags.slice(0, 6)} />
-          )}
+          ) : null}
 
-          {isSelected && (
+          {isSelected ? (
             <div className="mt-2 text-[11px] text-zinc-600">
               Space = play • Enter = from here
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-1">
-          <button onClick={() => onPlay(track)}>Play</button>
-          <button onClick={() => onPlayFromHere(track)}>From Here</button>
+          <button
+            type="button"
+            onClick={() => onPlay(track)}
+            className="rounded border px-2 py-1 text-xs"
+          >
+            Play
+          </button>
+          <button
+            type="button"
+            onClick={() => onPlayFromHere(track)}
+            className="rounded border px-2 py-1 text-xs"
+          >
+            From Here
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectTrack(tid)}
+            className="rounded border px-2 py-1 text-xs"
+          >
+            Select
+          </button>
+          <button
+            type="button"
+            disabled={loadingProject || atTop}
+            onClick={() => onMoveUp(tid)}
+            className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+          >
+            Up
+          </button>
+          <button
+            type="button"
+            disabled={loadingProject || atBottom}
+            onClick={() => onMoveDown(tid)}
+            className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+          >
+            Down
+          </button>
         </div>
       </div>
     </div>

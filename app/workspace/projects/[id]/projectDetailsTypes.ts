@@ -1,3 +1,5 @@
+import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
+
 export type ProjectKind = "music" | "education" | "game" | "experiment" | "collab";
 
 export type ProjectVisibility = "private" | "shared" | "public";
@@ -6,7 +8,7 @@ export type Tab = "overview" | "notes" | "library" | "activity";
 
 export type LoopMode = "off" | "track" | "setlist";
 
-export type MetadataTargetType = "track" | "section" | "moment" | "project";
+export type { MetadataTargetType };
 
 export type Project = {
   id: string;

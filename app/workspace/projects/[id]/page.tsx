@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PlaybackHelper from "../../../components/PlaybackHelper";
 import { useAuth } from "../../../components/AuthProvider";
+import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 import ProjectActivityPanel from "./ProjectActivityPanel";
 import ProjectHeader from "./ProjectHeader";
 import ProjectKeyboardShortcuts from "./ProjectKeyboardShortcuts";
@@ -14,7 +15,6 @@ import ProjectNotesWorkspace from "./ProjectNotesWorkspace";
 import ProjectOverviewWorkspace from "./ProjectOverviewWorkspace";
 import ProjectPageShell from "./ProjectPageShell";
 import ProjectTabs from "./ProjectTabs";
-import { PROJECT_TAB_CONFIG } from "./projectTabConfig";
 import {
   selectNowPlayingTrack,
   selectOrderedTracks,
@@ -22,11 +22,8 @@ import {
 } from "./projectPageSelectors";
 import { writeProjectPlayerBridge } from "./projectPlayerBridge";
 import { projectSupabase } from "./projectSupabase";
-import {
-  clamp01,
-  looksLikeUuid,
-} from "./projectDetailsUtils";
-import type { MetadataTargetType, Tab } from "./projectDetailsTypes";
+import { clamp01, looksLikeUuid } from "./projectDetailsUtils";
+import type { Tab } from "./projectDetailsTypes";
 import { useProjectLibraryLinking } from "./useProjectLibraryLinking";
 import { useProjectNotes } from "./useProjectNotes";
 import { useProjectOverview } from "./useProjectOverview";
@@ -130,6 +127,11 @@ export default function ProjectDetailsPage() {
     [orderedLinkedTracks]
   );
 
+  const playbackSourceTracks = useMemo(
+    () => (tab === "library" ? allTracks : orderedLinkedTracks),
+    [tab, allTracks, orderedLinkedTracks]
+  );
+
   const {
     playerErr,
     elapsedSec,
@@ -164,15 +166,20 @@ export default function ProjectDetailsPage() {
   } = useProjectPlayback({
     projectId: id,
     audioRef,
-    orderedLinkedTracks,
+    orderedLinkedTracks: playbackSourceTracks,
     nowPlayingId,
     setNowPlayingId,
     setPreviewTrackId,
   });
 
+  const previewSourceTracks = useMemo(
+    () => (tab === "library" ? allTracks : orderedLinkedTracks),
+    [tab, allTracks, orderedLinkedTracks]
+  );
+
   const previewTrack = useMemo(
-    () => selectNowPlayingTrack(orderedLinkedTracks, previewTrackId),
-    [orderedLinkedTracks, previewTrackId]
+    () => selectNowPlayingTrack(previewSourceTracks, previewTrackId),
+    [previewSourceTracks, previewTrackId]
   );
 
   const overviewErr = projectErr ?? libraryOverviewErr ?? null;
@@ -198,6 +205,36 @@ export default function ProjectDetailsPage() {
   function selectTrackMetadataTarget(tid: string) {
     setMetadataTargetType("track");
     setMetadataTargetId(String(tid));
+  }
+
+  function handlePlayTrackById(tid: string) {
+    const cleanId = String(tid ?? "");
+    if (!cleanId) return;
+
+    setMiniAutoVisible(true);
+    playTrackById(cleanId);
+  }
+
+  function handlePlayProject() {
+    setMiniAutoVisible(true);
+    playProject();
+  }
+
+  function handleTogglePlayPause() {
+    if (nowPlayingId) {
+      setMiniAutoVisible(true);
+    }
+    togglePlayPause();
+  }
+
+  function handlePrevTrack() {
+    setMiniAutoVisible(true);
+    prevTrack();
+  }
+
+  function handleNextTrack() {
+    setMiniAutoVisible(true);
+    nextTrack({ wrapIfSetlistLoop: true });
   }
 
   useEffect(() => {
@@ -313,19 +350,19 @@ export default function ProjectDetailsPage() {
 
         if (e.code === "Space") {
           e.preventDefault();
-          togglePlayPause();
+          handleTogglePlayPause();
           return;
         }
 
         if (k === "j" || e.key === "ArrowLeft") {
           e.preventDefault();
-          prevTrack();
+          handlePrevTrack();
           return;
         }
 
         if (k === "k" || e.key === "ArrowRight") {
           e.preventDefault();
-          nextTrack({ wrapIfSetlistLoop: true });
+          handleNextTrack();
           return;
         }
 
@@ -361,14 +398,15 @@ export default function ProjectDetailsPage() {
     notesQuery,
     saveActiveNote,
     createNote,
-    togglePlayPause,
-    prevTrack,
-    nextTrack,
     toggleShuffle,
     toggleLoop,
     setMuted,
     showKeys,
     setNotesQuery,
+    nowPlayingId,
+    handleTogglePlayPause,
+    handlePrevTrack,
+    handleNextTrack,
   ]);
 
   if (loading) {
@@ -415,8 +453,8 @@ export default function ProjectDetailsPage() {
           void loadOverviewDock();
           void loadProject();
         }}
-        onPlayProject={playProject}
-        onPlayTrackById={playTrackById}
+        onPlayProject={handlePlayProject}
+        onPlayTrackById={handlePlayTrackById}
         onPreviewTrack={setPreviewTrackId}
         onSelectTrackMetadataTarget={selectTrackMetadataTarget}
         onMoveSetlistItem={moveSetlistItem}
@@ -449,7 +487,9 @@ export default function ProjectDetailsPage() {
         renameValue={renameValue}
         setRenameValue={setRenameValue}
         renamingBusy={renamingBusy}
-        onTrySwitchNote={trySwitchNote}
+        onTrySwitchNote={(note) => {
+          void trySwitchNote(note as any);
+        }}
         onCreateNote={() => {
           void createNote();
         }}
@@ -459,8 +499,12 @@ export default function ProjectDetailsPage() {
         onDeleteActiveNote={() => {
           void deleteActiveNote();
         }}
-        onTogglePin={togglePin}
-        onStartRename={startRename}
+        onTogglePin={(note) => {
+          void togglePin(note as any);
+        }}
+        onStartRename={(note) => {
+          startRename(note as any);
+        }}
         onCancelRename={cancelRename}
         onSaveRename={(noteId) => {
           void saveRename(noteId);
@@ -483,7 +527,7 @@ export default function ProjectDetailsPage() {
         onRefresh={() => {
           void loadLibrary();
         }}
-        onPlayTrackById={playTrackById}
+        onPlayTrackById={handlePlayTrackById}
         onPreviewTrack={setPreviewTrackId}
         onSelectTrackMetadataTarget={selectTrackMetadataTarget}
         onUnlinkTrack={(tid) => {
@@ -495,7 +539,7 @@ export default function ProjectDetailsPage() {
       />
     );
   } else {
-    content = <ProjectActivityPanel projectId={id} />;
+    content = <ProjectActivityPanel />;
   }
 
   return (
@@ -539,7 +583,7 @@ export default function ProjectDetailsPage() {
       />
 
       <ProjectMiniPlayer
-        visible={tab === "overview" && miniVisible}
+        visible={miniVisible}
         nowPlayingTrack={nowPlayingTrack}
         upNextTrack={upNextTrack}
         playbackIndex={playbackIndex}
@@ -555,9 +599,9 @@ export default function ProjectDetailsPage() {
         onShowKeys={() => setShowKeys(true)}
         onTogglePinned={() => setMiniPlayerPinned((v) => !v)}
         onToggleShuffle={toggleShuffle}
-        onPrev={prevTrack}
-        onNext={() => nextTrack({ wrapIfSetlistLoop: true })}
-        onTogglePlayPause={togglePlayPause}
+        onPrev={handlePrevTrack}
+        onNext={handleNextTrack}
+        onTogglePlayPause={handleTogglePlayPause}
         onStop={stopPlayer}
         onToggleMuted={() => setMuted((v) => !v)}
         onVolumeChange={(value01) => setVolume01(clamp01(value01))}

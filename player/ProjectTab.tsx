@@ -73,8 +73,6 @@ export default function ProjectTab(props: {
 
   const bannerTimerRef = useRef<number | null>(null);
   const flashTimerRef = useRef<number | null>(null);
-  const autoFollowTimerRef = useRef<number | null>(null);
-  const lastAutoFollowNowIdRef = useRef<string | null>(null);
 
   function showBanner(message: string, ms = 1500) {
     setBanner(message);
@@ -256,51 +254,6 @@ export default function ProjectTab(props: {
   }
 
   useEffect(() => {
-    if (!onProjectPage) return;
-    if (!nowId) return;
-
-    const t = window.setTimeout(() => {
-      onJumpToNow();
-    }, 0);
-
-    return () => window.clearTimeout(t);
-  }, [onJumpToNow, onProjectPage, nowId]);
-
-  useEffect(() => {
-    if (!onProjectPage) return;
-    if (!nowId) {
-      lastAutoFollowNowIdRef.current = null;
-      return;
-    }
-
-    const normalizedNowId = String(nowId);
-    const nowExists = projectTracks.some((t) => String(t.id) === normalizedNowId);
-    if (!nowExists) return;
-
-    const changed = lastAutoFollowNowIdRef.current !== normalizedNowId;
-    if (!changed) return;
-
-    lastAutoFollowNowIdRef.current = normalizedNowId;
-    setSelectedTrackId(normalizedNowId);
-
-    if (autoFollowTimerRef.current) {
-      window.clearTimeout(autoFollowTimerRef.current);
-    }
-
-    autoFollowTimerRef.current = window.setTimeout(() => {
-      scrollToTrackId(normalizedNowId);
-      autoFollowTimerRef.current = null;
-    }, 120);
-
-    return () => {
-      if (autoFollowTimerRef.current) {
-        window.clearTimeout(autoFollowTimerRef.current);
-        autoFollowTimerRef.current = null;
-      }
-    };
-  }, [onProjectPage, nowId, projectTracks, hidePlayed]);
-
-  useEffect(() => {
     if (visibleTracks.length === 0) {
       setSelectedTrackId(null);
       return;
@@ -321,17 +274,13 @@ export default function ProjectTab(props: {
 
   useEffect(() => {
     if (!onProjectPage) return;
-    if (!selectedTrackId) return;
+    if (!nowId) return;
 
-    const exists = visibleTracks.some((t) => String(t.id) === String(selectedTrackId));
-    if (!exists) return;
+    const nowExists = projectTracks.some((t) => String(t.id) === String(nowId));
+    if (!nowExists) return;
 
-    const t = window.setTimeout(() => {
-      scrollToTrackId(selectedTrackId);
-    }, 0);
-
-    return () => window.clearTimeout(t);
-  }, [selectedTrackId, visibleTracks, onProjectPage]);
+    setSelectedTrackId(String(nowId));
+  }, [onProjectPage, nowId, projectTracks]);
 
   useEffect(() => {
     if (!onProjectPage) return;
@@ -384,6 +333,7 @@ export default function ProjectTab(props: {
         const first = visibleTracks[0];
         if (!first) return;
         setSelectedTrackId(String(first.id));
+        scrollToTrackId(String(first.id));
         return;
       }
 
@@ -392,6 +342,7 @@ export default function ProjectTab(props: {
         const last = visibleTracks[visibleTracks.length - 1];
         if (!last) return;
         setSelectedTrackId(String(last.id));
+        scrollToTrackId(String(last.id));
         return;
       }
 
@@ -473,9 +424,6 @@ export default function ProjectTab(props: {
       if (flashTimerRef.current) {
         window.clearTimeout(flashTimerRef.current);
       }
-      if (autoFollowTimerRef.current) {
-        window.clearTimeout(autoFollowTimerRef.current);
-      }
     };
   }, []);
 
@@ -495,7 +443,14 @@ export default function ProjectTab(props: {
         setShuffle={setShuffle}
         loop={loop}
         setLoop={setLoop}
-        onJumpToNow={onJumpToNow}
+        onJumpToNow={() => {
+          onJumpToNow();
+          if (nowId) {
+            window.setTimeout(() => {
+              scrollToTrackId(String(nowId));
+            }, 80);
+          }
+        }}
         nowId={nowId}
         handleResetOrder={handleResetOrder}
         onRefresh={onRefresh}

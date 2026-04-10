@@ -33,6 +33,12 @@ type Props = {
   nowPlayingCardRef: React.RefObject<HTMLDivElement | null>;
 };
 
+// 🔒 HARD GUARD — prevents invalid metadata types (like "project")
+function normalizeMetadataTargetType(t: any): MetadataTargetType {
+  if (t === "track" || t === "section" || t === "moment") return t;
+  return "track";
+}
+
 export default function ProjectOverviewWorkspace(props: Props) {
   const {
     project,
@@ -56,6 +62,8 @@ export default function ProjectOverviewWorkspace(props: Props) {
     onStopPlayer,
     nowPlayingCardRef,
   } = props;
+
+  const safeMetadataTargetType = normalizeMetadataTargetType(metadataTargetType);
 
   return (
     <div className="space-y-4">
@@ -250,7 +258,10 @@ export default function ProjectOverviewWorkspace(props: Props) {
       {metadataTargetId ? (
         <div className="rounded-lg border p-4 space-y-2">
           <div className="text-sm font-medium">Metadata</div>
-          <MetadataPanel targetType={metadataTargetType} targetId={metadataTargetId} />
+          <MetadataPanel
+            targetType={safeMetadataTargetType}
+            targetId={metadataTargetId}
+          />
         </div>
       ) : null}
     </div>

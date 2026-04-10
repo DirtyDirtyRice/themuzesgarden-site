@@ -1,4 +1,5 @@
 export type MetadataTargetType =
+  | "project"   // ✅ NEW (SAFE ADD)
   | "track"
   | "section"
   | "moment"

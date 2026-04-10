@@ -2,7 +2,7 @@
 
 import MetadataPanel from "../../../../player/MetadataPanel";
 import ProjectLibraryPanel from "./ProjectLibraryPanel";
-import type { MetadataTargetType } from "./projectDetailsTypes";
+import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 
 type TrackLike = {
   id: string;
@@ -49,6 +49,11 @@ export default function ProjectLibraryWorkspace(props: Props) {
     onLinkTrack,
   } = props;
 
+  const selectedMetadataTrack =
+    metadataTargetType === "track" && metadataTargetId
+      ? linkedTracks.find((t: TrackLike) => String(t.id) === String(metadataTargetId)) ?? null
+      : null;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
@@ -69,6 +74,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {/* LEFT SIDE */}
         <div className="rounded-lg border p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-medium">Linked Tracks</div>
@@ -94,10 +100,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
                     className={`rounded border p-3 flex items-center justify-between gap-3 cursor-pointer ${
                       isPreview ? "bg-zinc-50 border-black" : "bg-white"
                     }`}
-                    onClick={() => {
-                      onPreviewTrack(tid);
-                      onSelectTrackMetadataTarget(tid);
-                    }}
+                    onClick={() => onPreviewTrack(tid)}
                   >
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">
@@ -110,27 +113,21 @@ export default function ProjectLibraryWorkspace(props: Props) {
                         {t.title ?? "Untitled"}
                       </div>
 
-                      {t.artist ? (
+                      {t.artist && (
                         <div className="text-xs text-zinc-500 truncate">{t.artist}</div>
-                      ) : null}
+                      )}
 
-                      {isMetadataSelected ? (
+                      {isMetadataSelected && (
                         <div className="mt-1 text-[11px] text-zinc-500">
                           Selected for metadata
                         </div>
-                      ) : null}
-
-                      {isMetadataSelected ? (
-                        <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                          <MetadataPanel
-                            targetType={metadataTargetType}
-                            targetId={metadataTargetId ?? tid}
-                          />
-                        </div>
-                      ) : null}
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex items-center gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         className="rounded border px-3 py-2 text-xs"
                         onClick={() => onPlayTrackById(tid)}
@@ -163,6 +160,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
           )}
         </div>
 
+        {/* RIGHT SIDE (FIXED) */}
         <ProjectLibraryPanel
           allTracks={allTracks as any[]}
           linkedTrackIds={linkedTrackIds}
@@ -170,13 +168,35 @@ export default function ProjectLibraryWorkspace(props: Props) {
           linkBusyId={linkBusyId}
           linkTrack={onLinkTrack}
           unlinkTrack={onUnlinkTrack}
-          playTrack={(track: any) => {
-            const tid = String(track?.id ?? "");
-            if (!tid) return;
-            onPlayTrackById(tid);
-          }}
+          onPlayTrackById={onPlayTrackById}  // ✅ FIX
         />
       </div>
+
+      {selectedMetadataTrack && (
+        <div className="rounded-lg border p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-medium">Inspect Track Metadata</div>
+              <div className="text-xs text-zinc-500 truncate">
+                {selectedMetadataTrack.title ?? "Untitled"}
+                {selectedMetadataTrack.artist ? ` — ${selectedMetadataTrack.artist}` : ""}
+              </div>
+            </div>
+
+            <button
+              className="rounded border px-3 py-2 text-xs"
+              onClick={() => onPreviewTrack(String(selectedMetadataTrack.id))}
+            >
+              Focus Track
+            </button>
+          </div>
+
+          <MetadataPanel
+            targetType="track"
+            targetId={String(selectedMetadataTrack.id)}
+          />
+        </div>
+      )}
 
       <div className="rounded-lg border p-4 space-y-1">
         <div className="font-medium text-sm">Safe architecture</div>

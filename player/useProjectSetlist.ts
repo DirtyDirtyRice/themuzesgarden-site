@@ -50,11 +50,14 @@ export function useProjectSetlist(args: {
   const cleanProjectId = String(projectId ?? "").trim();
 
   const projectTracks = useMemo(() => {
-    if (!projectTrackIds.length) return [];
-
     const byId = new Map(
       allTracks.map((t) => [String(t?.id ?? "").trim(), t] as const)
     );
+
+    // 🔥 NEW: fallback if no linked IDs
+    if (!projectTrackIds.length) {
+      return allTracks;
+    }
 
     return projectTrackIds
       .map((id) => byId.get(String(id).trim()))

@@ -1,137 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AnyTrack, PlayerTab, TrackSection } from "./playerTypes";
-import { pickUrl, isTypingTarget } from "./playerUtils";
+import type { AnyTrack, PlayerTab } from "./playerTypes";
 import { readPersisted, writePersisted } from "./playerStorage";
-import { logProjectActivity } from "../lib/projectActivity";
-
-function fmtTime(sec: number): string {
-  const s = Number.isFinite(sec) ? Math.max(0, Math.floor(sec)) : 0;
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${String(r).padStart(2, "0")}`;
-}
-
-function clampNonNegative(n: number): number {
-  return Number.isFinite(n) ? Math.max(0, n) : 0;
-}
-
-function getSortedTrackSections(track: AnyTrack | null | undefined): TrackSection[] {
-  const sections = Array.isArray(track?.sections) ? [...track.sections] : [];
-
-  return sections
-    .filter(
-      (section): section is TrackSection =>
-        Boolean(section) &&
-        typeof section === "object" &&
-        typeof section.id === "string"
-    )
-    .sort((a, b) => {
-      const aStart = Number(a.start);
-      const bStart = Number(b.start);
-
-      const safeA = Number.isFinite(aStart) ? aStart : 0;
-      const safeB = Number.isFinite(bStart) ? bStart : 0;
-
-      if (safeA !== safeB) return safeA - safeB;
-
-      return String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, {
-        sensitivity: "base",
-      });
-    });
-}
-
-function getTrackSectionById(
-  track: AnyTrack | null | undefined,
-  sectionId: string | null | undefined
-): TrackSection | null {
-  if (!track || !sectionId) return null;
-  const needle = String(sectionId).trim();
-  if (!needle) return null;
-
-  const found = getSortedTrackSections(track).find(
-    (section) => String(section?.id ?? "") === needle
-  );
-
-  return found ?? null;
-}
-
-function getTrackSectionByStartTime(
-  track: AnyTrack | null | undefined,
-  startTime: number | null | undefined
-): TrackSection | null {
-  if (!track || typeof startTime !== "number" || !Number.isFinite(startTime)) return null;
-
-  const safeStartTime = clampNonNegative(startTime);
-  const sections = getSortedTrackSections(track);
-
-  for (const section of sections) {
-    const sectionStart = clampNonNegative(Number(section.start));
-    if (Math.abs(sectionStart - safeStartTime) < 0.05) {
-      return section;
-    }
-  }
-
-  return null;
-}
-
-function getSafeSectionEnd(section: TrackSection | null, startTime: number): number | null {
-  if (!section) return null;
-  const end = Number(section.end);
-  if (!Number.isFinite(end)) return null;
-  if (end <= startTime) return null;
-  return end;
-}
-
-function getSectionDisplayLabel(section: TrackSection | null): string {
-  if (!section) return "";
-
-  const description = String(section.description ?? "").trim();
-  if (description) return description;
-
-  const tags = Array.isArray(section.tags)
-    ? section.tags.map((x) => String(x ?? "").trim()).filter(Boolean)
-    : [];
-
-  if (tags.length > 0) return tags[0]!;
-  return String(section.id ?? "").trim();
-}
-
-function buildNowLabel(track: AnyTrack, section: TrackSection | null, startTime?: number): string {
-  const labelBase = `${track.title ?? "Untitled"} — ${track.artist ?? "Supabase"}`;
-
-  if (section) {
-    const sectionLabel = getSectionDisplayLabel(section);
-    if (sectionLabel) return `${labelBase} • ${sectionLabel}`;
-  }
-
-  if (typeof startTime === "number" && Number.isFinite(startTime) && startTime > 0) {
-    return `${labelBase} • @ ${fmtTime(startTime)}`;
-  }
-
-  return labelBase;
-}
-
-function getEditableHost(node: EventTarget | null): HTMLElement | null {
-  if (!(node instanceof HTMLElement)) return null;
-
-  if (isTypingTarget(node)) return node;
-
-  const editableAncestor = node.closest(
-    'input, textarea, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"], [role="textbox"], [role="searchbox"], [role="combobox"]'
-  );
-
-  return editableAncestor instanceof HTMLElement ? editableAncestor : null;
-}
-
-type PlaybackTarget = {
-  track: AnyTrack;
-  startTime?: number;
-  sectionId?: string | null;
-};
-
-type PlaybackQueueSource = "project" | "search";
+import { buildNowLabel } from "./audioEngineHelpers";
+import {
+  getTrackSectionById,
+  getTrackSectionByStartTime,
+} from "./audioEngineSections";
+import {
+  getActiveQueue,
+  getTrackForCurrentPlayIntent,
+  pickNextTrack,
+  pickPlayAllTrack,
+  pickPrevTrack,
+} from "./audioEngineQueue";
+import type { PlaybackQueueSource, PlaybackTarget } from "./audioEngineState";
+import { initializeAudioEngineFromPersisted } from "./audioEngineInit";
+import { logProjectPlayIfPossible } from "./audioEngineProject";
+import {
+  clearNowState,
+  playResolvedTarget,
+  stopAudio,
+} from "./audioEngineActions";
+import {
+  attachEndedErrorPlayingHandlers,
+  attachVolumeAndTimeHandlers,
+} from "./audioEngineMediaEffects";
+import { attachKeyboardAndCustomEventHandlers } from "./audioEngineEventEffects";
 
 export function useAudioEngine(args: {
   tab: PlayerTab;
@@ -225,31 +121,18 @@ export function useAudioEngine(args: {
     if (didInitRef.current) return;
     didInitRef.current = true;
 
-    const p = readPersisted();
-
-    if (typeof p.shuffle === "boolean") setShuffle(p.shuffle);
-    if (typeof p.loop === "boolean") setLoop(p.loop);
-    if (typeof p.nowId === "string" || p.nowId === null) setNowId(p.nowId ?? null);
-
-    currentSectionIdRef.current =
-      typeof p.currentSectionId === "string" ? p.currentSectionId : null;
-
-    currentSectionStartRef.current =
-      typeof p.sectionStartTime === "number" && Number.isFinite(p.sectionStartTime)
-        ? clampNonNegative(p.sectionStartTime)
-        : typeof p.lastMatchedSectionStartTime === "number" &&
-          Number.isFinite(p.lastMatchedSectionStartTime)
-        ? clampNonNegative(p.lastMatchedSectionStartTime)
-        : null;
-
-    currentSectionEndRef.current = null;
-
-    if (typeof p.currentTime === "number") setStatusTime(fmtTime(p.currentTime));
-    if (typeof p.volume === "number" && Number.isFinite(p.volume)) {
-      setStatusVolPct(Math.round(Math.max(0, Math.min(1, p.volume)) * 100));
-    }
-
-    playbackQueueSourceRef.current = p.tab === "search" ? "search" : "project";
+    initializeAudioEngineFromPersisted({
+      persisted: readPersisted(),
+      setShuffle,
+      setLoop,
+      setNowId,
+      setStatusTime,
+      setStatusVolPct,
+      currentSectionIdRef,
+      currentSectionStartRef,
+      currentSectionEndRef,
+      playbackQueueSourceRef,
+    });
   }, []);
 
   useEffect(() => writePersisted({ shuffle, loop }), [shuffle, loop]);
@@ -257,319 +140,198 @@ export function useAudioEngine(args: {
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
-    const p = readPersisted();
-    if (typeof p.volume === "number" && !Number.isNaN(p.volume)) {
-      const v = Math.max(0, Math.min(1, p.volume));
+
+    const persisted = readPersisted();
+    if (typeof persisted.volume === "number" && !Number.isNaN(persisted.volume)) {
+      const v = Math.max(0, Math.min(1, persisted.volume));
       el.volume = v;
       setStatusVolPct(Math.round(v * 100));
     }
   }, [open]);
 
-  const logProjectPlayIfPossible = useCallback(
-    (t: AnyTrack, meta?: { sectionId?: string | null; startTime?: number }) => {
-      if (!onProjectPageRef.current) return;
-
-      const pid = String(projectIdRef.current ?? "").trim();
-      if (!pid) return;
-
-      const detailParts: string[] = [];
-      if (meta?.sectionId) detailParts.push(`section ${meta.sectionId}`);
-      if (typeof meta?.startTime === "number" && Number.isFinite(meta.startTime)) {
-        detailParts.push(`start ${fmtTime(meta.startTime)}`);
-      }
-
-      const detailSuffix = detailParts.length ? ` (${detailParts.join(" • ")})` : "";
-
-      logProjectActivity(
-        pid,
-        "play",
-        `Played track: ${t.title ?? "Untitled"}${detailSuffix}`,
-        { trackId: String(t.id) }
-      );
+  const logProjectPlay = useCallback(
+    (track: AnyTrack, meta?: { sectionId?: string | null; startTime?: number }) => {
+      logProjectPlayIfPossible({
+        track,
+        onProjectPage: onProjectPageRef.current,
+        projectId: projectIdRef.current,
+        meta,
+      });
     },
     []
   );
 
   const stop = useCallback(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    el.pause();
+    stopAudio(audioRef);
   }, []);
 
   const clearNow = useCallback(() => {
-    clearResumeMetaHandler();
-
-    const el = audioRef.current;
-    if (el) {
-      el.pause();
-      el.removeAttribute("src");
-      try {
-        el.load();
-      } catch {}
-    }
-
-    setNowId(null);
-    setNowLabel("");
-    errorSkipGuardRef.current = 0;
-
-    currentSectionIdRef.current = null;
-    currentSectionStartRef.current = null;
-    currentSectionEndRef.current = null;
-
-    writePersisted({
-      nowId: null,
-      currentTime: 0,
-      currentSectionId: null,
-      sectionStartTime: null,
-      lastMatchedSectionId: null,
-      lastMatchedSectionStartTime: null,
+    clearNowState({
+      audioRef,
+      clearResumeMetaHandler,
+      setNowId,
+      setNowLabel,
+      setStatusTime,
+      errorSkipGuardRef,
+      currentSectionIdRef,
+      currentSectionStartRef,
+      currentSectionEndRef,
     });
-
-    setStatusTime("0:00");
   }, [clearResumeMetaHandler]);
 
   const playTarget = useCallback(
     (target: PlaybackTarget) => {
-      const { track } = target;
-      const rawUrl = pickUrl(track);
-
-      if (!rawUrl) {
-        setNowLabel("Track URL missing");
-        return;
-      }
-
-      clearResumeMetaHandler();
-
-      const el = audioRef.current;
-      if (!el) {
-        setNowLabel("Audio element missing");
-        return;
-      }
-
-      const seq = ++playSeqRef.current;
-      errorSkipGuardRef.current = 0;
-
-      const requestedStartTime =
-        typeof target.startTime === "number" && Number.isFinite(target.startTime)
-          ? clampNonNegative(target.startTime)
-          : 0;
-
-      const resolvedSectionById =
-        typeof target.sectionId === "string"
-          ? getTrackSectionById(track, target.sectionId)
-          : null;
-
-      const resolvedSectionByTime =
-        !resolvedSectionById && requestedStartTime > 0
-          ? getTrackSectionByStartTime(track, requestedStartTime)
-          : null;
-
-      const resolvedSection = resolvedSectionById ?? resolvedSectionByTime;
-      const resolvedStartTime = resolvedSection
-        ? clampNonNegative(Number(resolvedSection.start))
-        : requestedStartTime;
-
-      const resolvedSectionId = resolvedSection ? String(resolvedSection.id) : null;
-      const resolvedSectionEnd = getSafeSectionEnd(resolvedSection, resolvedStartTime);
-
-      const tid = String(track.id);
-      setNowId(tid);
-      setNowLabel(buildNowLabel(track, resolvedSection, resolvedStartTime));
-
-      currentSectionIdRef.current = resolvedSectionId;
-      currentSectionStartRef.current =
-        resolvedSection || resolvedStartTime > 0 ? resolvedStartTime : null;
-      currentSectionEndRef.current = resolvedSectionEnd;
-
-      const persisted = readPersisted();
-      writePersisted({
-        nowId: tid,
-        lastProjectId: onProjectPageRef.current ? projectIdRef.current : persisted.lastProjectId,
-        currentTime: resolvedStartTime,
-        currentSectionId: resolvedSectionId,
-        sectionStartTime: resolvedSection || resolvedStartTime > 0 ? resolvedStartTime : null,
-        lastMatchedSectionId: resolvedSectionId,
-        lastMatchedSectionStartTime:
-          resolvedSection || resolvedStartTime > 0 ? resolvedStartTime : null,
+      playResolvedTarget({
+        target,
+        audioRef,
+        clearResumeMetaHandler,
+        resumeMetaHandlerRef,
+        playSeqRef,
+        errorSkipGuardRef,
+        currentSectionIdRef,
+        currentSectionStartRef,
+        currentSectionEndRef,
+        onProjectPage: onProjectPageRef.current,
+        projectId: projectIdRef.current,
+        setNowId,
+        setNowLabel,
+        setStatusTime,
+        lastTimeSavedRef,
+        onLogProjectPlay: logProjectPlay,
       });
-
-      lastTimeSavedRef.current = 0;
-      setStatusTime(fmtTime(resolvedStartTime));
-
-      logProjectPlayIfPossible(track, {
-        sectionId: resolvedSectionId,
-        startTime:
-          resolvedSection || resolvedStartTime > 0 ? resolvedStartTime : undefined,
-      });
-
-      el.src = rawUrl;
-
-      try {
-        el.currentTime = 0;
-      } catch {}
-
-      const applyStartTime = () => {
-        if (seq !== playSeqRef.current) return;
-
-        try {
-          el.currentTime = resolvedStartTime;
-        } catch {}
-
-        setStatusTime(fmtTime(resolvedStartTime));
-
-        el.play().catch(() => {
-          if (seq !== playSeqRef.current) return;
-          setNowLabel("Playback blocked (click Play again)");
-        });
-      };
-
-      if (el.readyState >= 1) {
-        applyStartTime();
-        return;
-      }
-
-      const onMeta = () => {
-        clearResumeMetaHandler();
-        applyStartTime();
-      };
-
-      resumeMetaHandlerRef.current = onMeta;
-      el.addEventListener("loadedmetadata", onMeta);
     },
-    [clearResumeMetaHandler, logProjectPlayIfPossible]
+    [clearResumeMetaHandler, logProjectPlay]
   );
 
   const playTrack = useCallback(
-    (t: AnyTrack) => {
+    (track: AnyTrack) => {
       setQueueSourceFromCurrentContext();
-      playTarget({ track: t, startTime: 0, sectionId: null });
+      playTarget({ track, startTime: 0, sectionId: null });
     },
     [playTarget, setQueueSourceFromCurrentContext]
   );
 
   const playTrackAtTime = useCallback(
-    (t: AnyTrack, startTime: number) => {
+    (track: AnyTrack, startTime: number) => {
       setQueueSourceFromCurrentContext();
-      playTarget({ track: t, startTime, sectionId: null });
+      playTarget({ track, startTime, sectionId: null });
     },
     [playTarget, setQueueSourceFromCurrentContext]
   );
 
   const playSection = useCallback(
-    (t: AnyTrack, sectionId: string) => {
+    (track: AnyTrack, sectionId: string) => {
       setQueueSourceFromCurrentContext();
-      playTarget({ track: t, sectionId });
+      playTarget({ track, sectionId });
     },
     [playTarget, setQueueSourceFromCurrentContext]
   );
 
   const playFromHere = useCallback(
-    (t: AnyTrack) => {
+    (track: AnyTrack) => {
       playbackQueueSourceRef.current = "project";
       setShuffle(false);
-      playTarget({ track: t, startTime: 0, sectionId: null });
+      playTarget({ track, startTime: 0, sectionId: null });
     },
     [playTarget]
   );
+
+  const getCurrentActiveQueue = useCallback((): AnyTrack[] => {
+    return getActiveQueue({
+      source: playbackQueueSourceRef.current,
+      allTracks: allTracksRef.current,
+      projectTracks: projectTracksRef.current,
+    });
+  }, []);
 
   const togglePlayPause = useCallback(() => {
     const el = audioRef.current;
     if (!el) return;
 
+    const hasLoadedSource = Boolean(el.currentSrc || el.src);
+
     if (el.paused) {
+      if (!hasLoadedSource) {
+        const activeQueue = getCurrentActiveQueue();
+        const track = getTrackForCurrentPlayIntent({
+          nowId: nowIdRef.current,
+          activeQueue,
+          allTracks: allTracksRef.current,
+        });
+
+        if (!track) {
+          setNowLabel("Nothing to play yet");
+          return;
+        }
+
+        playTarget({ track, startTime: 0, sectionId: null });
+        return;
+      }
+
       el.play().catch(() => {
         setNowLabel("Playback blocked (press Play again)");
       });
     } else {
       el.pause();
     }
-  }, []);
-
-  const getActiveQueue = useCallback((): AnyTrack[] => {
-    return playbackQueueSourceRef.current === "search"
-      ? allTracksRef.current
-      : projectTracksRef.current;
-  }, []);
-
-  const safeIndexOfNow = useCallback((): number => {
-    const list = getActiveQueue();
-    if (!list.length) return -1;
-    const nid = String(nowIdRef.current ?? "");
-    return list.findIndex((t) => String(t.id) === nid);
-  }, [getActiveQueue]);
+  }, [getCurrentActiveQueue, playTarget]);
 
   const next = useCallback(() => {
-    const list = getActiveQueue();
+    const list = getCurrentActiveQueue();
     if (!list.length) return;
 
     currentSectionIdRef.current = null;
     currentSectionStartRef.current = null;
     currentSectionEndRef.current = null;
 
-    if (shuffleRef.current) {
-      const cur = String(nowIdRef.current ?? "");
-      const pool = list.filter((t) => String(t.id) !== cur);
-      const pickFrom = pool.length ? pool : list;
-      const r = Math.floor(Math.random() * pickFrom.length);
-      const picked = pickFrom[r];
-      if (!picked) return;
-      playTarget({ track: picked, startTime: 0, sectionId: null });
-      return;
-    }
+    const picked = pickNextTrack({
+      list,
+      nowId: nowIdRef.current,
+      shuffle: shuffleRef.current,
+    });
 
-    const idx = safeIndexOfNow();
-    const nextIdx = idx >= 0 ? (idx + 1) % list.length : 0;
-    const picked = list[nextIdx];
     if (!picked) return;
     playTarget({ track: picked, startTime: 0, sectionId: null });
-  }, [getActiveQueue, playTarget, safeIndexOfNow]);
+  }, [getCurrentActiveQueue, playTarget]);
 
   const prev = useCallback(() => {
-    const list = getActiveQueue();
+    const list = getCurrentActiveQueue();
     if (!list.length) return;
 
     currentSectionIdRef.current = null;
     currentSectionStartRef.current = null;
     currentSectionEndRef.current = null;
 
-    if (shuffleRef.current) {
-      next();
-      return;
-    }
+    const picked = pickPrevTrack({
+      list,
+      nowId: nowIdRef.current,
+      shuffle: shuffleRef.current,
+    });
 
-    const idx = safeIndexOfNow();
-    const prevIdx = idx >= 0 ? (idx - 1 + list.length) % list.length : 0;
-    const picked = list[prevIdx];
     if (!picked) return;
     playTarget({ track: picked, startTime: 0, sectionId: null });
-  }, [getActiveQueue, next, playTarget, safeIndexOfNow]);
+  }, [getCurrentActiveQueue, playTarget]);
 
   const playAll = useCallback(() => {
-    const list = projectTracksRef.current;
-    if (!list.length) return;
+    const picked = pickPlayAllTrack({
+      projectTracks: projectTracksRef.current,
+      shuffle: shuffleRef.current,
+    });
+
+    if (!picked) return;
 
     playbackQueueSourceRef.current = "project";
-
     currentSectionIdRef.current = null;
     currentSectionStartRef.current = null;
     currentSectionEndRef.current = null;
 
-    if (shuffleRef.current) {
-      const r = Math.floor(Math.random() * list.length);
-      const picked = list[r];
-      if (!picked) return;
-      playTarget({ track: picked, startTime: 0, sectionId: null });
-      return;
-    }
-
-    const first = list[0];
-    if (!first) return;
-    playTarget({ track: first, startTime: 0, sectionId: null });
+    playTarget({ track: picked, startTime: 0, sectionId: null });
   }, [playTarget]);
 
   const resumeLastSession = useCallback(() => {
-    const p = readPersisted();
-    const id = typeof p.nowId === "string" ? p.nowId : null;
+    const persisted = readPersisted();
+    const id = typeof persisted.nowId === "string" ? persisted.nowId : null;
+
     if (!id) {
       setNowLabel("Nothing to resume yet");
       return;
@@ -582,27 +344,27 @@ export function useAudioEngine(args: {
     }
 
     const sectionId =
-      typeof p.currentSectionId === "string"
-        ? p.currentSectionId
-        : typeof p.lastMatchedSectionId === "string"
-        ? p.lastMatchedSectionId
+      typeof persisted.currentSectionId === "string"
+        ? persisted.currentSectionId
+        : typeof persisted.lastMatchedSectionId === "string"
+        ? persisted.lastMatchedSectionId
         : null;
 
     const section = sectionId ? getTrackSectionById(track, sectionId) : null;
 
     const seekTo =
-      typeof p.currentTime === "number" && p.currentTime >= 0
-        ? clampNonNegative(p.currentTime)
-        : typeof p.sectionStartTime === "number" && p.sectionStartTime >= 0
-        ? clampNonNegative(p.sectionStartTime)
-        : typeof p.lastMatchedSectionStartTime === "number" &&
-          p.lastMatchedSectionStartTime >= 0
-        ? clampNonNegative(p.lastMatchedSectionStartTime)
+      typeof persisted.currentTime === "number" && persisted.currentTime >= 0
+        ? persisted.currentTime
+        : typeof persisted.sectionStartTime === "number" && persisted.sectionStartTime >= 0
+        ? persisted.sectionStartTime
+        : typeof persisted.lastMatchedSectionStartTime === "number" &&
+          persisted.lastMatchedSectionStartTime >= 0
+        ? persisted.lastMatchedSectionStartTime
         : section
-        ? clampNonNegative(section.start)
+        ? Number(section.start)
         : 0;
 
-    playbackQueueSourceRef.current = p.tab === "search" ? "search" : "project";
+    playbackQueueSourceRef.current = persisted.tab === "search" ? "search" : "project";
 
     playTarget({
       track,
@@ -612,336 +374,84 @@ export function useAudioEngine(args: {
   }, [playTarget]);
 
   useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    function onEnded() {
-      const list = getActiveQueue();
-      if (!list.length) return;
-
-      const nid = String(nowIdRef.current ?? "");
-      const exists = list.some((t) => String(t.id) === nid);
-
-      if (!exists) {
-        if (playbackQueueSourceRef.current === "project") {
-          playAll();
-        }
-        return;
-      }
-
-      if (loopRef.current) {
-        const cur = list.find((t) => String(t.id) === nid);
-        if (cur) {
-          if (currentSectionIdRef.current) {
-            playTarget({
-              track: cur,
-              sectionId: currentSectionIdRef.current,
-              startTime:
-                typeof currentSectionStartRef.current === "number"
-                  ? currentSectionStartRef.current
-                  : undefined,
-            });
-            return;
-          }
-
-          playTarget({ track: cur, startTime: 0, sectionId: null });
-          return;
-        }
-      }
-
-      next();
-    }
-
-    function onError() {
-      const list = getActiveQueue();
-      if (!list.length) return;
-
-      errorSkipGuardRef.current += 1;
-      if (errorSkipGuardRef.current > 3) {
-        setNowLabel("Audio error (too many skips). Stopping.");
-        stop();
-        return;
-      }
-
-      setNowLabel("Audio error → skipping…");
-      window.setTimeout(() => next(), 150);
-    }
-
-    function onPlaying() {
-      errorSkipGuardRef.current = 0;
-      const audio = audioRef.current;
-      if (!audio) return;
-      setStatusTime(fmtTime(audio.currentTime));
-    }
-
-    el.addEventListener("ended", onEnded);
-    el.addEventListener("error", onError);
-    el.addEventListener("playing", onPlaying);
-
-    return () => {
-      el.removeEventListener("ended", onEnded);
-      el.removeEventListener("error", onError);
-      el.removeEventListener("playing", onPlaying);
-    };
-  }, [getActiveQueue, next, playAll, playTarget, stop]);
+    return attachEndedErrorPlayingHandlers({
+      audio,
+      getCurrentActiveQueue,
+      nowIdRef,
+      playbackQueueSourceRef,
+      loopRef,
+      currentSectionIdRef,
+      currentSectionStartRef,
+      errorSkipGuardRef,
+      setNowLabel,
+      setStatusTime,
+      allTracksRef,
+      playAll,
+      next,
+      stop,
+      playTarget,
+    });
+  }, [getCurrentActiveQueue, next, playAll, playTarget, stop]);
 
   useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    function onVolume() {
-      const audio = audioRef.current as HTMLAudioElement | null;
-      const v = Math.max(0, Math.min(1, audio?.volume ?? 0));
-      writePersisted({ volume: v });
-      setStatusVolPct(Math.round(v * 100));
-    }
-
-    function onTime() {
-      const audio = audioRef.current as HTMLAudioElement | null;
-      if (!audio) return;
-
-      const now = Date.now();
-      if (now - lastTimeSavedRef.current < 500) return;
-      lastTimeSavedRef.current = now;
-
-      const sectionEnd = currentSectionEndRef.current;
-      if (
-        typeof sectionEnd === "number" &&
-        Number.isFinite(sectionEnd) &&
-        audio.currentTime >= sectionEnd
-      ) {
-        if (loopRef.current && currentSectionIdRef.current && nowIdRef.current) {
-          const curTrack =
-            allTracksRef.current.find((t) => String(t.id) === String(nowIdRef.current)) ?? null;
-
-          if (curTrack) {
-            playTarget({
-              track: curTrack,
-              sectionId: currentSectionIdRef.current,
-              startTime:
-                typeof currentSectionStartRef.current === "number"
-                  ? currentSectionStartRef.current
-                  : undefined,
-            });
-            return;
-          }
-        }
-
-        try {
-          audio.currentTime = sectionEnd;
-        } catch {}
-
-        audio.pause();
-        setStatusTime(fmtTime(sectionEnd));
-
-        writePersisted({
-          currentTime: sectionEnd,
-          currentSectionId: currentSectionIdRef.current,
-          sectionStartTime: currentSectionStartRef.current,
-          lastMatchedSectionId: currentSectionIdRef.current,
-          lastMatchedSectionStartTime: currentSectionStartRef.current,
-        });
-
-        return;
-      }
-
-      writePersisted({
-        currentTime: audio.currentTime,
-        currentSectionId: currentSectionIdRef.current,
-        sectionStartTime: currentSectionStartRef.current,
-        lastMatchedSectionId: currentSectionIdRef.current,
-        lastMatchedSectionStartTime: currentSectionStartRef.current,
-      });
-
-      setStatusTime(fmtTime(audio.currentTime));
-    }
-
-    el.addEventListener("volumechange", onVolume);
-    el.addEventListener("timeupdate", onTime);
-
-    return () => {
-      el.removeEventListener("volumechange", onVolume);
-      el.removeEventListener("timeupdate", onTime);
-    };
+    return attachVolumeAndTimeHandlers({
+      audio,
+      loopRef,
+      currentSectionIdRef,
+      currentSectionStartRef,
+      currentSectionEndRef,
+      nowIdRef,
+      allTracksRef,
+      lastTimeSavedRef,
+      setStatusVolPct,
+      setStatusTime,
+      playTarget,
+    });
   }, [open, playTarget]);
 
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (!open) return;
-      if (e.defaultPrevented) return;
-      if (e.isComposing) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-
-      const eventEditable = getEditableHost(e.target);
-      const activeEditable = getEditableHost(document.activeElement);
-
-      if (eventEditable || activeEditable) {
-        return;
-      }
-
-      const k = e.key;
-
-      if (k === " ") {
-        e.preventDefault();
-        togglePlayPause();
-        return;
-      }
-
-      if (k === "ArrowRight") {
-        e.preventDefault();
-        next();
-        return;
-      }
-
-      if (k === "ArrowLeft") {
-        e.preventDefault();
-        prev();
-        return;
-      }
-
-      if (k === "r" || k === "R") {
-        e.preventDefault();
-        resumeLastSession();
-        return;
-      }
-
-      if (k === "s" || k === "S") {
-        if (playbackQueueSourceRef.current === "project") {
-          e.preventDefault();
-          setShuffle((v) => !v);
-        }
-        return;
-      }
-
-      if (k === "l" || k === "L") {
-        if (playbackQueueSourceRef.current === "project") {
-          e.preventDefault();
-          setLoop((v) => !v);
-        }
-        return;
-      }
-    }
-
-    function onActivityTrackJump(event: Event) {
-      const custom = event as CustomEvent<{
-        projectId?: string;
-        trackId?: string;
-      }>;
-
-      const targetProjectId = String(custom.detail?.projectId ?? "").trim();
-      const targetTrackId = String(custom.detail?.trackId ?? "").trim();
-
-      if (!targetProjectId || !targetTrackId) return;
-      if (!onProjectPageRef.current) return;
-      if (String(projectIdRef.current) !== targetProjectId) return;
-
-      const track =
-        projectTracksRef.current.find((t) => String(t.id) === targetTrackId) ?? null;
-
-      if (!track) return;
-
-      playbackQueueSourceRef.current = "project";
-      setShuffle(false);
-      playTarget({ track, startTime: 0, sectionId: null });
-    }
-
-    function onPlaybackTarget(event: Event) {
-      const custom = event as CustomEvent<{
-        projectId?: string;
-        trackId?: string;
-        sectionId?: string;
-        startTime?: number;
-        preferProjectTab?: boolean;
-      }>;
-
-      const targetTrackId = String(custom.detail?.trackId ?? "").trim();
-      if (!targetTrackId) return;
-
-      const targetProjectId = String(custom.detail?.projectId ?? "").trim();
-      const sectionId = String(custom.detail?.sectionId ?? "").trim() || null;
-      const startTime =
-        typeof custom.detail?.startTime === "number" &&
-        Number.isFinite(custom.detail.startTime)
-          ? clampNonNegative(custom.detail.startTime)
-          : undefined;
-
-      const fromProject = projectTracksRef.current.find(
-        (t) => String(t.id) === targetTrackId
-      );
-      const fromLibrary = allTracksRef.current.find(
-        (t) => String(t.id) === targetTrackId
-      );
-      const track = fromProject ?? fromLibrary ?? null;
-
-      if (!track) return;
-
-      if (
-        targetProjectId &&
-        onProjectPageRef.current &&
-        String(projectIdRef.current) === targetProjectId
-      ) {
-        playbackQueueSourceRef.current = "project";
-        setShuffle(false);
-      } else {
-        playbackQueueSourceRef.current = "search";
-      }
-
-      playTarget({
-        track,
-        startTime,
-        sectionId,
-      });
-    }
-
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(
-      "muzesgarden-activity-track-jump",
-      onActivityTrackJump as EventListener
-    );
-    window.addEventListener(
-      "muzesgarden-playback-target",
-      onPlaybackTarget as EventListener
-    );
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(
-        "muzesgarden-activity-track-jump",
-        onActivityTrackJump as EventListener
-      );
-      window.removeEventListener(
-        "muzesgarden-playback-target",
-        onPlaybackTarget as EventListener
-      );
-    };
-  }, [
-    open,
-    next,
-    prev,
-    resumeLastSession,
-    togglePlayPause,
-    playTarget,
-    stop,
-    playAll,
-  ]);
+    return attachKeyboardAndCustomEventHandlers({
+      open,
+      togglePlayPause,
+      next,
+      prev,
+      resumeLastSession,
+      setShuffle,
+      setLoop,
+      playbackQueueSourceRef,
+      onProjectPageRef,
+      projectIdRef,
+      projectTracksRef,
+      allTracksRef,
+      setNowLabel,
+      setShuffleDirect: setShuffle,
+      playTarget,
+    });
+  }, [open, next, prev, resumeLastSession, togglePlayPause, playTarget]);
 
   useEffect(() => {
     const nid = nowId;
     if (!nid) return;
 
-    const t = allTracks.find((x) => String(x.id) === String(nid)) ?? null;
-    if (!t) return;
+    const track = allTracks.find((x) => String(x.id) === String(nid)) ?? null;
+    if (!track) return;
 
     const activeSection =
-      getTrackSectionById(t, currentSectionIdRef.current) ??
-      getTrackSectionByStartTime(t, currentSectionStartRef.current);
+      getTrackSectionById(track, currentSectionIdRef.current) ??
+      getTrackSectionByStartTime(track, currentSectionStartRef.current);
 
     const activeStartTime =
       typeof currentSectionStartRef.current === "number"
         ? currentSectionStartRef.current
         : undefined;
 
-    setNowLabel(buildNowLabel(t, activeSection, activeStartTime));
+    setNowLabel(buildNowLabel(track, activeSection, activeStartTime));
   }, [allTracks, nowId]);
 
   useEffect(() => {

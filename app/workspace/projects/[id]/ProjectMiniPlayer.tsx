@@ -1,6 +1,6 @@
 "use client";
 
-import { fmtTime } from "./projectDetailsUtils";
+import { clamp01, fmtTime } from "./projectDetailsUtils";
 
 type TrackLike = {
   id: string;
@@ -71,8 +71,20 @@ export default function ProjectMiniPlayer(props: Props) {
 
   if (!visible) return null;
 
+  const safeDuration = Number.isFinite(durationSec) ? durationSec : 0;
+  const safeElapsed = Number.isFinite(elapsedSec) ? elapsedSec : 0;
+
   const progressValue =
-    durationSec > 0 ? Math.round((elapsedSec / durationSec) * 1000) : 0;
+    safeDuration > 0 ? Math.round((safeElapsed / safeDuration) * 1000) : 0;
+
+  const canPrev =
+    playbackCount > 0 && (playbackIndex > 0 || loopMode === "setlist");
+
+  const canNext =
+    playbackCount > 0 &&
+    (playbackIndex < playbackCount - 1 || loopMode === "setlist");
+
+  const hasTrack = !!nowPlayingTrack;
 
   return (
     <div className="fixed bottom-4 left-1/2 z-50 w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 space-y-2">
@@ -90,13 +102,14 @@ export default function ProjectMiniPlayer(props: Props) {
               title="Jump to Now Playing"
             >
               <div className="truncate text-sm font-medium">
-                ▶ {nowPlayingTrack?.title ?? "Untitled"}
+                {hasTrack ? "▶ " : ""}
+                {nowPlayingTrack?.title ?? "No track playing"}
               </div>
             </button>
 
             <div className="truncate text-xs text-zinc-500">
-              {nowPlayingTrack?.artist ?? "Supabase"}
-              {playbackIndex >= 0 ? (
+              {nowPlayingTrack?.artist ?? "—"}
+              {playbackIndex >= 0 && playbackCount > 0 ? (
                 <>
                   {" "}
                   • Track {playbackIndex + 1} / {playbackCount}
@@ -138,7 +151,7 @@ export default function ProjectMiniPlayer(props: Props) {
           <button
             className="rounded border px-2 py-1 text-xs disabled:opacity-60"
             onClick={onPrev}
-            disabled={playbackCount === 0 || playbackIndex <= 0}
+            disabled={!canPrev}
             title="Previous"
           >
             Prev
@@ -147,7 +160,7 @@ export default function ProjectMiniPlayer(props: Props) {
           <button
             className="rounded border px-2 py-1 text-xs disabled:opacity-60"
             onClick={onNext}
-            disabled={playbackCount === 0 || playbackIndex === -1}
+            disabled={!canNext}
             title="Next"
           >
             Next
@@ -158,13 +171,14 @@ export default function ProjectMiniPlayer(props: Props) {
             onClick={onTogglePlayPause}
             title="Play / Pause"
           >
-            {isPaused ? "Resume" : "Pause"}
+            {!hasTrack ? "Play" : isPaused ? "Resume" : "Pause"}
           </button>
 
           <button
-            className="rounded border px-2 py-1 text-xs"
+            className="rounded border px-2 py-1 text-xs disabled:opacity-60"
             onClick={onStop}
             title="Stop"
+            disabled={!hasTrack}
           >
             Stop
           </button>
@@ -174,7 +188,7 @@ export default function ProjectMiniPlayer(props: Props) {
       <div className="rounded-2xl border bg-white p-3 shadow-lg space-y-2">
         <div className="flex items-center justify-between gap-2 text-xs text-zinc-600">
           <div>
-            {fmtTime(elapsedSec)} / {fmtTime(durationSec)}
+            {fmtTime(safeElapsed)} / {fmtTime(safeDuration)}
           </div>
 
           <div className="flex items-center gap-2">
@@ -190,7 +204,7 @@ export default function ProjectMiniPlayer(props: Props) {
               type="range"
               min={0}
               max={100}
-              value={Math.round(volume01 * 100)}
+              value={Math.round(clamp01(volume01) * 100)}
               onChange={(e) => {
                 const v = Number(e.target.value) || 0;
                 onVolumeChange(v / 100);
@@ -204,7 +218,12 @@ export default function ProjectMiniPlayer(props: Props) {
               onClick={onToggleLoop}
               title="Loop mode"
             >
-              Loop: {loopMode === "off" ? "Off" : loopMode === "track" ? "Track" : "Setlist"}
+              Loop:{" "}
+              {loopMode === "off"
+                ? "Off"
+                : loopMode === "track"
+                ? "Track"
+                : "Setlist"}
             </button>
           </div>
         </div>

@@ -51,6 +51,9 @@ export type AnyTrack = {
 
   sections?: TrackSection[];
 
+  // track access / sharing
+  visibility?: "private" | "shared" | "public" | null;
+
   // future-ready track metadata
   duration?: number | null;
   bucket?: string;

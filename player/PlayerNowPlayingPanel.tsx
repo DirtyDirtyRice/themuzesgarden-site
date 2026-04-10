@@ -1,6 +1,7 @@
 "use client";
 
 import MetadataPanel from "./MetadataPanel";
+import type { AnyTrack } from "./playerTypes";
 
 export default function PlayerNowPlayingPanel(props: {
   nowLabel: string;
@@ -16,6 +17,7 @@ export default function PlayerNowPlayingPanel(props: {
   projectTracksLength: number;
   remainingCount: number;
   trimmedQuery: string;
+  nowTrack: AnyTrack | null;
 }) {
   const {
     nowLabel,
@@ -31,7 +33,19 @@ export default function PlayerNowPlayingPanel(props: {
     projectTracksLength,
     remainingCount,
     trimmedQuery,
+    nowTrack,
   } = props;
+
+  const visibility = nowTrack?.visibility ?? null;
+
+  const visibilityLabel =
+    visibility === "private"
+      ? "🔒 Private"
+      : visibility === "public"
+      ? "🌍 Public"
+      : visibility === "shared"
+      ? "👥 Shared"
+      : null;
 
   return (
     <div
@@ -56,6 +70,10 @@ export default function PlayerNowPlayingPanel(props: {
       <div className="mt-1 text-sm">
         <span className={nowLabel ? "font-semibold" : ""}>{nowLabel || "(none)"}</span>
       </div>
+
+      {hasNow && visibilityLabel ? (
+        <div className="mt-1 text-[11px] text-zinc-600">{visibilityLabel}</div>
+      ) : null}
 
       {nowId ? <MetadataPanel targetType="track" targetId={nowId} /> : null}
 

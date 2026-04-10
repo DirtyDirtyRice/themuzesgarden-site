@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { logProjectActivity } from "../../../../lib/projectActivity";
-import { buildShuffleOrder, clamp, clamp01, nextLoopMode } from "./projectDetailsUtils";
+import {
+  buildShuffleOrder,
+  clamp,
+  clamp01,
+  nextLoopMode,
+} from "./projectDetailsUtils";
 import { getPlayableTrackUrl } from "./projectPlaybackHelpers";
 import type { LoopMode } from "./projectDetailsTypes";
 
@@ -16,8 +21,14 @@ type UseProjectPlaybackArgs = {
 };
 
 export function useProjectPlayback(args: UseProjectPlaybackArgs) {
-  const { projectId, audioRef, orderedLinkedTracks, nowPlayingId, setNowPlayingId, setPreviewTrackId } =
-    args;
+  const {
+    projectId,
+    audioRef,
+    orderedLinkedTracks,
+    nowPlayingId,
+    setNowPlayingId,
+    setPreviewTrackId,
+  } = args;
 
   const [playerErr, setPlayerErr] = useState<string | null>(null);
   const [autoAdvance] = useState(true);
@@ -33,29 +44,36 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
   const [volume01, setVolume01] = useState(1);
   const [muted, setMuted] = useState(false);
 
+  const lastLoadedTrackIdRef = useRef<string | null>(null);
+  const lastLoadedUrlRef = useRef<string | null>(null);
+  const playRequestIdRef = useRef(0);
+
   const playbackTracks = useMemo(() => {
     if (!orderedLinkedTracks.length) return [];
     if (!shuffleOn) return orderedLinkedTracks;
 
     const ids = orderedLinkedTracks.map((t: any) => String(t.id));
-    const set = new Set(ids);
-    const filteredOrder = shuffleOrder.filter((tid) => set.has(String(tid)));
+    const validIds = new Set(ids);
+    const filteredOrder = shuffleOrder.filter((tid) => validIds.has(String(tid)));
     const missing = ids.filter((tid) => !filteredOrder.includes(tid));
     const finalIds = [...filteredOrder, ...missing];
 
-    const map = new Map<string, any>();
-    for (const t of orderedLinkedTracks) map.set(String(t.id), t);
-    return finalIds.map((tid) => map.get(String(tid))).filter(Boolean);
+    const trackMap = new Map<string, any>();
+    for (const track of orderedLinkedTracks) {
+      trackMap.set(String(track.id), track);
+    }
+
+    return finalIds.map((tid) => trackMap.get(String(tid))).filter(Boolean);
   }, [orderedLinkedTracks, shuffleOn, shuffleOrder]);
 
   const nowPlayingTrack = useMemo(() => {
     if (!nowPlayingId) return null;
-    return orderedLinkedTracks.find((t: any) => String(t.id) === nowPlayingId) ?? null;
-  }, [nowPlayingId, orderedLinkedTracks]);
+    return playbackTracks.find((t: any) => String(t.id) === String(nowPlayingId)) ?? null;
+  }, [nowPlayingId, playbackTracks]);
 
   const playbackIndex = useMemo(() => {
     if (!nowPlayingId) return -1;
-    return playbackTracks.findIndex((t: any) => String(t.id) === nowPlayingId);
+    return playbackTracks.findIndex((t: any) => String(t.id) === String(nowPlayingId));
   }, [nowPlayingId, playbackTracks]);
 
   const upNextTrack = useMemo(() => {
@@ -78,21 +96,25 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     const el = audioRef.current;
     if (!el) return;
 
-    const d = Number.isFinite(el.duration) ? el.duration : 0;
-    const t = Number.isFinite(el.currentTime) ? el.currentTime : 0;
+    const duration = Number.isFinite(el.duration) ? el.duration : 0;
+    const currentTime = Number.isFinite(el.currentTime) ? el.currentTime : 0;
 
-    setDurationSec(d || 0);
-    if (!seeking) setElapsedSec(t || 0);
+    setDurationSec(duration || 0);
+
+    if (!seeking) {
+      setElapsedSec(currentTime || 0);
+    }
   }
 
   function seekTo(percent01: number) {
     const el = audioRef.current;
     if (!el) return;
 
-    const d = Number.isFinite(el.duration) ? el.duration : 0;
-    if (!d || d <= 0) return;
+    const duration = Number.isFinite(el.duration) ? el.duration : 0;
+    if (!duration || duration <= 0) return;
 
-    const nextTime = clamp(percent01, 0, 1) * d;
+    const nextTime = clamp(percent01, 0, 1) * duration;
+
     try {
       el.currentTime = nextTime;
       setElapsedSec(nextTime);
@@ -101,43 +123,91 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     }
   }
 
-  function playTrackById(tid: string) {
-    setPlayerErr(null);
+  function applyAudioSettings(el: HTMLAudioElement) {
+    try {
+      el.volume = clamp01(volume01);
+      el.muted = !!muted;
+      el.loop = loopMode === "track";
+    } catch {
+      // ignore
+    }
+  }
 
-    const t = getTrackById(tid);
-    const playableUrl = getPlayableTrackUrl(t);
+  function startPlayback(el: HTMLAudioElement, requestId: number) {
+    try {
+      const maybePromise = el.play();
+
+      if (maybePromise && typeof (maybePromise as any).catch === "function") {
+        (maybePromise as any).catch((err: any) => {
+          if (requestId !== playRequestIdRef.current) return;
+          setPlayerErr(err?.message ?? "Playback blocked by browser.");
+        });
+      }
+    } catch (e: any) {
+      if (requestId !== playRequestIdRef.current) return;
+      setPlayerErr(e?.message ?? "Failed to start playback.");
+    }
+  }
+
+  function playTrackById(tid: string) {
+    const cleanId = String(tid ?? "");
+    if (!cleanId) {
+      setPlayerErr("Missing track id.");
+      return;
+    }
+
+    const track = getTrackById(cleanId);
+    const playableUrl = getPlayableTrackUrl(track);
 
     if (!playableUrl) {
       setPlayerErr("Track URL missing. Cannot play.");
       return;
     }
 
-    setNowPlayingId(String(tid));
-    setPreviewTrackId(String(tid));
-
-    logProjectActivity(
-      projectId,
-      "play",
-      `Played track: ${t?.title ?? "Untitled"}`,
-      { trackId: tid }
-    );
-
     const el = audioRef.current;
-    if (!el) return;
+    if (!el) {
+      setPlayerErr("Audio element missing.");
+      return;
+    }
+
+    setPlayerErr(null);
+    setNowPlayingId(cleanId);
+    setPreviewTrackId(cleanId);
+
+    logProjectActivity(projectId, "play", `Played track: ${track?.title ?? "Untitled"}`, {
+      trackId: cleanId,
+    });
+
+    const isSameTrack = lastLoadedTrackIdRef.current === cleanId;
+    const isSameUrl = lastLoadedUrlRef.current === playableUrl;
+    const requestId = playRequestIdRef.current + 1;
+    playRequestIdRef.current = requestId;
 
     try {
+      applyAudioSettings(el);
+
+      if (isSameTrack && isSameUrl) {
+        startPlayback(el, requestId);
+        return;
+      }
+
+      try {
+        el.pause();
+      } catch {
+        // ignore
+      }
+
       el.src = playableUrl;
       el.currentTime = 0;
-      el.volume = clamp01(volume01);
-      el.muted = !!muted;
-      el.loop = loopMode === "track";
+      applyAudioSettings(el);
 
-      const p = el.play();
-      if (p && typeof (p as any).catch === "function") {
-        (p as any).catch((err: any) => {
-          setPlayerErr(err?.message ?? "Playback blocked by browser.");
-        });
-      }
+      lastLoadedTrackIdRef.current = cleanId;
+      lastLoadedUrlRef.current = playableUrl;
+      setElapsedSec(0);
+      setDurationSec(0);
+      setIsPaused(false);
+
+      startPlayback(el, requestId);
     } catch (e: any) {
       setPlayerErr(e?.message ?? "Failed to start playback.");
     }
@@ -145,12 +215,21 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
 
   function playProject() {
     setPlayerErr(null);
+
     if (playbackTracks.length === 0) {
       setPlayerErr("No linked tracks. Link tracks first.");
       return;
     }
 
-    const tid = nowPlayingId ? nowPlayingId : String(playbackTracks[0]?.id ?? "");
+    const preferredId = nowPlayingId ? String(nowPlayingId) : "";
+    const hasPreferred = preferredId
+      ? playbackTracks.some((t: any) => String(t.id) === preferredId)
+      : false;
+
+    const tid = hasPreferred
+      ? preferredId
+      : String(playbackTracks[0]?.id ?? "");
+
     if (!tid) {
       setPlayerErr("No playable track found.");
       return;
@@ -164,7 +243,16 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     if (playbackTracks.length === 0) return;
 
     const idx = playbackIndex >= 0 ? playbackIndex : 0;
-    const prevIdx = Math.max(0, idx - 1);
+
+    let prevIdx = idx - 1;
+    if (prevIdx < 0) {
+      if (loopMode === "setlist") {
+        prevIdx = playbackTracks.length - 1;
+      } else {
+        prevIdx = 0;
+      }
+    }
+
     const tid = String(playbackTracks[prevIdx]?.id ?? "");
     if (!tid) return;
 
@@ -176,11 +264,19 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     if (playbackTracks.length === 0) return;
 
     const idx = playbackIndex >= 0 ? playbackIndex : -1;
-    let nextIdx = Math.min(playbackTracks.length - 1, idx + 1);
+    const atEnd = idx >= playbackTracks.length - 1;
 
-    if (opts?.wrapIfSetlistLoop && loopMode === "setlist" && idx >= playbackTracks.length - 1) {
-      nextIdx = 0;
+    let nextIdx = idx + 1;
+
+    if (atEnd) {
+      if (opts?.wrapIfSetlistLoop && loopMode === "setlist") {
+        nextIdx = 0;
+      } else {
+        nextIdx = playbackTracks.length - 1;
+      }
     }
+
+    nextIdx = clamp(nextIdx, 0, Math.max(0, playbackTracks.length - 1));
 
     const tid = String(playbackTracks[nextIdx]?.id ?? "");
     if (!tid) return;
@@ -192,8 +288,14 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     setPlayerErr(null);
 
     const el = audioRef.current;
+
     if (!el) {
+      lastLoadedTrackIdRef.current = null;
+      lastLoadedUrlRef.current = null;
       setNowPlayingId(null);
+      setElapsedSec(0);
+      setDurationSec(0);
+      setIsPaused(false);
       return;
     }
 
@@ -201,9 +303,13 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
       el.pause();
       el.currentTime = 0;
       el.loop = false;
+      el.removeAttribute("src");
+      el.load();
     } catch {
       // ignore
     } finally {
+      lastLoadedTrackIdRef.current = null;
+      lastLoadedUrlRef.current = null;
       setNowPlayingId(null);
       setElapsedSec(0);
       setDurationSec(0);
@@ -213,6 +319,7 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
 
   function togglePlayPause() {
     setPlayerErr(null);
+
     const el = audioRef.current;
     if (!el) return;
 
@@ -223,12 +330,10 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
 
     try {
       if (el.paused) {
-        const p = el.play();
-        if (p && typeof (p as any).catch === "function") {
-          (p as any).catch((err: any) => {
-            setPlayerErr(err?.message ?? "Playback blocked by browser.");
-          });
-        }
+        const requestId = playRequestIdRef.current + 1;
+        playRequestIdRef.current = requestId;
+        applyAudioSettings(el);
+        startPlayback(el, requestId);
       } else {
         el.pause();
       }
@@ -244,15 +349,20 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     if (playbackIndex < 0) return;
 
     const atEnd = playbackIndex + 1 >= playbackTracks.length;
+
     if (atEnd) {
       if (loopMode === "setlist") {
         nextTrack({ wrapIfSetlistLoop: true });
+      } else {
+        setIsPaused(false);
+        setElapsedSec(0);
       }
       return;
     }
 
     const tid = String(playbackTracks[playbackIndex + 1]?.id ?? "");
     if (!tid) return;
+
     playTrackById(tid);
   }
 
@@ -260,7 +370,11 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     setLoopMode((prev) => {
       const next = nextLoopMode(prev);
       const el = audioRef.current;
-      if (el) el.loop = next === "track";
+
+      if (el) {
+        el.loop = next === "track";
+      }
+
       return next;
     });
   }
@@ -268,10 +382,14 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
   function toggleShuffle() {
     setShuffleOn((prev) => {
       const next = !prev;
+
       if (next) {
         const ids = orderedLinkedTracks.map((t: any) => String(t.id));
         setShuffleOrder(buildShuffleOrder(ids, nowPlayingId));
+      } else {
+        setShuffleOrder([]);
       }
+
       return next;
     });
   }
@@ -283,39 +401,61 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     function onTimeUpdate() {
       syncTimesFromAudio();
     }
-    function onLoadedMeta() {
+
+    function onLoadedMetadata() {
+      setPlayerErr(null);
       syncTimesFromAudio();
     }
+
     function onDurationChange() {
       syncTimesFromAudio();
     }
+
     function onPlay() {
+      setPlayerErr(null);
       setIsPaused(false);
       syncTimesFromAudio();
     }
+
     function onPause() {
       setIsPaused(true);
       syncTimesFromAudio();
     }
 
+    function onError() {
+      const currentEl = audioRef.current;
+      if (!currentEl) return;
+
+      const mediaError = currentEl.error;
+      if (!mediaError) {
+        setPlayerErr("Audio playback failed.");
+        return;
+      }
+
+      setPlayerErr(`Audio playback failed (code ${mediaError.code}).`);
+    }
+
     el.addEventListener("timeupdate", onTimeUpdate);
-    el.addEventListener("loadedmetadata", onLoadedMeta);
+    el.addEventListener("loadedmetadata", onLoadedMetadata);
     el.addEventListener("durationchange", onDurationChange);
     el.addEventListener("play", onPlay);
     el.addEventListener("pause", onPause);
+    el.addEventListener("error", onError);
 
     return () => {
       el.removeEventListener("timeupdate", onTimeUpdate);
-      el.removeEventListener("loadedmetadata", onLoadedMeta);
+      el.removeEventListener("loadedmetadata", onLoadedMetadata);
       el.removeEventListener("durationchange", onDurationChange);
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
+      el.removeEventListener("error", onError);
     };
-  }, [audioRef, nowPlayingId, loopMode, seeking]);
+  }, [audioRef, seeking]);
 
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
+
     el.loop = loopMode === "track";
   }, [audioRef, loopMode]);
 
@@ -335,18 +475,32 @@ export function useProjectPlayback(args: UseProjectPlaybackArgs) {
     if (!shuffleOn) return;
 
     const ids = orderedLinkedTracks.map((t: any) => String(t.id));
+
     if (!ids.length) {
       setShuffleOrder([]);
       return;
     }
 
     setShuffleOrder((prev) => {
-      const set = new Set(ids);
-      const filtered = prev.filter((tid) => set.has(String(tid)));
+      const validIds = new Set(ids);
+      const filtered = prev.filter((tid) => validIds.has(String(tid)));
       const missing = ids.filter((tid) => !filtered.includes(tid));
       return [...filtered, ...missing];
     });
-  }, [shuffleOn, orderedLinkedTracks, nowPlayingId]);
+  }, [shuffleOn, orderedLinkedTracks]);
+
+  useEffect(() => {
+    if (!nowPlayingId) return;
+    if (!orderedLinkedTracks.length) return;
+
+    const stillExists = orderedLinkedTracks.some(
+      (t: any) => String(t.id) === String(nowPlayingId)
+    );
+
+    if (!stillExists) {
+      stopPlayer();
+    }
+  }, [nowPlayingId, orderedLinkedTracks]);
 
   return {
     playerErr,

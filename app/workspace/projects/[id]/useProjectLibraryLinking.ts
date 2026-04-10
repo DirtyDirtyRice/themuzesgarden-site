@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { logProjectActivity } from "../../../../lib/projectActivity";
 import { looksLikeUuid } from "./projectDetailsUtils";
@@ -8,10 +9,13 @@ import { looksLikeUuid } from "./projectDetailsUtils";
 type UseProjectLibraryLinkingArgs = {
   projectId: string;
   supabase: any;
+  userId?: string | null; // 🔥 NEW
+  projectOwnerId?: string | null; // 🔥 NEW
+
   setSetlistOrder?: React.Dispatch<React.SetStateAction<string[]>>;
   setNowPlayingId?: React.Dispatch<React.SetStateAction<string | null>>;
   setPreviewTrackId?: React.Dispatch<React.SetStateAction<string | null>>;
-  metadataTargetType?: string;
+  metadataTargetType?: MetadataTargetType;
   metadataTargetId?: string | null;
   setMetadataTargetId?: React.Dispatch<React.SetStateAction<string | null>>;
 };
@@ -20,6 +24,9 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
   const {
     projectId,
     supabase,
+    userId,
+    projectOwnerId,
+
     setSetlistOrder,
     setNowPlayingId,
     setPreviewTrackId,
@@ -41,15 +48,41 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
     return allTracks.filter((t) => linkedTrackIds.has(String(t.id)));
   }, [allTracks, linkedTrackIds]);
 
+  const ensureProjectExists = useCallback(async () => {
+    if (!supabase) throw new Error("Supabase client not found.");
+    if (!looksLikeUuid(projectId)) throw new Error("Invalid project id format.");
+
+    const { data, error } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", projectId)
+      .limit(1);
+
+    if (error) throw new Error(error.message);
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error("Project not found. Cannot link tracks to a missing project.");
+    }
+
+    return true;
+  }, [supabase, projectId]);
+
   const ensureTracksLoadedOnce = useCallback(async () => {
-    setAllTracks((prev) => prev);
     if (allTracks.length > 0) return allTracks;
 
     const tracks = await getSupabaseTracks();
-    const safeTracks = Array.isArray(tracks) ? tracks : [];
+    let safeTracks = Array.isArray(tracks) ? tracks : [];
+
+    // 🔥 NEW: OWNER PERMISSION LOGIC
+    const isOwner =
+      userId && projectOwnerId && String(userId) === String(projectOwnerId);
+
+    if (!isOwner) {
+      safeTracks = safeTracks.filter((t: any) => t.visibility !== "private");
+    }
+
     setAllTracks(safeTracks);
     return safeTracks;
-  }, [allTracks]);
+  }, [allTracks, userId, projectOwnerId]);
 
   const refreshLinkedIdsOnly = useCallback(async () => {
     if (!supabase) throw new Error("Supabase client not found.");
@@ -128,6 +161,8 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
         if (!looksLikeUuid(projectId)) throw new Error("Invalid project id format.");
         if (linkedTrackIds.has(trackId)) return;
 
+        await ensureProjectExists();
+
         setLinkBusyId(trackId);
 
         setLinkedTrackIds((prev) => {
@@ -152,11 +187,15 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
 
         if (error) throw new Error(error.message);
 
-        const linkedTrack = allTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
+        const linkedTrack =
+          allTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
 
-        logProjectActivity(projectId, "link", `Linked track: ${linkedTrack?.title ?? "Untitled"}`, {
-          trackId,
-        });
+        logProjectActivity(
+          projectId,
+          "link",
+          `Linked track: ${linkedTrack?.title ?? "Untitled"}`,
+          { trackId }
+        );
 
         setSetlistOrder?.((prev) => (prev.includes(trackId) ? prev : [...prev, trackId]));
       } catch (e: any) {
@@ -173,7 +212,7 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
         setLinkBusyId(null);
       }
     },
-    [supabase, projectId, linkedTrackIds, allTracks, setSetlistOrder]
+    [supabase, projectId, linkedTrackIds, ensureProjectExists, allTracks, setSetlistOrder]
   );
 
   const unlinkTrack = useCallback(
@@ -241,6 +280,7 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
     overviewLoading,
     overviewErr,
     linkBusyId,
+    ensureProjectExists,
     ensureTracksLoadedOnce,
     refreshLinkedIdsOnly,
     loadLibrary,
