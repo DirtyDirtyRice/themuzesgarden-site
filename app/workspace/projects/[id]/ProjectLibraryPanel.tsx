@@ -20,6 +20,7 @@ type AnyTrack = {
 };
 
 type FilterMode = "all" | "linked" | "unlinked";
+type LocalVisibility = "private" | "public";
 
 function getTrackTags(t: AnyTrack): string[] {
   const raw = (t as any)?.tags;
@@ -81,6 +82,24 @@ function hasPlayableSource(track: AnyTrack | null | undefined) {
   );
 }
 
+function normalizeVisibility(value: unknown): LocalVisibility {
+  const clean = String(value ?? "").trim().toLowerCase();
+  return clean === "private" ? "private" : "public";
+}
+
+function getBaseVisibility(track: AnyTrack): LocalVisibility {
+  const directVisibility = normalizeVisibility(track?.visibility);
+  if (directVisibility === "private") return "private";
+
+  const decoratedVisibility = String(
+    getProjectTrackVisibilityLabel(track) ?? ""
+  )
+    .trim()
+    .toLowerCase();
+
+  return decoratedVisibility === "private" ? "private" : "public";
+}
+
 export default function ProjectLibraryPanel(props: {
   allTracks: AnyTrack[];
   linkedTrackIds: Set<string>;
@@ -106,13 +125,46 @@ export default function ProjectLibraryPanel(props: {
   const [q, setQ] = useState("");
   const [mode, setMode] = useState<FilterMode>("all");
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [visibilityOverrides, setVisibilityOverrides] = useState<
+    Record<string, LocalVisibility>
+  >({});
 
   const listRef = useRef<HTMLDivElement | null>(null);
 
+  function getEffectiveVisibility(track: AnyTrack): LocalVisibility {
+    const tid = String(track?.id ?? "");
+    const override = visibilityOverrides[tid];
+    if (override === "private" || override === "public") return override;
+    return getBaseVisibility(track);
+  }
+
+  function getEffectiveVisibilityLabel(track: AnyTrack): string {
+    return getEffectiveVisibility(track) === "private" ? "Private" : "Public";
+  }
+
+  function toggleTrackVisibility(track: AnyTrack) {
+    const tid = String(track?.id ?? "");
+    if (!tid) return;
+
+    setVisibilityOverrides((current) => {
+      const existing = current[tid];
+      const currentVisibility =
+        existing === "private" || existing === "public"
+          ? existing
+          : getBaseVisibility(track);
+
+      const nextVisibility: LocalVisibility =
+        currentVisibility === "private" ? "public" : "private";
+
+      return {
+        ...current,
+        [tid]: nextVisibility,
+      };
+    });
+  }
+
   const visibleTracks = useMemo(() => {
-    return (Array.isArray(allTracks) ? allTracks : []).filter(
-      (t) => t.visibility !== "private"
-    );
+    return Array.isArray(allTracks) ? allTracks : [];
   }, [allTracks]);
 
   const filtered = useMemo(() => {
@@ -349,6 +401,8 @@ export default function ProjectLibraryPanel(props: {
             const isSelected = idx === selectedIdx;
             const tags = getTrackTags(t);
             const playable = hasPlayableSource(t);
+            const visibilityLabel = getEffectiveVisibilityLabel(t);
+            const isPrivate = getEffectiveVisibility(t) === "private";
 
             return (
               <div
@@ -379,7 +433,7 @@ export default function ProjectLibraryPanel(props: {
 
                   <div className="mt-1 text-[10px] text-zinc-400">
                     Source: {getProjectTrackSourceLabel(t)} • Visibility:{" "}
-                    {getProjectTrackVisibilityLabel(t)}
+                    {visibilityLabel}
                   </div>
 
                   {tags.length > 0 ? (
@@ -418,6 +472,20 @@ export default function ProjectLibraryPanel(props: {
                     }
                   >
                     Play
+                  </button>
+
+                  <button
+                    type="button"
+                    className="rounded border px-3 py-2 text-xs disabled:opacity-60"
+                    onClick={() => toggleTrackVisibility(t)}
+                    disabled={linkBusyId === tid}
+                    title={
+                      isPrivate
+                        ? "Change this track back to public"
+                        : "Mark this track private in the local control layer"
+                    }
+                  >
+                    {isPrivate ? "Make Public" : "Make Private"}
                   </button>
 
                   {isLinked ? (
