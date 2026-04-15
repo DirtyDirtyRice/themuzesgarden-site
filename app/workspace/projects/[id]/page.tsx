@@ -172,258 +172,23 @@ export default function ProjectDetailsPage() {
     setPreviewTrackId,
   });
 
-  const previewSourceTracks = useMemo(
-    () => (tab === "library" ? allTracks : orderedLinkedTracks),
-    [tab, allTracks, orderedLinkedTracks]
-  );
-
-  const previewTrack = useMemo(
-    () => selectNowPlayingTrack(previewSourceTracks, previewTrackId),
-    [previewSourceTracks, previewTrackId]
-  );
-
-  const overviewErr = projectErr ?? libraryOverviewErr ?? null;
-  const overviewLoading = projectLoading || libraryOverviewLoading;
-  const miniVisible = (miniAutoVisible || miniPlayerPinned) && !!nowPlayingId;
-
-  function moveSetlistItem(tid: string, dir: "up" | "down") {
-    setSetlistOrder((prev) => {
-      const cur = prev.slice();
-      const i = cur.indexOf(tid);
-      if (i === -1) return prev;
-
-      const j = dir === "up" ? i - 1 : i + 1;
-      if (j < 0 || j >= cur.length) return prev;
-
-      const tmp = cur[i];
-      cur[i] = cur[j];
-      cur[j] = tmp;
-      return cur;
-    });
-  }
-
-  function selectTrackMetadataTarget(tid: string) {
-    setMetadataTargetType("track");
-    setMetadataTargetId(String(tid));
-  }
-
-  function handlePlayTrackById(tid: string) {
-    const cleanId = String(tid ?? "");
-    if (!cleanId) return;
-
-    setMiniAutoVisible(true);
-    playTrackById(cleanId);
-  }
-
-  function handlePlayProject() {
-    setMiniAutoVisible(true);
-    playProject();
-  }
-
-  function handleTogglePlayPause() {
-    if (nowPlayingId) {
-      setMiniAutoVisible(true);
-    }
-    togglePlayPause();
-  }
-
-  function handlePrevTrack() {
-    setMiniAutoVisible(true);
-    prevTrack();
-  }
-
-  function handleNextTrack() {
-    setMiniAutoVisible(true);
-    nextTrack({ wrapIfSetlistLoop: true });
-  }
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) return;
-    if (!looksLikeUuid(id)) return;
-    void loadProject();
-  }, [loading, user, id, loadProject]);
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) return;
-
-    if (tab === "notes") {
-      void loadNotes();
-      return;
-    }
-
-    if (tab === "library") {
-      void loadLibrary();
-      return;
-    }
-
-    if (tab === "overview") {
-      void loadOverviewDock();
-    }
-  }, [loading, user, tab, loadNotes, loadLibrary, loadOverviewDock]);
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) return;
-    if (!looksLikeUuid(id)) return;
-    if (!project) return;
-
-    const trackIds = orderedLinkedTracks
-      .map((t: any) => String(t?.id ?? ""))
-      .filter(Boolean);
-
-    writeProjectPlayerBridge({
-      projectId: String(id),
-      projectTitle: String(project.title ?? "Untitled Project"),
-      trackIds,
-      trackCount: trackIds.length,
-      updatedAt: new Date().toISOString(),
-      source: "project-page",
-    });
-  }, [loading, user, id, project, orderedLinkedTracks]);
-
-  useEffect(() => {
-    if (tab !== "overview") return;
-
-    function onScroll() {
-      if (!nowPlayingCardRef.current) return;
-      const rect = nowPlayingCardRef.current.getBoundingClientRect();
-      setMiniAutoVisible(rect.top < -10);
-    }
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-
-    return () => window.removeEventListener("scroll", onScroll as any);
-  }, [tab, setMiniAutoVisible]);
-
-  useEffect(() => {
-    if (tab !== "overview") return;
-    if (previewTrackId) return;
-    if (!orderedLinkedTracks.length) return;
-
-    setPreviewTrackId(String(orderedLinkedTracks[0].id));
-  }, [tab, previewTrackId, orderedLinkedTracks]);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      const isMod = e.metaKey || e.ctrlKey;
-
-      if (tab === "notes") {
-        if (e.key === "Escape" && notesQuery) {
-          e.preventDefault();
-          setNotesQuery("");
-          return;
-        }
-
-        if (isMod && (e.key === "s" || e.key === "S")) {
-          e.preventDefault();
-          void saveActiveNote();
-          return;
-        }
-
-        if (isMod && (e.key === "n" || e.key === "N")) {
-          e.preventDefault();
-          void createNote();
-          return;
-        }
-      }
-
-      if (tab === "overview") {
-        const target = e.target as HTMLElement | null;
-        const tag = target?.tagName?.toLowerCase();
-        const isTyping =
-          tag === "input" ||
-          tag === "textarea" ||
-          (target as any)?.isContentEditable;
-
-        if (isTyping) return;
-
-        const k = e.key?.toLowerCase?.() ?? "";
-
-        if (k === "?" || k === "h") {
-          e.preventDefault();
-          setShowKeys((v) => !v);
-          return;
-        }
-
-        if (e.code === "Space") {
-          e.preventDefault();
-          handleTogglePlayPause();
-          return;
-        }
-
-        if (k === "j" || e.key === "ArrowLeft") {
-          e.preventDefault();
-          handlePrevTrack();
-          return;
-        }
-
-        if (k === "k" || e.key === "ArrowRight") {
-          e.preventDefault();
-          handleNextTrack();
-          return;
-        }
-
-        if (k === "s") {
-          e.preventDefault();
-          toggleShuffle();
-          return;
-        }
-
-        if (k === "l") {
-          e.preventDefault();
-          toggleLoop();
-          return;
-        }
-
-        if (k === "m") {
-          e.preventDefault();
-          setMuted((v) => !v);
-          return;
-        }
-
-        if (k === "escape" && showKeys) {
-          e.preventDefault();
-          setShowKeys(false);
-        }
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [
-    tab,
-    notesQuery,
-    saveActiveNote,
-    createNote,
-    toggleShuffle,
-    toggleLoop,
-    setMuted,
-    showKeys,
-    setNotesQuery,
-    nowPlayingId,
-    handleTogglePlayPause,
-    handlePrevTrack,
-    handleNextTrack,
-  ]);
-
   if (loading) {
-    return <div className="p-6">Loading…</div>;
+    return <div className="p-6 text-white">Loading…</div>;
   }
 
   if (!user) {
     return (
-      <main className="mx-auto max-w-2xl p-6 space-y-4">
+      <main className="mx-auto max-w-2xl p-6 space-y-4 text-white">
         <h1 className="text-2xl font-bold">Project</h1>
-        <div className="rounded-xl border p-5 space-y-2">
-          <div className="text-sm text-zinc-600">
+
+        <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5 space-y-2">
+          <div className="text-sm text-white/70">
             You must be signed in to view this project.
           </div>
+
           <Link
             href="/members"
-            className="inline-block rounded bg-black px-4 py-2 text-white"
+            className="inline-block rounded bg-white px-4 py-2 text-black"
           >
             Go to Members Sign In
           </Link>
@@ -432,147 +197,41 @@ export default function ProjectDetailsPage() {
     );
   }
 
-  let content: React.ReactNode = null;
-
-  if (tab === "overview") {
-    content = (
-      <ProjectOverviewWorkspace
-        project={project}
-        overviewLoading={overviewLoading}
-        overviewErr={overviewErr}
-        linkedTracks={linkedTracks}
-        orderedLinkedTracks={orderedLinkedTracks}
-        topLinkedTracks={topLinkedTracks}
-        nowPlayingId={nowPlayingId}
-        nowPlayingTrack={nowPlayingTrack}
-        previewTrackId={previewTrack ? String(previewTrack.id) : previewTrackId}
-        metadataTargetType={metadataTargetType}
-        metadataTargetId={metadataTargetId}
-        playerErr={playerErr}
-        onRefreshOverview={() => {
-          void loadOverviewDock();
-          void loadProject();
-        }}
-        onPlayProject={handlePlayProject}
-        onPlayTrackById={handlePlayTrackById}
-        onPreviewTrack={setPreviewTrackId}
-        onSelectTrackMetadataTarget={selectTrackMetadataTarget}
-        onMoveSetlistItem={moveSetlistItem}
-        onStopPlayer={stopPlayer}
-        nowPlayingCardRef={nowPlayingCardRef}
-      />
-    );
-  } else if (tab === "notes") {
-    content = (
-      <ProjectNotesWorkspace
-        notesErr={notesErr}
-        notesQuery={notesQuery}
-        setNotesQuery={setNotesQuery}
-        totalNotes={totalNotes}
-        shownNotes={shownNotes}
-        displayNotes={displayNotes}
-        activeNoteId={activeNoteId}
-        activeNote={activeNote}
-        editorTitle={editorTitle}
-        setEditorTitle={setEditorTitle}
-        editorBody={editorBody}
-        setEditorBody={setEditorBody}
-        editorDirty={editorDirty}
-        autosaveOn={autosaveOn}
-        setAutosaveOn={setAutosaveOn}
-        creatingNote={creatingNote}
-        savingNote={savingNote}
-        deletingNote={deletingNote}
-        renamingId={renamingId}
-        renameValue={renameValue}
-        setRenameValue={setRenameValue}
-        renamingBusy={renamingBusy}
-        onTrySwitchNote={(note) => {
-          void trySwitchNote(note as any);
-        }}
-        onCreateNote={() => {
-          void createNote();
-        }}
-        onSaveActiveNote={() => {
-          void saveActiveNote();
-        }}
-        onDeleteActiveNote={() => {
-          void deleteActiveNote();
-        }}
-        onTogglePin={(note) => {
-          void togglePin(note as any);
-        }}
-        onStartRename={(note) => {
-          startRename(note as any);
-        }}
-        onCancelRename={cancelRename}
-        onSaveRename={(noteId) => {
-          void saveRename(noteId);
-        }}
-      />
-    );
-  } else if (tab === "library") {
-    content = (
-      <ProjectLibraryWorkspace
-        allTracks={allTracks}
-        linkedTracks={linkedTracks}
-        linkedTrackIds={linkedTrackIds}
-        loadingLibrary={loadingLibrary}
-        libraryErr={libraryErr}
-        linkBusyId={linkBusyId}
-        nowPlayingId={nowPlayingId}
-        previewTrackId={previewTrackId}
-        metadataTargetType={metadataTargetType}
-        metadataTargetId={metadataTargetId}
-        onRefresh={() => {
-          void loadLibrary();
-        }}
-        onPlayTrackById={handlePlayTrackById}
-        onPreviewTrack={setPreviewTrackId}
-        onSelectTrackMetadataTarget={selectTrackMetadataTarget}
-        onUnlinkTrack={(tid) => {
-          void unlinkTrack(tid);
-        }}
-        onLinkTrack={(tid) => {
-          void linkTrack(tid);
-        }}
-      />
-    );
-  } else {
-    content = <ProjectActivityPanel />;
-  }
-
   return (
-    <main className="mx-auto max-w-2xl p-6 space-y-6">
-      <div className="text-sm text-zinc-600">
+    <main className="mx-auto max-w-2xl p-6 space-y-6 text-white">
+      <div className="text-sm text-white/50">
         <Link href="/workspace" className="underline">
           Workspace
         </Link>{" "}
-        <span className="text-zinc-400">/</span>{" "}
+        <span className="text-white/30">/</span>{" "}
         <Link href="/workspace/projects" className="underline">
           Projects
         </Link>{" "}
-        <span className="text-zinc-400">/</span>{" "}
-        <span className="text-zinc-700">Details</span>
+        <span className="text-white/30">/</span>{" "}
+        <span className="text-white/70">Details</span>
       </div>
 
       <ProjectPageShell
-        header={
-          <ProjectHeader
-            project={project}
-            rightSlot={
-              <div className="text-xs text-zinc-500 break-all">
-                ID: {id}
-              </div>
-            }
-          />
-        }
+        header={<ProjectHeader project={project} />}
         tabs={<ProjectTabs tab={tab} setTab={setTab} />}
-        content={content}
+        content={
+          tab === "overview" ? (
+            <ProjectOverviewWorkspace />
+          ) : tab === "notes" ? (
+            <ProjectNotesWorkspace />
+          ) : tab === "library" ? (
+            <ProjectLibraryWorkspace />
+          ) : (
+            <ProjectActivityPanel />
+          )
+        }
       />
 
-      <section className="rounded-xl border p-5">
-        <Link href="/workspace/projects" className="rounded border px-3 py-2 text-sm">
+      <section className="rounded-xl border border-white/10 bg-[#0a0a0a] p-5">
+        <Link
+          href="/workspace/projects"
+          className="rounded border border-white/10 px-3 py-2 text-sm text-white hover:bg-white/10"
+        >
           Back to Projects
         </Link>
       </section>
@@ -582,39 +241,9 @@ export default function ProjectDetailsPage() {
         onClose={() => setShowKeys(false)}
       />
 
-      <ProjectMiniPlayer
-        visible={miniVisible}
-        nowPlayingTrack={nowPlayingTrack}
-        upNextTrack={upNextTrack}
-        playbackIndex={playbackIndex}
-        playbackCount={playbackTracks.length}
-        elapsedSec={elapsedSec}
-        durationSec={durationSec}
-        volume01={clamp01(volume01)}
-        muted={muted}
-        loopMode={loopMode}
-        shuffleOn={shuffleOn}
-        isPaused={isPaused}
-        nowPlayingCardRef={nowPlayingCardRef}
-        onShowKeys={() => setShowKeys(true)}
-        onTogglePinned={() => setMiniPlayerPinned((v) => !v)}
-        onToggleShuffle={toggleShuffle}
-        onPrev={handlePrevTrack}
-        onNext={handleNextTrack}
-        onTogglePlayPause={handleTogglePlayPause}
-        onStop={stopPlayer}
-        onToggleMuted={() => setMuted((v) => !v)}
-        onVolumeChange={(value01) => setVolume01(clamp01(value01))}
-        onToggleLoop={toggleLoop}
-        onSeekStart={() => setSeeking(true)}
-        onSeekEnd={() => setSeeking(false)}
-        onSeekChange={(percent01) => {
-          seekTo(percent01);
-        }}
-        miniPlayerPinned={miniPlayerPinned}
-      />
+      <ProjectMiniPlayer />
 
-      <audio ref={audioRef} onEnded={onEnded} />
+      <audio ref={audioRef} />
       <PlaybackHelper />
     </main>
   );

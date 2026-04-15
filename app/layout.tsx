@@ -18,23 +18,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
-     <AuthProvider>
-
-  {/* 🔹 GLOBAL TITLE BAR */}
-  <TitleBar />
-
-  {/* 🔹 PAGE CONTENT */}
-  {children}
-
-  {/* 🔹 SYSTEM HELPERS */}
-  <WorkspaceSyncListener />
-  <QuickLinkHelper />
-
-  {/* 🔹 GLOBAL PLAYER */}
-  <GlobalPlayer />
-
-</AuthProvider>
+      <body className="min-h-screen bg-black text-white antialiased">
+        <AuthProvider>
+          <TitleBar />
+          {children}
+          <WorkspaceSyncListener />
+          <QuickLinkHelper />
+          <GlobalPlayer />
+        </AuthProvider>
       </body>
     </html>
   );

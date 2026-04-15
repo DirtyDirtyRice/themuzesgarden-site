@@ -34,13 +34,22 @@ export default function MetadataPage() {
 
             <div className="flex flex-wrap gap-3 pt-2 text-sm text-white/70">
               <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                Shelves: <span className="font-semibold text-white">{library.shelves.length}</span>
+                Shelves:{" "}
+                <span className="font-semibold text-white">
+                  {library.shelves.length}
+                </span>
               </div>
               <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                Records: <span className="font-semibold text-white">{records.length}</span>
+                Records:{" "}
+                <span className="font-semibold text-white">
+                  {records.length}
+                </span>
               </div>
               <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                Mode: <span className="font-semibold text-white">Foundation Phase</span>
+                Mode:{" "}
+                <span className="font-semibold text-white">
+                  Foundation Phase
+                </span>
               </div>
             </div>
           </div>
@@ -91,6 +100,13 @@ export default function MetadataPage() {
                 Record Shells
               </h2>
             </div>
+
+            <Link
+              href="/metadata/create"
+              className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              + Create Record
+            </Link>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
