@@ -1,3 +1,12 @@
+import {
+  type MetadataRecord,
+  type MetadataRecordField,
+  type MetadataRelationship,
+  type MetadataRelationshipType,
+  type MetadataSectionKey,
+  type MetadataShelfKey,
+  type MetadataVisibility,
+} from "@/lib/metadata/metadataLibraryTypes";
 import { normalizeText, getRelationshipLabel } from "./metadataCreateUtils";
 
 export type MetadataCreateRecordBuilderInput = {
@@ -5,13 +14,13 @@ export type MetadataCreateRecordBuilderInput = {
   trimmedTitle: string;
   trimmedSummary: string;
   trimmedBelongsReason: string;
-  visibility: string;
+  visibility: MetadataVisibility;
   recordType: string;
-  relationshipType: string;
+  relationshipType: MetadataRelationshipType;
   selectedShelfId: string;
   selectedSectionId: string;
-  activeShelfKey?: string;
-  activeSectionKey?: string;
+  activeShelfKey?: MetadataShelfKey;
+  activeSectionKey?: MetadataSectionKey;
   selectedRelatedRecord: {
     id: string;
     title: string;
@@ -19,37 +28,8 @@ export type MetadataCreateRecordBuilderInput = {
   } | null;
 };
 
-export type MetadataCreateRelationshipRecord = {
-  id: string;
-  type: string;
-  targetRecordId: string;
-  targetSlug: string;
-  targetLabel: string;
-  note: string;
-};
-
-export type MetadataCreateFieldRecord = {
-  id: string;
-  label: string;
-  type: string;
-  value: string;
-};
-
-export type MetadataCreateFinalRecord = {
-  id: string;
-  slug: string;
-  title: string;
-  shelf: string;
-  section: string;
-  visibility: string;
-  excerpt: string;
-  description: string;
-  fields: MetadataCreateFieldRecord[];
-  relationships: MetadataCreateRelationshipRecord[];
-};
-
 export type MetadataCreateRecordBuilderResult = {
-  finalRecord: MetadataCreateFinalRecord;
+  finalRecord: MetadataRecord;
   finalRecordJson: string;
 };
 
@@ -68,8 +48,8 @@ export function buildMetadataCreateRecord({
   selectedRelatedRecord,
 }: MetadataCreateRecordBuilderInput): MetadataCreateRecordBuilderResult {
   const safeSlug = generatedSlug || "untitled-record";
-  const shelfKey = activeShelfKey ?? selectedShelfId;
-  const sectionKey = activeSectionKey ?? selectedSectionId;
+  const shelfKey = (activeShelfKey ?? selectedShelfId) as MetadataShelfKey;
+  const sectionKey = (activeSectionKey ?? selectedSectionId) as MetadataSectionKey;
 
   const descriptionParts = [trimmedSummary];
 
@@ -77,22 +57,26 @@ export function buildMetadataCreateRecord({
     descriptionParts.push(`Why this belongs here: ${trimmedBelongsReason}`);
   }
 
-  const fields: MetadataCreateFieldRecord[] = [
+  const draftFields = [
     {
       id: `field-${safeSlug}-record-type`,
       label: "Record Type",
-      type: "text",
+      type: "text" as const,
       value: recordType,
     },
     {
       id: `field-${safeSlug}-belongs-reason`,
       label: "Belongs Reason",
-      type: "textarea",
+      type: "textarea" as const,
       value: trimmedBelongsReason,
     },
-  ].filter((field) => normalizeText(field.value).length > 0);
+  ];
 
-  const relationships: MetadataCreateRelationshipRecord[] = selectedRelatedRecord
+  const fields: MetadataRecordField[] = draftFields.filter(
+    (field) => normalizeText(String(field.value ?? "")).length > 0
+  );
+
+  const relationships: MetadataRelationship[] = selectedRelatedRecord
     ? [
         {
           id: `rel-${safeSlug}-${selectedRelatedRecord.slug}`,
@@ -107,7 +91,7 @@ export function buildMetadataCreateRecord({
       ]
     : [];
 
-  const finalRecord: MetadataCreateFinalRecord = {
+  const finalRecord: MetadataRecord = {
     id: `record-${safeSlug}`,
     slug: safeSlug,
     title: trimmedTitle || "Untitled Record",

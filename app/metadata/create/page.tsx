@@ -7,6 +7,10 @@ import {
   getMetadataLibrary,
   getMetadataRecordSummaries,
 } from "@/lib/metadata/metadataLibrarySeed";
+import type {
+  MetadataSectionKey,
+  MetadataShelfKey,
+} from "@/lib/metadata/metadataLibraryTypes";
 
 import {
   RECORD_TYPE_OPTIONS,
@@ -21,6 +25,8 @@ import {
 
 import { validateMetadataCreateState } from "./metadataCreateValidation";
 import { buildMetadataCreateRecord } from "./metadataCreateRecordBuilder";
+import { buildMetadataCreateSaveBridge } from "./metadataCreateSaveBridge";
+import { executeMetadataCreateSubmit } from "./metadataCreateSubmitAction";
 
 import MetadataCreateForm from "./MetadataCreateForm";
 import MetadataCreateSidebar from "./MetadataCreateSidebar";
@@ -31,12 +37,12 @@ type RelationshipType = (typeof RELATIONSHIP_OPTIONS)[number]["value"];
 
 type ShelfOption = {
   id: string;
-  key?: string;
+  key?: MetadataShelfKey;
   label: string;
   description: string;
   sections: {
     id: string;
-    key?: string;
+    key?: MetadataSectionKey;
     label: string;
   }[];
 };
@@ -68,6 +74,10 @@ export default function MetadataCreatePage() {
   const [relationshipType, setRelationshipType] =
     useState<RelationshipType>("related_to");
   const [relatedRecordId, setRelatedRecordId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [createdSlug, setCreatedSlug] = useState("");
 
   const activeShelf = useMemo(() => {
     return shelfOptions.find((shelf) => shelf.id === selectedShelfId) ?? null;
@@ -176,6 +186,48 @@ export default function MetadataCreatePage() {
 
   const finalRecord = recordBuild.finalRecord;
   const finalRecordJson = recordBuild.finalRecordJson;
+
+  const saveBridge = useMemo(() => {
+    return buildMetadataCreateSaveBridge({
+      finalRecord,
+      canContinue,
+      missingItems,
+    });
+  }, [finalRecord, canContinue, missingItems]);
+
+  const saveReady = saveBridge.saveReady;
+  const saveBlockedReasons = saveBridge.saveBlockedReasons;
+  const savePayload = saveBridge.savePayload;
+  const savePayloadJson = saveBridge.savePayloadJson;
+
+  async function handleCreateRecord() {
+    setSubmitMessage("");
+    setSubmitError("");
+    setCreatedSlug("");
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await executeMetadataCreateSubmit(savePayload);
+
+      if (!result.ok) {
+        setSubmitError(result.message);
+        return;
+      }
+
+      setSubmitMessage(result.message);
+      setCreatedSlug(result.createdRecord.slug);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unknown create error occurred.";
+
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white md:px-6">
@@ -374,6 +426,142 @@ export default function MetadataCreatePage() {
               <pre className="overflow-x-auto px-4 py-4 text-xs leading-6 text-white/85 md:text-sm">
                 {finalRecordJson}
               </pre>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
+                Create Bridge Output
+              </span>
+
+              <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                Create Bridge Output
+              </h2>
+
+              <p className="max-w-3xl text-sm leading-6 text-white/70 md:text-base">
+                This is the future create-ready payload layer. It packages the
+                structured record into the form that a real create action can
+                use later, without pretending to save anything yet.
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Save Ready
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/85">
+                  {saveReady ? "Yes" : "No"}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Blockers
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/85">
+                  {saveBlockedReasons.length}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Mode
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/85">
+                  create
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                Save blockers
+              </p>
+
+              {saveBlockedReasons.length ? (
+                <div className="mt-3 flex flex-col gap-2">
+                  {saveBlockedReasons.map((reason) => (
+                    <div
+                      key={reason}
+                      className="rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white/80"
+                    >
+                      {reason}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm leading-6 text-white/80">
+                  No blockers. This record is structurally ready for a future
+                  create action.
+                </p>
+              )}
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/50">
+              <div className="border-b border-white/10 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Create Payload JSON
+                </p>
+              </div>
+
+              <pre className="overflow-x-auto px-4 py-4 text-xs leading-6 text-white/85 md:text-sm">
+                {savePayloadJson}
+              </pre>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                Real create action
+              </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleCreateRecord();
+                  }}
+                  disabled={!saveReady || isSubmitting}
+                  className={[
+                    "inline-flex rounded-md px-4 py-2 text-sm font-medium transition",
+                    saveReady && !isSubmitting
+                      ? "border border-white/10 bg-white text-black hover:bg-white/90"
+                      : "cursor-not-allowed border border-white/10 bg-white/5 text-white/35",
+                  ].join(" ")}
+                >
+                  {isSubmitting ? "Creating Record..." : "Create Record Now"}
+                </button>
+
+                {createdSlug ? (
+                  <Link
+                    href={`/metadata/${createdSlug}`}
+                    className="inline-flex rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                  >
+                    Open Created Record
+                  </Link>
+                ) : null}
+              </div>
+
+              {submitMessage ? (
+                <div className="mt-3 rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white/85">
+                  {submitMessage}
+                </div>
+              ) : null}
+
+              {submitError ? (
+                <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                  {submitError}
+                </div>
+              ) : null}
+
+              <p className="mt-3 text-xs text-white/45">
+                This currently creates into the active in-memory metadata source
+                for the running app session. Database persistence can be layered
+                in next.
+              </p>
             </div>
           </div>
         </section>
