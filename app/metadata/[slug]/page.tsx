@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { getMetadataRecordBySlug } from "@/lib/metadata/metadataLibrarySeed";
+import {
+  getMetadataRecordBySlugFromDb,
+  getMetadataRelationshipTargetSlugFromDb,
+} from "@/lib/metadata/metadataFetch";
 
 type MetadataRecordPageProps = {
   params: Promise<{
@@ -22,26 +25,11 @@ function renderFieldValue(value: string | number | boolean | string[]) {
   return String(value);
 }
 
-function getRelationshipTargetSlug(relationship: unknown) {
-  if (!relationship || typeof relationship !== "object") {
-    return null;
-  }
-
-  const rawValue = (relationship as Record<string, unknown>).targetSlug;
-
-  if (typeof rawValue !== "string") {
-    return null;
-  }
-
-  const trimmed = rawValue.trim();
-  return trimmed ? trimmed : null;
-}
-
 export default async function MetadataRecordPage({
   params,
 }: MetadataRecordPageProps) {
   const { slug } = await params;
-  const record = getMetadataRecordBySlug(slug);
+  const record = await getMetadataRecordBySlugFromDb(slug);
 
   if (!record) {
     return (
@@ -56,7 +44,7 @@ export default async function MetadataRecordPage({
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
               The metadata record you tried to open does not exist in the current
-              foundation dataset.
+              database dataset.
             </p>
 
             <div className="mt-5">
@@ -159,39 +147,42 @@ export default async function MetadataRecordPage({
 
           <div className="grid gap-4">
             {record.relationships.length ? (
-              record.relationships.map((relationship) => {
-                const targetSlug = getRelationshipTargetSlug(relationship);
+              await Promise.all(
+                record.relationships.map(async (relationship) => {
+                  const targetSlug =
+                    await getMetadataRelationshipTargetSlugFromDb(relationship);
 
-                return (
-                  <article
-                    key={relationship.id}
-                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
-                      {formatLabel(relationship.type)}
-                    </p>
-
-                    {targetSlug ? (
-                      <Link
-                        href={`/metadata/${targetSlug}`}
-                        className="mt-2 block text-base font-semibold text-blue-300 hover:underline"
-                      >
-                        {relationship.targetLabel}
-                      </Link>
-                    ) : (
-                      <p className="mt-2 text-base font-semibold text-white">
-                        {relationship.targetLabel}
+                  return (
+                    <article
+                      key={relationship.id}
+                      className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
+                        {formatLabel(relationship.type)}
                       </p>
-                    )}
 
-                    {relationship.note ? (
-                      <p className="mt-2 text-sm leading-6 text-white/70">
-                        {relationship.note}
-                      </p>
-                    ) : null}
-                  </article>
-                );
-              })
+                      {targetSlug ? (
+                        <Link
+                          href={`/metadata/${targetSlug}`}
+                          className="mt-2 block text-base font-semibold text-blue-300 hover:underline"
+                        >
+                          {relationship.targetLabel}
+                        </Link>
+                      ) : (
+                        <p className="mt-2 text-base font-semibold text-white">
+                          {relationship.targetLabel}
+                        </p>
+                      )}
+
+                      {relationship.note ? (
+                        <p className="mt-2 text-sm leading-6 text-white/70">
+                          {relationship.note}
+                        </p>
+                      ) : null}
+                    </article>
+                  );
+                })
+              )
             ) : (
               <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/70">
                 No connected records yet.

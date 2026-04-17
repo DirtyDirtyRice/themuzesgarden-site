@@ -1,8 +1,6 @@
 import Link from "next/link";
-import {
-  getMetadataLibrary,
-  getMetadataRecordSummaries,
-} from "@/lib/metadata/metadataLibrarySeed";
+import { getMetadataLibrary } from "@/lib/metadata/metadataLibrarySeed";
+import { getMetadataRecordSummariesFromDb } from "@/lib/metadata/metadataFetch";
 
 function formatLabel(value: string) {
   return value
@@ -11,9 +9,9 @@ function formatLabel(value: string) {
     .join(" ");
 }
 
-export default function MetadataPage() {
+export default async function MetadataPage() {
   const library = getMetadataLibrary();
-  const records = getMetadataRecordSummaries();
+  const records = await getMetadataRecordSummariesFromDb();
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white md:px-6">
@@ -48,7 +46,7 @@ export default function MetadataPage() {
               <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
                 Mode:{" "}
                 <span className="font-semibold text-white">
-                  Foundation Phase
+                  Persistence Phase
                 </span>
               </div>
             </div>
@@ -57,16 +55,17 @@ export default function MetadataPage() {
 
         <section className="grid gap-4 lg:grid-cols-2">
           {library.shelves.map((shelf) => (
-            <article
+            <Link
               key={shelf.id}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+              href={`/metadata/shelf/${shelf.key}`}
+              className="group block rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/20 hover:bg-white/[0.05]"
             >
-              <div className="flex flex-col gap-3">
+              <div className="flex h-full flex-col gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
                     Shelf
                   </p>
-                  <h2 className="mt-1 text-xl font-semibold text-white">
+                  <h2 className="mt-1 text-xl font-semibold text-white group-hover:text-white">
                     {shelf.label}
                   </h2>
                 </div>
@@ -85,8 +84,14 @@ export default function MetadataPage() {
                     </span>
                   ))}
                 </div>
+
+                <div className="mt-auto pt-3">
+                  <span className="inline-flex rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition group-hover:bg-white/10">
+                    Open Shelf
+                  </span>
+                </div>
               </div>
-            </article>
+            </Link>
           ))}
         </section>
 
