@@ -34,9 +34,10 @@ export default function MetadataCreateRelationshipSection({
             Relationship starter
           </p>
           <p className="mt-2 text-sm leading-6 text-white/65">
-            This is not the full relationship system yet. It is just the first
+            This is not the full relationship system yet. It is the first
             controlled way to say this record connects to another record in the
-            library.
+            library and to show how that structure will appear in the final
+            record output.
           </p>
         </div>
 
@@ -98,6 +99,15 @@ export default function MetadataCreateRelationshipSection({
               ? `This draft record would start with a "${getRelationshipLabel(relationshipType)}" connection to "${relationshipPreview.title}".`
               : "No related record selected yet. This is optional for now, but it helps show how records will connect."}
           </p>
+
+          {relationshipPreview ? (
+            <div className="mt-3 rounded-lg border border-white/10 bg-black/80 px-3 py-2 text-sm text-white/70">
+              Target slug preview:{" "}
+              <span className="text-white">
+                /metadata/{relationshipPreview.slug}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
 

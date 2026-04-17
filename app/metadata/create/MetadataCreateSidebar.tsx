@@ -1,9 +1,11 @@
 type ShelfOption = {
   id: string;
+  key?: string;
   label: string;
   description: string;
   sections: {
     id: string;
+    key?: string;
     label: string;
   }[];
 };

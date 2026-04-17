@@ -156,7 +156,8 @@ export default function MetadataCreateIdentitySection({
 
             <p className="text-sm leading-6 text-white/65">
               This shows how the URL path would look if the record were created
-              from the current title.
+              from the current title and pushed into the structural output
+              model.
             </p>
 
             <div

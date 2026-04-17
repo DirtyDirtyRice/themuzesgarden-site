@@ -2,10 +2,12 @@ import { getFieldStatusMessage } from "./metadataCreateUtils";
 
 type ShelfOption = {
   id: string;
+  key?: string;
   label: string;
   description: string;
   sections: {
     id: string;
+    key?: string;
     label: string;
   }[];
 };
@@ -28,7 +30,7 @@ export default function MetadataCreatePlacementSection({
   onSectionChange: (value: string) => void;
   shelfOptions: ShelfOption[];
   activeShelfDescription: string;
-  activeSections: { id: string; label: string }[];
+  activeSections: { id: string; key?: string; label: string }[];
   belongsReason: string;
   onBelongsReasonChange: (value: string) => void;
   belongsReady: boolean;
@@ -96,7 +98,8 @@ export default function MetadataCreatePlacementSection({
             </select>
 
             <p className="text-xs text-white/45">
-              Section gives the record a real structural home.
+              Section gives the record a real structural home and feeds the
+              final output model.
             </p>
           </div>
         </div>

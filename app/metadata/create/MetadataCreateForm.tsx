@@ -15,10 +15,12 @@ type RelationshipType = (typeof RELATIONSHIP_OPTIONS)[number]["value"];
 
 type ShelfOption = {
   id: string;
+  key?: string;
   label: string;
   description: string;
   sections: {
     id: string;
+    key?: string;
     label: string;
   }[];
 };
@@ -84,7 +86,7 @@ export default function MetadataCreateForm({
   onRelatedRecordChange: (value: string) => void;
   shelfOptions: ShelfOption[];
   activeShelfDescription: string;
-  activeSections: { id: string; label: string }[];
+  activeSections: { id: string; key?: string; label: string }[];
   generatedSlug: string;
   relationshipOptions: RelationshipOption[];
   requiredReadyCount: number;

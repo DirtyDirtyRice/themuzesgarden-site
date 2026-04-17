@@ -41,8 +41,8 @@ export default function MetadataCreateReviewSection({
           <p className="text-sm font-semibold text-white">Current state</p>
           <p className="mt-2 text-sm leading-6 text-white/70">
             {canContinue
-              ? "This record has enough real structure to move into a future creation step."
-              : "This draft is not ready yet. It still needs more real structure before it should move forward."}
+              ? "This record has enough real structure to move into the next creation phase and already supports a valid structural output model."
+              : "This draft is not ready yet. It still needs more real structure before it should move forward into the next creation phase."}
           </p>
 
           <div className="mt-3 rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white/70">
@@ -86,11 +86,13 @@ export default function MetadataCreateReviewSection({
           <div className="rounded-lg border border-white/10 bg-black px-3 py-2">
             Placement:{" "}
             <span className="text-white">
-              {activeShelfLabel || "No shelf"} → {activeSectionLabel || "No section"}
+              {activeShelfLabel || "No shelf"} →{" "}
+              {activeSectionLabel || "No section"}
             </span>
           </div>
           <div className="rounded-lg border border-white/10 bg-black px-3 py-2">
-            Visibility: <span className="text-white capitalize">{visibility}</span>
+            Visibility:{" "}
+            <span className="text-white capitalize">{visibility}</span>
           </div>
           <div className="rounded-lg border border-white/10 bg-black px-3 py-2">
             Slug path:{" "}
@@ -106,9 +108,9 @@ export default function MetadataCreateReviewSection({
           Next phase intent
         </p>
         <p className="mt-2 text-sm leading-6 text-white/70">
-          The next system phase can turn this into real creation flow, add
-          stronger field validation, allow relationship stacking, and save the
-          record into the metadata library.
+          The next system phase can turn this structural model into real
+          creation flow, add stronger field validation, allow relationship
+          stacking, and save the record into the metadata library.
         </p>
       </div>
 

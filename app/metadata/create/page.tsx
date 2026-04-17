@@ -2,20 +2,26 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+
 import {
   getMetadataLibrary,
   getMetadataRecordSummaries,
 } from "@/lib/metadata/metadataLibrarySeed";
+
 import {
   RECORD_TYPE_OPTIONS,
   RELATIONSHIP_OPTIONS,
   VISIBILITY_OPTIONS,
 } from "./metadataCreateConfig";
+
 import {
   getRelationshipLabel,
-  normalizeText,
   slugify,
 } from "./metadataCreateUtils";
+
+import { validateMetadataCreateState } from "./metadataCreateValidation";
+import { buildMetadataCreateRecord } from "./metadataCreateRecordBuilder";
+
 import MetadataCreateForm from "./MetadataCreateForm";
 import MetadataCreateSidebar from "./MetadataCreateSidebar";
 
@@ -25,10 +31,12 @@ type RelationshipType = (typeof RELATIONSHIP_OPTIONS)[number]["value"];
 
 type ShelfOption = {
   id: string;
+  key?: string;
   label: string;
   description: string;
   sections: {
     id: string;
+    key?: string;
     label: string;
   }[];
 };
@@ -95,55 +103,79 @@ export default function MetadataCreatePage() {
     setSelectedSectionId(nextShelf?.sections[0]?.id ?? "");
   }
 
-  const trimmedTitle = normalizeText(title);
-  const trimmedSummary = normalizeText(summary);
-  const trimmedBelongsReason = normalizeText(belongsReason);
-  const generatedSlug = slugify(title);
+  const validation = useMemo(() => {
+    return validateMetadataCreateState({
+      title,
+      summary,
+      belongsReason,
+      visibility,
+      hasActiveShelf: Boolean(activeShelf),
+      hasActiveSection: Boolean(activeSection),
+      hasSelectedRelatedRecord: Boolean(selectedRelatedRecord),
+      relationshipType,
+    });
+  }, [
+    title,
+    summary,
+    belongsReason,
+    visibility,
+    activeShelf,
+    activeSection,
+    selectedRelatedRecord,
+    relationshipType,
+  ]);
 
-  const titleReady = trimmedTitle.length >= 3;
-  const shelfReady = Boolean(activeShelf);
-  const sectionReady = Boolean(activeSection);
-  const visibilityReady = Boolean(visibility);
-  const summaryReady = trimmedSummary.length >= 24;
-  const belongsReady = trimmedBelongsReason.length >= 20;
-  const slugReady = generatedSlug.length >= 3;
+  const trimmedTitle = validation.trimmedTitle;
+  const trimmedSummary = validation.trimmedSummary;
+  const trimmedBelongsReason = validation.trimmedBelongsReason;
+  const generatedSlug = validation.generatedSlug;
 
-  const requiredReadyCount = [
-    titleReady,
-    shelfReady,
-    sectionReady,
-    visibilityReady,
-    summaryReady,
-    belongsReady,
-    slugReady,
-  ].filter(Boolean).length;
+  const titleReady = validation.titleReady;
+  const slugReady = validation.slugReady;
+  const summaryReady = validation.summaryReady;
+  const belongsReady = validation.belongsReady;
 
-  const canContinue =
-    titleReady &&
-    shelfReady &&
-    sectionReady &&
-    visibilityReady &&
-    summaryReady &&
-    belongsReady &&
-    slugReady;
-
-  const hasRelationshipStarter = Boolean(
-    selectedRelatedRecord && relationshipType
-  );
-
-  const missingItems = [
-    !titleReady ? "Add a real title" : null,
-    !slugReady ? "Create a valid slug from the title" : null,
-    !shelfReady ? "Choose a shelf" : null,
-    !sectionReady ? "Choose a section" : null,
-    !visibilityReady ? "Choose visibility" : null,
-    !summaryReady ? "Write a meaningful explanation" : null,
-    !belongsReady ? "Explain why this belongs here" : null,
-  ].filter(Boolean) as string[];
+  const requiredReadyCount = validation.requiredReadyCount;
+  const canContinue = validation.canContinue;
+  const hasRelationshipStarter = validation.hasRelationshipStarter;
+  const missingItems = validation.missingItems;
 
   const relationshipPreviewLabel = selectedRelatedRecord
     ? `${getRelationshipLabel(relationshipType)} → ${selectedRelatedRecord.title}`
     : "No starter relationship selected yet.";
+
+  const recordBuild = useMemo(() => {
+    return buildMetadataCreateRecord({
+      generatedSlug,
+      trimmedTitle,
+      trimmedSummary,
+      trimmedBelongsReason,
+      visibility,
+      recordType,
+      relationshipType,
+      selectedShelfId,
+      selectedSectionId,
+      activeShelfKey: activeShelf?.key,
+      activeSectionKey: activeSection?.key,
+      selectedRelatedRecord,
+    });
+  }, [
+    generatedSlug,
+    trimmedTitle,
+    trimmedSummary,
+    trimmedBelongsReason,
+    visibility,
+    recordType,
+    relationshipType,
+    selectedShelfId,
+    selectedSectionId,
+    activeShelf,
+    activeSection,
+    selectedRelatedRecord,
+  ]);
+
+  const finalRecord = recordBuild.finalRecord;
+  const finalRecordJson = recordBuild.finalRecordJson;
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white md:px-6">
@@ -274,6 +306,76 @@ export default function MetadataCreatePage() {
             relationshipPreviewLabel={relationshipPreviewLabel}
             shelfOptions={shelfOptions}
           />
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
+                Final Record Output
+              </span>
+
+              <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                Final Record Output
+              </h2>
+
+              <p className="max-w-3xl text-sm leading-6 text-white/70 md:text-base">
+                This is the full structured record object generated from the
+                current builder state. It includes the metadata record shape,
+                starter fields, and relationship structure.
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-4">
+              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Record ID
+                </p>
+                <p className="mt-2 break-all text-sm leading-6 text-white/85">
+                  {finalRecord.id}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Slug
+                </p>
+                <p className="mt-2 break-all text-sm leading-6 text-white/85">
+                  {finalRecord.slug}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Fields
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/85">
+                  {finalRecord.fields.length}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Relationships
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/85">
+                  {finalRecord.relationships.length}
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/50">
+              <div className="border-b border-white/10 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  MetadataRecord JSON
+                </p>
+              </div>
+
+              <pre className="overflow-x-auto px-4 py-4 text-xs leading-6 text-white/85 md:text-sm">
+                {finalRecordJson}
+              </pre>
+            </div>
+          </div>
         </section>
       </div>
     </main>

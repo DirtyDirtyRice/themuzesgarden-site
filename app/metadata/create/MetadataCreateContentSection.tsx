@@ -21,7 +21,8 @@ export default function MetadataCreateContentSection({
 
         <p className="text-sm leading-6 text-white/65">
           Write enough information so the record can stand on its own. This
-          keeps the system from becoming fake hierarchy.
+          keeps the system from becoming fake hierarchy and gives the final
+          record output real substance.
         </p>
 
         <textarea
