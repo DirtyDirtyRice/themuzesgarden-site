@@ -41,6 +41,23 @@ function normalizeSection(section: unknown, index: number): TrackSection | null 
   };
 }
 
+function buildMetadataId(track: Record<string, unknown>): string | null {
+  const url = String(track.url ?? "").trim();
+
+  if (!url) return null;
+
+  try {
+    const parts = url.split("/");
+    const filename = parts[parts.length - 1]?.trim();
+
+    if (!filename) return null;
+
+    return `sb:audio:${filename}`;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeTrack(track: unknown): AnyTrack | null {
   if (!track || typeof track !== "object") return null;
 
@@ -89,7 +106,6 @@ function normalizeTrack(track: unknown): AnyTrack | null {
         .filter((section): section is TrackSection => Boolean(section))
     : undefined;
 
-  // 🔥 NEW: visibility passthrough
   const visibility =
     raw.visibility === "private" ||
     raw.visibility === "public" ||
@@ -97,15 +113,18 @@ function normalizeTrack(track: unknown): AnyTrack | null {
       ? raw.visibility
       : "shared";
 
+  const metadataId = buildMetadataId(raw);
+
   return {
     id,
     title,
     artist,
     url,
     path,
+    metadataId,
     tags,
     sections,
-    visibility, // 🔥 added
+    visibility,
   };
 }
 

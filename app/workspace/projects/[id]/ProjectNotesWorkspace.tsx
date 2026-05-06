@@ -89,18 +89,19 @@ export default function ProjectNotesWorkspace(props: Props) {
   } = props;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[20rem,1fr]">
-      <section className="rounded-xl border p-3 space-y-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[20rem,1fr] text-white">
+      {/* LEFT PANEL */}
+      <section className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div>
             <div className="text-sm font-medium">Notes</div>
-            <div className="text-xs text-zinc-500">
+            <div className="text-xs text-white/60">
               Total: {totalNotes} • Showing: {shownNotes}
             </div>
           </div>
 
           <button
-            className="rounded border px-3 py-2 text-xs disabled:opacity-60"
+            className="rounded border border-white/20 px-3 py-2 text-xs hover:bg-white/10 disabled:opacity-60"
             onClick={onCreateNote}
             disabled={creatingNote}
           >
@@ -109,21 +110,21 @@ export default function ProjectNotesWorkspace(props: Props) {
         </div>
 
         <input
-          className="w-full rounded border px-3 py-2 text-sm"
+          className="w-full rounded border border-white/20 bg-black px-3 py-2 text-sm text-white"
           placeholder="Search notes…"
           value={notesQuery}
           onChange={(e) => setNotesQuery(e.target.value)}
         />
 
         {notesErr ? (
-          <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-400">
             {notesErr}
           </div>
         ) : null}
 
         <div className="max-h-[34rem] space-y-2 overflow-y-auto pr-1">
           {displayNotes.length === 0 ? (
-            <div className="text-sm text-zinc-600">No notes yet.</div>
+            <div className="text-sm text-white/60">No notes yet.</div>
           ) : (
             displayNotes.map((note) => {
               const isActive = note.id === activeNoteId;
@@ -134,7 +135,9 @@ export default function ProjectNotesWorkspace(props: Props) {
                 <div
                   key={note.id}
                   className={`rounded-lg border p-3 space-y-2 cursor-pointer ${
-                    isActive ? "bg-zinc-50 border-black" : "bg-white"
+                    isActive
+                      ? "bg-white text-black border-white"
+                      : "bg-black border-white/10"
                   }`}
                   onClick={() => onTrySwitchNote(note.id)}
                 >
@@ -143,20 +146,20 @@ export default function ProjectNotesWorkspace(props: Props) {
                       {renamingId === note.id ? (
                         <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
                           <input
-                            className="w-full rounded border px-2 py-1 text-sm"
+                            className="w-full rounded border border-white/20 bg-black px-2 py-1 text-sm text-white"
                             value={renameValue}
                             onChange={(e) => setRenameValue(e.target.value)}
                           />
                           <div className="flex items-center gap-2">
                             <button
-                              className="rounded border px-2 py-1 text-xs disabled:opacity-60"
+                              className="rounded border border-white/20 px-2 py-1 text-xs hover:bg-white/10 disabled:opacity-60"
                               onClick={() => onSaveRename(note.id)}
                               disabled={renamingBusy}
                             >
                               {renamingBusy ? "Saving…" : "Save"}
                             </button>
                             <button
-                              className="rounded border px-2 py-1 text-xs"
+                              className="rounded border border-white/20 px-2 py-1 text-xs hover:bg-white/10"
                               onClick={onCancelRename}
                             >
                               Cancel
@@ -169,34 +172,33 @@ export default function ProjectNotesWorkspace(props: Props) {
                             {note.pinned ? "📌 " : ""}
                             {note.title || "Note"}
                           </div>
-                          <div className="mt-1 line-clamp-2 text-xs text-zinc-500">
+                          <div className="mt-1 line-clamp-2 text-xs text-white/60">
                             {previewText}
                           </div>
                         </>
                       )}
                     </div>
 
-                    {renamingId !== note.id ? (
+                    {renamingId !== note.id && (
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         <button
-                          className="rounded border px-2 py-1 text-[11px]"
+                          className="rounded border border-white/20 px-2 py-1 text-[11px] hover:bg-white/10"
                           onClick={() => onTogglePin(note)}
-                          title={note.pinned ? "Unpin note" : "Pin note"}
                         >
                           {note.pinned ? "Unpin" : "Pin"}
                         </button>
 
                         <button
-                          className="rounded border px-2 py-1 text-[11px]"
+                          className="rounded border border-white/20 px-2 py-1 text-[11px] hover:bg-white/10"
                           onClick={() => onStartRename(note)}
                         >
                           Rename
                         </button>
                       </div>
-                    ) : null}
+                    )}
                   </div>
 
-                  <div className="text-[11px] text-zinc-500">
+                  <div className="text-[11px] text-white/50">
                     Updated: {formatDate(note.updated_at)}
                   </div>
                 </div>
@@ -206,19 +208,20 @@ export default function ProjectNotesWorkspace(props: Props) {
         </div>
       </section>
 
-      <section className="rounded-xl border p-4 space-y-3">
+      {/* RIGHT PANEL */}
+      <section className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <div className="text-sm font-medium">
               {activeNote ? activeNote.title || "Note" : "Note Editor"}
             </div>
-            <div className="text-xs text-zinc-500">
+            <div className="text-xs text-white/60">
               {editorDirty ? "Unsaved changes" : "Saved"}
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-2 rounded border px-3 py-2 text-xs">
+            <label className="flex items-center gap-2 rounded border border-white/20 px-3 py-2 text-xs">
               <input
                 type="checkbox"
                 checked={autosaveOn}
@@ -228,7 +231,7 @@ export default function ProjectNotesWorkspace(props: Props) {
             </label>
 
             <button
-              className="rounded border px-3 py-2 text-xs disabled:opacity-60"
+              className="rounded border border-white/20 px-3 py-2 text-xs hover:bg-white/10 disabled:opacity-60"
               onClick={onSaveActiveNote}
               disabled={!activeNote || savingNote}
             >
@@ -236,7 +239,7 @@ export default function ProjectNotesWorkspace(props: Props) {
             </button>
 
             <button
-              className="rounded border px-3 py-2 text-xs disabled:opacity-60"
+              className="rounded border border-white/20 px-3 py-2 text-xs hover:bg-white/10 disabled:opacity-60"
               onClick={onDeleteActiveNote}
               disabled={!activeNote || deletingNote}
             >
@@ -246,20 +249,20 @@ export default function ProjectNotesWorkspace(props: Props) {
         </div>
 
         {!activeNote ? (
-          <div className="text-sm text-zinc-600">
+          <div className="text-sm text-white/60">
             Select a note on the left, or create a new one.
           </div>
         ) : (
           <>
             <input
-              className="w-full rounded border px-3 py-2 text-sm"
+              className="w-full rounded border border-white/20 bg-black px-3 py-2 text-sm text-white"
               value={editorTitle}
               onChange={(e) => setEditorTitle(e.target.value)}
               placeholder="Note title"
             />
 
             <textarea
-              className="min-h-[28rem] w-full rounded border px-3 py-2 text-sm"
+              className="min-h-[28rem] w-full rounded border border-white/20 bg-black px-3 py-2 text-sm text-white"
               value={editorBody}
               onChange={(e) => setEditorBody(e.target.value)}
               placeholder="Write your note here…"

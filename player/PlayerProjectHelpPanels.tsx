@@ -14,16 +14,16 @@ export default function PlayerProjectHelpPanels(props: {
   return (
     <>
       {!onProjectPage && tab === "project" && (
-        <div className="rounded-xl border bg-zinc-50 px-3 py-2 text-[11px] text-zinc-700">
+        <div className="rounded-xl border border-white/10 bg-[#111] px-3 py-2 text-[11px] text-white/70">
           Project mode becomes available when you open a project workspace page.
         </div>
       )}
 
       {canUseProject && hasProjectTracks && (
-        <div className="rounded-xl border bg-zinc-50 px-3 py-2 text-[11px] text-zinc-700">
-          Rehearsal keys: <span className="font-medium">↑ ↓</span> select row •{" "}
-          <span className="font-medium">Enter</span> play from selected •{" "}
-          <span className="font-medium">Space</span> play selected
+        <div className="rounded-xl border border-white/10 bg-[#111] px-3 py-2 text-[11px] text-white/70">
+          Rehearsal keys: <span className="font-medium text-white">↑ ↓</span> select row •{" "}
+          <span className="font-medium text-white">Enter</span> play •{" "}
+          <span className="font-medium text-white">Space</span> toggle play
         </div>
       )}
     </>

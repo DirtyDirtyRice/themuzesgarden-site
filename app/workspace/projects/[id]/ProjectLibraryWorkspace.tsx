@@ -240,12 +240,12 @@ export default function ProjectLibraryWorkspace(props: Props) {
   );
 
   return (
-    <div className="relative">
+    <div className="relative text-white">
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="font-medium">Project Library</div>
+          <div className="font-medium text-white">Project Library</div>
           <button
-            className="rounded border px-3 py-2 text-sm transition hover:bg-zinc-50 active:scale-[0.98] disabled:opacity-60"
+            className="rounded border border-white bg-black px-3 py-2 text-sm text-white transition active:scale-[0.98] disabled:opacity-60"
             onClick={onRefresh}
             disabled={loadingLibrary}
           >
@@ -254,11 +254,11 @@ export default function ProjectLibraryWorkspace(props: Props) {
         </div>
 
         {metadataFilters.length > 0 ? (
-          <div className="rounded border bg-yellow-50 p-2 text-xs space-y-2">
+          <div className="space-y-2 rounded border border-white bg-black p-2 text-xs text-white">
             <div className="flex items-center justify-between gap-2">
               <span>Active metadata filters</span>
               <button
-                className="underline transition hover:text-black active:scale-[0.98]"
+                className="underline transition active:scale-[0.98]"
                 onClick={clearMetadataFilters}
               >
                 Clear all
@@ -269,7 +269,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
               {metadataFilters.map((filter) => (
                 <button
                   key={filter.id}
-                  className="rounded-full border bg-white px-2 py-1 text-[11px] transition hover:bg-zinc-50 active:scale-[0.98]"
+                  className="rounded-full border border-white bg-black px-2 py-1 text-[11px] text-white transition active:scale-[0.98]"
                   onClick={() => removeMetadataFilter(filter.id)}
                   title={filter.query}
                 >
@@ -281,22 +281,22 @@ export default function ProjectLibraryWorkspace(props: Props) {
         ) : null}
 
         {libraryErr ? (
-          <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded border border-white bg-black p-3 text-sm text-white">
             {libraryErr}
           </div>
         ) : null}
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="rounded-lg border p-3 space-y-2">
+          <div className="space-y-2 rounded-lg border border-white bg-black p-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-sm font-medium">Linked Tracks</div>
-              <div className="text-xs text-zinc-500">
+              <div className="text-sm font-medium text-white">Linked Tracks</div>
+              <div className="text-xs text-white">
                 Linked: {groundedLinkedTracks.length}
               </div>
             </div>
 
             {groundedLinkedTracks.length === 0 ? (
-              <div className="text-sm text-zinc-600">
+              <div className="text-sm text-white">
                 No tracks linked yet. Use the Library list to link.
               </div>
             ) : (
@@ -319,16 +319,18 @@ export default function ProjectLibraryWorkspace(props: Props) {
                   return (
                     <div
                       key={tid}
-                      className={`rounded border p-3 flex items-center justify-between gap-3 cursor-pointer ${
-                        isPreview ? "bg-zinc-50 border-black" : "bg-white"
+                      className={`flex cursor-pointer items-center justify-between gap-3 rounded border p-3 ${
+                        isPreview
+                          ? "border-white bg-black"
+                          : "border-white bg-black"
                       }`}
                       onClick={() => onPreviewTrack(tid)}
                     >
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium truncate">
+                      <div className="min-w-0 text-white">
+                        <div className="truncate text-sm font-medium text-white">
                           {isNow ? "▶ " : ""}
                           {isNow ? (
-                            <span className="mr-2 rounded bg-black px-2 py-0.5 text-[10px] text-white">
+                            <span className="mr-2 rounded border border-white bg-black px-2 py-0.5 text-[10px] text-white">
                               NOW
                             </span>
                           ) : null}
@@ -336,17 +338,17 @@ export default function ProjectLibraryWorkspace(props: Props) {
                         </div>
 
                         {track.artist ? (
-                          <div className="text-xs text-zinc-500 truncate">
+                          <div className="truncate text-xs text-white">
                             {track.artist}
                           </div>
                         ) : null}
 
-                        <div className="mt-1 text-[10px] text-zinc-400">
+                        <div className="mt-1 text-[10px] text-white">
                           Source: {sourceLabel} • Visibility: {visibilityLabel}
                         </div>
 
                         {isMetadataSelected ? (
-                          <div className="mt-1 text-[11px] text-zinc-500">
+                          <div className="mt-1 text-[11px] text-white">
                             Selected for metadata
                           </div>
                         ) : null}
@@ -357,21 +359,21 @@ export default function ProjectLibraryWorkspace(props: Props) {
                         onClick={(event) => event.stopPropagation()}
                       >
                         <button
-                          className="rounded border px-3 py-2 text-xs transition hover:bg-zinc-50 active:scale-[0.98]"
+                          className="rounded border border-white bg-black px-3 py-2 text-xs text-white transition active:scale-[0.98]"
                           onClick={() => onPlayTrackById(tid)}
                         >
                           Play
                         </button>
 
                         <button
-                          className="rounded border px-3 py-2 text-xs transition hover:bg-zinc-50 active:scale-[0.98]"
+                          className="rounded border border-white bg-black px-3 py-2 text-xs text-white transition active:scale-[0.98]"
                           onClick={() => handleInspectTrack(tid)}
                         >
                           Inspect
                         </button>
 
                         <button
-                          className="rounded border px-3 py-2 text-xs transition hover:bg-zinc-50 active:scale-[0.98] disabled:opacity-60"
+                          className="rounded border border-white bg-black px-3 py-2 text-xs text-white transition active:scale-[0.98] disabled:opacity-60"
                           onClick={() => onUnlinkTrack(tid)}
                           disabled={linkBusyId === tid}
                         >
@@ -396,13 +398,13 @@ export default function ProjectLibraryWorkspace(props: Props) {
           />
         </div>
 
-        <div className="rounded-lg border p-4 space-y-1">
-          <div className="font-medium text-sm">Safe architecture</div>
-          <div className="text-sm text-zinc-600">
-            This uses <code className="px-1">project_tracks</code> as a join
+        <div className="space-y-1 rounded-lg border border-white bg-black p-4">
+          <div className="text-sm font-medium text-white">Safe architecture</div>
+          <div className="text-sm text-white">
+            This uses <code className="border border-white px-1 text-white">project_tracks</code> as a join
             table. Library stays global and unchanged.
           </div>
-          <div className="text-sm text-zinc-600">
+          <div className="text-sm text-white">
             Metadata inspect now runs through the universal panel system.
           </div>
         </div>

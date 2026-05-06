@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+
+import FindItPanel from "./find-it/FindItPanel";
+import { isActivePath } from "./find-it/findItPathUtils";
 
 type TitleBarLink = {
   label: string;
@@ -17,19 +21,51 @@ const PRIMARY_LINKS: TitleBarLink[] = [
 ];
 
 const METADATA_CHILD_LINKS: TitleBarLink[] = [
-  { label: "Library", href: "/metadata" },
-  { label: "Create", href: "/metadata/create" }, // ✅ added
+  { label: "Library", href: "/metadata/library" },
+  { label: "Create", href: "/metadata/create" },
   { label: "System", href: "/metadata/system" },
 ];
 
-function isActivePath(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(`${href}/`);
+function getPrimaryLinkClass(active: boolean) {
+  return [
+    "rounded-md border px-3 py-2 text-sm font-medium transition duration-150",
+    "hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]",
+    active
+      ? "border-white bg-white text-black"
+      : "border-white/10 bg-white/5 text-white",
+  ].join(" ");
+}
+
+function getMetadataChildLinkClass(active: boolean) {
+  return [
+    "block rounded-lg border px-3 py-2 text-sm transition duration-150",
+    "hover:opacity-85 active:scale-[0.99]",
+    active
+      ? "border-white bg-white text-black"
+      : "border-transparent bg-transparent text-white",
+  ].join(" ");
 }
 
 export default function TitleBar() {
   const pathname = usePathname();
   const metadataActive = isActivePath(pathname, "/metadata");
+  const [metadataMenuOpen, setMetadataMenuOpen] = useState(false);
+  const [findItOpen, setFindItOpen] = useState(false);
+  const [findItSearchValue, setFindItSearchValue] = useState("");
+
+  function closeMetadataMenu() {
+    setMetadataMenuOpen(false);
+  }
+
+  function openMetadataMenu() {
+    setMetadataMenuOpen(true);
+  }
+
+  function handleMetadataBlur(event: React.FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      closeMetadataMenu();
+    }
+  }
 
   return (
     <header className="sticky top-0 z-[1000] border-b border-white/10 bg-black/90 backdrop-blur">
@@ -37,13 +73,13 @@ export default function TitleBar() {
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/"
-            className="shrink-0 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold tracking-wide text-white transition hover:bg-white/10"
+            className="shrink-0 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold tracking-wide text-white transition duration-150 hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]"
             aria-label="Go to The Muzes Garden home page"
           >
             The Muzes Garden
           </Link>
 
-          <div className="hidden min-w-0 md:flex flex-col">
+          <div className="hidden min-w-0 flex-col md:flex">
             <span className="truncate text-sm font-semibold text-white">
               Workspace Navigation
             </span>
@@ -65,40 +101,47 @@ export default function TitleBar() {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={[
-                  "rounded-md px-3 py-2 text-sm font-medium transition",
-                  active
-                    ? "bg-white text-black"
-                    : "border border-white/10 bg-white/5 text-white hover:bg-white/10",
-                ].join(" ")}
+                className={getPrimaryLinkClass(active)}
               >
                 {link.label}
               </Link>
             );
           })}
 
-          <div className="group relative">
+          <div
+            className="relative"
+            onBlur={handleMetadataBlur}
+            onFocus={openMetadataMenu}
+            onMouseEnter={openMetadataMenu}
+            onMouseLeave={closeMetadataMenu}
+          >
             <Link
               href="/metadata"
               aria-current={metadataActive ? "page" : undefined}
+              aria-expanded={metadataMenuOpen}
+              aria-haspopup="menu"
               aria-label="Open Metadata library"
-              className={[
-                "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition",
-                metadataActive
-                  ? "bg-white text-black"
-                  : "border border-white/10 bg-white/5 text-white hover:bg-white/10",
-              ].join(" ")}
+              className={getPrimaryLinkClass(metadataActive)}
             >
-              <span>Metadata</span>
-              <span
-                aria-hidden="true"
-                className="text-[10px] leading-none opacity-80"
-              >
-                ▼
+              <span className="inline-flex items-center gap-2">
+                <span>Metadata</span>
+                <span
+                  aria-hidden="true"
+                  className="text-[10px] leading-none opacity-80"
+                >
+                  ▼
+                </span>
               </span>
             </Link>
 
-            <div className="pointer-events-none absolute right-0 top-full z-[1100] mt-2 min-w-[180px] translate-y-1 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100">
+            <div
+              className={[
+                "absolute right-0 top-full z-[1100] mt-2 min-w-[180px] transition duration-150",
+                metadataMenuOpen
+                  ? "pointer-events-auto translate-y-0 opacity-100"
+                  : "pointer-events-none translate-y-1 opacity-0",
+              ].join(" ")}
+            >
               <div className="overflow-hidden rounded-xl border border-white/10 bg-black/95 p-1 shadow-2xl backdrop-blur">
                 {METADATA_CHILD_LINKS.map((link) => {
                   const active = isActivePath(pathname, link.href);
@@ -108,12 +151,8 @@ export default function TitleBar() {
                       key={link.href}
                       href={link.href}
                       aria-current={active ? "page" : undefined}
-                      className={[
-                        "block rounded-lg px-3 py-2 text-sm transition",
-                        active
-                          ? "bg-white text-black"
-                          : "text-white hover:bg-white/10",
-                      ].join(" ")}
+                      className={getMetadataChildLinkClass(active)}
+                      onClick={closeMetadataMenu}
                     >
                       {link.label}
                     </Link>
@@ -125,7 +164,22 @@ export default function TitleBar() {
 
           <button
             type="button"
-            className="rounded-md border border-dashed border-white/20 bg-transparent px-3 py-2 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+            onClick={() => setFindItOpen((current) => !current)}
+            aria-expanded={findItOpen}
+            className={[
+              "rounded-md border px-3 py-2 text-sm font-medium transition duration-150",
+              "hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]",
+              findItOpen
+                ? "border-white bg-white text-black"
+                : "border-white/10 bg-white/5 text-white",
+            ].join(" ")}
+          >
+            Find It
+          </button>
+
+          <button
+            type="button"
+            className="rounded-md border border-dashed border-white/20 bg-transparent px-3 py-2 text-sm font-medium text-white/70 transition duration-150 hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]"
             aria-label="Project menu placeholder"
             title="Project menu placeholder"
           >
@@ -133,6 +187,14 @@ export default function TitleBar() {
           </button>
         </nav>
       </div>
+
+      {findItOpen ? (
+        <FindItPanel
+          pathname={pathname}
+          searchValue={findItSearchValue}
+          onSearchChange={setFindItSearchValue}
+        />
+      ) : null}
     </header>
   );
 }

@@ -1,570 +1,442 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 
-import {
-  getMetadataLibrary,
-  getMetadataRecordSummaries,
-} from "@/lib/metadata/metadataLibrarySeed";
-import type {
-  MetadataSectionKey,
-  MetadataShelfKey,
-} from "@/lib/metadata/metadataLibraryTypes";
-
-import {
-  RECORD_TYPE_OPTIONS,
-  RELATIONSHIP_OPTIONS,
-  VISIBILITY_OPTIONS,
-} from "./metadataCreateConfig";
-
-import {
-  getRelationshipLabel,
-  slugify,
-} from "./metadataCreateUtils";
-
-import { validateMetadataCreateState } from "./metadataCreateValidation";
-import { buildMetadataCreateRecord } from "./metadataCreateRecordBuilder";
-import { buildMetadataCreateSaveBridge } from "./metadataCreateSaveBridge";
-import { executeMetadataCreateSubmit } from "./metadataCreateSubmitAction";
-
+import MetadataCreateCreateBridgePanel from "./MetadataCreateCreateBridgePanel";
 import MetadataCreateForm from "./MetadataCreateForm";
+import MetadataCreateOutputPanel from "./MetadataCreateOutputPanel";
 import MetadataCreateSidebar from "./MetadataCreateSidebar";
+import {
+  CREATE_PANELS,
+  getPanelTitle,
+  useMetadataCreatePageState,
+} from "./useMetadataCreatePageState";
 
-type VisibilityOption = (typeof VISIBILITY_OPTIONS)[number]["value"];
-type RecordTypeOption = (typeof RECORD_TYPE_OPTIONS)[number]["value"];
-type RelationshipType = (typeof RELATIONSHIP_OPTIONS)[number]["value"];
+type MetadataCreatePanel = "form" | "preview" | "output" | "save";
 
-type ShelfOption = {
-  id: string;
-  key?: MetadataShelfKey;
+type FlowBlockReason = {
   label: string;
-  description: string;
-  sections: {
-    id: string;
-    key?: MetadataSectionKey;
-    label: string;
-  }[];
+  detail: string;
 };
 
-type RecordSummaryOption = {
-  id: string;
-  title: string;
-  slug: string;
-};
+const REQUIRED_PANEL_BLOCK_MESSAGE =
+  "Finish required fields first before moving to preview, output, or save.";
 
-export default function MetadataCreatePage() {
-  const library = getMetadataLibrary();
-  const recordSummaries = getMetadataRecordSummaries();
+function StartCreatePanel({ onStart }: { onStart: () => void }) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
+      <div className="flex flex-col gap-5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/45">
+            Metadata Create
+          </p>
 
-  const shelfOptions = library.shelves as ShelfOption[];
-  const starterRelationshipOptions = recordSummaries as RecordSummaryOption[];
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+            Create Record v3
+          </h1>
 
-  const [title, setTitle] = useState("");
-  const [selectedShelfId, setSelectedShelfId] = useState(
-    shelfOptions[0]?.id ?? ""
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/70 md:text-base">
+            Start the guided record builder. The next screen replaces this intro
+            and puts the first required field directly in front of you.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
+            Creating record steps
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-white/70">
+            * = mandatory step. Complete Title, Placement, Why it belongs here,
+            and Description before saving. Relationship is optional.
+          </p>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-black px-3 py-3">
+              <p className="text-sm font-semibold text-white">1. Title *</p>
+              <p className="mt-1 text-sm leading-6 text-white/60">
+                Give the record a real name. This creates the slug.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black px-3 py-3">
+              <p className="text-sm font-semibold text-white">
+                2. Placement *
+              </p>
+              <p className="mt-1 text-sm leading-6 text-white/60">
+                Choose shelf and section, then explain why it belongs there.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black px-3 py-3">
+              <p className="text-sm font-semibold text-white">
+                3. Description *
+              </p>
+              <p className="mt-1 text-sm leading-6 text-white/60">
+                Explain what this record is so it can stand on its own.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onStart}
+          className="inline-flex w-full justify-center rounded-xl border border-white/10 bg-white px-5 py-4 text-base font-semibold text-black transition hover:opacity-85 hover:scale-[0.99] md:w-fit"
+        >
+          Start Creating Record
+        </button>
+      </div>
+    </section>
   );
-  const [selectedSectionId, setSelectedSectionId] = useState(
-    shelfOptions[0]?.sections[0]?.id ?? ""
+}
+
+function getFlowBlockReasons(missingItems: string[]): FlowBlockReason[] {
+  if (missingItems.length === 0) return [];
+
+  return missingItems.map((item) => ({
+    label: item,
+    detail: `${item} is required before you can leave the form step.`,
+  }));
+}
+
+function MissingRequiredFieldsAlert({
+  reasons,
+  onReturnToForm,
+}: {
+  reasons: FlowBlockReason[];
+  onReturnToForm: () => void;
+}) {
+  if (reasons.length === 0) return null;
+
+  return (
+    <section className="rounded-2xl border border-yellow-400/30 bg-yellow-400/10 p-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-yellow-100">
+            Finish required fields first
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-yellow-50/85">
+            Complete the required fields marked with * before moving to Preview,
+            Output, Save, or Create.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onReturnToForm}
+          className="rounded-xl border border-yellow-100/30 bg-black px-4 py-2 text-sm font-bold text-yellow-50 transition hover:opacity-85"
+        >
+          Return to required fields
+        </button>
+      </div>
+
+      <div className="mt-4 grid gap-2 md:grid-cols-2">
+        {reasons.map((reason) => (
+          <div
+            key={reason.label}
+            className="rounded-xl border border-yellow-100/20 bg-black/50 px-3 py-3"
+          >
+            <p className="text-sm font-black text-yellow-50">
+              {reason.label} *
+            </p>
+            <p className="mt-1 text-xs leading-5 text-yellow-50/70">
+              {reason.detail}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
   );
-  const [recordType, setRecordType] = useState<RecordTypeOption>("concept");
-  const [visibility, setVisibility] = useState<VisibilityOption>("public");
-  const [summary, setSummary] = useState("");
-  const [belongsReason, setBelongsReason] = useState("");
-  const [relationshipType, setRelationshipType] =
-    useState<RelationshipType>("related_to");
-  const [relatedRecordId, setRelatedRecordId] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState("");
-  const [submitError, setSubmitError] = useState("");
-  const [createdSlug, setCreatedSlug] = useState("");
+}
 
-  const activeShelf = useMemo(() => {
-    return shelfOptions.find((shelf) => shelf.id === selectedShelfId) ?? null;
-  }, [selectedShelfId, shelfOptions]);
-
-  const activeSections = activeShelf?.sections ?? [];
-
-  const activeSection = useMemo(() => {
+function FlowGuardCard({
+  canContinue,
+  missingItems,
+}: {
+  canContinue: boolean;
+  missingItems: string[];
+}) {
+  if (canContinue) {
     return (
-      activeSections.find((section) => section.id === selectedSectionId) ?? null
+      <section className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-3">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-100">
+          Required fields complete
+        </p>
+        <p className="mt-1 text-sm leading-6 text-emerald-50/80">
+          Preview, Output, Save, and Create are unlocked.
+        </p>
+      </section>
     );
-  }, [activeSections, selectedSectionId]);
-
-  const relationshipOptions = useMemo(() => {
-    const currentSlug = slugify(title);
-
-    return starterRelationshipOptions.filter(
-      (record) => record.slug !== currentSlug
-    );
-  }, [starterRelationshipOptions, title]);
-
-  const selectedRelatedRecord = useMemo(() => {
-    return (
-      relationshipOptions.find((record) => record.id === relatedRecordId) ?? null
-    );
-  }, [relationshipOptions, relatedRecordId]);
-
-  function handleShelfChange(nextShelfId: string) {
-    const nextShelf =
-      shelfOptions.find((shelf) => shelf.id === nextShelfId) ?? null;
-
-    setSelectedShelfId(nextShelfId);
-    setSelectedSectionId(nextShelf?.sections[0]?.id ?? "");
-  }
-
-  const validation = useMemo(() => {
-    return validateMetadataCreateState({
-      title,
-      summary,
-      belongsReason,
-      visibility,
-      hasActiveShelf: Boolean(activeShelf),
-      hasActiveSection: Boolean(activeSection),
-      hasSelectedRelatedRecord: Boolean(selectedRelatedRecord),
-      relationshipType,
-    });
-  }, [
-    title,
-    summary,
-    belongsReason,
-    visibility,
-    activeShelf,
-    activeSection,
-    selectedRelatedRecord,
-    relationshipType,
-  ]);
-
-  const trimmedTitle = validation.trimmedTitle;
-  const trimmedSummary = validation.trimmedSummary;
-  const trimmedBelongsReason = validation.trimmedBelongsReason;
-  const generatedSlug = validation.generatedSlug;
-
-  const titleReady = validation.titleReady;
-  const slugReady = validation.slugReady;
-  const summaryReady = validation.summaryReady;
-  const belongsReady = validation.belongsReady;
-
-  const requiredReadyCount = validation.requiredReadyCount;
-  const canContinue = validation.canContinue;
-  const hasRelationshipStarter = validation.hasRelationshipStarter;
-  const missingItems = validation.missingItems;
-
-  const relationshipPreviewLabel = selectedRelatedRecord
-    ? `${getRelationshipLabel(relationshipType)} → ${selectedRelatedRecord.title}`
-    : "No starter relationship selected yet.";
-
-  const recordBuild = useMemo(() => {
-    return buildMetadataCreateRecord({
-      generatedSlug,
-      trimmedTitle,
-      trimmedSummary,
-      trimmedBelongsReason,
-      visibility,
-      recordType,
-      relationshipType,
-      selectedShelfId,
-      selectedSectionId,
-      activeShelfKey: activeShelf?.key,
-      activeSectionKey: activeSection?.key,
-      selectedRelatedRecord,
-    });
-  }, [
-    generatedSlug,
-    trimmedTitle,
-    trimmedSummary,
-    trimmedBelongsReason,
-    visibility,
-    recordType,
-    relationshipType,
-    selectedShelfId,
-    selectedSectionId,
-    activeShelf,
-    activeSection,
-    selectedRelatedRecord,
-  ]);
-
-  const finalRecord = recordBuild.finalRecord;
-  const finalRecordJson = recordBuild.finalRecordJson;
-
-  const saveBridge = useMemo(() => {
-    return buildMetadataCreateSaveBridge({
-      finalRecord,
-      canContinue,
-      missingItems,
-    });
-  }, [finalRecord, canContinue, missingItems]);
-
-  const saveReady = saveBridge.saveReady;
-  const saveBlockedReasons = saveBridge.saveBlockedReasons;
-  const savePayload = saveBridge.savePayload;
-  const savePayloadJson = saveBridge.savePayloadJson;
-
-  async function handleCreateRecord() {
-    setSubmitMessage("");
-    setSubmitError("");
-    setCreatedSlug("");
-
-    setIsSubmitting(true);
-
-    try {
-      const result = await executeMetadataCreateSubmit(savePayload);
-
-      if (!result.ok) {
-        setSubmitError(result.message);
-        return;
-      }
-
-      setSubmitMessage(result.message);
-      setCreatedSlug(result.createdRecord.slug);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unknown create error occurred.";
-
-      setSubmitError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
   }
 
   return (
-    <main className="min-h-screen bg-black px-4 py-6 text-white md:px-6">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
-                  Metadata Create
-                </span>
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/55">
+        Required before next step
+      </p>
 
-                <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                  Create Record v3
-                </h1>
+      <p className="mt-1 text-sm leading-6 text-white/70">
+        {REQUIRED_PANEL_BLOCK_MESSAGE}
+      </p>
 
-                <p className="max-w-3xl text-sm leading-6 text-white/70 md:text-base">
-                  This page builds a record with stronger structure. The goal is
-                  not just to name something, but to place it intentionally,
-                  describe it meaningfully, and begin connecting it to the rest
-                  of the library.
-                </p>
-              </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {missingItems.map((item) => (
+          <span
+            key={item}
+            className="rounded-full border border-white/15 bg-black px-3 py-1 text-xs font-bold text-white/80"
+          >
+            {item} *
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href="/metadata"
-                  className="inline-flex rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                >
-                  Back to Library
-                </Link>
+function CompactCreateToolbar({
+  activePanel,
+  canContinue,
+  saveReady,
+  isSubmitting,
+  onPanelChange,
+  onCreateRecord,
+}: {
+  activePanel: MetadataCreatePanel;
+  canContinue: boolean;
+  saveReady: boolean;
+  isSubmitting: boolean;
+  onPanelChange: (panel: MetadataCreatePanel) => void;
+  onCreateRecord: () => void;
+}) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-black/85 p-3">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
+            Create mode
+          </p>
+          <p className="text-sm text-white/70">{getPanelTitle(activePanel)}</p>
+        </div>
 
-                <Link
-                  href="/metadata/system"
-                  className="inline-flex rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                >
-                  View System
-                </Link>
-              </div>
-            </div>
+        <div className="flex flex-wrap gap-2">
+          {CREATE_PANELS.map((panel) => {
+            const isActive = panel.key === activePanel;
+            const isLocked = panel.key !== "form" && !canContinue;
 
-            <div className="grid gap-3 md:grid-cols-4">
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Rule 1
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/80">
-                  Content must exist before something becomes a child.
-                </p>
-              </div>
+            return (
+              <button
+                key={panel.key}
+                type="button"
+                onClick={() => onPanelChange(panel.key)}
+                aria-disabled={isLocked}
+                title={
+                  isLocked ? REQUIRED_PANEL_BLOCK_MESSAGE : getPanelTitle(panel.key)
+                }
+                className={[
+                  "rounded-lg border px-3 py-2 text-xs transition hover:opacity-85",
+                  isActive
+                    ? "border-white bg-white text-black"
+                    : "border-white/10 bg-black/40 text-white",
+                  isLocked ? "cursor-not-allowed opacity-45" : "",
+                ].join(" ")}
+              >
+                {panel.title}
+                {isLocked ? " 🔒" : ""}
+              </button>
+            );
+          })}
 
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Rule 2
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/80">
-                  A child becomes a father only when it has children.
-                </p>
-              </div>
+          <button
+            type="button"
+            onClick={onCreateRecord}
+            disabled={!saveReady || isSubmitting}
+            className={[
+              "rounded-lg border px-3 py-2 text-xs font-medium transition",
+              saveReady && !isSubmitting
+                ? "border-white/10 bg-white text-black hover:opacity-85"
+                : "cursor-not-allowed border-white/10 bg-white/5 text-white/35",
+            ].join(" ")}
+          >
+            {isSubmitting ? "Creating..." : saveReady ? "Create" : "Blocked"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
 
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Rule 3
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/80">
-                  Depth is earned, not assumed.
-                </p>
-              </div>
+export default function MetadataCreatePage() {
+  const state = useMetadataCreatePageState();
+  const [hasStarted, setHasStarted] = useState(false);
+  const [blockedReasons, setBlockedReasons] = useState<FlowBlockReason[]>([]);
+  const createStageRef = useRef<HTMLDivElement | null>(null);
 
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Rule 4
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/80">
-                  The interface must stay clean even when the system gets deep.
-                </p>
-              </div>
-            </div>
+  const missingItems = state.validation.missingItems;
+  const flowBlockReasons = getFlowBlockReasons(missingItems);
+
+  function scrollCreateStageIntoView() {
+    window.requestAnimationFrame(() => {
+      createStageRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  function clearBlockedReasons() {
+    if (blockedReasons.length > 0) {
+      setBlockedReasons([]);
+    }
+  }
+
+  function showBlockedReasons() {
+    setBlockedReasons(flowBlockReasons);
+    state.setActivePanel("form");
+    scrollCreateStageIntoView();
+  }
+
+  function startCreateFlow() {
+    setHasStarted(true);
+    state.setActivePanel("form");
+    clearBlockedReasons();
+    scrollCreateStageIntoView();
+  }
+
+  function guardedPanelChange(panel: MetadataCreatePanel) {
+    if (panel !== "form" && !state.validation.canContinue) {
+      showBlockedReasons();
+      return;
+    }
+
+    clearBlockedReasons();
+    state.setActivePanel(panel);
+    scrollCreateStageIntoView();
+  }
+
+  function guardedCreateRecord() {
+    if (!state.validation.canContinue || !state.saveBridge.saveReady) {
+      showBlockedReasons();
+      return;
+    }
+
+    clearBlockedReasons();
+    void state.handleCreateRecord();
+  }
+
+  function moveToSavePanel() {
+    if (!state.validation.canContinue) {
+      showBlockedReasons();
+      return;
+    }
+
+    clearBlockedReasons();
+    state.setActivePanel("save");
+    scrollCreateStageIntoView();
+  }
+
+  return (
+    <main className="min-h-screen bg-black px-4 py-4 text-white md:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+        {!hasStarted ? (
+          <StartCreatePanel onStart={startCreateFlow} />
+        ) : (
+          <div ref={createStageRef} className="flex flex-col gap-4">
+            <CompactCreateToolbar
+              activePanel={state.activePanel}
+              canContinue={state.validation.canContinue}
+              saveReady={state.saveBridge.saveReady}
+              isSubmitting={state.isSubmitting}
+              onPanelChange={guardedPanelChange}
+              onCreateRecord={guardedCreateRecord}
+            />
+
+            <FlowGuardCard
+              canContinue={state.validation.canContinue}
+              missingItems={missingItems}
+            />
+
+            <MissingRequiredFieldsAlert
+              reasons={blockedReasons}
+              onReturnToForm={() => guardedPanelChange("form")}
+            />
+
+            {state.activePanel === "form" && (
+              <MetadataCreateForm
+                title={state.title}
+                onTitleChange={state.setTitle}
+                selectedShelfId={state.selectedShelfId}
+                onShelfChange={state.handleShelfChange}
+                selectedSectionId={state.selectedSectionId}
+                onSectionChange={state.setSelectedSectionId}
+                recordType={state.recordType}
+                onRecordTypeChange={state.setRecordType}
+                visibility={state.visibility}
+                onVisibilityChange={state.setVisibility}
+                summary={state.summary}
+                onSummaryChange={state.setSummary}
+                belongsReason={state.belongsReason}
+                onBelongsReasonChange={state.setBelongsReason}
+                relationshipType={state.relationshipType}
+                onRelationshipTypeChange={state.setRelationshipType}
+                relatedRecordId={state.relatedRecordId}
+                onRelatedRecordChange={state.setRelatedRecordId}
+                shelfOptions={state.shelfOptions}
+                activeShelfDescription={state.activeShelf?.description ?? ""}
+                activeSections={state.activeSections}
+                generatedSlug={state.validation.generatedSlug}
+                relationshipOptions={state.relationshipOptions}
+                requiredReadyCount={state.validation.requiredReadyCount}
+                hasRelationshipStarter={state.validation.hasRelationshipStarter}
+                missingItems={missingItems}
+                canContinue={state.validation.canContinue}
+                titleReady={state.validation.titleReady}
+                slugReady={state.validation.slugReady}
+                summaryReady={state.validation.summaryReady}
+                belongsReady={state.validation.belongsReady}
+                activeShelfLabel={state.activeShelf?.label ?? ""}
+                activeSectionLabel={state.activeSection?.label ?? ""}
+                onFinishReview={moveToSavePanel}
+              />
+            )}
+
+            {state.activePanel === "preview" && (
+              <MetadataCreateSidebar
+                activeShelfLabel={state.activeShelf?.label ?? ""}
+                activeSectionLabel={state.activeSection?.label ?? ""}
+                recordType={state.recordType}
+                visibility={state.visibility}
+                title={state.validation.trimmedTitle}
+                generatedSlug={state.validation.generatedSlug}
+                summary={state.validation.trimmedSummary}
+                belongsReason={state.validation.trimmedBelongsReason}
+                relationshipPreviewLabel={state.relationshipPreviewLabel}
+                shelfOptions={state.shelfOptions}
+              />
+            )}
+
+            {state.activePanel === "output" && (
+              <MetadataCreateOutputPanel
+                finalRecord={state.recordBuild.finalRecord}
+                finalRecordJson={state.recordBuild.finalRecordJson}
+              />
+            )}
+
+            {state.activePanel === "save" && (
+              <MetadataCreateCreateBridgePanel
+                saveReady={state.saveBridge.saveReady}
+                saveBlockedReasons={state.saveBridge.saveBlockedReasons}
+                savePayloadJson={state.saveBridge.savePayloadJson}
+                isSubmitting={state.isSubmitting}
+                submitMessage={state.submitMessage}
+                submitError={state.submitError}
+                createdSlug={state.createdSlug}
+                onCreateRecord={guardedCreateRecord}
+              />
+            )}
           </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-          <MetadataCreateForm
-            title={title}
-            onTitleChange={setTitle}
-            selectedShelfId={selectedShelfId}
-            onShelfChange={handleShelfChange}
-            selectedSectionId={selectedSectionId}
-            onSectionChange={setSelectedSectionId}
-            recordType={recordType}
-            onRecordTypeChange={setRecordType}
-            visibility={visibility}
-            onVisibilityChange={setVisibility}
-            summary={summary}
-            onSummaryChange={setSummary}
-            belongsReason={belongsReason}
-            onBelongsReasonChange={setBelongsReason}
-            relationshipType={relationshipType}
-            onRelationshipTypeChange={setRelationshipType}
-            relatedRecordId={relatedRecordId}
-            onRelatedRecordChange={setRelatedRecordId}
-            shelfOptions={shelfOptions}
-            activeShelfDescription={activeShelf?.description ?? ""}
-            activeSections={activeSections}
-            generatedSlug={generatedSlug}
-            relationshipOptions={relationshipOptions}
-            requiredReadyCount={requiredReadyCount}
-            hasRelationshipStarter={hasRelationshipStarter}
-            missingItems={missingItems}
-            canContinue={canContinue}
-            titleReady={titleReady}
-            slugReady={slugReady}
-            summaryReady={summaryReady}
-            belongsReady={belongsReady}
-            activeShelfLabel={activeShelf?.label ?? ""}
-            activeSectionLabel={activeSection?.label ?? ""}
-          />
-
-          <MetadataCreateSidebar
-            activeShelfLabel={activeShelf?.label ?? ""}
-            activeSectionLabel={activeSection?.label ?? ""}
-            recordType={recordType}
-            visibility={visibility}
-            title={trimmedTitle}
-            generatedSlug={generatedSlug}
-            summary={trimmedSummary}
-            belongsReason={trimmedBelongsReason}
-            relationshipPreviewLabel={relationshipPreviewLabel}
-            shelfOptions={shelfOptions}
-          />
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
-                Final Record Output
-              </span>
-
-              <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
-                Final Record Output
-              </h2>
-
-              <p className="max-w-3xl text-sm leading-6 text-white/70 md:text-base">
-                This is the full structured record object generated from the
-                current builder state. It includes the metadata record shape,
-                starter fields, and relationship structure.
-              </p>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-4">
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Record ID
-                </p>
-                <p className="mt-2 break-all text-sm leading-6 text-white/85">
-                  {finalRecord.id}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Slug
-                </p>
-                <p className="mt-2 break-all text-sm leading-6 text-white/85">
-                  {finalRecord.slug}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Fields
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/85">
-                  {finalRecord.fields.length}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Relationships
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/85">
-                  {finalRecord.relationships.length}
-                </p>
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/50">
-              <div className="border-b border-white/10 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  MetadataRecord JSON
-                </p>
-              </div>
-
-              <pre className="overflow-x-auto px-4 py-4 text-xs leading-6 text-white/85 md:text-sm">
-                {finalRecordJson}
-              </pre>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
-                Create Bridge Output
-              </span>
-
-              <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
-                Create Bridge Output
-              </h2>
-
-              <p className="max-w-3xl text-sm leading-6 text-white/70 md:text-base">
-                This is the future create-ready payload layer. It packages the
-                structured record into the form that a real create action can
-                use later, without pretending to save anything yet.
-              </p>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Save Ready
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/85">
-                  {saveReady ? "Yes" : "No"}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Blockers
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/85">
-                  {saveBlockedReasons.length}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Mode
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/85">
-                  create
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                Save blockers
-              </p>
-
-              {saveBlockedReasons.length ? (
-                <div className="mt-3 flex flex-col gap-2">
-                  {saveBlockedReasons.map((reason) => (
-                    <div
-                      key={reason}
-                      className="rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white/80"
-                    >
-                      {reason}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-3 text-sm leading-6 text-white/80">
-                  No blockers. This record is structurally ready for a future
-                  create action.
-                </p>
-              )}
-            </div>
-
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/50">
-              <div className="border-b border-white/10 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Create Payload JSON
-                </p>
-              </div>
-
-              <pre className="overflow-x-auto px-4 py-4 text-xs leading-6 text-white/85 md:text-sm">
-                {savePayloadJson}
-              </pre>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                Real create action
-              </p>
-
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleCreateRecord();
-                  }}
-                  disabled={!saveReady || isSubmitting}
-                  className={[
-                    "inline-flex rounded-md px-4 py-2 text-sm font-medium transition",
-                    saveReady && !isSubmitting
-                      ? "border border-white/10 bg-white text-black hover:bg-white/90"
-                      : "cursor-not-allowed border border-white/10 bg-white/5 text-white/35",
-                  ].join(" ")}
-                >
-                  {isSubmitting ? "Creating Record..." : "Create Record Now"}
-                </button>
-
-                {createdSlug ? (
-                  <Link
-                    href={`/metadata/${createdSlug}`}
-                    className="inline-flex rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                  >
-                    Open Created Record
-                  </Link>
-                ) : null}
-              </div>
-
-              {submitMessage ? (
-                <div className="mt-3 rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white/85">
-                  {submitMessage}
-                </div>
-              ) : null}
-
-              {submitError ? (
-                <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-                  {submitError}
-                </div>
-              ) : null}
-
-              <p className="mt-3 text-xs text-white/45">
-                This currently creates into the active in-memory metadata source
-                for the running app session. Database persistence can be layered
-                in next.
-              </p>
-            </div>
-          </div>
-        </section>
+        )}
       </div>
     </main>
   );

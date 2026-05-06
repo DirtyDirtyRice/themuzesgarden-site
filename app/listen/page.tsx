@@ -1,558 +1,581 @@
 "use client";
 
-import Link from "next/link";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import TopNav from "../components/TopNav";
 import { TRACKS_SEED } from "../../lib/tracksSeed";
+import { supabase } from "../../lib/supabaseClient";
+import { getUploadedTracks } from "../../lib/uploadedTracks";
+import {
+  TAGS,
+  findTag,
+  type TagCategory,
+  type TagDefinition,
+} from "../../lib/tagSystem";
 
-type Track = {
+type TrackLike = {
   id: string;
   title: string;
-  url: string;
-  artist?: string;
+  artist: string;
+  url?: string;
   tags?: string[];
+  createdAt?: string;
 };
 
-function Nav() {
-  const baseBtn: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "10px 12px",
-    borderRadius: 999,
-    border: "1px solid #475569",
-    background: "#020617",
-    color: "#e5e7eb",
-    textDecoration: "none",
-    fontWeight: 700,
-    fontSize: 13,
-  };
+const LS_KEY = "muzes.library.trackTags.v1";
 
-  const activeBtn: React.CSSProperties = {
-    ...baseBtn,
-    background: "#1e293b",
-    border: "1px solid #93c5fd",
-    color: "#f8fafc",
-  };
+const CATEGORY_ORDER: TagCategory[] = [
+  "genre",
+  "mood",
+  "instrument",
+  "production",
+  "energy",
+  "era",
+  "use",
+  "reference",
+];
 
-  return (
-    <nav style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-      <Link href="/" style={baseBtn}>
-        Player
-      </Link>
-      <Link href="/library" style={baseBtn}>
-        Library
-      </Link>
-      <span style={activeBtn}>Listen</span>
-    </nav>
-  );
+const CATEGORY_LABEL: Record<TagCategory, string> = {
+  genre: "Genre",
+  mood: "Mood",
+  instrument: "Instrument",
+  production: "Production",
+  energy: "Energy",
+  era: "Era",
+  use: "Use",
+  reference: "Sounds Like",
+};
+
+function ensureUnique(arr: string[]) {
+  return Array.from(new Set(arr));
 }
 
-function normalize(s: string) {
-  return s.trim().toLowerCase();
+function safeParseJSON<T>(s: string | null): T | null {
+  if (!s) return null;
+  try {
+    return JSON.parse(s) as T;
+  } catch {
+    return null;
+  }
 }
 
-function uniqueTagsFromTracks(tracks: Track[]): string[] {
-  const set = new Set<string>();
-  for (const t of tracks) for (const tag of t.tags ?? []) set.add(tag);
-  return Array.from(set).sort((a, b) => a.localeCompare(b));
+function displayTagLabel(tagId: string) {
+  const tag = findTag(tagId);
+  if (!tag) return tagId;
+  if (tag.category === "reference") return `Sounds Like: ${tag.label}`;
+  return tag.label;
 }
 
-export default function ListenPage() {
-  const tracks = useMemo<Track[]>(() => (TRACKS_SEED as Track[]) ?? [], []);
-  const allTags = useMemo(() => uniqueTagsFromTracks(tracks), [tracks]);
+// Small reusable nested picker (Category -> Tag)
+function NestedTagPicker(props: {
+  title: string;
+  onPickTagId: (tagId: string) => void;
+  excludeTagIds?: string[];
+}) {
+  const { title, onPickTagId, excludeTagIds = [] } = props;
 
-  // --- Player ---
-  const [selectedId, setSelectedId] = useState<string | null>(tracks[0]?.id ?? null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // --- Library filters ---
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [query, setQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
-
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const listRef = useRef<HTMLUListElement | null>(null);
-
-  const filteredSuggestions = useMemo(() => {
-    const q = normalize(query);
-    const base = allTags.filter((t) => !selectedTags.includes(t));
-    if (!q) return base.slice(0, 20);
-    return base.filter((t) => normalize(t).includes(q)).slice(0, 20);
-  }, [allTags, query, selectedTags]);
-
-  const filteredTracks = useMemo(() => {
-    if (selectedTags.length === 0) return tracks;
-    return tracks.filter((t) => selectedTags.every((tag) => (t.tags ?? []).includes(tag)));
-  }, [tracks, selectedTags]);
-
-  const selectedTrack = useMemo(() => {
-    const inFiltered = filteredTracks.find((t) => t.id === selectedId);
-    if (inFiltered) return inFiltered;
-    return filteredTracks[0] ?? tracks[0] ?? null;
-  }, [filteredTracks, selectedId, tracks]);
+  const [open, setOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<TagCategory>("reference");
+  const [search, setSearch] = useState("");
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!selectedTrack) return;
-    if (selectedId !== selectedTrack.id) setSelectedId(selectedTrack.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTrack?.id]);
-
-  function loadAndPlay() {
-    const el = audioRef.current;
-    if (!el) return;
-    el.pause();
-    el.load();
-    el.play().catch(() => {});
-  }
-
-  function selectTrackById(id: string) {
-    setSelectedId(id);
-    setTimeout(() => {
-      const el = audioRef.current;
-      if (!el) return;
-      el.pause();
-      el.load();
-    }, 0);
-  }
-
-  function addTag(tag: string) {
-    if (!tag) return;
-    if (selectedTags.includes(tag)) return;
-    setSelectedTags([...selectedTags, tag]);
-    setQuery("");
-    setIsOpen(true);
-    setActiveIndex(-1);
-    requestAnimationFrame(() => inputRef.current?.focus());
-  }
-
-  function removeTag(tag: string) {
-    setSelectedTags(selectedTags.filter((t) => t !== tag));
-    requestAnimationFrame(() => inputRef.current?.focus());
-  }
-
-  function clearTags() {
-    setSelectedTags([]);
-    requestAnimationFrame(() => inputRef.current?.focus());
-  }
-
-  function openDropdown() {
-    setIsOpen(true);
-  }
-  function closeDropdown() {
-    setIsOpen(false);
-    setActiveIndex(-1);
-  }
-
-  useEffect(() => {
-    function onDocMouseDown(e: MouseEvent) {
-      const el = containerRef.current;
-      if (!el) return;
-      if (e.target instanceof Node && !el.contains(e.target)) closeDropdown();
+    function onDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (open && rootRef.current && !rootRef.current.contains(t)) setOpen(false);
     }
-    document.addEventListener("mousedown", onDocMouseDown);
-    return () => document.removeEventListener("mousedown", onDocMouseDown);
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const tagsByCategory = useMemo(() => {
+    const map: Record<TagCategory, TagDefinition[]> = {
+      genre: [],
+      mood: [],
+      instrument: [],
+      production: [],
+      energy: [],
+      era: [],
+      use: [],
+      reference: [],
+    };
+    for (const t of TAGS) map[t.category].push(t);
+    return map;
   }, []);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    if (filteredSuggestions.length === 0) {
-      setActiveIndex(-1);
-      return;
-    }
-    if (activeIndex >= filteredSuggestions.length) {
-      setActiveIndex(filteredSuggestions.length - 1);
-    }
-  }, [filteredSuggestions.length, activeIndex, isOpen]);
+  const visibleTags = useMemo(() => {
+    const list = tagsByCategory[activeCategory] ?? [];
+    const q = search.trim().toLowerCase();
+    const filtered = q
+      ? list.filter((t) => t.label.toLowerCase().includes(q))
+      : list;
 
-  useEffect(() => {
-    if (!isOpen) return;
-    if (activeIndex < 0) return;
-    const ul = listRef.current;
-    if (!ul) return;
-    const li = ul.querySelector<HTMLLIElement>(`li[data-idx="${activeIndex}"]`);
-    li?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex, isOpen]);
-
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (!isOpen && (e.key === "ArrowDown" || e.key === "ArrowUp")) openDropdown();
-
-    switch (e.key) {
-      case "ArrowDown": {
-        e.preventDefault();
-        if (filteredSuggestions.length === 0) return;
-        setActiveIndex((prev) => (prev < 0 ? 0 : (prev + 1) % filteredSuggestions.length));
-        break;
-      }
-      case "ArrowUp": {
-        e.preventDefault();
-        if (filteredSuggestions.length === 0) return;
-        setActiveIndex((prev) => {
-          if (prev < 0) return filteredSuggestions.length - 1;
-          const next = prev - 1;
-          return next < 0 ? filteredSuggestions.length - 1 : next;
-        });
-        break;
-      }
-      case "Enter": {
-        if (!isOpen) return;
-        if (activeIndex >= 0 && activeIndex < filteredSuggestions.length) {
-          e.preventDefault();
-          addTag(filteredSuggestions[activeIndex]);
-          return;
-        }
-        const exact = filteredSuggestions.find((t) => normalize(t) === normalize(query));
-        if (exact) {
-          e.preventDefault();
-          addTag(exact);
-        }
-        break;
-      }
-      case "Escape": {
-        e.preventDefault();
-        closeDropdown();
-        break;
-      }
-    }
-  }
+    return filtered.filter((t) => !excludeTagIds.includes(t.id));
+  }, [tagsByCategory, activeCategory, search, excludeTagIds]);
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(180deg, #0f172a, #020617)",
-        color: "#e5e7eb",
-        padding: 24,
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }} ref={containerRef}>
-        <header
-          style={{
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            gap: 12,
-            marginBottom: 16,
-          }}
-        >
-          <div>
-            <h1 style={{ margin: 0, fontSize: 28, color: "#f8fafc" }}>Listen</h1>
-            <p style={{ margin: "6px 0 0", color: "#cbd5f5" }}>
-              Player + Library unified (filter tags, then play).
-            </p>
-            <div style={{ marginTop: 12 }}>
-              <Nav />
+    <div className="relative" ref={rootRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="border rounded-lg px-3 py-2 text-sm bg-white text-black hover:bg-gray-50 shadow-sm"
+      >
+        {title} ▾
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-[520px] max-w-[92vw] border rounded-2xl bg-white shadow-xl z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b bg-white">
+            <div className="text-sm font-semibold text-black">{title}</div>
+            <div className="text-xs text-gray-600 mt-1">
+              Step 1: choose a category. Step 2: choose a tag.
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={clearTags}
-            disabled={selectedTags.length === 0}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid #475569",
-              background: selectedTags.length === 0 ? "#0b1220" : "#020617",
-              color: selectedTags.length === 0 ? "#64748b" : "#e5e7eb",
-              cursor: selectedTags.length === 0 ? "not-allowed" : "pointer",
-            }}
-            title="Clear tag filters"
-          >
-            Clear
-          </button>
-        </header>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 16 }}>
-          {/* LEFT: Library */}
-          <section>
-            {/* Selected tags */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {selectedTags.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => removeTag(t)}
-                  title="Click to remove"
-                  style={{
-                    borderRadius: 999,
-                    border: "1px solid #475569",
-                    background: "#020617",
-                    color: "#e5e7eb",
-                    padding: "6px 10px",
-                    cursor: "pointer",
-                  }}
-                >
-                  {t} <span style={{ opacity: 0.7, marginLeft: 6 }}>×</span>
-                </button>
-              ))}
-
-              {selectedTags.length === 0 && (
-                <div style={{ color: "#94a3b8", fontSize: 14 }}>No tag filters selected.</div>
-              )}
+          <div className="grid grid-cols-12">
+            {/* LEFT: Categories */}
+            <div className="col-span-5 border-r bg-gray-50">
+              <div className="p-2">
+                {CATEGORY_ORDER.map((cat) => {
+                  const isActive = cat === activeCategory;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        setActiveCategory(cat);
+                        setSearch("");
+                      }}
+                      className={[
+                        "w-full text-left px-3 py-2 rounded-xl text-sm",
+                        isActive
+                          ? "bg-white text-black shadow-sm border"
+                          : "text-gray-800 hover:bg-white/70",
+                      ].join(" ")}
+                    >
+                      {CATEGORY_LABEL[cat]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Tag search */}
-            <div style={{ position: "relative", marginTop: 12 }}>
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setIsOpen(true);
-                  setActiveIndex(-1);
-                }}
-                onFocus={() => openDropdown()}
-                onKeyDown={onKeyDown}
-                placeholder="Search tags… (↑ ↓ Enter)"
-                style={{
-                  width: "100%",
-                  borderRadius: 12,
-                  border: "1px solid #475569",
-                  background: "#020617",
-                  color: "#f8fafc",
-                  padding: "12px 14px",
-                  outline: "none",
-                }}
-              />
+            {/* RIGHT: Tags */}
+            <div className="col-span-7 bg-white">
+              <div className="p-3 border-b">
+                <div className="text-xs font-semibold text-gray-700">
+                  {CATEGORY_LABEL[activeCategory]}
+                </div>
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search within this category…"
+                  className="mt-2 w-full border rounded-lg p-2 text-sm text-black bg-white"
+                />
+              </div>
 
-              {isOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    zIndex: 20,
-                    marginTop: 8,
-                    width: "100%",
-                    borderRadius: 12,
-                    border: "1px solid #334155",
-                    background: "#020617",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-                    overflow: "hidden",
-                  }}
-                >
-                  {filteredSuggestions.length === 0 ? (
-                    <div style={{ padding: 12, color: "#94a3b8", fontSize: 14 }}>No matching tags</div>
-                  ) : (
-                    <ul
-                      ref={listRef}
-                      style={{
-                        maxHeight: 260,
-                        overflow: "auto",
-                        listStyle: "none",
-                        padding: 6,
-                        margin: 0,
+              <div className="max-h-80 overflow-y-auto p-2">
+                {visibleTags.length === 0 ? (
+                  <div className="px-2 py-3 text-sm text-gray-600">
+                    No tags found.
+                  </div>
+                ) : (
+                  visibleTags.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        onPickTagId(t.id);
                       }}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-gray-100 flex items-center justify-between"
                     >
-                      {filteredSuggestions.map((tag, idx) => {
-                        const active = idx === activeIndex;
-                        return (
-                          <li
-                            key={tag}
-                            data-idx={idx}
-                            style={{
-                              padding: "10px 10px",
-                              borderRadius: 10,
-                              cursor: "pointer",
-                              background: active ? "#1e293b" : "transparent",
-                              color: "#e5e7eb",
-                            }}
-                            onMouseEnter={() => setActiveIndex(idx)}
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => addTag(tag)}
-                          >
-                            {tag}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+                      <span className="text-sm text-black">
+                        {t.category === "reference"
+                          ? `Sounds Like: ${t.label}`
+                          : t.label}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {CATEGORY_LABEL[t.category]}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              <div className="p-2 border-t flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="text-sm px-3 py-2 border rounded-lg bg-white hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function mergeSeedAndUploaded(seed: TrackLike[], uploaded: TrackLike[]) {
+  const byId = new Map<string, TrackLike>();
+  for (const t of seed) byId.set(t.id, t);
+  for (const t of uploaded) byId.set(t.id, t); // uploaded wins
+  return Array.from(byId.values());
+}
+
+export default function LibraryPage() {
+  const router = useRouter();
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // Global filter tags (AND)
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+
+  // Tracks with local edits
+  const [tracks, setTracks] = useState<TrackLike[]>(() => {
+    const seed = TRACKS_SEED as unknown as TrackLike[];
+    const uploaded = getUploadedTracks() as unknown as TrackLike[];
+    return mergeSeedAndUploaded(seed, uploaded);
+  });
+
+  // Per-track editor
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
+
+  // Options menu
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const optionsRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ Member Protection: require an authenticated session to use /library
+  useEffect(() => {
+    let mounted = true;
+
+    async function check() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        const session = data.session;
+        if (!session) {
+          router.replace("/members");
+          return;
+        }
+      } catch {
+        router.replace("/members");
+        return;
+      } finally {
+        if (mounted) setCheckingSession(false);
+      }
+    }
+
+    check();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
+
+  // ✅ Sync: when uploads are added, refresh the library list
+  useEffect(() => {
+    function refreshFromUploaded() {
+      const seed = TRACKS_SEED as unknown as TrackLike[];
+      const uploaded = getUploadedTracks() as unknown as TrackLike[];
+      setTracks((prev) => {
+        // Keep existing tags/edits where possible by merging by id with prev
+        const merged = mergeSeedAndUploaded(seed, uploaded);
+        const prevById = new Map(prev.map((t) => [t.id, t]));
+        return merged.map((t) => prevById.get(t.id) ?? t);
+      });
+    }
+
+    window.addEventListener("tmz_tracks_updated", refreshFromUploaded);
+    window.addEventListener("storage", refreshFromUploaded); // cross-tab updates
+    return () => {
+      window.removeEventListener("tmz_tracks_updated", refreshFromUploaded);
+      window.removeEventListener("storage", refreshFromUploaded);
+    };
+  }, []);
+
+  useEffect(() => {
+    const saved = safeParseJSON<Record<string, string[]>>(
+      localStorage.getItem(LS_KEY)
+    );
+    if (!saved) return;
+
+    setTracks((prev) =>
+      prev.map((t) => {
+        const override = saved[t.id];
+        if (!override) return t;
+        return { ...t, tags: ensureUnique([...(t.tags ?? []), ...override]) };
+      })
+    );
+  }, []);
+
+  useEffect(() => {
+    const map: Record<string, string[]> = {};
+    for (const t of tracks) map[t.id] = ensureUnique(t.tags ?? []);
+    localStorage.setItem(LS_KEY, JSON.stringify(map));
+  }, [tracks]);
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (optionsOpen && optionsRef.current && !optionsRef.current.contains(target)) {
+        setOptionsOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOptionsOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [optionsOpen]);
+
+  function addFilterTag(tagId: string) {
+    setActiveTags((prev) => (prev.includes(tagId) ? prev : [...prev, tagId]));
+  }
+
+  function removeFilterTag(tagId: string) {
+    setActiveTags((prev) => prev.filter((t) => t !== tagId));
+  }
+
+  function clearFilters() {
+    setActiveTags([]);
+  }
+
+  function clearSavedTags() {
+    const ok = window.confirm(
+      "Clear ALL saved per-track tags from this browser?\n(This does not change TRACKS_SEED — only local saved edits.)"
+    );
+    if (!ok) return;
+
+    localStorage.removeItem(LS_KEY);
+    // reset to seed + uploaded (not just seed)
+    const seed = TRACKS_SEED as unknown as TrackLike[];
+    const uploaded = getUploadedTracks() as unknown as TrackLike[];
+    setTracks(mergeSeedAndUploaded(seed, uploaded));
+    setEditingTrackId(null);
+  }
+
+  function addTagToTrack(trackId: string, tagId: string) {
+    setTracks((prev) =>
+      prev.map((t) => {
+        if (t.id !== trackId) return t;
+        const next = ensureUnique([...(t.tags ?? []), tagId]);
+        return { ...t, tags: next };
+      })
+    );
+  }
+
+  function removeTagFromTrack(trackId: string, tagId: string) {
+    setTracks((prev) =>
+      prev.map((t) => {
+        if (t.id !== trackId) return t;
+        const next = (t.tags ?? []).filter((x) => x !== tagId);
+        return { ...t, tags: next };
+      })
+    );
+  }
+
+  const filteredTracks = useMemo(() => {
+    if (!activeTags.length) return tracks;
+    return tracks.filter((t) => {
+      const ids = t.tags ?? [];
+      return activeTags.every((tag) => ids.includes(tag));
+    });
+  }, [tracks, activeTags]);
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-zinc-50 text-zinc-900">
+        <TopNav />
+        <div className="p-6 max-w-6xl mx-auto">
+          <h1 className="text-2xl font-bold text-black">Library</h1>
+          <p className="mt-2 text-sm text-zinc-600">Checking session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <TopNav />
+
+      <div className="p-6 max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h1 className="text-2xl font-bold text-black">Library</h1>
+
+          <div className="flex items-center gap-2">
+            {/* Nested tag picker for GLOBAL FILTERS */}
+            <NestedTagPicker
+              title="Tags"
+              onPickTagId={(tagId) => addFilterTag(tagId)}
+              excludeTagIds={activeTags}
+            />
+
+            {/* Options */}
+            <div className="relative" ref={optionsRef}>
+              <button
+                type="button"
+                onClick={() => setOptionsOpen((v) => !v)}
+                className="border rounded-lg px-3 py-2 text-sm bg-white text-black hover:bg-gray-50 shadow-sm"
+              >
+                Options ▾
+              </button>
+
+              {optionsOpen && (
+                <div className="absolute right-0 mt-2 w-64 border rounded-2xl bg-white shadow-xl z-50 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearFilters();
+                      setOptionsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm text-black hover:bg-gray-100"
+                  >
+                    Clear filters
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearSavedTags();
+                      setOptionsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm text-black hover:bg-gray-100"
+                  >
+                    Clear saved track tags
+                  </button>
+
+                  <div className="border-t">
+                    <button
+                      type="button"
+                      onClick={() => setOptionsOpen(false)}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
+          </div>
+        </div>
 
-            {/* Track list */}
-            <div style={{ marginTop: 18 }}>
-              <h2 style={{ margin: "0 0 10px", fontSize: 18, color: "#f8fafc" }}>
-                Tracks{" "}
-                <span style={{ opacity: 0.7, fontWeight: 500 }}>({filteredTracks.length})</span>
-              </h2>
-
-              <div
-                style={{
-                  border: "1px solid #334155",
-                  borderRadius: 14,
-                  background: "#020617",
-                  overflow: "hidden",
-                }}
+        {/* Active filter chips */}
+        {activeTags.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {activeTags.map((tagId) => (
+              <button
+                key={tagId}
+                type="button"
+                onClick={() => removeFilterTag(tagId)}
+                className="px-3 py-1 bg-black text-white rounded-full text-sm"
+                title="Remove filter"
               >
-                {filteredTracks.length === 0 ? (
-                  <div style={{ padding: 14, color: "#94a3b8" }}>No tracks match these tags.</div>
-                ) : (
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                    {filteredTracks.map((t, idx) => {
-                      const isSelected = t.id === selectedTrack?.id;
-                      return (
-                        <li
-                          key={t.id}
-                          style={{
-                            padding: 14,
-                            borderTop: idx === 0 ? "none" : "1px solid #0b1220",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 12,
-                            background: isSelected ? "#0b1220" : "transparent",
-                          }}
+                {displayTagLabel(tagId)} ✕
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Track list */}
+        <div className="space-y-3">
+          {filteredTracks.map((track) => {
+            const tagIds = track.tags ?? [];
+            const isEditing = editingTrackId === track.id;
+
+            return (
+              <div
+                key={track.id}
+                className="border rounded-2xl p-4 bg-white text-black hover:shadow-sm hover:ring-2 hover:ring-black/10"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-black">{track.title}</div>
+                    <div className="text-sm text-gray-700">{track.artist}</div>
+                  </div>
+
+                  {!isEditing ? (
+                    <button
+                      type="button"
+                      onClick={() => setEditingTrackId(track.id)}
+                      className="text-sm px-3 py-2 border rounded-lg bg-white hover:bg-gray-50"
+                    >
+                      Edit tags
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditingTrackId(null)}
+                      className="text-sm px-3 py-2 border rounded-lg bg-white hover:bg-gray-50"
+                    >
+                      Done
+                    </button>
+                  )}
+                </div>
+
+                {/* Tags under track */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {tagIds.length === 0 ? (
+                    <span className="text-xs text-gray-500">No tags yet.</span>
+                  ) : (
+                    tagIds.map((tagId) => (
+                      <div key={`${track.id}-${tagId}`} className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => addFilterTag(tagId)}
+                          className="text-xs px-2 py-1 border rounded-full bg-white text-black hover:bg-gray-100"
+                          title="Filter by this tag"
                         >
-                          <div style={{ minWidth: 0 }}>
-                            <button
-                              type="button"
-                              onClick={() => selectTrackById(t.id)}
-                              style={{
-                                display: "block",
-                                textAlign: "left",
-                                background: "transparent",
-                                border: "none",
-                                padding: 0,
-                                color: "#f8fafc",
-                                cursor: "pointer",
-                                width: "100%",
-                              }}
-                              title="Load into player"
-                            >
-                              <div style={{ fontWeight: 800, color: "#f8fafc" }}>
-                                {t.title}
-                                {t.artist ? (
-                                  <span style={{ opacity: 0.7, fontWeight: 500 }}> — {t.artist}</span>
-                                ) : null}
-                              </div>
-                              <div style={{ fontSize: 12, color: "#93c5fd", marginTop: 6 }}>
-                                Click to load
-                              </div>
-                            </button>
+                          {displayTagLabel(tagId)}
+                        </button>
 
-                            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
-                              {(t.tags ?? []).map((tag) => (
-                                <button
-                                  key={tag}
-                                  type="button"
-                                  onClick={() => addTag(tag)}
-                                  title="Add filter"
-                                  style={{
-                                    borderRadius: 999,
-                                    border: "1px solid #475569",
-                                    background: "transparent",
-                                    color: "#cbd5f5",
-                                    padding: "6px 10px",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  {tag}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                        <button
+                          type="button"
+                          onClick={() => removeTagFromTrack(track.id, tagId)}
+                          className="text-xs px-2 py-1 border rounded-full bg-white text-black hover:bg-gray-100"
+                          title="Remove tag from this track"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
 
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <a
-                              href={t.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                fontSize: 12,
-                                color: "#93c5fd",
-                                textDecoration: "none",
-                                border: "1px solid #334155",
-                                borderRadius: 10,
-                                padding: "8px 10px",
-                              }}
-                              title="Open the MP3 URL"
-                            >
-                              Open
-                            </a>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                {/* Inline nested picker for THIS TRACK */}
+                {isEditing && (
+                  <div className="mt-4 flex items-center justify-between gap-3 border rounded-xl p-3 bg-gray-50">
+                    <div className="text-sm text-gray-800">
+                      Add a tag to this track:
+                    </div>
+
+                    <NestedTagPicker
+                      title="Add tag"
+                      onPickTagId={(tagId) => addTagToTrack(track.id, tagId)}
+                      excludeTagIds={tagIds}
+                    />
+                  </div>
                 )}
               </div>
-            </div>
-          </section>
-
-          {/* RIGHT: Player */}
-          <section
-            style={{
-              background: "#020617",
-              border: "1px solid #334155",
-              borderRadius: 14,
-              padding: 16,
-              boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-              height: "fit-content",
-              position: "sticky",
-              top: 18,
-            }}
-          >
-            <div style={{ fontSize: 12, color: "#93c5fd", marginBottom: 8 }}>Player</div>
-
-            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <select
-                value={selectedTrack?.id ?? ""}
-                size={1}
-                onChange={(e) => selectTrackById(e.target.value)}
-                style={{
-                  width: "100%",
-                  height: 44,
-                  background: "#020617",
-                  color: "#f8fafc",
-                  border: "1px solid #475569",
-                  borderRadius: 10,
-                  padding: "8px 12px",
-                }}
-              >
-                {filteredTracks.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                onClick={loadAndPlay}
-                disabled={!selectedTrack}
-                style={{
-                  width: "100%",
-                  background: selectedTrack ? "#3b82f6" : "#0b1220",
-                  color: selectedTrack ? "white" : "#64748b",
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "10px 14px",
-                  fontWeight: 700,
-                  cursor: selectedTrack ? "pointer" : "not-allowed",
-                }}
-              >
-                Play
-              </button>
-
-              <div style={{ fontSize: 12, color: "#cbd5f5" }}>
-                Selected:{" "}
-                <strong style={{ color: "#f8fafc" }}>{selectedTrack?.title ?? "None"}</strong>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 14 }}>
-              <audio ref={audioRef} controls preload="none" style={{ width: "100%" }}>
-                <source src={selectedTrack?.url ?? ""} />
-              </audio>
-            </div>
-
-            <div style={{ marginTop: 12, fontSize: 12, color: "#94a3b8" }}>
-              Tip: filter on the left, click a track to load, then hit Play.
-            </div>
-          </section>
+            );
+          })}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

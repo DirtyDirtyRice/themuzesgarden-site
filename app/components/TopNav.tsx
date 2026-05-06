@@ -24,9 +24,12 @@ export default function TopNav() {
   const pathname = usePathname() ?? "/";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-black bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
-        <div className="text-sm font-semibold tracking-tight">The Muzes Garden</div>
+        
+        <div className="text-xl font-bold tracking-tight text-black">
+          The Muzes Garden
+        </div>
 
         <nav className="flex items-center gap-2">
           {NAV.map((item) => {
@@ -37,11 +40,8 @@ export default function TopNav() {
                 key={item.href}
                 href={item.href}
                 className={[
-                  "rounded-lg px-3 py-2 text-sm transition",
-                  "border",
-                  active
-                    ? "border-zinc-900 bg-zinc-900 text-white"
-                    : "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 hover:border-zinc-300",
+                  "rounded-lg px-3 py-2 text-sm transition border",
+                  "border-black bg-black text-white/90 hover:bg-white hover:text-black",
                 ].join(" ")}
                 aria-current={active ? "page" : undefined}
               >

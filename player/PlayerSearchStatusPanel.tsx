@@ -17,37 +17,42 @@ export default function PlayerSearchStatusPanel(props: {
   if (compact || !isSearchTab) return null;
 
   return (
-    <div className="rounded-xl border bg-zinc-50 px-3 py-2 text-[11px] text-zinc-700">
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-medium">Search Status</span>
+    <div className="rounded-xl border border-white/10 bg-[#111] px-3 py-2 text-[11px] text-white/70">
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-white">Search Status</span>
         <span>
           {trimmedQuery
-            ? `${searchResultCount} ranked result${searchResultCount === 1 ? "" : "s"}`
-            : "Waiting for query"}
+            ? `${searchResultCount} results`
+            : "Waiting"}
         </span>
       </div>
 
       {trimmedQuery ? (
         <>
-          <div className="mt-1 text-zinc-600">
-            Current query:{" "}
-            <span className="font-medium text-zinc-800">{trimmedQuery}</span>
+          <div className="mt-1 text-white/60">
+            Query:{" "}
+            <span className="font-medium text-white">
+              {trimmedQuery}
+            </span>
           </div>
 
-          <div className="mt-1 text-zinc-600">
-            Heat engine:{" "}
-            <span className="font-medium text-zinc-800">{searchInsights.hotCount} hot</span>
+          <div className="mt-1 text-white/60">
+            <span className="text-white">
+              {searchInsights.hotCount} hot
+            </span>
             {" • "}
-            <span className="font-medium text-zinc-800">{searchInsights.warmCount} warm</span>
+            <span className="text-white">
+              {searchInsights.warmCount} warm
+            </span>
             {" • "}
-            <span className="font-medium text-zinc-800">
-              best score {searchInsights.bestScore}
+            <span className="text-white">
+              score {searchInsights.bestScore}
             </span>
           </div>
         </>
       ) : (
-        <div className="mt-1 text-zinc-600">
-          Search by title, artist, tag, or sound moment.
+        <div className="mt-1 text-white/60">
+          Search by title, tag, or sound
         </div>
       )}
     </div>

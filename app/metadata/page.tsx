@@ -1,157 +1,146 @@
 import Link from "next/link";
-import { getMetadataLibrary } from "@/lib/metadata/metadataLibrarySeed";
-import { getMetadataRecordSummariesFromDb } from "@/lib/metadata/metadataFetch";
-
-function formatLabel(value: string) {
-  return value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
 
 export default async function MetadataPage() {
-  const library = getMetadataLibrary();
-  const records = await getMetadataRecordSummariesFromDb();
-
   return (
-    <main className="min-h-screen bg-black px-4 py-6 text-white md:px-6">
+    <main className="min-h-screen bg-black px-4 py-6 md:px-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
+
+        {/* 🧠 DADDY PAGE INTRO */}
+        <section className="rounded-2xl border border-white bg-black p-5 md:p-6">
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
-              Metadata Library
+            <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
+              Metadata Home
             </span>
 
-            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              {library.label}
+            <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+              The Metadata World
             </h1>
 
-            <p className="max-w-3xl text-sm leading-6 text-white/70 md:text-base">
-              {library.description}
+            <p className="max-w-3xl text-base leading-7 text-white/80">
+              Metadata is the knowledge layer of the app. This is where ideas,
+              structures, relationships, and systems live.
             </p>
 
-            <div className="flex flex-wrap gap-3 pt-2 text-sm text-white/70">
-              <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                Shelves:{" "}
-                <span className="font-semibold text-white">
-                  {library.shelves.length}
-                </span>
+            <div className="rounded-lg border border-white/20 bg-black px-4 py-3 text-sm text-white/80">
+              If you are new, read this page first. If you already know where
+              you want to go, use the buttons below.
+            </div>
+
+            <div className="grid gap-2 rounded-lg border border-white/20 bg-black px-4 py-3 text-sm text-white/80 md:grid-cols-3">
+              <div><strong className="text-white">Library</strong> = browse records</div>
+              <div><strong className="text-white">Create</strong> = build a record</div>
+              <div><strong className="text-white">System</strong> = learn structure</div>
+            </div>
+
+            {/* NAV BUTTONS */}
+            <div className="grid gap-3 pt-3 md:grid-cols-3">
+              <Link href="/metadata/library" className="rounded-2xl border border-white bg-black p-4">
+                <div className="text-lg font-semibold text-white">Library</div>
+                <p className="mt-2 text-sm text-white/70">
+                  Browse and explore all metadata records.
+                </p>
+              </Link>
+
+              <Link href="/metadata/create" className="rounded-2xl border border-white bg-black p-4">
+                <div className="text-lg font-semibold text-white">Create</div>
+                <p className="mt-2 text-sm text-white/70">
+                  Create new metadata records and relationships.
+                </p>
+              </Link>
+
+              <Link href="/metadata/system" className="rounded-2xl border border-white bg-black p-4">
+                <div className="text-lg font-semibold text-white">System</div>
+                <p className="mt-2 text-sm text-white/70">
+                  Explore the deeper structure.
+                </p>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* 🌳 NAVIGATION TREE */}
+        <section className="rounded-2xl border border-white bg-black p-5 md:p-6">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-2xl font-semibold text-white">
+              System Structure (Navigation Tree)
+            </h2>
+
+            <div className="rounded-xl border border-white/20 bg-black px-4 py-4 text-base leading-7 text-white/85">
+              <p>Metadata</p>
+              <p className="ml-4">→ Library</p>
+              <p className="ml-8">→ Shelf</p>
+              <p className="ml-12">→ Section</p>
+              <p className="ml-16">→ Record</p>
+
+              <p className="mt-3 ml-4">→ Create</p>
+              <p className="ml-4">→ System</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 🧭 HOW TO GET THERE */}
+        <section className="rounded-2xl border border-white bg-black p-5 md:p-6">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-2xl font-semibold text-white">
+              How to Get There
+            </h2>
+
+            <div className="grid gap-3">
+
+              <div className="rounded-xl border border-white/20 bg-black px-4 py-3">
+                <p className="text-sm font-semibold text-white">
+                  Create a record
+                </p>
+                <p className="mt-1 text-sm text-white/75">
+                  Metadata → Create → Start Creating Record
+                </p>
               </div>
-              <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                Records:{" "}
-                <span className="font-semibold text-white">
-                  {records.length}
-                </span>
+
+              <div className="rounded-xl border border-white/20 bg-black px-4 py-3">
+                <p className="text-sm font-semibold text-white">
+                  View a record
+                </p>
+                <p className="mt-1 text-sm text-white/75">
+                  Metadata → Library → Select shelf → Select section → Open record
+                </p>
               </div>
-              <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                Mode:{" "}
-                <span className="font-semibold text-white">
-                  Persistence Phase
-                </span>
+
+              <div className="rounded-xl border border-white/20 bg-black px-4 py-3">
+                <p className="text-sm font-semibold text-white">
+                  Understand relationships
+                </p>
+                <p className="mt-1 text-sm text-white/75">
+                  Open any record → Scroll to Relationships section
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* 🔮 WHAT’S COMING */}
+        <section className="rounded-2xl border border-white bg-black p-5 md:p-6">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-2xl font-semibold text-white">
+              What’s Coming
+            </h2>
+
+            <div className="grid gap-2 text-sm text-white/80">
+              <div className="rounded-lg border border-white/20 bg-black px-3 py-2">
+                Relationship intelligence system
+              </div>
+
+              <div className="rounded-lg border border-white/20 bg-black px-3 py-2">
+                Visual relationship maps
+              </div>
+
+              <div className="rounded-lg border border-white/20 bg-black px-3 py-2">
+                Metadata search and query tools
               </div>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-2">
-          {library.shelves.map((shelf) => (
-            <Link
-              key={shelf.id}
-              href={`/metadata/shelf/${shelf.key}`}
-              className="group block rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/20 hover:bg-white/[0.05]"
-            >
-              <div className="flex h-full flex-col gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
-                    Shelf
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-white group-hover:text-white">
-                    {shelf.label}
-                  </h2>
-                </div>
-
-                <p className="text-sm leading-6 text-white/70">
-                  {shelf.description}
-                </p>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {shelf.sections.map((section) => (
-                    <span
-                      key={section.id}
-                      className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/75"
-                    >
-                      {section.label}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="mt-auto pt-3">
-                  <span className="inline-flex rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition group-hover:bg-white/10">
-                    Open Shelf
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
-          <div className="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
-                Starter Records
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold text-white">
-                Record Shells
-              </h2>
-            </div>
-
-            <Link
-              href="/metadata/create"
-              className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-            >
-              + Create Record
-            </Link>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-3">
-            {records.map((record) => (
-              <article
-                key={record.id}
-                className="flex h-full flex-col gap-3 rounded-2xl border border-white/10 bg-black/30 p-4"
-              >
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full border border-white/10 px-2 py-1 text-white/70">
-                    {formatLabel(record.shelf)}
-                  </span>
-                  <span className="rounded-full border border-white/10 px-2 py-1 text-white/70">
-                    {formatLabel(record.section)}
-                  </span>
-                  <span className="rounded-full border border-white/10 px-2 py-1 text-white/70">
-                    {formatLabel(record.visibility)}
-                  </span>
-                </div>
-
-                <h3 className="text-lg font-semibold text-white">
-                  {record.title}
-                </h3>
-
-                <p className="text-sm leading-6 text-white/70">
-                  {record.excerpt}
-                </p>
-
-                <div className="mt-auto pt-2">
-                  <Link
-                    href={`/metadata/${record.slug}`}
-                    className="inline-flex rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                  >
-                    More Information
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
       </div>
     </main>
   );

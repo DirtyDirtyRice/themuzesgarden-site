@@ -16,10 +16,18 @@ export default function PlayerTimeline(props: {
   setSeekSec: React.Dispatch<React.SetStateAction<number>>;
   finishSeek: () => void;
 }) {
-  const { durSec, curSec, isSeeking, seekSec, setIsSeeking, setSeekSec, finishSeek } = props;
+  const {
+    durSec,
+    curSec,
+    isSeeking,
+    seekSec,
+    setIsSeeking,
+    setSeekSec,
+    finishSeek,
+  } = props;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2 rounded-xl border border-white/10 bg-black px-2 py-2">
       <input
         type="range"
         min={0}
@@ -44,7 +52,8 @@ export default function PlayerTimeline(props: {
         className="w-full"
         title="Scrub / seek"
       />
-      <div className="flex items-center justify-between text-[11px] text-zinc-600">
+
+      <div className="flex items-center justify-between text-[11px] text-[color:var(--text-normal)]">
         <span>{fmtTime(isSeeking ? seekSec : curSec)}</span>
         <span>{durSec > 0 ? fmtTime(durSec) : "--:--"}</span>
       </div>

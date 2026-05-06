@@ -47,6 +47,7 @@ export type AnyTrack = {
   artist?: string;
   url?: string;
   path?: string;
+  metadataId?: string | null;
   tags?: string[];
 
   sections?: TrackSection[];

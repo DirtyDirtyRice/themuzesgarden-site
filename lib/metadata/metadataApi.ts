@@ -32,9 +32,15 @@ import {
   type FullMetadataContext,
 } from "./metadataEngine";
 import {
+  cleanText,
+  uniqueEntriesById,
+} from "./metadataEngineCore";
+import {
   getWorkingMetadataLinks,
   getWorkingMetadataRegistry,
+  removeWorkingMetadataLink,
   replaceWorkingMetadataEntry,
+  replaceWorkingMetadataLink,
   setWorkingMetadataLinks,
   setWorkingMetadataRegistry,
 } from "./metadataStore";
@@ -44,24 +50,6 @@ export type ResolvedMetadataLink = {
   entry: MetadataEntry | null;
 };
 
-function cleanText(value: unknown): string {
-  return String(value ?? "").trim();
-}
-
-function uniqueById<T extends { id?: string }>(entries: T[]): T[] {
-  const out: T[] = [];
-  const seen = new Set<string>();
-
-  for (const entry of entries ?? []) {
-    const id = cleanText(entry?.id);
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    out.push(entry);
-  }
-
-  return out;
-}
-
 function ensureRegistryLoaded() {
   const current = getWorkingMetadataRegistry();
   if (current.length > 0) return current;
@@ -70,6 +58,17 @@ function ensureRegistryLoaded() {
   const normalized = seeded.map(normalizeMetadataEntry);
   setWorkingMetadataRegistry(normalized);
   return normalized;
+}
+
+function normalizeMetadataLink(link: MetadataLink): MetadataLink {
+  return {
+    ...link,
+    id: cleanText(link.id) || undefined,
+    sourceId: cleanText(link.sourceId),
+    targetId: cleanText(link.targetId),
+    relationship: link.relationship,
+    createdAt: cleanText(link.createdAt) || undefined,
+  };
 }
 
 function ensureLinksLoaded() {
@@ -84,18 +83,34 @@ function ensureLinksLoaded() {
       const relationship = cleanText(link?.relationship);
       return !!sourceId && !!targetId && !!relationship;
     })
-    .map((link) => ({
-      ...link,
-      id: cleanText(link.id) || undefined,
-      sourceId: cleanText(link.sourceId),
-      targetId: cleanText(link.targetId),
-      relationship: link.relationship,
-      createdAt: cleanText(link.createdAt) || undefined,
-    }));
+    .map((link) => normalizeMetadataLink(link));
 
   setWorkingMetadataLinks(safe);
   return safe;
 }
+
+/* =========================
+   NEW INTELLIGENCE HELPERS
+========================= */
+
+function calculateConfidence(entry: MetadataEntry): number {
+  let score = 0;
+
+  if (entry.tags?.length) score += entry.tags.length * 2;
+  if (entry.label) score += 2;
+  if (entry.value) score += 1;
+  if (entry.description) score += 2;
+
+  return score;
+}
+
+function classifyStrength(score: number): "strong" | "medium" | "weak" {
+  if (score >= 6) return "strong";
+  if (score >= 3) return "medium";
+  return "weak";
+}
+
+/* ========================= */
 
 export function getAllMetadata(): MetadataEntry[] {
   return sortMetadataEntries(ensureRegistryLoaded());
@@ -124,8 +139,13 @@ export function getMetadataByTarget(
     return direct;
   }
 
-  const unified = getUnifiedMetadataForTarget(registry, links, targetType, targetId);
-  return sortMetadataEntries(uniqueById(unified.displayEntries));
+  const unified = getUnifiedMetadataForTarget(
+    registry,
+    links,
+    targetType,
+    targetId
+  );
+  return sortMetadataEntries(uniqueEntriesById(unified.displayEntries));
 }
 
 export function getUnifiedMetadataByTarget(
@@ -152,6 +172,10 @@ export function getExpandedMetadataByTarget(
   );
 }
 
+/* =========================
+   🔥 INTELLIGENCE UPGRADE
+========================= */
+
 export function getMetadataIntelligence(
   targetType: MetadataTargetType,
   targetId: string
@@ -173,6 +197,17 @@ export function getMetadataIntelligence(
     }
   }
 
+  const enrichedEntries = unified.displayEntries.map((entry) => {
+    const confidence = calculateConfidence(entry);
+    const strength = classifyStrength(confidence);
+
+    return {
+      ...entry,
+      _confidence: confidence,
+      _strength: strength,
+    };
+  });
+
   const topTags = [...tagWeights.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
@@ -181,12 +216,19 @@ export function getMetadataIntelligence(
   return {
     targetType,
     targetId: cleanText(targetId),
-    entries: unified.displayEntries,
+    entries: enrichedEntries,
     tokens: extractMetadataTokens(unified.displayEntries),
     topTags,
     isFallback: unified.isFallback,
+    meta: {
+      totalEntries: enrichedEntries.length,
+      strongCount: enrichedEntries.filter((e) => e._strength === "strong").length,
+      weakCount: enrichedEntries.filter((e) => e._strength === "weak").length,
+    },
   };
 }
+
+/* ========================= */
 
 export function searchMetadata(
   query: string,
@@ -242,7 +284,7 @@ export function getResolvedLinksTo(targetId: string): ResolvedMetadataLink[] {
 
 export function getRelatedMetadataForEntry(id: string): MetadataEntry[] {
   return sortMetadataEntries(
-    uniqueById(
+    uniqueEntriesById(
       getRelatedMetadataEntries(ensureRegistryLoaded(), ensureLinksLoaded(), id)
     )
   );
@@ -280,6 +322,16 @@ export function patchMetadataEntry(
   return updated;
 }
 
+export function replaceMetadataLink(link: MetadataLink): MetadataLink {
+  const normalized = normalizeMetadataLink(link);
+  replaceWorkingMetadataLink(normalized);
+  return normalized;
+}
+
+export function removeMetadataLink(id: string): MetadataLink[] {
+  return removeWorkingMetadataLink(id);
+}
+
 export function replaceAllMetadata(entries: MetadataEntry[]) {
   const normalized = (entries ?? []).map(normalizeMetadataEntry);
   setWorkingMetadataRegistry(normalized);
@@ -295,14 +347,7 @@ export function replaceAllMetadataLinks(links: MetadataLink[]) {
           const relationship = cleanText(link?.relationship);
           return !!sourceId && !!targetId && !!relationship;
         })
-        .map((link) => ({
-          ...link,
-          id: cleanText(link.id) || undefined,
-          sourceId: cleanText(link.sourceId),
-          targetId: cleanText(link.targetId),
-          relationship: link.relationship,
-          createdAt: cleanText(link.createdAt) || undefined,
-        }))
+        .map((link) => normalizeMetadataLink(link))
     : [];
 
   setWorkingMetadataLinks(safe);

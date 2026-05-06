@@ -55,6 +55,7 @@ export type MetadataRelationship = {
   type: MetadataRelationshipType;
   targetRecordId: string;
   targetLabel: string;
+  targetSlug?: string;
   note?: string;
 };
 
@@ -94,4 +95,15 @@ export type MetadataLibrary = {
   label: string;
   description: string;
   shelves: MetadataShelf[];
+};
+
+export type MetadataCreateMode = "create";
+
+export type MetadataCreateSource = "metadata-create";
+
+export type MetadataCreatePayload = {
+  record: MetadataRecord;
+  mode: MetadataCreateMode;
+  source: MetadataCreateSource;
+  readyForCreate: boolean;
 };

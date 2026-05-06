@@ -124,6 +124,7 @@ export const metadataRecordSeed: MetadataRecord[] = [
         id: "rel-c-major-song-structure",
         type: "related_to",
         targetRecordId: "record-verse-chorus",
+        targetSlug: "verse-chorus-form",
         targetLabel: "Verse / Chorus Form",
         note: "Frequently discussed together in beginner songwriting contexts.",
       },
@@ -158,6 +159,7 @@ export const metadataRecordSeed: MetadataRecord[] = [
         id: "rel-verse-chorus-c-major",
         type: "related_to",
         targetRecordId: "record-c-major",
+        targetSlug: "c-major",
         targetLabel: "C Major",
       },
     ],
@@ -192,6 +194,7 @@ export const metadataRecordSeed: MetadataRecord[] = [
         id: "rel-metadata-phase-verse-chorus",
         type: "references",
         targetRecordId: "record-verse-chorus",
+        targetSlug: "verse-chorus-form",
         targetLabel: "Verse / Chorus Form",
         note: "Example starter record for future metadata navigation.",
       },
@@ -223,4 +226,39 @@ export function getMetadataRecordSummaries(): MetadataRecordSummary[] {
 
 export function getMetadataRecordBySlug(slug: string): MetadataRecord | null {
   return metadataRecordSeed.find((record) => record.slug === slug) ?? null;
+}
+
+export function getMetadataRecordById(id: string): MetadataRecord | null {
+  return metadataRecordSeed.find((record) => record.id === id) ?? null;
+}
+
+export function createMetadataRecord(record: MetadataRecord): MetadataRecord {
+  const existingById = getMetadataRecordById(record.id);
+  if (existingById) {
+    throw new Error(`Metadata record id already exists: ${record.id}`);
+  }
+
+  const existingBySlug = getMetadataRecordBySlug(record.slug);
+  if (existingBySlug) {
+    throw new Error(`Metadata record slug already exists: ${record.slug}`);
+  }
+
+  metadataRecordSeed.unshift(record);
+  return record;
+}
+
+export function getMetadataRelationshipTargetSlug(
+  relationship: { targetRecordId: string; targetSlug?: string } | null | undefined
+): string | null {
+  if (!relationship) {
+    return null;
+  }
+
+  const explicitSlug = relationship.targetSlug?.trim();
+  if (explicitSlug) {
+    return explicitSlug;
+  }
+
+  const targetRecord = getMetadataRecordById(relationship.targetRecordId);
+  return targetRecord?.slug ?? null;
 }

@@ -3,293 +3,62 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopNav from "../components/TopNav";
-import { TRACKS_SEED } from "../../lib/tracksSeed";
-import { supabase } from "../../lib/supabaseClient";
-import { getUploadedTracks } from "../../lib/uploadedTracks";
-import { getSupabaseTracks } from "../../lib/getSupabaseTracks";
-import NestedTagPicker from "./NestedTagPicker";
-import { LS_KEY } from "./libraryData";
-import type { TrackLike } from "./libraryTypes";
-import {
-  displayTagLabel,
-  ensureUnique,
-  mergeTrackLists,
-  normalizeTrack,
-  safeParseJSON,
-} from "./libraryUtils";
 import { buildLibraryGroundworkTracks } from "./libraryTrackGroundwork";
+import { LibraryPageHeader } from "./LibraryPageHeader";
+import { LibraryTrackList } from "./LibraryTrackList";
+import { useLibraryTracks } from "./useLibraryTracks";
+import { useLibraryFilters } from "./useLibraryFilters";
 
-function getTagIds(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => String(item ?? "").trim()).filter(Boolean);
+type IncomingTagMode = "add" | "replace";
+
+const LIBRARY_PAGE_HOVER_FIX_STYLES = `
+  .library-page-hover-fix nav a:hover:not([aria-current="page"]),
+  .library-page-hover-fix nav button:hover:not([aria-current="page"]),
+  .library-page-hover-fix header a:hover:not([aria-current="page"]),
+  .library-page-hover-fix header button:hover:not([aria-current="page"]) {
+    color: #000000 !important;
+  }
+
+  .library-page-hover-fix nav a:hover:not([aria-current="page"]) *,
+  .library-page-hover-fix nav button:hover:not([aria-current="page"]) *,
+  .library-page-hover-fix header a:hover:not([aria-current="page"]) *,
+  .library-page-hover-fix header button:hover:not([aria-current="page"]) * {
+    color: #000000 !important;
+  }
+
+  .library-page-hover-fix nav a[aria-current="page"]:hover,
+  .library-page-hover-fix nav button[aria-current="page"]:hover,
+  .library-page-hover-fix header a[aria-current="page"]:hover,
+  .library-page-hover-fix header button[aria-current="page"]:hover {
+    color: #ffffff !important;
+  }
+
+  .library-page-hover-fix nav a[aria-current="page"]:hover *,
+  .library-page-hover-fix nav button[aria-current="page"]:hover *,
+  .library-page-hover-fix header a[aria-current="page"]:hover *,
+  .library-page-hover-fix header button[aria-current="page"]:hover * {
+    color: #ffffff !important;
+  }
+`;
+
+function LibraryPageHoverFix() {
+  return <style>{LIBRARY_PAGE_HOVER_FIX_STYLES}</style>;
 }
 
 export default function LibraryPage() {
   const router = useRouter();
-  const [checkingSession, setCheckingSession] = useState(true);
-  const [supabaseLoaded, setSupabaseLoaded] = useState(false);
-  const [supabaseErr, setSupabaseErr] = useState<string | null>(null);
-
-  const [activeTags, setActiveTags] = useState<string[]>([]);
-  const [tracks, setTracks] = useState<TrackLike[]>(() => {
-    return ((TRACKS_SEED as unknown as TrackLike[]) ?? [])
-      .map((row) => normalizeTrack(row))
-      .filter(Boolean) as TrackLike[];
-  });
-
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
+  const [flashFilterArea, setFlashFilterArea] = useState(false);
 
-  const [optionsOpen, setOptionsOpen] = useState(false);
-  const optionsRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function check() {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        const session = data.session;
-        if (!session) {
-          router.replace("/members");
-          return;
-        }
-      } catch {
-        router.replace("/members");
-        return;
-      } finally {
-        if (mounted) setCheckingSession(false);
-      }
-    }
-
-    check();
-
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
-
-  useEffect(() => {
-    if (checkingSession) return;
-
-    let cancelled = false;
-
-    async function loadLibraryTracks() {
-      setSupabaseErr(null);
-
-      try {
-        const supabaseRows = await getSupabaseTracks();
-
-        if (cancelled) return;
-
-        const supabaseTracks = ((supabaseRows as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-
-        const uploaded = ((getUploadedTracks() as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-
-        const seed = ((TRACKS_SEED as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-
-        setTracks((prev) => {
-          const prevById = new Map(prev.map((t) => [t.id, t]));
-          const merged = mergeTrackLists(supabaseTracks, uploaded, seed);
-
-          return merged.map((t) => {
-            const p = prevById.get(t.id);
-            if (!p) return t;
-            return {
-              ...t,
-              tags: p.tags ?? t.tags,
-            };
-          });
-        });
-
-        setSupabaseLoaded(true);
-      } catch (err: any) {
-        if (cancelled) return;
-
-        const uploaded = ((getUploadedTracks() as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-
-        const seed = ((TRACKS_SEED as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-
-        setTracks((prev) => {
-          const prevById = new Map(prev.map((t) => [t.id, t]));
-          const merged = mergeTrackLists(uploaded, seed);
-
-          return merged.map((t) => {
-            const p = prevById.get(t.id);
-            if (!p) return t;
-            return {
-              ...t,
-              tags: p.tags ?? t.tags,
-            };
-          });
-        });
-
-        setSupabaseLoaded(false);
-        setSupabaseErr(err?.message ?? "Failed to load Daddy Library tracks.");
-      }
-    }
-
-    loadLibraryTracks();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [checkingSession]);
-
-  useEffect(() => {
-    const uploaded = ((getUploadedTracks() as unknown as TrackLike[]) ?? [])
-      .map((row) => normalizeTrack(row))
-      .filter(Boolean) as TrackLike[];
-
-    if (!uploaded.length) return;
-
-    setTracks((prev) => mergeTrackLists(uploaded, prev));
-  }, []);
-
-  useEffect(() => {
-    async function onUploadedUpdated() {
-      const uploaded = ((getUploadedTracks() as unknown as TrackLike[]) ?? [])
-        .map((row) => normalizeTrack(row))
-        .filter(Boolean) as TrackLike[];
-
-      let supabaseTracks: TrackLike[] = [];
-
-      try {
-        const supabaseRows = await getSupabaseTracks();
-        supabaseTracks = ((supabaseRows as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-      } catch {
-        supabaseTracks = [];
-      }
-
-      setTracks((prev) => {
-        const seed = ((TRACKS_SEED as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-
-        const merged = mergeTrackLists(supabaseTracks, uploaded, seed, prev);
-
-        const prevById = new Map(prev.map((t) => [t.id, t]));
-        return merged.map((t) => {
-          const p = prevById.get(t.id);
-          if (!p) return t;
-          return { ...t, tags: p.tags ?? t.tags };
-        });
-      });
-    }
-
-    window.addEventListener("tmz_tracks_updated", onUploadedUpdated);
-    return () => {
-      window.removeEventListener("tmz_tracks_updated", onUploadedUpdated);
-    };
-  }, []);
-
-  useEffect(() => {
-    const saved = safeParseJSON<Record<string, string[]>>(
-      localStorage.getItem(LS_KEY)
-    );
-    if (!saved) return;
-
-    setTracks((prev) =>
-      prev.map((t) => {
-        const override = saved[t.id];
-        if (!override) return t;
-        return { ...t, tags: ensureUnique([...(t.tags ?? []), ...override]) };
-      })
-    );
-  }, []);
-
-  useEffect(() => {
-    const map: Record<string, string[]> = {};
-    for (const t of tracks) {
-      map[String(t.id)] = ensureUnique(getTagIds(t.tags));
-    }
-    localStorage.setItem(LS_KEY, JSON.stringify(map));
-  }, [tracks]);
-
-  useEffect(() => {
-    function onDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        optionsOpen &&
-        optionsRef.current &&
-        !optionsRef.current.contains(target)
-      ) {
-        setOptionsOpen(false);
-      }
-    }
-
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOptionsOpen(false);
-    }
-
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [optionsOpen]);
-
-  function addFilterTag(tagId: string) {
-    setActiveTags((prev) => (prev.includes(tagId) ? prev : [...prev, tagId]));
-  }
-
-  function removeFilterTag(tagId: string) {
-    setActiveTags((prev) => prev.filter((t) => t !== tagId));
-  }
-
-  function clearFilters() {
-    setActiveTags([]);
-  }
-
-  function clearSavedTags() {
-    const ok = window.confirm(
-      "Clear ALL saved per-track tags from this browser?\n(This does not change TRACKS_SEED — only local saved edits.)"
-    );
-    if (!ok) return;
-
-    localStorage.removeItem(LS_KEY);
-    setTracks((prev) =>
-      prev.map((t) => ({
-        ...t,
-        tags: [],
-      }))
-    );
-    setEditingTrackId(null);
-  }
-
-  function addTagToTrack(trackId: string, tagId: string) {
-    setTracks((prev) =>
-      prev.map((t) => {
-        if (String(t.id) !== trackId) return t;
-        const next = ensureUnique([...getTagIds(t.tags), tagId]);
-        return { ...t, tags: next };
-      })
-    );
-  }
-
-  function removeTagFromTrack(trackId: string, tagId: string) {
-    setTracks((prev) =>
-      prev.map((t) => {
-        if (String(t.id) !== trackId) return t;
-        const next = getTagIds(t.tags).filter((x) => x !== tagId);
-        return { ...t, tags: next };
-      })
-    );
-  }
+  const {
+    checkingSession,
+    supabaseLoaded,
+    supabaseErr,
+    tracks,
+    addTagToTrack,
+    removeTagFromTrack,
+    clearSavedTags,
+  } = useLibraryTracks({ router });
 
   const groundworkTracks = useMemo(() => {
     return buildLibraryGroundworkTracks(
@@ -303,229 +72,189 @@ export default function LibraryPage() {
     );
   }, [groundworkTracks]);
 
-  const filteredTracks = useMemo(() => {
-    if (!activeTags.length) return visibleTracks;
+  const {
+    activeTags,
+    filteredTracks,
+    addFilterTag,
+    removeFilterTag,
+    clearFilters,
+  } = useLibraryFilters({
+    visibleTracks,
+  });
 
-    return visibleTracks.filter((t) => {
-      const ids = getTagIds(t.tags);
-      return activeTags.every((tag) => ids.includes(tag));
+  const addFilterTagRef = useRef(addFilterTag);
+  const clearFiltersRef = useRef(clearFilters);
+  const activeTagsRef = useRef<string[]>(activeTags);
+  const lastPlayerTagKeyRef = useRef("");
+  const libraryTopRef = useRef<HTMLDivElement | null>(null);
+  const flashTimeoutRef = useRef<number | null>(null);
+  const debounceRef = useRef(false);
+
+  useEffect(() => {
+    addFilterTagRef.current = addFilterTag;
+  }, [addFilterTag]);
+
+  useEffect(() => {
+    clearFiltersRef.current = clearFilters;
+  }, [clearFilters]);
+
+  useEffect(() => {
+    activeTagsRef.current = activeTags;
+  }, [activeTags]);
+
+  useEffect(() => {
+    return () => {
+      if (flashTimeoutRef.current != null) {
+        window.clearTimeout(flashTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  function triggerFilterFeedback() {
+    if (debounceRef.current) return;
+
+    debounceRef.current = true;
+
+    requestAnimationFrame(() => {
+      libraryTopRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     });
-  }, [visibleTracks, activeTags]);
+
+    setFlashFilterArea(true);
+
+    if (flashTimeoutRef.current != null) {
+      window.clearTimeout(flashTimeoutRef.current);
+    }
+
+    flashTimeoutRef.current = window.setTimeout(() => {
+      setFlashFilterArea(false);
+      debounceRef.current = false;
+    }, 900);
+  }
+
+  function applyIncomingPlayerTag(tag: string, mode: IncomingTagMode) {
+    const cleanTag = String(tag ?? "").trim();
+    if (!cleanTag) return;
+
+    const currentTags = activeTagsRef.current;
+
+    if (mode === "replace") {
+      clearFiltersRef.current();
+
+      requestAnimationFrame(() => {
+        addFilterTagRef.current(cleanTag);
+        triggerFilterFeedback();
+      });
+
+      return;
+    }
+
+    if (currentTags.includes(cleanTag)) {
+      triggerFilterFeedback();
+      return;
+    }
+
+    addFilterTagRef.current(cleanTag);
+    triggerFilterFeedback();
+  }
+
+  useEffect(() => {
+    function onSearchTag(event: Event) {
+      const custom = event as CustomEvent<{
+        tag?: string;
+        mode?: IncomingTagMode;
+      }>;
+
+      const tag = String(custom.detail?.tag ?? "").trim();
+      const mode: IncomingTagMode =
+        custom.detail?.mode === "replace" ? "replace" : "add";
+
+      if (!tag) return;
+
+      applyIncomingPlayerTag(tag, mode);
+    }
+
+    window.addEventListener(
+      "muzesgarden-search-tag",
+      onSearchTag as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "muzesgarden-search-tag",
+        onSearchTag as EventListener
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const playerTag = String(params.get("playerTag") ?? "").trim();
+    const playerMode: IncomingTagMode =
+      params.get("playerMode") === "replace" ? "replace" : "add";
+
+    if (!playerTag) return;
+
+    const routeKey = `${playerMode}:${playerTag}`;
+    if (lastPlayerTagKeyRef.current === routeKey) return;
+
+    lastPlayerTagKeyRef.current = routeKey;
+    applyIncomingPlayerTag(playerTag, playerMode);
+
+    router.replace("/library");
+  }, [router]);
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-zinc-50 text-zinc-900">
+      <div className="library-page-hover-fix min-h-screen bg-black">
+        <LibraryPageHoverFix />
         <TopNav />
-        <div className="p-6 max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold text-black">Library</h1>
-          <p className="mt-2 text-sm text-zinc-600">Checking session…</p>
+
+        <div className="mx-auto max-w-6xl p-6">
+          <h1 className="text-2xl font-bold text-white">Library</h1>
+          <p className="mt-2 text-sm text-white/70">Checking session…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="library-page-hover-fix min-h-screen bg-black">
+      <LibraryPageHoverFix />
       <TopNav />
 
-      <div className="p-6 lg:pr-[32rem] max-w-6xl mx-auto">
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-black">Library</h1>
-            <div className="mt-1 text-sm text-zinc-600">
-              {filteredTracks.length} track
-              {filteredTracks.length === 1 ? "" : "s"}
-              {supabaseLoaded
-                ? " • Daddy Library connected"
-                : " • Local fallback only"}
-            </div>
-            {supabaseErr ? (
-              <div className="mt-1 text-xs text-amber-700">
-                Supabase load note: {supabaseErr}
-              </div>
-            ) : null}
-          </div>
+      <div
+        ref={libraryTopRef}
+        className={[
+          "mx-auto max-w-6xl p-6 lg:pr-[32rem] transition-all duration-500",
+          flashFilterArea
+            ? "rounded-2xl ring-2 ring-white/40 bg-white/[0.02]"
+            : "",
+        ].join(" ")}
+      >
+        <LibraryPageHeader
+          filteredTrackCount={filteredTracks.length}
+          supabaseLoaded={supabaseLoaded}
+          supabaseErr={supabaseErr}
+          activeTags={activeTags}
+          onAddFilterTag={addFilterTag}
+          onRemoveFilterTag={removeFilterTag}
+          onClearFilters={clearFilters}
+          onClearSavedTags={clearSavedTags}
+        />
 
-          <div className="flex items-center gap-2">
-            <NestedTagPicker
-              title="Tags"
-              onPickTagId={(tagId) => addFilterTag(tagId)}
-              excludeTagIds={activeTags}
-            />
-
-            <div className="relative" ref={optionsRef}>
-              <button
-                type="button"
-                onClick={() => setOptionsOpen((v) => !v)}
-                className="border rounded-lg px-3 py-2 text-sm bg-white text-black hover:bg-gray-50 shadow-sm"
-              >
-                Options ▾
-              </button>
-
-              {optionsOpen && (
-                <div className="absolute right-0 mt-2 w-64 border rounded-2xl bg-white shadow-xl z-50 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearFilters();
-                      setOptionsOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-sm text-black hover:bg-gray-100"
-                  >
-                    Clear filters
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearSavedTags();
-                      setOptionsOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-sm text-black hover:bg-gray-100"
-                  >
-                    Clear saved track tags
-                  </button>
-
-                  <div className="border-t">
-                    <button
-                      type="button"
-                      onClick={() => setOptionsOpen(false)}
-                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {activeTags.length > 0 && (
-          <div className="mb-4 flex flex-wrap gap-2">
-            {activeTags.map((tagId) => (
-              <button
-                key={tagId}
-                type="button"
-                onClick={() => removeFilterTag(tagId)}
-                className="px-3 py-1 bg-black text-white rounded-full text-sm"
-                title="Remove filter"
-              >
-                {displayTagLabel(tagId)} ✕
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-3">
-          {filteredTracks.map((track) => {
-            const trackId = String(track.id ?? "");
-            const trackTitle = String(track.title ?? "Untitled track");
-            const trackArtist = String(track.artist ?? "");
-            const trackSourceProjectTitle = track.sourceProjectTitle
-              ? String(track.sourceProjectTitle)
-              : "";
-            const tagIds = getTagIds(track.tags);
-            const isEditing = editingTrackId === trackId;
-
-            return (
-              <div
-                key={trackId}
-                className="border rounded-2xl p-4 bg-white text-black hover:shadow-sm hover:ring-2 hover:ring-black/10"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold text-black">{trackTitle}</div>
-                    <div className="text-sm text-gray-700">{trackArtist}</div>
-
-                    <div className="mt-1 text-xs text-zinc-500">
-                      Source: {track.librarySourceLabel}
-                      {" • "}
-                      Visibility: {track.libraryVisibilityLabel}
-                      {trackSourceProjectTitle
-                        ? ` • Project: ${trackSourceProjectTitle}`
-                        : null}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditingTrackId((cur) =>
-                          cur === trackId ? null : trackId
-                        )
-                      }
-                      className="text-sm px-3 py-2 border rounded-lg bg-white hover:bg-gray-50"
-                    >
-                      {isEditing ? "Done" : "Edit tags"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setEditingTrackId(trackId)}
-                      className="text-sm px-3 py-2 border rounded-lg bg-white hover:bg-gray-50"
-                    >
-                      Add tag
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {tagIds.length === 0 ? (
-                    <span className="text-xs text-gray-500">
-                      No tags yet. Use the Add tag button.
-                    </span>
-                  ) : (
-                    tagIds.map((tagId) => (
-                      <div key={`${trackId}-${tagId}`} className="flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => addFilterTag(tagId)}
-                          className="text-xs px-2 py-1 border rounded-full bg-white text-black hover:bg-gray-100"
-                          title="Filter by this tag"
-                        >
-                          {displayTagLabel(tagId)}
-                        </button>
-
-                        {tagId !== "uploaded" && (
-                          <button
-                            type="button"
-                            onClick={() => removeTagFromTrack(trackId, tagId)}
-                            className="text-xs px-2 py-1 border rounded-full bg-white text-black hover:bg-gray-100"
-                            title="Remove tag from this track"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {isEditing && (
-                  <div className="mt-4 flex items-center justify-between gap-3 border rounded-xl p-3 bg-gray-50">
-                    <div className="text-sm text-gray-800">
-                      Add a tag to this track:
-                    </div>
-
-                    <NestedTagPicker
-                      title="Add tag"
-                      onPickTagId={(tagId) => addTagToTrack(trackId, tagId)}
-                      excludeTagIds={tagIds}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {filteredTracks.length === 0 && (
-            <div className="border rounded-2xl p-6 bg-white text-sm text-zinc-600">
-              No tracks found in the Daddy Library yet.
-            </div>
-          )}
-        </div>
+        <LibraryTrackList
+          tracks={filteredTracks}
+          editingTrackId={editingTrackId}
+          onSetEditingTrackId={setEditingTrackId}
+          onAddFilterTag={addFilterTag}
+          onAddTagToTrack={addTagToTrack}
+          onRemoveTagFromTrack={removeTagFromTrack}
+        />
       </div>
     </div>
   );

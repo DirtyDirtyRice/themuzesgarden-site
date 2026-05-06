@@ -2,19 +2,27 @@
 
 :root {
   --background: #000000;
-  --foreground: #ffffff;
-  --muted-foreground: rgba(255, 255, 255, 0.7);
-  --border-subtle: rgba(255, 255, 255, 0.1);
+
+  /* TEXT SYSTEM */
+  --text-strong: rgba(255, 255, 255, 0.95);
+  --text-normal: rgba(255, 255, 255, 0.82);
+
+  /* STRUCTURE */
+  --border-subtle: rgba(255, 255, 255, 0.12);
   --surface-subtle: rgba(255, 255, 255, 0.03);
-  --surface-strong: rgba(255, 255, 255, 0.05);
+  --surface-strong: rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-foreground: var(--text-normal);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+/* ---------------------------------------------------------
+   RESET
+--------------------------------------------------------- */
 
 *,
 *::before,
@@ -22,25 +30,223 @@
   box-sizing: border-box;
 }
 
-html {
-  background: var(--background);
-  color: var(--foreground);
-}
+/* ---------------------------------------------------------
+   BASE COLORS
+--------------------------------------------------------- */
 
+html,
 body {
-  min-height: 100vh;
-  margin: 0;
   background: var(--background);
-  color: var(--foreground);
+  color: var(--text-normal);
+  margin: 0;
+  min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-::selection {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+/* ---------------------------------------------------------
+   TEXT SYSTEM
+--------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-strong);
 }
+
+p,
+span,
+label,
+small,
+strong,
+em,
+li,
+dt,
+dd,
+th,
+td {
+  color: var(--text-normal);
+}
+
+/* ---------------------------------------------------------
+   LINKS
+--------------------------------------------------------- */
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ---------------------------------------------------------
+   GLOBAL BLACK BACKGROUND
+--------------------------------------------------------- */
+
+main,
+section,
+article {
+  background: #000000;
+}
+
+/* ---------------------------------------------------------
+   HARD CARD / PANEL / SURFACE OVERRIDE
+--------------------------------------------------------- */
+
+[class*="card"],
+[class*="Card"],
+[class*="panel"],
+[class*="Panel"],
+[class*="surface"],
+[class*="Surface"],
+[class*="container"],
+[class*="Container"],
+div[data-surface],
+section,
+article {
+  background: #000000 !important;
+  color: var(--text-normal) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Ensure inner text inside cards stays correct */
+[class*="card"] *,
+[class*="Card"] *,
+[class*="panel"] *,
+[class*="Panel"] *,
+[class*="surface"] *,
+[class*="Surface"] *,
+div[data-surface] * {
+  color: var(--text-normal) !important;
+}
+
+/* ---------------------------------------------------------
+   BUTTON SYSTEM (GLOBAL HARD OVERRIDE)
+--------------------------------------------------------- */
+
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.15s ease !important;
+}
+
+button *,
+[role="button"] * {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* ACTIVE / SELECTED */
+button[aria-pressed="true"],
+button[aria-selected="true"],
+button[aria-current="page"],
+button[data-active="true"],
+button[data-state="active"],
+button[data-state="on"],
+
+[role="button"][aria-pressed="true"],
+[role="button"][aria-selected="true"],
+[role="button"][aria-current="page"],
+[role="button"][data-active="true"],
+[role="button"][data-state="active"],
+[role="button"][data-state="on"],
+
+header a[aria-current="page"],
+nav a[aria-current="page"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #ffffff !important;
+}
+
+button[aria-pressed="true"] *,
+button[aria-selected="true"] *,
+button[aria-current="page"] *,
+button[data-active="true"] *,
+button[data-state="active"] *,
+button[data-state="on"] *,
+
+[role="button"][aria-pressed="true"] *,
+[role="button"][aria-selected="true"] *,
+[role="button"][aria-current="page"] *,
+[role="button"][data-active="true"] *,
+[role="button"][data-state="active"] *,
+[role="button"][data-state="on"] *,
+
+header a[aria-current="page"] *,
+nav a[aria-current="page"] * {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
+   INPUTS
+--------------------------------------------------------- */
+
+input,
+textarea,
+select {
+  background: #000000;
+  color: var(--text-normal);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------------------------------------------------------
+   SELECTION
+--------------------------------------------------------- */
+
+::selection {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-strong);
+}
+
+/* ---------------------------------------------------------
+   SCROLLBAR
+--------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+
+/* =========================================================
+   HOVER FIX (ONLY THIS WAS ADDED)
+========================================================= */
+
+/* remove ONLY hover color changes */
+[class*="hover:bg-"]:hover {
+  background: inherit !important;
+}
+
+[class*="hover:text-"]:hover {
+  color: inherit !important;
+}
+
+[class*="hover:border-"]:hover {
+  border-color: inherit !important;
+}
+
+/* keep interaction feel */
+button:hover,
+a:hover,
+[role="button"]:hover {
+  opacity: 0.92;
+  transform: scale(0.99);
 }

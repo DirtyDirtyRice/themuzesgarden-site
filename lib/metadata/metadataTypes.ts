@@ -1,5 +1,5 @@
 export type MetadataTargetType =
-  | "project"   // ✅ NEW (SAFE ADD)
+  | "project"
   | "track"
   | "section"
   | "moment"
@@ -96,9 +96,13 @@ export type MetadataLayerSource =
   | "expanded"
   | "fallback";
 
+export type MetadataConfidenceStrength = "strong" | "medium" | "weak";
+
 export type LayeredMetadataEntry = MetadataEntry & {
   source: MetadataLayerSource;
   score: number;
+  _confidence?: number;
+  _strength?: MetadataConfidenceStrength;
 };
 
 export type UnifiedMetadataTargetResult = {
@@ -119,6 +123,12 @@ export type ExpandedMetadataTargetContext = UnifiedMetadataTargetResult & {
   childrenMap: Record<string, LayeredMetadataEntry[]>;
 };
 
+export type MetadataIntelligenceSummary = {
+  totalEntries: number;
+  strongCount: number;
+  weakCount: number;
+};
+
 export type MetadataIntelligencePayload = {
   targetType: MetadataTargetType;
   targetId: string;
@@ -126,4 +136,5 @@ export type MetadataIntelligencePayload = {
   tokens: string[];
   topTags: string[];
   isFallback: boolean;
+  meta?: MetadataIntelligenceSummary;
 };

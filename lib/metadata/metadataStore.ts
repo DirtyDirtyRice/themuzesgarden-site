@@ -29,11 +29,43 @@ export function replaceWorkingMetadataEntry(entry: MetadataEntry) {
   return getWorkingMetadataRegistry();
 }
 
+/* =========================
+   LINKS
+========================= */
+
 export function getWorkingMetadataLinks(): MetadataLink[] {
   return workingMetadataLinks.slice();
 }
 
 export function setWorkingMetadataLinks(links: MetadataLink[]) {
   workingMetadataLinks = Array.isArray(links) ? links.slice() : [];
+  return getWorkingMetadataLinks();
+}
+
+export function replaceWorkingMetadataLink(link: MetadataLink) {
+  const id = String(link?.id ?? "").trim();
+  if (!id) return getWorkingMetadataLinks();
+
+  const next = workingMetadataLinks.slice();
+  const index = next.findIndex((l) => String(l?.id ?? "").trim() === id);
+
+  if (index === -1) {
+    next.push(link);
+  } else {
+    next[index] = link;
+  }
+
+  workingMetadataLinks = next;
+  return getWorkingMetadataLinks();
+}
+
+export function removeWorkingMetadataLink(id: string) {
+  const clean = String(id ?? "").trim();
+  if (!clean) return getWorkingMetadataLinks();
+
+  workingMetadataLinks = workingMetadataLinks.filter(
+    (l) => String(l?.id ?? "").trim() !== clean
+  );
+
   return getWorkingMetadataLinks();
 }

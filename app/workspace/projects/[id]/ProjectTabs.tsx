@@ -17,10 +17,13 @@ export default function ProjectTabs({ tab, setTab }: Props) {
         return (
           <button
             key={t.key}
-            className={`rounded border px-3 py-2 text-sm ${
-              active ? "bg-black text-white" : "bg-white"
-            }`}
+            type="button"
             onClick={() => setTab(t.key)}
+            className={[
+              "min-w-[120px] rounded border border-white px-4 py-2 text-sm font-medium",
+              "bg-black text-white",
+              active ? "ring-1 ring-white" : "",
+            ].join(" ")}
           >
             {t.label}
           </button>

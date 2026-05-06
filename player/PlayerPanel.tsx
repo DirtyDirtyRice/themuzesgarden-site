@@ -11,16 +11,11 @@ import PlayerTimeline from "./PlayerTimeline";
 import PlayerTransportControls from "./PlayerTransportControls";
 import PlayerStatusBadges from "./PlayerStatusBadges";
 import PlayerModeSummary from "./PlayerModeSummary";
-import PlayerSearchStatusPanel from "./PlayerSearchStatusPanel";
-import PlayerTagIntelligencePanel from "./PlayerTagIntelligencePanel";
 import PlayerHeaderBar from "./PlayerHeaderBar";
-import PlayerSearchHelpPanel from "./PlayerSearchHelpPanel";
-import PlayerProjectHelpPanels from "./PlayerProjectHelpPanels";
 import {
   buildSearchInsights,
   getSearchModeLabel,
 } from "./playerPanelSearch";
-import { emitTagSearch, buildTopTags } from "./playerPanelTags";
 import { usePlayerPanelLayout } from "./playerPanelLayout";
 import { usePlayerPanelTimeline } from "./playerPanelTimeline";
 
@@ -120,11 +115,8 @@ export default function PlayerPanel(props: {
     onPlayTrack,
   } = props;
 
-  const {
-    compact,
-    toggleCompact,
-    playerPanelWidthPx,
-  } = usePlayerPanelLayout(open);
+  const { compact, toggleCompact, playerPanelWidthPx } =
+    usePlayerPanelLayout(open);
 
   const {
     audioHostRef,
@@ -178,14 +170,18 @@ export default function PlayerPanel(props: {
     !shuffle &&
     !loop;
 
-  const topTags = useMemo(() => {
-    return buildTopTags(allTracks);
-  }, [allTracks]);
-
   const [navTick, setNavTick] = useState<{ prev: number; next: number }>({
     prev: 0,
     next: 0,
   });
+
+  const [contentTab, setContentTab] = useState<"queue" | "search" | "moments">(
+    isSearchTab ? "search" : "queue"
+  );
+
+  useEffect(() => {
+    setContentTab(isSearchTab ? "search" : "queue");
+  }, [isSearchTab]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -207,7 +203,7 @@ export default function PlayerPanel(props: {
       <div className="fixed bottom-6 right-6 z-[80]">
         <button
           onClick={() => setOpen(true)}
-          className="rounded-xl bg-black px-4 py-2 text-white shadow"
+          className="rounded-xl border border-white/10 bg-black px-4 py-2 text-[color:var(--text-normal)] shadow"
           title="Open Global Player"
         >
           ▶ Global Player
@@ -224,7 +220,7 @@ export default function PlayerPanel(props: {
         maxWidth: "92vw",
       }}
     >
-      <div className="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl border bg-white shadow-xl">
+      <div className="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-black text-[color:var(--text-normal)] shadow-xl">
         <PlayerHeaderBar
           compact={compact}
           toggleCompact={toggleCompact}
@@ -236,95 +232,6 @@ export default function PlayerPanel(props: {
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           <div className="space-y-3">
-            <div style={{ display: isSearchTab && !compact ? "block" : "none" }}>
-              <SearchTab
-                q={q}
-                setQ={setQ}
-                allTracks={allTracks}
-                onPlay={onPlayTrack}
-              />
-            </div>
-
-            <PlayerStatusBadges
-              isSearchTab={isSearchTab}
-              isProjectTab={isProjectTab}
-              hasNow={hasNow}
-              compact={compact}
-              trimmedQuery={trimmedQuery}
-              getSearchModeLabel={getSearchModeLabel}
-            />
-
-            <PlayerModeSummary
-              tab={tab}
-              shuffle={shuffle}
-              loop={loop}
-              statusVolPct={statusVolPct}
-              statusTime={statusTime}
-              trackCountLabel={trackCountLabel}
-            />
-
-            <PlayerSearchStatusPanel
-              compact={compact}
-              isSearchTab={isSearchTab}
-              trimmedQuery={trimmedQuery}
-              searchResultCount={searchResultCount}
-              searchInsights={searchInsights}
-            />
-
-            <PlayerSearchHelpPanel compact={compact} isSearchTab={isSearchTab} />
-
-            <PlayerProjectHelpPanels
-              compact={compact}
-              tab={tab}
-              onProjectPage={onProjectPage}
-              canUseProject={canUseProject}
-              hasProjectTracks={hasProjectTracks}
-            />
-
-            <PlayerTagIntelligencePanel
-              compact={compact}
-              tab={tab}
-              topTags={topTags}
-              onTagClick={(tag) => {
-                emitTagSearch(tag);
-              }}
-            />
-
-            {!compact && isSearchTab ? (
-              <MomentInspector allTracks={allTracks} />
-            ) : null}
-
-            <PlayerNowPlayingPanel
-              nowLabel={nowLabel}
-              nowId={nowId}
-              compact={compact}
-              tab={tab}
-              trackCountLabel={trackCountLabel}
-              hasNow={hasNow}
-              canUseProject={canUseProject}
-              hasProjectTracks={hasProjectTracks}
-              nowIdx={nowIdx}
-              upNextIdx={upNextIdx}
-              projectTracksLength={projectTracks.length}
-              remainingCount={remainingCount}
-              trimmedQuery={trimmedQuery}
-              nowTrack={
-                allTracks.find((t) => String(t.id) === String(nowId)) ?? null
-              }
-            />
-
-            <div ref={audioHostRef}>{audioEl}</div>
-
-            <PlayerTimeline
-              durSec={durSec}
-              curSec={curSec}
-              isSeeking={isSeeking}
-              seekSec={seekSec}
-              setIsSeeking={setIsSeeking}
-              setSeekSec={setSeekSec}
-              finishSeek={finishSeek}
-            />
-
             <PlayerTransportControls
               tab={tab}
               hasNow={hasNow}
@@ -353,7 +260,109 @@ export default function PlayerPanel(props: {
               onClearNow={onClearNow}
             />
 
-            {!compact && tab === "project" ? (
+            <div ref={audioHostRef}>{audioEl}</div>
+
+            <PlayerTimeline
+              durSec={durSec}
+              curSec={curSec}
+              isSeeking={isSeeking}
+              seekSec={seekSec}
+              setIsSeeking={setIsSeeking}
+              setSeekSec={setSeekSec}
+              finishSeek={finishSeek}
+            />
+
+            <PlayerStatusBadges
+              isSearchTab={isSearchTab}
+              isProjectTab={isProjectTab}
+              hasNow={hasNow}
+              compact={compact}
+              trimmedQuery={trimmedQuery}
+              getSearchModeLabel={getSearchModeLabel}
+            />
+
+            <PlayerModeSummary
+              tab={tab}
+              shuffle={shuffle}
+              loop={loop}
+              statusVolPct={statusVolPct}
+              statusTime={statusTime}
+              trackCountLabel={trackCountLabel}
+            />
+
+            <PlayerNowPlayingPanel
+              nowLabel={nowLabel}
+              nowId={nowId}
+              compact={compact}
+              tab={tab}
+              trackCountLabel={trackCountLabel}
+              hasNow={hasNow}
+              canUseProject={canUseProject}
+              hasProjectTracks={hasProjectTracks}
+              nowIdx={nowIdx}
+              upNextIdx={upNextIdx}
+              projectTracksLength={projectTracks.length}
+              remainingCount={remainingCount}
+              trimmedQuery={trimmedQuery}
+              nowTrack={
+                allTracks.find((t) => String(t.id) === String(nowId)) ?? null
+              }
+            />
+
+            {!compact ? (
+              <div className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setContentTab("queue")}
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    contentTab === "queue"
+                      ? "border-white bg-black text-[color:var(--text-strong)]"
+                      : "border-white/20 bg-black text-[color:var(--text-normal)]"
+                  }`}
+                >
+                  {tab === "project" ? "Setlist" : "Queue"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setContentTab("search")}
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    contentTab === "search"
+                      ? "border-white bg-black text-[color:var(--text-strong)]"
+                      : "border-white/20 bg-black text-[color:var(--text-normal)]"
+                  }`}
+                >
+                  Search
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setContentTab("moments")}
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    contentTab === "moments"
+                      ? "border-white bg-black text-[color:var(--text-strong)]"
+                      : "border-white/20 bg-black text-[color:var(--text-normal)]"
+                  }`}
+                >
+                  Moments
+                </button>
+              </div>
+            ) : null}
+
+            {!compact && contentTab === "search" ? (
+              <SearchTab
+                q={q}
+                setQ={setQ}
+                allTracks={allTracks}
+                onPlay={onPlayTrack}
+              />
+            ) : null}
+
+            {!compact && contentTab === "moments" ? (
+              <MomentInspector allTracks={allTracks} />
+            ) : null}
+
+            {!compact && contentTab === "queue" && tab === "project" ? (
               <ProjectTab
                 onProjectPage={onProjectPage}
                 projectTracks={projectTracks}
@@ -376,6 +385,29 @@ export default function PlayerPanel(props: {
                 navPrevTick={navTick.prev}
                 navNextTick={navTick.next}
               />
+            ) : null}
+
+            {!compact && contentTab === "queue" && tab === "search" ? (
+              <SearchTab
+                q={q}
+                setQ={setQ}
+                allTracks={allTracks}
+                onPlay={onPlayTrack}
+              />
+            ) : null}
+
+            {compact ? (
+              <div className="text-xs text-[color:var(--text-normal)]">
+                {tab === "project"
+                  ? `Project mode • ${trackCountLabel}`
+                  : `Search mode • ${trackCountLabel}`}
+              </div>
+            ) : null}
+
+            {!compact && isSearchTab && trimmedQuery ? (
+              <div className="text-xs text-[color:var(--text-normal)]">
+                Results: {searchResultCount}
+              </div>
             ) : null}
           </div>
         </div>

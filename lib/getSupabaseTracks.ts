@@ -3,12 +3,12 @@ import * as supabaseClientModule from "./supabaseClient";
 export type TrackVisibility = "private" | "shared" | "public";
 
 export type SupabaseTrack = {
-  id: string; // stable id
+  id: string;
   title: string;
   artist: string;
   url: string;
   tags: string[];
-  path: string; // storage path
+  path: string;
   bucket: string;
   visibility: TrackVisibility;
   updatedAt?: string;
@@ -98,10 +98,14 @@ function inferVisibilityFromPath(path: string): TrackVisibility {
 }
 
 function compareTracks(a: SupabaseTrack, b: SupabaseTrack) {
-  const byTitle = a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+  const byTitle = a.title.localeCompare(b.title, undefined, {
+    sensitivity: "base",
+  });
   if (byTitle !== 0) return byTitle;
 
-  const byPath = a.path.localeCompare(b.path, undefined, { sensitivity: "base" });
+  const byPath = a.path.localeCompare(b.path, undefined, {
+    sensitivity: "base",
+  });
   if (byPath !== 0) return byPath;
 
   return a.id.localeCompare(b.id, undefined, { sensitivity: "base" });
@@ -117,7 +121,11 @@ async function listAllMp3sFromBucket(bucket: string) {
   const MAX_ITEMS = 2000;
 
   while (queue.length && results.length < MAX_ITEMS) {
-    const { prefix, depth } = queue.shift()!;
+    const next = queue.shift();
+    if (!next) break;
+
+    const { prefix, depth } = next;
+
     if (seenPrefixes.has(prefix)) continue;
     seenPrefixes.add(prefix);
 
@@ -126,15 +134,26 @@ async function listAllMp3sFromBucket(bucket: string) {
       sortBy: { column: "name", order: "asc" },
     });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error(
+        `[getSupabaseTracks] Failed to list bucket "${bucket}" at prefix "${prefix}":`,
+        error.message
+      );
+      return results;
+    }
 
     for (const item of data ?? []) {
       const isFolder = !(item as any).id;
-      const itemName = item.name;
+      const itemName = String((item as any).name ?? "");
+
+      if (!itemName) continue;
 
       if (isFolder) {
         if (depth < MAX_DEPTH) {
-          queue.push({ prefix: `${prefix}${itemName}/`, depth: depth + 1 });
+          queue.push({
+            prefix: `${prefix}${itemName}/`,
+            depth: depth + 1,
+          });
         }
         continue;
       }
@@ -159,38 +178,42 @@ export async function getSupabaseTracksClient(options?: {
 }): Promise<SupabaseTrack[]> {
   const bucket = options?.bucket ?? "audio";
 
-  const files = await listAllMp3sFromBucket(bucket);
+  try {
+    const files = await listAllMp3sFromBucket(bucket);
 
-  const mapped: SupabaseTrack[] = files.map((f) => {
-    const { data } = supabase.storage.from(bucket).getPublicUrl(f.path);
-    const publicUrl = String(data?.publicUrl ?? "");
+    const mapped: SupabaseTrack[] = files.map((f) => {
+      const { data } = supabase.storage.from(bucket).getPublicUrl(f.path);
+      const publicUrl = String(data?.publicUrl ?? "");
 
-    return {
-      id: `sb:${bucket}:${f.path}`,
-      title: titleFromFilename(f.name),
-      artist: "Supabase",
-      url: publicUrl,
-      tags: tagsFromPath(f.path),
-      path: f.path,
-      bucket,
-      visibility: inferVisibilityFromPath(f.path),
-      updatedAt: f.updatedAt,
-    };
-  });
+      return {
+        id: `sb:${bucket}:${f.path}`,
+        title: titleFromFilename(f.name),
+        artist: "Supabase",
+        url: publicUrl,
+        tags: tagsFromPath(f.path),
+        path: f.path,
+        bucket,
+        visibility: inferVisibilityFromPath(f.path),
+        updatedAt: f.updatedAt,
+      };
+    });
 
-  const deduped = new Map<string, SupabaseTrack>();
+    const deduped = new Map<string, SupabaseTrack>();
 
-  for (const track of mapped) {
-    if (!track.id) continue;
-    if (!track.url) continue;
-    if (!deduped.has(track.id)) {
-      deduped.set(track.id, track);
+    for (const track of mapped) {
+      if (!track.id) continue;
+      if (!track.url) continue;
+      if (!deduped.has(track.id)) {
+        deduped.set(track.id, track);
+      }
     }
-  }
 
-  return Array.from(deduped.values()).sort(compareTracks);
+    return Array.from(deduped.values()).sort(compareTracks);
+  } catch (error) {
+    console.error("[getSupabaseTracks] Unexpected failure:", error);
+    return [];
+  }
 }
 
-// EXTEND ONLY: aliases so any import name works
 export const getSupabaseTracks = getSupabaseTracksClient;
 export const getSupabaseTracksClients = getSupabaseTracksClient;

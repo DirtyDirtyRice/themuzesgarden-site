@@ -37,10 +37,13 @@ export default function PlayerTransportControls(props: {
 
   const isProjectTab = tab === "project";
 
+  const buttonClassName =
+    "!rounded-xl !border !border-white/20 !bg-black !px-3 !py-2 !text-sm !font-medium !text-[color:var(--text-normal)] disabled:!opacity-50";
+
   return (
     <div className="flex flex-wrap gap-2">
       <button
-        className="rounded border px-3 py-2 text-sm disabled:opacity-50"
+        className={buttonClassName}
         onClick={onPrevWrapped}
         disabled={(isProjectTab && !hasNow) || atProjectStart}
         title={
@@ -55,7 +58,7 @@ export default function PlayerTransportControls(props: {
       </button>
 
       <button
-        className="rounded border px-3 py-2 text-sm"
+        className={[buttonClassName, "!border-white"].join(" ")}
         onClick={onToggle}
         title="Play / Pause (Space)"
       >
@@ -63,7 +66,7 @@ export default function PlayerTransportControls(props: {
       </button>
 
       <button
-        className="rounded border px-3 py-2 text-sm"
+        className={buttonClassName}
         onClick={onStop}
         title="Stop playback"
       >
@@ -71,7 +74,7 @@ export default function PlayerTransportControls(props: {
       </button>
 
       <button
-        className="rounded border px-3 py-2 text-sm disabled:opacity-50"
+        className={buttonClassName}
         onClick={onNextWrapped}
         disabled={(isProjectTab && !hasNow) || atProjectEnd}
         title={
@@ -85,29 +88,29 @@ export default function PlayerTransportControls(props: {
         Next
       </button>
 
-      {!compact && (
+      {!compact ? (
         <button
-          className="rounded border px-3 py-2 text-sm"
+          className={buttonClassName}
           onClick={onResume}
           title="Resume last session (R)"
         >
           Resume
         </button>
-      )}
+      ) : null}
 
-      {!compact && (
+      {!compact ? (
         <button
-          className="rounded border px-3 py-2 text-sm"
+          className={buttonClassName}
           onClick={onPlayAll}
           disabled={tab !== "project" || projectTracksLength === 0}
           title="Start setlist playback"
         >
           Play All
         </button>
-      )}
+      ) : null}
 
       <button
-        className="rounded border px-3 py-2 text-sm"
+        className={buttonClassName}
         onClick={onJumpToNow}
         disabled={tab !== "project" || !nowId}
         title="Jump to Now (J)"
@@ -115,15 +118,15 @@ export default function PlayerTransportControls(props: {
         Jump (J)
       </button>
 
-      {!compact && (
+      {!compact ? (
         <button
-          className="rounded border px-3 py-2 text-sm"
+          className={buttonClassName}
           onClick={onClearNow}
           title="Stop and clear NOW"
         >
           Clear Now
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

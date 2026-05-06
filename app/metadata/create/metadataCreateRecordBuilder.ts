@@ -33,6 +33,37 @@ export type MetadataCreateRecordBuilderResult = {
   finalRecordJson: string;
 };
 
+function buildStarterRelationship({
+  safeSlug,
+  relationshipType,
+  selectedRelatedRecord,
+}: {
+  safeSlug: string;
+  relationshipType: MetadataRelationshipType;
+  selectedRelatedRecord: {
+    id: string;
+    title: string;
+    slug: string;
+  } | null;
+}): MetadataRelationship[] {
+  if (!selectedRelatedRecord) {
+    return [];
+  }
+
+  return [
+    {
+      id: `rel-${safeSlug}-${selectedRelatedRecord.slug}`,
+      type: relationshipType,
+      targetRecordId: selectedRelatedRecord.id,
+      targetSlug: selectedRelatedRecord.slug,
+      targetLabel: selectedRelatedRecord.title,
+      note: `Starter relationship created from Metadata Create (${getRelationshipLabel(
+        relationshipType,
+      )}).`,
+    },
+  ];
+}
+
 export function buildMetadataCreateRecord({
   generatedSlug,
   trimmedTitle,
@@ -73,23 +104,14 @@ export function buildMetadataCreateRecord({
   ];
 
   const fields: MetadataRecordField[] = draftFields.filter(
-    (field) => normalizeText(String(field.value ?? "")).length > 0
+    (field) => normalizeText(String(field.value ?? "")).length > 0,
   );
 
-  const relationships: MetadataRelationship[] = selectedRelatedRecord
-    ? [
-        {
-          id: `rel-${safeSlug}-${selectedRelatedRecord.slug}`,
-          type: relationshipType,
-          targetRecordId: selectedRelatedRecord.id,
-          targetSlug: selectedRelatedRecord.slug,
-          targetLabel: selectedRelatedRecord.title,
-          note: `Starter relationship created from Metadata Create (${getRelationshipLabel(
-            relationshipType
-          )}).`,
-        },
-      ]
-    : [];
+  const relationships = buildStarterRelationship({
+    safeSlug,
+    relationshipType,
+    selectedRelatedRecord,
+  });
 
   const finalRecord: MetadataRecord = {
     id: `record-${safeSlug}`,
@@ -104,7 +126,16 @@ export function buildMetadataCreateRecord({
     relationships,
   };
 
-  const finalRecordJson = JSON.stringify(finalRecord, null, 2);
+  const finalRecordJson = JSON.stringify(
+    {
+      ...finalRecord,
+      relationshipStorage: relationships.length
+        ? "metadata_relationships table on save"
+        : "no relationship selected",
+    },
+    null,
+    2,
+  );
 
   return {
     finalRecord,
