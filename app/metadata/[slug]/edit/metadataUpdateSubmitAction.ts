@@ -1,7 +1,9 @@
 import type { MetadataRecord } from "@/lib/metadata/metadataLibraryTypes";
 import type { MetadataRelationshipInput } from "@/lib/metadata/metadataRelationshipEngine";
 import type { MetadataRelationshipMutationClient } from "@/lib/metadata/metadataRelationshipMutations";
-import { createRelationshipThroughService } from "@/lib/metadata/metadataRelationshipService";
+import {
+  createRelationshipsThroughService,
+} from "@/lib/metadata/metadataRelationshipService";
 import { requireMetadataSupabase } from "@/lib/metadata/metadataSupabase";
 
 export type MetadataUpdateRelationshipDraft = {
@@ -93,18 +95,6 @@ function buildRelationshipInput(
   };
 }
 
-function getRelationshipFailureMessage(result: unknown) {
-  if (!result || typeof result !== "object") {
-    return "Failed to create relationship in database.";
-  }
-
-  const record = result as Record<string, unknown>;
-  return cleanSubmitText(
-    record.error ?? record.message,
-    "Failed to create relationship in database.",
-  );
-}
-
 async function createRelationshipIfPresent(
   relationshipDraft: MetadataUpdateRelationshipDraft | null | undefined,
 ) {
@@ -112,18 +102,18 @@ async function createRelationshipIfPresent(
     return { ok: true, created: false, message: "" };
   }
 
-  const relationshipInput = buildRelationshipInput(relationshipDraft);
+  const input = buildRelationshipInput(relationshipDraft);
 
-  const result = await createRelationshipThroughService({
+  const result = await createRelationshipsThroughService({
     client: getRelationshipMutationClient(),
-    input: relationshipInput,
+    inputs: [input], // batch even for single
   });
 
   if (!result.ok) {
     return {
       ok: false,
       created: false,
-      message: getRelationshipFailureMessage(result),
+      message: "Failed to create relationship in database.",
     };
   }
 

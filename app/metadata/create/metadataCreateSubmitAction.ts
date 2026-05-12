@@ -5,7 +5,9 @@ import type {
 } from "@/lib/metadata/metadataLibraryTypes";
 import type { MetadataRelationshipInput } from "@/lib/metadata/metadataRelationshipEngine";
 import type { MetadataRelationshipMutationClient } from "@/lib/metadata/metadataRelationshipMutations";
-import { createRelationshipThroughService } from "@/lib/metadata/metadataRelationshipService";
+import {
+  createRelationshipsThroughService,
+} from "@/lib/metadata/metadataRelationshipService";
 import { requireMetadataSupabase } from "@/lib/metadata/metadataSupabase";
 
 type MetadataSupabaseError = {
@@ -41,7 +43,6 @@ export type MetadataCreateSubmitResult =
 
 function cleanCreateText(value: unknown, fallback = "") {
   if (typeof value !== "string") return fallback;
-
   const cleaned = value.trim();
   return cleaned || fallback;
 }
@@ -50,22 +51,16 @@ function formatSupabaseError(
   fallback: string,
   error: MetadataSupabaseError | null,
 ) {
-  if (!error) {
-    return fallback;
-  }
+  if (!error) return fallback;
 
   const message = cleanCreateText(error.message);
   const details = cleanCreateText(error.details);
   const hint = cleanCreateText(error.hint);
   const code = cleanCreateText(error.code);
 
-  const parts = [message, details, hint, code ? `Code: ${code}` : ""].filter(
-    Boolean,
-  );
+  const parts = [message, details, hint, code ? `Code: ${code}` : ""].filter(Boolean);
 
-  if (parts.length < 1) {
-    return fallback;
-  }
+  if (parts.length < 1) return fallback;
 
   return `${fallback} ${parts.join(" ")}`;
 }
@@ -75,17 +70,9 @@ function validateCreateRecord(record: MetadataRecord) {
   const slug = cleanCreateText(record.slug);
   const title = cleanCreateText(record.title);
 
-  if (!id) {
-    return "Record id is missing.";
-  }
-
-  if (!slug) {
-    return "Record slug is missing.";
-  }
-
-  if (!title) {
-    return "Record title is missing.";
-  }
+  if (!id) return "Record id is missing.";
+  if (!slug) return "Record slug is missing.";
+  if (!title) return "Record title is missing.";
 
   return "";
 }
@@ -94,58 +81,36 @@ function getRelationshipMutationClient() {
   return requireMetadataSupabase() as unknown as MetadataRelationshipMutationClient;
 }
 
-function getRelationshipExtraShape(
-  relationship: MetadataRelationship,
-): RelationshipExtraShape {
+function getExtra(relationship: MetadataRelationship): RelationshipExtraShape {
   return relationship as unknown as RelationshipExtraShape;
-}
-
-function getRelationshipType(relationship: MetadataRelationship) {
-  const extraShape = getRelationshipExtraShape(relationship);
-
-  return cleanCreateText(
-    relationship.type ?? extraShape.relationshipType,
-    "related_to",
-  );
-}
-
-function getRelationshipTargetTitle(relationship: MetadataRelationship) {
-  const extraShape = getRelationshipExtraShape(relationship);
-
-  return cleanCreateText(
-    relationship.targetLabel ?? extraShape.targetTitle,
-    "Selected record",
-  );
-}
-
-function getRelationshipDetail(
-  record: MetadataRecord,
-  relationship: MetadataRelationship,
-) {
-  const extraShape = getRelationshipExtraShape(relationship);
-  const sourceTitle = cleanCreateText(record.title, "Untitled Record");
-  const targetTitle = getRelationshipTargetTitle(relationship);
-
-  return cleanCreateText(
-    extraShape.detail ??
-      relationship.note ??
-      extraShape.reason ??
-      extraShape.whyItMatters,
-    `${sourceTitle} is connected to ${targetTitle}.`,
-  );
 }
 
 function buildRelationshipInput(
   record: MetadataRecord,
   relationship: MetadataRelationship,
 ): MetadataRelationshipInput {
+  const extra = getExtra(relationship);
+
   const sourceTitle = cleanCreateText(record.title, "Untitled Record");
   const targetRecordId = cleanCreateText(relationship.targetRecordId);
   const targetSlug = cleanCreateText(relationship.targetSlug, targetRecordId);
-  const targetTitle = getRelationshipTargetTitle(relationship);
-  const type = getRelationshipType(relationship);
-  const detail = getRelationshipDetail(record, relationship);
-  const extraShape = getRelationshipExtraShape(relationship);
+  const targetTitle = cleanCreateText(
+    relationship.targetLabel ?? extra.targetTitle,
+    "Selected record",
+  );
+
+  const type = cleanCreateText(
+    relationship.type ?? extra.relationshipType,
+    "related_to",
+  );
+
+  const detail = cleanCreateText(
+    extra.detail ??
+      relationship.note ??
+      extra.reason ??
+      extra.whyItMatters,
+    `${sourceTitle} is connected to ${targetTitle}.`,
+  );
 
   return {
     sourceRecordId: cleanCreateText(record.id),
@@ -158,40 +123,49 @@ function buildRelationshipInput(
     label: type,
     detail,
     note: cleanCreateText(relationship.note),
-    reason: cleanCreateText(extraShape.reason, detail),
+    reason: cleanCreateText(extra.reason, detail),
     strength: "normal",
     direction: "outgoing",
     source: "metadata-create",
   };
 }
 
-async function saveCreateRelationships(record: MetadataRecord) {
+function buildRelationshipInputs(record: MetadataRecord): MetadataRelationshipInput[] {
   const relationships = Array.isArray(record.relationships)
     ? record.relationships
     : [];
 
-  for (const relationship of relationships) {
-    const result = await createRelationshipThroughService({
-      client: getRelationshipMutationClient(),
-      input: buildRelationshipInput(record, relationship),
-    });
+  return relationships.map((rel) => buildRelationshipInput(record, rel));
+}
 
-    if (!result.ok) {
-      return {
-        ok: false,
-        savedCount: 0,
-        message: "Record saved, but relationship table save failed.",
-      };
-    }
+async function saveCreateRelationships(record: MetadataRecord) {
+  const inputs = buildRelationshipInputs(record);
+
+  if (inputs.length === 0) {
+    return {
+      ok: true,
+      savedCount: 0,
+      message: "",
+    };
+  }
+
+  const result = await createRelationshipsThroughService({
+    client: getRelationshipMutationClient(),
+    inputs,
+  });
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      savedCount: 0,
+      message: "Record saved, but relationship table save failed.",
+    };
   }
 
   return {
     ok: true,
-    savedCount: relationships.length,
-    message:
-      relationships.length > 0
-        ? " Relationship saved to metadata_relationships."
-        : "",
+    savedCount: inputs.length,
+    message: " Relationship saved to metadata_relationships.",
   };
 }
 
@@ -232,13 +206,8 @@ async function findExistingRecord(record: MetadataRecord) {
 
   const idCheck = await findExistingRecordByColumn("id", id);
 
-  if (idCheck.errorMessage) {
-    return idCheck;
-  }
-
-  if (idCheck.existingRecord) {
-    return idCheck;
-  }
+  if (idCheck.errorMessage) return idCheck;
+  if (idCheck.existingRecord) return idCheck;
 
   return findExistingRecordByColumn("slug", slug);
 }
@@ -255,22 +224,16 @@ export async function executeMetadataCreateSubmit(
 
   const supabase = requireMetadataSupabase();
   const record = payload.record;
-  const validationError = validateCreateRecord(record);
 
+  const validationError = validateCreateRecord(record);
   if (validationError) {
-    return {
-      ok: false,
-      message: validationError,
-    };
+    return { ok: false, message: validationError };
   }
 
   const existingCheck = await findExistingRecord(record);
 
   if (existingCheck.errorMessage) {
-    return {
-      ok: false,
-      message: existingCheck.errorMessage,
-    };
+    return { ok: false, message: existingCheck.errorMessage };
   }
 
   if (existingCheck.existingRecord) {

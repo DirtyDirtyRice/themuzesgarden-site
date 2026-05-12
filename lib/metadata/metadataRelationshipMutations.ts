@@ -41,10 +41,12 @@ export type MetadataRelationshipMutationClient = {
       eq: (
         column: string,
         value: string,
-      ) => Promise<{
-        data: MetadataRelationshipDbRow[] | null;
-        error: { message?: string } | null;
-      }>;
+      ) => {
+        select: () => Promise<{
+          data: MetadataRelationshipDbRow[] | null;
+          error: { message?: string } | null;
+        }>;
+      };
     };
   };
 };
@@ -246,7 +248,8 @@ export async function deleteMetadataRelationship({
   const { data, error } = await client
     .from(tableName)
     .delete()
-    .eq("id", cleanRelationshipId);
+    .eq("id", cleanRelationshipId)
+    .select(); // 🚀 CRITICAL CHANGE
 
   if (error) {
     return createMutationResult({
