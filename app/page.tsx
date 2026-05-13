@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/app/components/ui/Button";
 
 type HomeInfoCard = {
   title: string;
@@ -91,12 +92,9 @@ function HomeInfoCardView({ card }: { card: HomeInfoCard }) {
       </div>
 
       <div className="mt-4">
-        <Link
-          href={card.infoHref}
-          className="inline-flex rounded-lg border border-white/15 bg-white px-3 py-2 text-sm font-semibold text-black transition hover:opacity-85 active:scale-[0.98]"
-        >
+        <Button href={card.infoHref} variant="secondary">
           More Info (Manual Page)
-        </Link>
+        </Button>
       </div>
     </article>
   );
@@ -149,12 +147,9 @@ export default function Home() {
               </p>
             </div>
 
-            <Link
-              href="/about"
-              className="rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-white transition hover:opacity-85 active:scale-[0.98]"
-            >
+            <Button href="/about" variant="secondary">
               Manual Home
-            </Link>
+            </Button>
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">

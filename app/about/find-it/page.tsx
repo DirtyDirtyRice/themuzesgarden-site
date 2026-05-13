@@ -45,22 +45,22 @@ const SYSTEM_CONNECTIONS = [
   {
     title: "Manual",
     href: "/about",
-    text: "Find It should help users open the right explanation page when they are confused.",
+    text: "Search for what you do not understand and jump directly to the correct explanation page.",
   },
   {
     title: "Metadata System",
     href: "/about/metadata",
-    text: "Find It should surface metadata records, shelves, sections, and relationship pages.",
+    text: "Find It will surface metadata records, shelves, sections, and relationship pages.",
   },
   {
     title: "Projects",
     href: "/about/projects",
-    text: "Find It should help users locate project pages, saved work, and future project tools.",
+    text: "Find It will help locate project pages, saved work, and future project tools.",
   },
   {
     title: "Site Tree",
     href: "/about/site-tree",
-    text: "Find It depends on the app tree so it can explain where pages live.",
+    text: "Find It uses the app structure to explain where pages live.",
   },
 ];
 
@@ -83,6 +83,30 @@ export default function Page() {
           </Link>
         </div>
 
+        {/* NEW: MANUAL ENTRY PANEL */}
+        <section className="mt-6 rounded-3xl border border-blue-400/20 bg-blue-400/10 p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-200/70">
+            Use Find It With The Manual
+          </p>
+
+          <h2 className="mt-2 text-xl font-semibold text-white">
+            Don’t know what something means?
+          </h2>
+
+          <p className="mt-2 text-sm text-blue-100/80">
+            Type what you are trying to understand, and Find It will take you
+            directly to the correct manual page instead of making you search
+            through menus.
+          </p>
+
+          <Link
+            href="/about"
+            className="mt-4 inline-block rounded-full border border-blue-300/40 px-4 py-2 text-sm font-semibold text-blue-100 hover:border-blue-200 hover:text-white"
+          >
+            Open Manual →
+          </Link>
+        </section>
+
         <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/45">
             Core Navigation System
@@ -103,9 +127,9 @@ export default function Page() {
               Current status
             </p>
             <p className="mt-2 text-sm leading-6 text-emerald-50/75">
-              Building now. Navigation search works, keyboard movement works,
-              Enter is protected from accidental jumping, target path behavior
-              exists, and metadata results are being connected.
+              Navigation search works, keyboard movement works, Enter is
+              protected from accidental jumping, target path behavior exists,
+              and metadata results are being connected.
             </p>
           </div>
         </section>
@@ -121,10 +145,9 @@ export default function Page() {
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-white/68">
-              Normal search only gives a list of matches. Find It should go
-              further. It should show the user the best destination, the path to
-              reach it, and enough context to avoid getting lost inside a deep
-              app.
+              Normal search only gives a list of matches. Find It goes further.
+              It shows the best destination, the path to reach it, and enough
+              context to avoid getting lost.
             </p>
           </div>
 
@@ -138,10 +161,10 @@ export default function Page() {
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-white/68">
-              The Muzes Garden is growing into projects, metadata, manual
-              pages, generator tools, player tools, and future child pages. Find
-              It keeps that depth usable by turning the app structure into a
-              visible path.
+              The Muzes Garden is growing into projects, metadata, manual pages,
+              generator tools, player tools, and future child pages. Find It
+              keeps that depth usable by turning the structure into a visible
+              path.
             </p>
           </div>
         </section>
@@ -185,7 +208,7 @@ export default function Page() {
 
             <div className="mt-5 space-y-3">
               {CURRENT_BEHAVIOR.map((item) => (
-                <div
+        <div
                   key={item}
                   className="rounded-2xl border border-white/10 bg-black/35 p-4"
                 >

@@ -30,6 +30,85 @@ export const NAVIGATION_NODES: NavigationNode[] = [
     description: "The main app starting point.",
   },
   {
+    id: "manual",
+    label: "Manual",
+    kind: "area",
+    href: "/about",
+    parentId: "app",
+    keywords: [
+      "manual",
+      "help",
+      "guide",
+      "documentation",
+      "how to",
+      "explanation",
+    ],
+    description: "The full explanation system for how the app works.",
+  },
+  {
+    id: "manual-home",
+    label: "Manual Home",
+    kind: "page",
+    href: "/about",
+    parentId: "manual",
+    keywords: ["manual home", "start here", "manual index"],
+    description: "The main manual hub page.",
+  },
+  {
+    id: "manual-metadata",
+    label: "Metadata System (Manual)",
+    kind: "page",
+    href: "/about/metadata",
+    parentId: "manual",
+    keywords: ["metadata explanation", "what is metadata", "metadata help"],
+    description: "Explanation page for the metadata system.",
+  },
+  {
+    id: "manual-find-it",
+    label: "Find It (Manual)",
+    kind: "page",
+    href: "/about/find-it",
+    parentId: "manual",
+    keywords: ["find it help", "navigation help", "how find it works"],
+    description: "Explanation page for the Find It system.",
+  },
+  {
+    id: "manual-projects",
+    label: "Projects (Manual)",
+    kind: "page",
+    href: "/about/projects",
+    parentId: "manual",
+    keywords: ["projects help", "project system", "tracks help"],
+    description: "Explanation page for projects and workspace.",
+  },
+  {
+    id: "manual-player",
+    label: "Global Player (Manual)",
+    kind: "page",
+    href: "/about/global-player",
+    parentId: "manual",
+    keywords: ["player help", "music player", "audio playback"],
+    description: "Explanation page for the global player system.",
+  },
+  {
+    id: "manual-generator",
+    label: "AI Music Generator (Manual)",
+    kind: "page",
+    href: "/about/ai-music-generator",
+    parentId: "manual",
+    keywords: ["generator help", "ai music", "prompt system"],
+    description: "Explanation page for the AI music generator.",
+  },
+  {
+    id: "manual-site-tree",
+    label: "Site Tree / Roadmap (Manual)",
+    kind: "page",
+    href: "/about/site-tree",
+    parentId: "manual",
+    keywords: ["site tree", "roadmap", "structure map"],
+    description: "Explanation of the app structure and future roadmap.",
+  },
+  {
     id: "workspace",
     label: "Workspace",
     kind: "area",
@@ -51,10 +130,11 @@ export const NAVIGATION_NODES: NavigationNode[] = [
     id: "project-detail",
     label: "Project Detail",
     kind: "page",
-    href: "/workspace/projects/[id]",
+    href: "/workspace/projects",
     parentId: "projects",
     keywords: ["project detail", "project page", "open project"],
-    description: "A single project page with project-specific panels.",
+    description:
+      "A single project page with project-specific panels. Find It sends this safely to the project list first.",
   },
   {
     id: "metadata",
@@ -96,16 +176,17 @@ export const NAVIGATION_NODES: NavigationNode[] = [
     id: "metadata-record",
     label: "Metadata Record",
     kind: "record",
-    href: "/metadata/[slug]",
+    href: "/metadata",
     parentId: "metadata-sections",
     keywords: ["record", "metadata record", "detail", "more information"],
-    description: "A single metadata record detail page.",
+    description:
+      "A single metadata record detail page. Find It sends this safely to the metadata library until a real record slug is selected.",
   },
   {
     id: "metadata-relationships",
     label: "Relationships",
     kind: "section",
-    href: "/metadata/[slug]",
+    href: "/metadata",
     parentId: "metadata-record",
     keywords: [
       "relationships",
@@ -114,7 +195,8 @@ export const NAVIGATION_NODES: NavigationNode[] = [
       "source",
       "target",
     ],
-    description: "Record-to-record relationships and linked metadata.",
+    description:
+      "Record-to-record relationships and linked metadata. Find It sends this safely to the metadata library until a real record is selected.",
   },
   {
     id: "metadata-create",
@@ -185,7 +267,9 @@ export function getNavigationRootNodes() {
 }
 
 export function buildNavigationTree(parentId?: string): NavigationTreeNode[] {
-  const nodes = parentId ? getNavigationChildren(parentId) : getNavigationRootNodes();
+  const nodes = parentId
+    ? getNavigationChildren(parentId)
+    : getNavigationRootNodes();
 
   return nodes.map((node) => ({
     ...node,

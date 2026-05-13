@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { useMemo } from "react";
 
+import { getMetadataMeaningForSearch } from "@/lib/metadata/metadataLibrarySeed";
 import { getNavigationPath } from "@/lib/navigation/navigationPath";
 import type { NavigationSearchResult } from "@/lib/navigation/navigationSearch";
 
 import FindItTreeStep from "./FindItTreeStep";
 import { getSafeFindItRoute } from "./findItPanelUtils";
+
+type MeaningAction = {
+  href: string;
+  label: string;
+  note: string;
+};
 
 function EmptyTargetPathMessage() {
   return (
@@ -47,6 +54,106 @@ function getDirectionLabel(direction?: string) {
   return "Continue";
 }
 
+function getResultMeaning({
+  currentLabel,
+  isAlreadyHere,
+  targetFinalStep,
+  targetLabel,
+  totalSteps,
+}: {
+  currentLabel: string;
+  isAlreadyHere: boolean;
+  targetFinalStep: string;
+  targetLabel?: string;
+  totalSteps: number;
+}) {
+  if (!targetLabel) {
+    return {
+      title: "No explanation yet",
+      text: "Pick a result and Find It will explain why that destination matters.",
+      nextStep:
+        "Start by typing a plain word like metadata, projects, player, manual, or create.",
+    };
+  }
+
+  if (isAlreadyHere) {
+    return {
+      title: "Why this result?",
+      text: `${targetLabel} matched because it is the page you are already viewing.`,
+      nextStep:
+        "Stay here if this is the page you wanted, or choose another result to compare paths.",
+    };
+  }
+
+  return {
+    title: "Why this result?",
+    text: `${targetLabel} matched your search because it is a known app destination. You are starting from ${currentLabel}, and Find It found ${targetFinalStep} as the target in ${totalSteps} steps.`,
+    nextStep:
+      "Use the main destination button when you are ready to move, or use the explanation links below to understand the system first.",
+  };
+}
+
+function getMeaningActions({
+  metadataSlug,
+  safeRoute,
+  targetHref,
+  targetLabel,
+}: {
+  metadataSlug?: string;
+  safeRoute: string | null;
+  targetHref?: string;
+  targetLabel?: string;
+}): MeaningAction[] {
+  const actions: MeaningAction[] = [
+    {
+      href: "/about",
+      label: "Open Manual",
+      note: "Read the plain-language explanation hub.",
+    },
+    {
+      href: "/about/find-it",
+      label: "Read Find It Guide",
+      note: "Understand how path guidance works.",
+    },
+  ];
+
+  if (metadataSlug) {
+    actions.unshift({
+      href: `/metadata/${metadataSlug}`,
+      label: "Open Full Record",
+      note: "Read the complete metadata explanation.",
+    });
+  }
+
+  if (targetHref?.startsWith("/about") && targetHref !== "/about") {
+    actions.unshift({
+      href: targetHref,
+      label: "Open Manual Page",
+      note: targetLabel
+        ? `Read the manual page for ${targetLabel}.`
+        : "Read the matching manual page.",
+    });
+  }
+
+  if (targetHref?.startsWith("/metadata")) {
+    actions.unshift({
+      href: "/about/metadata",
+      label: "Open Metadata Guide",
+      note: "Understand the knowledge layer before jumping deeper.",
+    });
+  }
+
+  if (safeRoute && safeRoute !== targetHref) {
+    actions.push({
+      href: safeRoute,
+      label: "Open Safe Target",
+      note: "Use the verified route Find It selected.",
+    });
+  }
+
+  return actions.slice(0, 4);
+}
+
 export default function FindItTargetPathPanel({
   pathname,
   selectedResult,
@@ -63,6 +170,12 @@ export default function FindItTargetPathPanel({
     });
   }, [pathname, selectedResult]);
 
+  const queryText = selectedResult?.node?.label ?? "";
+
+  const metadataMeaning = useMemo(() => {
+    return getMetadataMeaningForSearch(queryText);
+  }, [queryText]);
+
   const targetSteps =
     pathResult?.steps.map((step) => step.label) ?? [
       "Type what you are trying to find",
@@ -71,15 +184,31 @@ export default function FindItTargetPathPanel({
   const targetFinalStep = targetSteps[targetSteps.length - 1];
   const currentLabel = pathResult?.currentNode?.label ?? "No page selected yet";
   const targetLabel = pathResult?.targetNode?.label;
+  const targetHref = pathResult?.targetNode?.href;
   const totalSteps = pathResult?.steps.length ?? 0;
 
-  const safeRoute = getSafeFindItRoute(pathResult?.targetNode?.href);
+  const safeRoute = getSafeFindItRoute(targetHref);
 
   const isAlreadyHere =
     pathResult?.currentNode?.id === pathResult?.targetNode?.id;
 
   const goButtonText = getTargetActionText({
     isAlreadyHere,
+    targetLabel,
+  });
+
+  const resultMeaning = getResultMeaning({
+    currentLabel,
+    isAlreadyHere,
+    targetFinalStep,
+    targetLabel,
+    totalSteps,
+  });
+
+  const meaningActions = getMeaningActions({
+    metadataSlug: metadataMeaning?.slug,
+    safeRoute,
+    targetHref,
     targetLabel,
   });
 
@@ -140,6 +269,53 @@ export default function FindItTargetPathPanel({
               {isAlreadyHere ? "Already here" : `${totalSteps} steps`}
             </p>
           </div>
+        </div>
+      ) : null}
+
+      {pathResult ? (
+        <div className="mt-3 rounded-xl border border-sky-300/20 bg-sky-300/10 p-3">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-100/80">
+            {metadataMeaning ? metadataMeaning.title : resultMeaning.title}
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-sky-50/75">
+            {metadataMeaning ? metadataMeaning.excerpt : resultMeaning.text}
+          </p>
+
+          <div className="mt-3 rounded-lg border border-sky-200/15 bg-black/25 p-3">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-100/65">
+              Suggested next step
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-sky-50/75">
+              {metadataMeaning
+                ? "Open the full metadata record to read the deeper explanation, fields, and relationships."
+                : resultMeaning.nextStep}
+            </p>
+          </div>
+
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            {meaningActions.map((action) => (
+              <Link
+                key={`${action.href}-${action.label}`}
+                href={action.href}
+                className="rounded-lg border border-sky-200/20 bg-black/30 px-3 py-2 transition hover:border-sky-100/45 hover:bg-sky-100/10"
+              >
+                <p className="text-sm font-bold text-sky-50">
+                  {action.label} →
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-sky-100/55">
+                  {action.note}
+                </p>
+              </Link>
+            ))}
+          </div>
+
+          <p className="mt-3 text-xs leading-5 text-sky-100/55">
+            This panel is the future bridge for metadata meanings, manual
+            explanations, relationship notes, and word-level help.
+          </p>
         </div>
       ) : null}
 

@@ -21,7 +21,7 @@ const CORE_SYSTEMS = [
     title: "Find It",
     href: "/about/find-it",
     summary:
-      "The navigation helper that should tell users where they are and how to reach what they need.",
+      "The navigation helper that tells you where you are and how to reach what you need.",
     status: "Core guidance system",
   },
   {
@@ -52,9 +52,9 @@ const FUTURE_SYSTEMS = [
 
 const WHY_IT_MATTERS = [
   "The app is becoming too deep for memory-only navigation.",
-  "The manual gives every major system a plain-language explanation page.",
-  "Find It and the manual should eventually work together so users can search for a goal and understand the path.",
-  "Metadata pages can grow into a Wikipedia-like knowledge layer for music, lyrics, tools, prompts, and projects.",
+  "The manual explains each system in plain language.",
+  "Find It turns that understanding into direct navigation.",
+  "Metadata will become the meaning layer behind everything.",
 ];
 
 function SystemCard({
@@ -101,6 +101,29 @@ export default function AboutHomePage() {
           ← Back Home
         </Link>
 
+        {/* NEW: FIND IT SHORTCUT */}
+        <section className="mt-6 rounded-3xl border border-blue-400/20 bg-blue-400/10 p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-200/70">
+            Find It Shortcut
+          </p>
+
+          <h2 className="mt-2 text-xl font-semibold text-white">
+            Not sure where something is?
+          </h2>
+
+          <p className="mt-2 text-sm text-blue-100/80">
+            Use Find It to search for what you need and get a step-by-step path
+            to it.
+          </p>
+
+          <Link
+            href="/find-it"
+            className="mt-4 inline-block rounded-full border border-blue-300/40 px-4 py-2 text-sm font-semibold text-blue-100 hover:border-blue-200 hover:text-white"
+          >
+            Open Find It →
+          </Link>
+        </section>
+
         <section className="mt-7 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/45">
             Manual Index
@@ -112,8 +135,8 @@ export default function AboutHomePage() {
 
           <p className="mt-5 max-w-4xl text-lg leading-8 text-white/72">
             This is the in-app book for The Muzes Garden. It explains the main
-            systems, why they exist, how they connect, and where the app is
-            headed next.
+            systems, how they connect, and how to move through the app with
+            confidence.
           </p>
 
           <div className="mt-6 grid gap-3 text-sm text-white/65 md:grid-cols-3">
@@ -127,15 +150,14 @@ export default function AboutHomePage() {
             <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
               <p className="font-semibold text-white">Step 2</p>
               <p className="mt-2 leading-6">
-                Use the page links to move into related systems.
+                Use links to move between connected systems.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
               <p className="font-semibold text-white">Step 3</p>
               <p className="mt-2 leading-6">
-                Later, Find It should help jump directly to the right manual
-                page.
+                Use Find It to jump directly to what you need.
               </p>
             </div>
           </div>
@@ -154,8 +176,8 @@ export default function AboutHomePage() {
             </div>
 
             <p className="max-w-xl text-sm leading-6 text-white/60">
-              These pages explain the major systems users need first: projects,
-              metadata, navigation help, and playback.
+              These are the systems you will use the most. Learn them once, then
+              use Find It to move between them instantly.
             </p>
           </div>
 
@@ -179,8 +201,8 @@ export default function AboutHomePage() {
             </div>
 
             <p className="max-w-xl text-sm leading-6 text-white/60">
-              These pages keep the future generator, roadmap, and deeper app
-              structure connected to the manual instead of scattered in memory.
+              These systems are being built next and will connect directly into
+              the same navigation and metadata layers.
             </p>
           </div>
 
@@ -197,7 +219,7 @@ export default function AboutHomePage() {
           </p>
 
           <h2 className="mt-2 text-2xl font-semibold">
-            The manual is part of the navigation system
+            The manual + Find It = full navigation system
           </h2>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2">
