@@ -15,8 +15,8 @@ function EmptyTargetPathMessage() {
       </p>
 
       <p className="mt-1 text-sm leading-6 text-white/60">
-        Find It will keep this panel clean until you search. After you type, the
-        target path, Go button, and clickable steps will appear here.
+        Find It will stay clean until you search. After you type, the path and
+        instructions will appear here.
       </p>
     </div>
   );
@@ -40,6 +40,13 @@ function getTargetActionText({
   return "No direct page yet";
 }
 
+function getDirectionLabel(direction?: string) {
+  if (direction === "up") return "Go up";
+  if (direction === "down") return "Go deeper";
+  if (direction === "across") return "Switch section";
+  return "Continue";
+}
+
 export default function FindItTargetPathPanel({
   pathname,
   selectedResult,
@@ -48,9 +55,7 @@ export default function FindItTargetPathPanel({
   selectedResult: NavigationSearchResult | null;
 }) {
   const pathResult = useMemo(() => {
-    if (!selectedResult) {
-      return null;
-    }
+    if (!selectedResult) return null;
 
     return getNavigationPath({
       currentPathname: pathname,
@@ -62,13 +67,17 @@ export default function FindItTargetPathPanel({
     pathResult?.steps.map((step) => step.label) ?? [
       "Type what you are trying to find",
     ];
+
   const targetFinalStep = targetSteps[targetSteps.length - 1];
   const currentLabel = pathResult?.currentNode?.label ?? "No page selected yet";
   const targetLabel = pathResult?.targetNode?.label;
   const totalSteps = pathResult?.steps.length ?? 0;
+
   const safeRoute = getSafeFindItRoute(pathResult?.targetNode?.href);
+
   const isAlreadyHere =
     pathResult?.currentNode?.id === pathResult?.targetNode?.id;
+
   const goButtonText = getTargetActionText({
     isAlreadyHere,
     targetLabel,
@@ -83,7 +92,7 @@ export default function FindItTargetPathPanel({
 
         <p className="mt-1 text-sm font-semibold text-emerald-50">
           {pathResult
-            ? "Selected destination is ready below."
+            ? "Follow these steps to reach your destination."
             : "Waiting for your search."}
         </p>
       </div>
@@ -124,44 +133,44 @@ export default function FindItTargetPathPanel({
 
           <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
-              Status
+              Steps
             </p>
 
             <p className="mt-1 text-sm font-semibold text-white">
-              {isAlreadyHere ? "Already here" : `${totalSteps} path steps`}
+              {isAlreadyHere ? "Already here" : `${totalSteps} steps`}
             </p>
           </div>
         </div>
       ) : null}
 
       {isAlreadyHere ? (
-        <span className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-emerald-100/50 bg-emerald-100/15 px-4 py-3 text-sm font-bold text-emerald-50 shadow-[0_0_18px_rgba(110,231,183,0.16)]">
+        <span className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-emerald-100/50 bg-emerald-100/15 px-4 py-3 text-sm font-bold text-emerald-50">
           {goButtonText}
         </span>
       ) : safeRoute ? (
         <Link
           href={safeRoute}
           aria-label={goButtonText}
-          className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-emerald-100/80 bg-white px-4 py-3 text-sm font-bold !text-black shadow-[0_0_22px_rgba(255,255,255,0.22)] transition hover:opacity-85 active:scale-[0.98]"
+          className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-emerald-100/80 bg-white px-4 py-3 text-sm font-bold !text-black transition"
         >
           {goButtonText}
         </Link>
-      ) : pathResult?.targetNode ? (
-        <span className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/55">
-          {goButtonText}
-        </span>
       ) : null}
 
       <div className="mt-3 flex flex-col gap-2">
-        {targetSteps.map((step, index) => (
+        {pathResult?.steps.map((step, index) => (
           <FindItTreeStep
-            key={`target-${step}`}
-            label={step}
-            href={pathResult?.steps[index]?.href}
+            key={`target-${step.id}`}
+            label={`${getDirectionLabel(step.direction)} → ${step.label}`}
+            href={step.href}
             marker={
-              pathResult && step === targetFinalStep ? "target" : undefined
+              step.isCurrentLocation
+                ? "here"
+                : step.isTarget
+                ? "target"
+                : undefined
             }
-            fullPath={pathResult?.steps.map((pathStep) => pathStep.href || "")}
+            fullPath={pathResult.steps.map((s) => s.href || "")}
             stepIndex={index}
           />
         ))}
@@ -172,37 +181,6 @@ export default function FindItTargetPathPanel({
           <p className="text-sm leading-6 text-white/75">
             {pathResult.targetNode.description}
           </p>
-
-          <div className="rounded-xl border border-white/10 bg-black/70 p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/60">
-              Clickable steps
-            </p>
-
-            <div className="mt-3 flex flex-col gap-2">
-              {pathResult.steps.map((step, index) => (
-                <FindItTreeStep
-                  key={`exact-${step.id}`}
-                  label={
-                    step.isCurrentLocation
-                      ? `${step.label} — you are here`
-                      : step.isTarget
-                      ? `${step.label} — target`
-                      : `${step.label} — step ${index + 1}`
-                  }
-                  href={step.href}
-                  marker={
-                    step.isCurrentLocation
-                      ? "here"
-                      : step.isTarget
-                      ? "target"
-                      : undefined
-                  }
-                  fullPath={pathResult.steps.map((pathStep) => pathStep.href || "")}
-                  stepIndex={index}
-                />
-              ))}
-            </div>
-          </div>
         </div>
       ) : null}
     </div>

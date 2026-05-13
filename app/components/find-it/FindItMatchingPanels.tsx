@@ -1,6 +1,9 @@
 import type { NavigationSearchResult } from "@/lib/navigation/navigationSearch";
 
-import { HighlightedResultLabel } from "./FindItMatchingHighlight";
+import {
+  getFindItResultSourceLabel,
+  HighlightedResultLabel,
+} from "./FindItMatchingHighlight";
 
 export function DidYouMeanPanel({
   suggestions,
@@ -40,12 +43,16 @@ export function DidYouMeanPanel({
 export function SearchPrecisionSummary({
   hasSearchText,
   matchCount,
+  metadataCount,
+  navigationCount,
   searchTokens,
   selectedMatchScore,
   topMatchScore,
 }: {
   hasSearchText: boolean;
   matchCount: number;
+  metadataCount: number;
+  navigationCount: number;
   searchTokens: string[];
   selectedMatchScore: number;
   topMatchScore: number;
@@ -58,15 +65,15 @@ export function SearchPrecisionSummary({
         </p>
 
         <p className="mt-1 text-xs leading-5 text-white/45">
-          Results will rank visually by match strength while navigation remains
-          click-only and safe.
+          Results will show navigation pages and metadata records together while
+          navigation remains click-only and safe.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-2 md:grid-cols-3">
+    <div className="grid gap-2 md:grid-cols-4">
       <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">
           Tokens
@@ -79,11 +86,21 @@ export function SearchPrecisionSummary({
 
       <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">
-          Matches
+          Navigation
         </p>
 
         <p className="mt-1 text-sm font-semibold text-white/75">
-          {matchCount}
+          {navigationCount}
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-purple-100/15 bg-purple-300/[0.035] p-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-purple-50/60">
+          Metadata
+        </p>
+
+        <p className="mt-1 text-sm font-semibold text-purple-50/80">
+          {metadataCount}
         </p>
       </div>
 
@@ -96,6 +113,11 @@ export function SearchPrecisionSummary({
           {selectedMatchScore || topMatchScore || 0}
         </p>
       </div>
+
+      <p className="md:col-span-4 text-xs leading-5 text-white/40">
+        Total results: {matchCount}. Purple chips are metadata records. White
+        chips are navigation destinations.
+      </p>
     </div>
   );
 }
@@ -113,6 +135,8 @@ export function TopResultPreview({
     return null;
   }
 
+  const sourceLabel = getFindItResultSourceLabel(result);
+
   return (
     <div className="sticky top-2 z-10 rounded-xl border border-emerald-200/25 bg-black/95 p-3 shadow-2xl shadow-black/40 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -121,6 +145,10 @@ export function TopResultPreview({
         </p>
 
         <div className="flex flex-wrap gap-1.5">
+          <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
+            {sourceLabel}
+          </span>
+
           <span className="rounded-full border border-emerald-100/20 bg-emerald-300/[0.08] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-50/70">
             Best match
           </span>
@@ -137,6 +165,12 @@ export function TopResultPreview({
           tokens={searchTokens}
         />
       </p>
+
+      {result.node.href ? (
+        <p className="mt-1 text-xs leading-5 text-white/35">
+          {result.node.href}
+        </p>
+      ) : null}
 
       <p className="mt-1 text-xs leading-5 text-emerald-50/65">
         This stays visible while you scan longer result lists. Enter still stays

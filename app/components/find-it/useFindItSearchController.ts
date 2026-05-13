@@ -4,10 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { searchNavigationNodes } from "@/lib/navigation/navigationSearch";
 import type { NavigationSearchResult } from "@/lib/navigation/navigationSearch";
 
+import { getFindItMetadataResults } from "./findItMetadataAdapter";
 import {
   clampFindItSelectedIndex,
   getFindItSuggestionPhrases,
 } from "./findItPanelUtils";
+
+const MAX_FIND_IT_RESULTS = 16;
 
 function useDebouncedValue(value: string, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -27,6 +30,69 @@ function getNavigationResultLabel(result: NavigationSearchResult | null) {
   return result?.node.label ?? null;
 }
 
+function getComparableResultScore(result: NavigationSearchResult) {
+  return result.score + result.contextBoost;
+}
+
+function getResultPriority(result: NavigationSearchResult) {
+  if (result.node.href?.startsWith("/metadata/")) {
+    return 2;
+  }
+
+  if (result.node.href?.startsWith("/about/")) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function sortFindItResults(
+  first: NavigationSearchResult,
+  second: NavigationSearchResult,
+) {
+  const secondScore = getComparableResultScore(second);
+  const firstScore = getComparableResultScore(first);
+
+  if (secondScore !== firstScore) {
+    return secondScore - firstScore;
+  }
+
+  const priorityDifference = getResultPriority(second) - getResultPriority(first);
+
+  if (priorityDifference !== 0) {
+    return priorityDifference;
+  }
+
+  return first.node.label.localeCompare(second.node.label);
+}
+
+function getMergedFindItResults({
+  metadataMatches,
+  navigationMatches,
+}: {
+  metadataMatches: NavigationSearchResult[];
+  navigationMatches: NavigationSearchResult[];
+}) {
+  const resultsByNodeId = new Map<string, NavigationSearchResult>();
+
+  [...navigationMatches, ...metadataMatches].forEach((result) => {
+    const existingResult = resultsByNodeId.get(result.node.id);
+
+    if (!existingResult) {
+      resultsByNodeId.set(result.node.id, result);
+      return;
+    }
+
+    if (getComparableResultScore(result) > getComparableResultScore(existingResult)) {
+      resultsByNodeId.set(result.node.id, result);
+    }
+  });
+
+  return [...resultsByNodeId.values()]
+    .sort(sortFindItResults)
+    .slice(0, MAX_FIND_IT_RESULTS);
+}
+
 export function useFindItSearchController({
   searchValue,
   onSearchChange,
@@ -41,7 +107,7 @@ export function useFindItSearchController({
   const hasSearchText = cleanSearchValue.length > 0;
   const isWaitingForDebounce = searchValue.trim() !== cleanSearchValue;
 
-  const matches = useMemo(() => {
+  const navigationMatches = useMemo(() => {
     if (!hasSearchText) {
       return [];
     }
@@ -50,6 +116,23 @@ export function useFindItSearchController({
       limit: 12,
     });
   }, [cleanSearchValue, hasSearchText]);
+
+  const metadataMatches = useMemo(() => {
+    if (!hasSearchText) {
+      return [];
+    }
+
+    return getFindItMetadataResults(cleanSearchValue);
+  }, [cleanSearchValue, hasSearchText]);
+
+  const matches = useMemo(
+    () =>
+      getMergedFindItResults({
+        metadataMatches,
+        navigationMatches,
+      }),
+    [metadataMatches, navigationMatches],
+  );
 
   const suggestions = useMemo(
     () => getFindItSuggestionPhrases(searchValue),

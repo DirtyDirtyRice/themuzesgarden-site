@@ -12,6 +12,24 @@ export function getSearchTokens(searchValue: string) {
     .slice(0, MAX_SEARCH_TOKENS);
 }
 
+export function getFindItResultSourceLabel(result: NavigationSearchResult) {
+  if (result.node.href?.startsWith("/metadata")) {
+    return "Metadata";
+  }
+
+  return "Navigation";
+}
+
+export function getFindItResultSourceTone(result: NavigationSearchResult) {
+  const sourceLabel = getFindItResultSourceLabel(result);
+
+  if (sourceLabel === "Metadata") {
+    return "metadata";
+  }
+
+  return "navigation";
+}
+
 export function getMatchedTokenCount(label: string, tokens: string[]) {
   const cleanLabel = label.toLowerCase();
 

@@ -14,6 +14,7 @@ type TitleBarLink = {
 
 const PRIMARY_LINKS: TitleBarLink[] = [
   { label: "Home", href: "/" },
+  { label: "Project", href: "/workspace/projects" },
   { label: "Library", href: "/library" },
   { label: "Listen", href: "/listen" },
   { label: "Live", href: "/live" },
@@ -44,6 +45,14 @@ function getMetadataChildLinkClass(active: boolean) {
       ? "border-white bg-white text-black"
       : "border-transparent bg-transparent text-white",
   ].join(" ");
+}
+
+function getPrimaryLinkActive(pathname: string, link: TitleBarLink) {
+  if (link.href === "/") {
+    return pathname === "/";
+  }
+
+  return isActivePath(pathname, link.href);
 }
 
 export default function TitleBar() {
@@ -94,7 +103,7 @@ export default function TitleBar() {
           className="flex flex-wrap items-center justify-end gap-2"
         >
           {PRIMARY_LINKS.map((link) => {
-            const active = isActivePath(pathname, link.href);
+            const active = getPrimaryLinkActive(pathname, link);
 
             return (
               <Link
@@ -175,15 +184,6 @@ export default function TitleBar() {
             ].join(" ")}
           >
             Find It
-          </button>
-
-          <button
-            type="button"
-            className="rounded-md border border-dashed border-white/20 bg-transparent px-3 py-2 text-sm font-medium text-white/70 transition duration-150 hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]"
-            aria-label="Project menu placeholder"
-            title="Project menu placeholder"
-          >
-            Project
           </button>
         </nav>
       </div>

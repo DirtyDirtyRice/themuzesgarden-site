@@ -4,6 +4,7 @@ import type { NavigationSearchResult } from "@/lib/navigation/navigationSearch";
 
 import {
   getCategoryMatchScore,
+  getFindItResultSourceLabel,
   getResultMatchScore,
   getSearchTokens,
 } from "./FindItMatchingHighlight";
@@ -56,6 +57,10 @@ export default function FindItMatchingOptionsPanel({
   const selectedResult =
     matches.find((result) => result.node.id === selectedNodeId) ?? null;
   const hasSearchText = searchValue.trim().length > 0;
+  const metadataCount = matches.filter(
+    (result) => getFindItResultSourceLabel(result) === "Metadata",
+  ).length;
+  const navigationCount = matches.length - metadataCount;
   const topMatchScore = topResult
     ? getResultMatchScore(topResult, searchTokens)
     : 0;
@@ -73,7 +78,7 @@ export default function FindItMatchingOptionsPanel({
 
           <p className="mt-2 text-sm leading-6 text-white/55">
             {hasSearchText
-              ? "Choose the closest match below. Result groups now rise by visible relevance."
+              ? "Choose the closest match below. Navigation pages and metadata records now show together."
               : "Start typing, or use one of the common destinations."}
           </p>
         </div>
@@ -92,6 +97,8 @@ export default function FindItMatchingOptionsPanel({
         <SearchPrecisionSummary
           hasSearchText={hasSearchText}
           matchCount={matches.length}
+          metadataCount={metadataCount}
+          navigationCount={navigationCount}
           searchTokens={searchTokens}
           selectedMatchScore={selectedMatchScore}
           topMatchScore={topMatchScore}

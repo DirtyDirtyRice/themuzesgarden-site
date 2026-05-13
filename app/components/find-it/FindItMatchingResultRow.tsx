@@ -4,9 +4,19 @@ import type { NavigationSearchResult } from "@/lib/navigation/navigationSearch";
 
 import FindItSuggestionButton from "./FindItSuggestionButton";
 import {
+  getFindItResultSourceLabel,
+  getFindItResultSourceTone,
   getMatchedTokenCount,
   HighlightedResultLabel,
 } from "./FindItMatchingHighlight";
+
+function getSourceChipClass(tone: "metadata" | "navigation") {
+  if (tone === "metadata") {
+    return "border-purple-100/20 bg-purple-300/[0.08] text-purple-50/80";
+  }
+
+  return "border-white/15 bg-white/[0.06] text-white/60";
+}
 
 export default function FindItMatchingResultRow({
   active,
@@ -25,6 +35,8 @@ export default function FindItMatchingResultRow({
 }) {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const matchedTokenCount = getMatchedTokenCount(result.node.label, searchTokens);
+  const sourceLabel = getFindItResultSourceLabel(result);
+  const sourceTone = getFindItResultSourceTone(result);
 
   useEffect(() => {
     if (!active) {
@@ -48,14 +60,31 @@ export default function FindItMatchingResultRow({
       ].join(" ")}
     >
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2 px-2 pt-1">
-        <p className="text-[11px] font-semibold leading-5 text-white/65">
-          <HighlightedResultLabel
-            label={result.node.label}
-            tokens={searchTokens}
-          />
-        </p>
+        <div>
+          <p className="text-[11px] font-semibold leading-5 text-white/65">
+            <HighlightedResultLabel
+              label={result.node.label}
+              tokens={searchTokens}
+            />
+          </p>
+
+          {result.node.href ? (
+            <p className="mt-0.5 text-[10px] leading-4 text-white/35">
+              {result.node.href}
+            </p>
+          ) : null}
+        </div>
 
         <div className="flex flex-wrap gap-1.5">
+          <span
+            className={[
+              "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em]",
+              getSourceChipClass(sourceTone),
+            ].join(" ")}
+          >
+            {sourceLabel}
+          </span>
+
           {isTopResult ? (
             <span className="rounded-full border border-emerald-100/20 bg-emerald-300/[0.08] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-50/80">
               Top

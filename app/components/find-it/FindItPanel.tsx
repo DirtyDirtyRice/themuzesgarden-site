@@ -1,6 +1,6 @@
 import FindItCurrentPagePanel from "./FindItCurrentPagePanel";
-import FindItMatchingOptionsPanel from "./FindItMatchingOptionsPanel";
 import FindItMoreInfoPreview from "./FindItMoreInfoPreview";
+import FindItResultsPanel from "./FindItResultsPanel";
 import FindItSearchBox from "./FindItSearchBox";
 import FindItTargetPathPanel from "./FindItTargetPathPanel";
 import { useFindItSearchController } from "./useFindItSearchController";
@@ -18,7 +18,6 @@ export default function FindItPanel({
     canClearSearch,
     handleSearchChange,
     handleSearchKeyDown,
-    handleSuggestionClick,
     hasFocusedTarget,
     hasSearchText,
     inputRef,
@@ -29,7 +28,6 @@ export default function FindItPanel({
     selectResult,
     selectedLabel,
     selectedResult,
-    suggestions,
     topResultLabel,
   } = useFindItSearchController({
     searchValue,
@@ -70,13 +68,12 @@ export default function FindItPanel({
         <div className="grid gap-3 xl:grid-cols-[0.85fr_1fr]">
           <FindItCurrentPagePanel pathname={pathname} />
 
-          <FindItMatchingOptionsPanel
+          <FindItResultsPanel
+            hasSearchText={hasSearchText}
+            isWaitingForDebounce={isWaitingForDebounce}
             matches={matches}
-            selectedNodeId={selectedResult?.node.id ?? null}
-            searchValue={searchValue}
-            suggestions={suggestions}
-            onSelect={selectResult}
-            onSuggestionClick={handleSuggestionClick}
+            safeSelectedIndex={safeSelectedIndex}
+            selectResult={selectResult}
           />
         </div>
 
