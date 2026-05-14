@@ -14,7 +14,7 @@ type TitleBarLink = {
 
 const PRIMARY_LINKS: TitleBarLink[] = [
   { label: "Home", href: "/" },
-  { label: "Project", href: "/workspace/projects" },
+  { label: "Projects", href: "/workspace/projects" },
   { label: "Library", href: "/library" },
   { label: "Listen", href: "/listen" },
   { label: "Live", href: "/live" },
@@ -27,89 +27,75 @@ const METADATA_CHILD_LINKS: TitleBarLink[] = [
   { label: "System", href: "/metadata/system" },
 ];
 
+const TRACK_MATCHER_CHILD_LINKS: TitleBarLink[] = [
+  { label: "Track Matcher", href: "/tools/track-matcher" },
+  { label: "Advanced", href: "/tools/track-matcher/advanced" },
+  { label: "Analyze", href: "/tools/track-matcher/advanced/analyze" },
+];
+
 function getPrimaryLinkClass(active: boolean) {
   return [
-    "rounded-md border px-3 py-2 text-sm font-medium transition duration-150",
-    "hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]",
+    "rounded-md border px-3 py-2 text-sm font-medium",
+    "hover:scale-[0.99] active:scale-[0.98]",
     active
-      ? "border-white bg-white text-black"
-      : "border-white/10 bg-white/5 text-white",
+      ? "border-white bg-black text-white"
+      : "border-white/30 bg-black text-white/80",
   ].join(" ");
 }
 
-function getMetadataChildLinkClass(active: boolean) {
+function getDropdownLinkClass(active: boolean) {
   return [
-    "block rounded-lg border px-3 py-2 text-sm transition duration-150",
-    "hover:opacity-85 active:scale-[0.99]",
+    "block rounded-lg border px-3 py-2 text-sm",
+    "hover:scale-[0.99] active:scale-[0.98]",
     active
-      ? "border-white bg-white text-black"
-      : "border-transparent bg-transparent text-white",
+      ? "border-white bg-black text-white"
+      : "border-white/30 bg-black text-white/80",
   ].join(" ");
 }
 
 function getPrimaryLinkActive(pathname: string, link: TitleBarLink) {
-  if (link.href === "/") {
-    return pathname === "/";
-  }
-
+  if (link.href === "/") return pathname === "/";
   return isActivePath(pathname, link.href);
 }
 
 export default function TitleBar() {
   const pathname = usePathname();
+
   const metadataActive = isActivePath(pathname, "/metadata");
+  const trackMatcherActive = isActivePath(pathname, "/tools/track-matcher");
+
   const [metadataMenuOpen, setMetadataMenuOpen] = useState(false);
+  const [trackMatcherMenuOpen, setTrackMatcherMenuOpen] = useState(false);
+
   const [findItOpen, setFindItOpen] = useState(false);
   const [findItSearchValue, setFindItSearchValue] = useState("");
 
-  function closeMetadataMenu() {
-    setMetadataMenuOpen(false);
-  }
-
-  function openMetadataMenu() {
-    setMetadataMenuOpen(true);
-  }
-
-  function handleMetadataBlur(event: React.FocusEvent<HTMLDivElement>) {
+  function handleBlur(
+    event: React.FocusEvent<HTMLDivElement>,
+    close: () => void
+  ) {
     if (!event.currentTarget.contains(event.relatedTarget)) {
-      closeMetadataMenu();
+      close();
     }
   }
 
   return (
-    <header className="sticky top-0 z-[1000] border-b border-white/10 bg-black/90 backdrop-blur">
+    <header className="sticky top-0 z-[1000] border-b border-white/10 bg-black">
       <div className="flex min-h-[64px] w-full items-center justify-between gap-4 px-4 md:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <Link
-            href="/"
-            className="shrink-0 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold tracking-wide text-white transition duration-150 hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]"
-            aria-label="Go to The Muzes Garden home page"
-          >
-            The Muzes Garden
-          </Link>
-
-          <div className="hidden min-w-0 flex-col md:flex">
-            <span className="truncate text-sm font-semibold text-white">
-              Workspace Navigation
-            </span>
-            <span className="truncate text-xs text-white/60">
-              Global title bar for pages, popups, and future child menus
-            </span>
-          </div>
-        </div>
-
-        <nav
-          aria-label="Primary"
-          className="flex flex-wrap items-center justify-end gap-2"
+        <Link
+          href="/"
+          className="rounded-md border border-white/30 bg-black px-3 py-2 text-sm font-semibold text-white"
         >
+          The Muzes Garden
+        </Link>
+
+        <nav className="flex flex-wrap items-center gap-2">
           {PRIMARY_LINKS.map((link) => {
             const active = getPrimaryLinkActive(pathname, link);
-
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                aria-current={active ? "page" : undefined}
                 className={getPrimaryLinkClass(active)}
               >
                 {link.label}
@@ -117,84 +103,90 @@ export default function TitleBar() {
             );
           })}
 
+          {/* TRACK MATCHER */}
           <div
             className="relative"
-            onBlur={handleMetadataBlur}
-            onFocus={openMetadataMenu}
-            onMouseEnter={openMetadataMenu}
-            onMouseLeave={closeMetadataMenu}
+            onBlur={(e) => handleBlur(e, () => setTrackMatcherMenuOpen(false))}
+            onMouseEnter={() => setTrackMatcherMenuOpen(true)}
+            onMouseLeave={() => setTrackMatcherMenuOpen(false)}
+          >
+            <Link
+              href="/tools/track-matcher"
+              className={getPrimaryLinkClass(trackMatcherActive)}
+            >
+              Track Matcher ▼
+            </Link>
+
+            {trackMatcherMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 min-w-[200px]">
+                <div className="rounded-xl border border-white/10 bg-black p-1">
+                  {TRACK_MATCHER_CHILD_LINKS.map((link) => {
+                    const active = isActivePath(pathname, link.href);
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={getDropdownLinkClass(active)}
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* METADATA */}
+          <div
+            className="relative"
+            onBlur={(e) => handleBlur(e, () => setMetadataMenuOpen(false))}
+            onMouseEnter={() => setMetadataMenuOpen(true)}
+            onMouseLeave={() => setMetadataMenuOpen(false)}
           >
             <Link
               href="/metadata"
-              aria-current={metadataActive ? "page" : undefined}
-              aria-expanded={metadataMenuOpen}
-              aria-haspopup="menu"
-              aria-label="Open Metadata library"
               className={getPrimaryLinkClass(metadataActive)}
             >
-              <span className="inline-flex items-center gap-2">
-                <span>Metadata</span>
-                <span
-                  aria-hidden="true"
-                  className="text-[10px] leading-none opacity-80"
-                >
-                  ▼
-                </span>
-              </span>
+              Metadata ▼
             </Link>
 
-            <div
-              className={[
-                "absolute right-0 top-full z-[1100] mt-2 min-w-[180px] transition duration-150",
-                metadataMenuOpen
-                  ? "pointer-events-auto translate-y-0 opacity-100"
-                  : "pointer-events-none translate-y-1 opacity-0",
-              ].join(" ")}
-            >
-              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/95 p-1 shadow-2xl backdrop-blur">
-                {METADATA_CHILD_LINKS.map((link) => {
-                  const active = isActivePath(pathname, link.href);
-
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      aria-current={active ? "page" : undefined}
-                      className={getMetadataChildLinkClass(active)}
-                      onClick={closeMetadataMenu}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
+            {metadataMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 min-w-[180px]">
+                <div className="rounded-xl border border-white/10 bg-black p-1">
+                  {METADATA_CHILD_LINKS.map((link) => {
+                    const active = isActivePath(pathname, link.href);
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={getDropdownLinkClass(active)}
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <button
-            type="button"
-            onClick={() => setFindItOpen((current) => !current)}
-            aria-expanded={findItOpen}
-            className={[
-              "rounded-md border px-3 py-2 text-sm font-medium transition duration-150",
-              "hover:scale-[0.99] hover:opacity-85 active:scale-[0.98]",
-              findItOpen
-                ? "border-white bg-white text-black"
-                : "border-white/10 bg-white/5 text-white",
-            ].join(" ")}
+            onClick={() => setFindItOpen(!findItOpen)}
+            className={getPrimaryLinkClass(findItOpen)}
           >
             Find It
           </button>
         </nav>
       </div>
 
-      {findItOpen ? (
+      {findItOpen && (
         <FindItPanel
           pathname={pathname}
           searchValue={findItSearchValue}
           onSearchChange={setFindItSearchValue}
         />
-      ) : null}
+      )}
     </header>
   );
 }

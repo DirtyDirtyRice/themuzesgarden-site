@@ -1,111 +1,63 @@
 import type { KeyboardEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { searchNavigationNodes } from "@/lib/navigation/navigationSearch";
 import type { NavigationSearchResult } from "@/lib/navigation/navigationSearch";
 
 import { getFindItMetadataResults } from "./findItMetadataAdapter";
+import { getFindItSuggestionPhrases } from "./findItPanelUtils";
 import {
-  clampFindItSelectedIndex,
-  getFindItSuggestionPhrases,
-} from "./findItPanelUtils";
-
-const MAX_FIND_IT_RESULTS = 16;
-
-function useDebouncedValue(value: string, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [delay, value]);
-
-  return debouncedValue;
-}
-
-function getNavigationResultLabel(result: NavigationSearchResult | null) {
-  return result?.node.label ?? null;
-}
-
-function getComparableResultScore(result: NavigationSearchResult) {
-  return result.score + result.contextBoost;
-}
-
-function getResultPriority(result: NavigationSearchResult) {
-  if (result.node.href?.startsWith("/metadata/")) {
-    return 2;
-  }
-
-  if (result.node.href?.startsWith("/about/")) {
-    return 1;
-  }
-
-  return 0;
-}
-
-function sortFindItResults(
-  first: NavigationSearchResult,
-  second: NavigationSearchResult,
-) {
-  const secondScore = getComparableResultScore(second);
-  const firstScore = getComparableResultScore(first);
-
-  if (secondScore !== firstScore) {
-    return secondScore - firstScore;
-  }
-
-  const priorityDifference = getResultPriority(second) - getResultPriority(first);
-
-  if (priorityDifference !== 0) {
-    return priorityDifference;
-  }
-
-  return first.node.label.localeCompare(second.node.label);
-}
-
-function getMergedFindItResults({
-  metadataMatches,
-  navigationMatches,
-}: {
-  metadataMatches: NavigationSearchResult[];
-  navigationMatches: NavigationSearchResult[];
-}) {
-  const resultsByNodeId = new Map<string, NavigationSearchResult>();
-
-  [...navigationMatches, ...metadataMatches].forEach((result) => {
-    const existingResult = resultsByNodeId.get(result.node.id);
-
-    if (!existingResult) {
-      resultsByNodeId.set(result.node.id, result);
-      return;
-    }
-
-    if (getComparableResultScore(result) > getComparableResultScore(existingResult)) {
-      resultsByNodeId.set(result.node.id, result);
-    }
-  });
-
-  return [...resultsByNodeId.values()]
-    .sort(sortFindItResults)
-    .slice(0, MAX_FIND_IT_RESULTS);
-}
+  NAVIGATION_RESULT_LIMIT,
+  SEARCH_DEBOUNCE_MS,
+} from "./FindItSearchControllerConstants";
+import { getFindItControllerStatus } from "./findItControllerStatus";
+import { getFindItKeyboardCommand } from "./findItKeyboardModel";
+import { mergeFindItResultGroups } from "./findItResultMerge";
+import {
+  getFindItResultId,
+  getFindItResultLabel,
+} from "./findItResultRanking";
+import {
+  getFindItFinalIndex,
+  getFindItPreferredSelectedIndex,
+  getFindItResultIndexByResult,
+  getFindItSafeSelectionTarget,
+  getFindItSelectionSnapshot,
+  getNextFindItSelectedIndex,
+} from "./findItSelectionModel";
+import { getFindItSourceSummary } from "./findItSourceSummary";
+import type {
+  FindItControllerInput,
+  FindItSelectionReason,
+} from "./FindItSearchControllerTypes";
+import {
+  getCleanFindItSearchValue,
+  hasUsableFindItSearchText,
+  isFindItWaitingForDebounce,
+  useFindItDebouncedValue,
+} from "./useFindItDebouncedValue";
 
 export function useFindItSearchController({
   searchValue,
   onSearchChange,
-}: {
-  searchValue: string;
-  onSearchChange: (value: string) => void;
-}) {
+}: FindItControllerInput) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const debouncedSearchValue = useDebouncedValue(searchValue, 120);
-  const cleanSearchValue = debouncedSearchValue.trim();
-  const hasSearchText = cleanSearchValue.length > 0;
-  const isWaitingForDebounce = searchValue.trim() !== cleanSearchValue;
+  const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
+  const [selectionReason, setSelectionReason] =
+    useState<FindItSelectionReason>("initial");
+
+  const debouncedSearchValue = useFindItDebouncedValue(
+    searchValue,
+    SEARCH_DEBOUNCE_MS,
+  );
+
+  const cleanSearchValue = getCleanFindItSearchValue(debouncedSearchValue);
+  const hasSearchText = hasUsableFindItSearchText(cleanSearchValue);
+  const isWaitingForDebounce = isFindItWaitingForDebounce({
+    debouncedSearchValue,
+    searchValue,
+  });
 
   const navigationMatches = useMemo(() => {
     if (!hasSearchText) {
@@ -113,7 +65,7 @@ export function useFindItSearchController({
     }
 
     return searchNavigationNodes(cleanSearchValue, {
-      limit: 12,
+      limit: NAVIGATION_RESULT_LIMIT,
     });
   }, [cleanSearchValue, hasSearchText]);
 
@@ -127,11 +79,21 @@ export function useFindItSearchController({
 
   const matches = useMemo(
     () =>
-      getMergedFindItResults({
+      mergeFindItResultGroups({
         metadataMatches,
         navigationMatches,
       }),
     [metadataMatches, navigationMatches],
+  );
+
+  const sourceSummary = useMemo(
+    () =>
+      getFindItSourceSummary({
+        matches,
+        metadataMatches,
+        navigationMatches,
+      }),
+    [matches, metadataMatches, navigationMatches],
   );
 
   const suggestions = useMemo(
@@ -139,117 +101,229 @@ export function useFindItSearchController({
     [searchValue],
   );
 
-  const safeSelectedIndex = clampFindItSelectedIndex(selectedIndex, matches);
-  const selectedResult = hasSearchText
-    ? matches[safeSelectedIndex] ?? matches[0] ?? null
-    : null;
+  const preferredSelectedIndex = getFindItPreferredSelectedIndex({
+    matches,
+    selectedIndex,
+    selectedResultId,
+  });
+
+  const safeSelectionTarget = getFindItSafeSelectionTarget({
+    matches,
+    preferredSelectedIndex,
+  });
+
+  const safeSelectedIndex = safeSelectionTarget.index;
+
+  const selectedResult = hasSearchText ? safeSelectionTarget.result : null;
   const topResult = hasSearchText ? matches[0] ?? null : null;
-  const selectedLabel = getNavigationResultLabel(selectedResult);
-  const topResultLabel = getNavigationResultLabel(topResult);
+  const selectedLabel = getFindItResultLabel(selectedResult);
+  const topResultLabel = getFindItResultLabel(topResult);
   const hasFocusedTarget = Boolean(selectedResult);
   const canClearSearch = searchValue.length > 0 || selectedIndex !== 0;
 
+  const controllerStatus = useMemo(
+    () =>
+      getFindItControllerStatus({
+        isWaitingForDebounce,
+        hasSearchText,
+        matches,
+        selectedIndex: safeSelectedIndex,
+        selectedResult,
+        sourceSummary,
+        topResult,
+      }),
+    [
+      hasSearchText,
+      isWaitingForDebounce,
+      matches,
+      safeSelectedIndex,
+      selectedResult,
+      sourceSummary,
+      topResult,
+    ],
+  );
+
+  const selectionSnapshot = useMemo(
+    () =>
+      getFindItSelectionSnapshot({
+        reason: selectionReason,
+        selectedIndex: safeSelectedIndex,
+        selectedResult,
+      }),
+    [safeSelectedIndex, selectedResult, selectionReason],
+  );
+
   useEffect(() => {
-    if (selectedIndex !== safeSelectedIndex) {
-      setSelectedIndex(safeSelectedIndex);
-    }
-  }, [safeSelectedIndex, selectedIndex]);
+    if (!hasSearchText) {
+      if (selectedIndex !== 0) {
+        setSelectedIndex(0);
+      }
 
-  function refocusSearchInput() {
-    window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-  }
+      if (selectedResultId !== null) {
+        setSelectedResultId(null);
+      }
 
-  function resetFindItSearch() {
-    setSelectedIndex(0);
-    onSearchChange("");
-    refocusSearchInput();
-  }
-
-  function handleSearchChange(value: string) {
-    setSelectedIndex(0);
-    onSearchChange(value);
-  }
-
-  function handleSuggestionClick(suggestion: string) {
-    handleSearchChange(suggestion);
-    refocusSearchInput();
-  }
-
-  function selectResult(result: NavigationSearchResult) {
-    const nextIndex = matches.findIndex(
-      (match) => match.node.id === result.node.id,
-    );
-
-    setSelectedIndex(nextIndex >= 0 ? nextIndex : 0);
-  }
-
-  function jumpSelectedIndex(amount: number) {
-    setSelectedIndex((current) =>
-      clampFindItSelectedIndex(current + amount, matches),
-    );
-  }
-
-  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Escape") {
-      if (canClearSearch) {
-        event.preventDefault();
-        resetFindItSearch();
+      if (selectionReason !== "cleared") {
+        setSelectionReason("cleared");
       }
 
       return;
     }
 
-    if (!hasSearchText) {
-      return;
+    if (selectedIndex !== safeSelectedIndex) {
+      setSelectedIndex(safeSelectedIndex);
+      setSelectionReason("clamped");
     }
+  }, [
+    hasSearchText,
+    safeSelectedIndex,
+    selectedIndex,
+    selectedResultId,
+    selectionReason,
+  ]);
 
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      jumpSelectedIndex(1);
-      return;
+  useEffect(() => {
+    const nextSelectedResultId = getFindItResultId(selectedResult);
+
+    if (nextSelectedResultId && nextSelectedResultId !== selectedResultId) {
+      setSelectedResultId(nextSelectedResultId);
     }
+  }, [selectedResult, selectedResultId]);
 
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      jumpSelectedIndex(-1);
-      return;
-    }
+  const refocusSearchInput = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+  }, []);
 
-    if (event.key === "PageDown") {
-      event.preventDefault();
-      jumpSelectedIndex(5);
-      return;
-    }
+  const resetFindItSearch = useCallback(() => {
+    setSelectedIndex(0);
+    setSelectedResultId(null);
+    setSelectionReason("cleared");
+    onSearchChange("");
+    refocusSearchInput();
+  }, [onSearchChange, refocusSearchInput]);
 
-    if (event.key === "PageUp") {
-      event.preventDefault();
-      jumpSelectedIndex(-5);
-      return;
-    }
-
-    if (event.key === "Home") {
-      event.preventDefault();
+  const handleSearchChange = useCallback(
+    (value: string) => {
       setSelectedIndex(0);
-      return;
-    }
+      setSelectedResultId(null);
+      setSelectionReason("search_changed");
+      onSearchChange(value);
+    },
+    [onSearchChange],
+  );
 
-    if (event.key === "End") {
-      event.preventDefault();
-      setSelectedIndex(Math.max(matches.length - 1, 0));
-      return;
-    }
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      handleSearchChange(suggestion);
+      refocusSearchInput();
+    },
+    [handleSearchChange, refocusSearchInput],
+  );
 
-    if (event.key === "Enter") {
-      event.preventDefault();
-      // ENTER NO LONGER NAVIGATES
-      // User must click a result, path step, or Go button.
-    }
-  }
+  const selectResult = useCallback(
+    (result: NavigationSearchResult) => {
+      const nextIndex = getFindItResultIndexByResult({
+        matches,
+        result,
+      });
+
+      setSelectedIndex(nextIndex >= 0 ? nextIndex : 0);
+      setSelectedResultId(result.node.id);
+      setSelectionReason("click");
+    },
+    [matches],
+  );
+
+  const jumpSelectedIndex = useCallback(
+    (amount: number) => {
+      setSelectedIndex((current) => {
+        const nextIndex = getNextFindItSelectedIndex({
+          currentIndex: current,
+          matches,
+          nextIndex: current + amount,
+        });
+
+        const nextResult = matches[nextIndex] ?? null;
+
+        setSelectedResultId(getFindItResultId(nextResult));
+        setSelectionReason("keyboard");
+
+        return nextIndex;
+      });
+    },
+    [matches],
+  );
+
+  const moveToFirstResult = useCallback(() => {
+    setSelectedIndex(0);
+    setSelectedResultId(getFindItResultId(matches[0] ?? null));
+    setSelectionReason("keyboard");
+  }, [matches]);
+
+  const moveToLastResult = useCallback(() => {
+    const finalIndex = getFindItFinalIndex(matches);
+
+    setSelectedIndex(finalIndex);
+    setSelectedResultId(getFindItResultId(matches[finalIndex] ?? null));
+    setSelectionReason("keyboard");
+  }, [matches]);
+
+  const handleSearchKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      const command = getFindItKeyboardCommand(event.key);
+
+      if (command.type === "clear") {
+        if (canClearSearch) {
+          event.preventDefault();
+          resetFindItSearch();
+        }
+
+        return;
+      }
+
+      if (!hasSearchText) {
+        return;
+      }
+
+      if (command.type === "jump") {
+        event.preventDefault();
+        jumpSelectedIndex(command.amount);
+        return;
+      }
+
+      if (command.type === "first") {
+        event.preventDefault();
+        moveToFirstResult();
+        return;
+      }
+
+      if (command.type === "last") {
+        event.preventDefault();
+        moveToLastResult();
+        return;
+      }
+
+      if (command.type === "confirm_without_navigation") {
+        event.preventDefault();
+        // ENTER DOES NOT NAVIGATE.
+        // The user must click a result, path step, or Go button.
+      }
+    },
+    [
+      canClearSearch,
+      hasSearchText,
+      jumpSelectedIndex,
+      moveToFirstResult,
+      moveToLastResult,
+      resetFindItSearch,
+    ],
+  );
 
   return {
     canClearSearch,
+    controllerStatus,
     handleSearchChange,
     handleSearchKeyDown,
     handleSuggestionClick,
@@ -264,6 +338,8 @@ export function useFindItSearchController({
     selectResult,
     selectedLabel,
     selectedResult,
+    selectionSnapshot,
+    sourceSummary,
     suggestions,
     topResultLabel,
   };

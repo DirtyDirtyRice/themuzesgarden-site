@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/app/components/ui/Button";
 
 type HomeInfoCard = {
   title: string;
@@ -27,6 +26,14 @@ const CURRENT_SYSTEMS: HomeInfoCard[] = [
     summary:
       "Build a structured music knowledge library with shelves, sections, records, and relationships.",
     status: "Building now",
+  },
+  {
+    title: "Track Matcher",
+    appHref: "/tools/track-matcher",
+    infoHref: "/about/track-matcher",
+    summary:
+      "Match BPM, explore key relationships, and analyze how tracks change over time using timeline-based intelligence.",
+    status: "Working now",
   },
   {
     title: "Find It System",
@@ -73,7 +80,7 @@ function HomeInfoCardView({ card }: { card: HomeInfoCard }) {
           {card.appHref ? (
             <Link
               href={card.appHref}
-              className="text-lg font-semibold text-white underline-offset-4 transition hover:text-white/75 hover:underline"
+              className="text-lg font-semibold text-white underline-offset-4 hover:underline"
             >
               {card.title}
             </Link>
@@ -81,9 +88,7 @@ function HomeInfoCardView({ card }: { card: HomeInfoCard }) {
             <p className="text-lg font-semibold text-white/85">{card.title}</p>
           )}
 
-          <p className="mt-1 text-sm leading-6 text-white/60">
-            {card.summary}
-          </p>
+          <p className="mt-1 text-sm text-white/60">{card.summary}</p>
         </div>
 
         <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/50">
@@ -92,9 +97,12 @@ function HomeInfoCardView({ card }: { card: HomeInfoCard }) {
       </div>
 
       <div className="mt-4">
-        <Button href={card.infoHref} variant="secondary">
-          More Info (Manual Page)
-        </Button>
+        <Link
+          href={card.infoHref}
+          className="inline-flex rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
+        >
+          More Info
+        </Link>
       </div>
     </article>
   );
@@ -104,72 +112,19 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-black px-6 py-10 text-white">
       <main className="mx-auto w-full max-w-6xl">
-        <section>
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/45">
-            Home
-          </p>
+        <h1 className="text-4xl font-bold">The Muzes Garden</h1>
 
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">
-            The Muzes Garden
-          </h1>
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {CURRENT_SYSTEMS.map((card) => (
+            <HomeInfoCardView key={card.title} card={card} />
+          ))}
+        </div>
 
-          <p className="mt-3 max-w-4xl text-lg leading-8 text-white/70">
-            A growing system for music creation, organization, metadata,
-            navigation help, and AI-assisted sound exploration. The goal is not
-            just a music app. The goal is a connected system where songs,
-            lyrics, sounds, projects, notes, relationships, and future AI
-            generation can explain each other.
-          </p>
-        </section>
-
-        <section className="mt-6 rounded-xl border border-amber-300/30 bg-amber-300/10 p-4">
-          <p className="text-sm font-semibold text-amber-200">
-            🚧 Under Construction
-          </p>
-
-          <p className="mt-1 text-sm leading-6 text-amber-100/80">
-            Core systems are working, but still being shaped. Use the titles to
-            enter working areas. Use “More Info” to read the manual pages that
-            explain each system.
-          </p>
-        </section>
-
-        <section className="mt-10">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/50">
-                Current Systems
-              </p>
-
-              <p className="mt-2 text-sm leading-6 text-white/45">
-                Title = open the system.  
-                More Info = learn what the system means.
-              </p>
-            </div>
-
-            <Button href="/about" variant="secondary">
-              Manual Home
-            </Button>
-          </div>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {CURRENT_SYSTEMS.map((card) => (
-              <HomeInfoCardView key={card.title} card={card} />
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">
-            Planned Systems
-          </p>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {PLANNED_SYSTEMS.map((card) => (
-              <HomeInfoCardView key={card.title} card={card} />
-            ))}
-          </div>
-        </section>
+        <div className="mt-10 grid gap-4 lg:grid-cols-2">
+          {PLANNED_SYSTEMS.map((card) => (
+            <HomeInfoCardView key={card.title} card={card} />
+          ))}
+        </div>
       </main>
     </div>
   );

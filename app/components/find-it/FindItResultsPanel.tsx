@@ -1,46 +1,61 @@
 import type { NavigationSearchResult } from "@/lib/navigation/navigationSearch";
 
 import FindItResultRow from "./FindItResultRow";
+import FindItResultsBrainSummary from "./FindItResultsBrainSummary";
+import { useFindItResultsBrain } from "./useFindItResultsBrain";
 
-function getResultKindLabel(result: NavigationSearchResult | null): string {
-  if (!result) {
-    return "No result selected";
-  }
-
-  const cleanKind = result.node.kind.replace(/_/g, " ");
-
-  return cleanKind.charAt(0).toUpperCase() + cleanKind.slice(1);
+function getResultBadgeClasses() {
+  return "rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60";
 }
 
-function getResultConfidenceLabel(matchCount: number): string {
-  if (matchCount === 1) {
-    return "Strong match";
-  }
+function EmptyResultsPanel() {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-black/35 p-4">
+      <p className="text-sm font-semibold text-white">
+        Start typing to search
+      </p>
 
-  if (matchCount <= 3) {
-    return "Good match list";
-  }
-
-  return "Multiple possible matches";
+      <p className="mt-2 text-sm leading-6 text-white/70">
+        Search for pages, metadata, projects, or system concepts.
+      </p>
+    </section>
+  );
 }
 
-function getResultConfidenceCopy(matchCount: number): string {
-  if (matchCount === 1) {
-    return "Find It found one clear place to send you next.";
-  }
+function DebounceResultsPanel() {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-black/35 p-4">
+      <p className="text-sm font-semibold text-white">
+        Updating results…
+      </p>
 
-  if (matchCount <= 3) {
-    return "Find It found a small set of likely choices. The selected row is the current best target.";
-  }
-
-  return "Find It found several possible choices. Use the arrow keys to compare them before opening one.";
+      <p className="mt-2 text-sm leading-6 text-white/70">
+        Checking navigation, metadata, and fuzzy matches.
+      </p>
+    </section>
+  );
 }
 
-function getNoResultsSuggestionCopy(): string {
-  return [
-    "Try one broader word first.",
-    "Good examples: metadata, projects, player, generator, manual, C Major, major, scale, or Find It.",
-  ].join(" ");
+function NoResultsPanel() {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-black/35 p-4">
+      <p className="text-sm font-semibold text-white">
+        No results yet
+      </p>
+
+      <p className="mt-2 text-sm text-white/70">
+        Try broader or simpler words.
+      </p>
+    </section>
+  );
+}
+
+function getPredictionRing(isPredicted: boolean) {
+  if (!isPredicted) {
+    return "";
+  }
+
+  return "rounded-xl ring-2 ring-indigo-400/40";
 }
 
 export default function FindItResultsPanel({
@@ -48,137 +63,152 @@ export default function FindItResultsPanel({
   isWaitingForDebounce,
   matches,
   safeSelectedIndex,
+  searchValue = "",
   selectResult,
 }: {
   hasSearchText: boolean;
   isWaitingForDebounce: boolean;
   matches: NavigationSearchResult[];
   safeSelectedIndex: number;
+  searchValue?: string;
   selectResult: (result: NavigationSearchResult) => void;
 }) {
-  const selectedResult = matches[safeSelectedIndex] ?? matches[0] ?? null;
-  const resultKindLabel = getResultKindLabel(selectedResult);
-  const confidenceLabel = getResultConfidenceLabel(matches.length);
-  const confidenceCopy = getResultConfidenceCopy(matches.length);
+  const brain = useFindItResultsBrain({
+    searchValue,
+    matches,
+    safeSelectedIndex,
+    selectResult,
+  });
+
+  const badgeClasses = getResultBadgeClasses();
+  const predictedNodeId = brain.prediction.predictedNodeId;
 
   if (!hasSearchText) {
-    return (
-      <section className="rounded-2xl border border-white/10 bg-black/35 p-4">
-        <p className="text-sm font-semibold text-white">
-          Start typing to search
-        </p>
-
-        <p className="mt-2 text-sm leading-6 text-white/70">
-          Search for a page, system, metadata record, project area, manual
-          topic, or fuzzy phrase like major, c maj, scale, or find.
-        </p>
-
-        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
-            Smart search is on
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-white/60">
-            Find It can now understand partial metadata words and common short
-            names before sending you to a page.
-          </p>
-        </div>
-      </section>
-    );
+    return <EmptyResultsPanel />;
   }
 
   if (isWaitingForDebounce) {
-    return (
-      <section className="rounded-2xl border border-white/10 bg-black/35 p-4">
-        <p className="text-sm font-semibold text-white">
-          Updating results…
-        </p>
-
-        <p className="mt-2 text-sm leading-6 text-white/70">
-          Find It is checking navigation pages, metadata records, partial
-          matches, and known short names.
-        </p>
-      </section>
-    );
+    return <DebounceResultsPanel />;
   }
 
   if (matches.length === 0) {
-    return (
-      <section className="rounded-2xl border border-white/10 bg-black/35 p-4">
-        <p className="text-sm font-semibold text-white">
-          No matching results yet
-        </p>
-
-        <p className="mt-2 text-sm leading-6 text-white/70">
-          {getNoResultsSuggestionCopy()}
-        </p>
-
-        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
-            Try this next
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-white/60">
-            Use fewer words first. After Find It shows results, use the selected
-            row, path panel, meaning panel, and action panel together.
-          </p>
-        </div>
-      </section>
-    );
+    return <NoResultsPanel />;
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <section className={`rounded-2xl border p-4 ${brain.panelTone}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-white">
-            Results
-          </p>
+          <p className="text-sm font-semibold text-white">Results</p>
 
-          <p className="mt-1 text-xs leading-5 text-white/55">
-            Use the arrow keys to move through results. Click Open when you are
-            ready to move.
+          <p className="mt-1 text-xs text-white/55">
+            Navigate with arrows. Select before opening.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
-            {matches.length} found
-          </span>
-
-          <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
-            {confidenceLabel}
-          </span>
+          <span className={badgeClasses}>{matches.length} found</span>
+          <span className={badgeClasses}>{brain.confidenceLabel}</span>
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-white/10 bg-black/35 p-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
-          Current best target
+      <FindItResultsBrainSummary
+        intent={brain.intent}
+        memory={brain.memory}
+        prediction={brain.prediction}
+      />
+
+      <div className="mt-4 rounded-xl border border-indigo-400/30 bg-indigo-400/10 p-3">
+        <p className="text-xs uppercase tracking-[0.14em] text-indigo-200/70">
+          Interpretation
         </p>
 
-        <p className="mt-2 text-sm font-semibold text-white">
-          {selectedResult?.node.label ?? "No selected result"}
-        </p>
-
-        <p className="mt-1 text-xs leading-5 text-white/60">
-          {confidenceCopy}
-        </p>
-
-        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
-          Type: {resultKindLabel}
+        <p className="mt-1 text-sm text-indigo-100/80">
+          {brain.interpretation}
         </p>
       </div>
 
+      <div className="mt-4 rounded-xl border border-white/10 bg-black/35 p-3">
+        <p className="text-xs uppercase text-white/45">
+          Intent
+        </p>
+
+        <p className="mt-1 text-sm font-semibold text-white">
+          {brain.intent.headline}
+        </p>
+
+        <p className="mt-1 text-sm text-white/70">
+          {brain.intent.explanation}
+        </p>
+
+        <p className="mt-2 text-xs text-white/50">
+          Next: {brain.intent.nextStep}
+        </p>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3">
+        <p className="text-xs uppercase tracking-[0.14em] text-amber-200/70">
+          Decision guidance
+        </p>
+
+        <p className="mt-1 text-sm text-amber-100/80">
+          {brain.guidance.strategy}
+        </p>
+
+        {brain.guidance.warning ? (
+          <p className="mt-1 text-xs text-amber-200/70">
+            ⚠ {brain.guidance.warning}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="mt-4 rounded-xl border border-white/10 bg-black/35 p-3">
+        <p className="text-xs uppercase text-white/45">
+          Current target
+        </p>
+
+        <p className="mt-1 text-sm font-semibold text-white">
+          {brain.selectedResult?.node.label ?? "None"}
+        </p>
+
+        <p className="mt-1 text-xs text-white/60">
+          {brain.confidenceCopy}
+        </p>
+
+        <p className="mt-2 text-[11px] text-white/45">
+          Type: {brain.resultKindLabel}
+        </p>
+      </div>
+
+      {brain.comparisonHint ? (
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/30 p-2">
+          <p className="text-xs text-white/55">{brain.comparisonHint}</p>
+        </div>
+      ) : null}
+
       <div className="mt-4 space-y-3">
-        {matches.map((result, index) => (
-          <FindItResultRow
-            key={result.node.id}
-            isSelected={index === safeSelectedIndex}
-            onSelect={selectResult}
-            result={result}
-          />
-        ))}
+        {matches.map((result, index) => {
+          const isPredicted = predictedNodeId === result.node.id;
+
+          return (
+            <div
+              className={getPredictionRing(isPredicted)}
+              key={result.node.id}
+            >
+              <FindItResultRow
+                isSelected={index === brain.activeSelectedIndex}
+                onSelect={brain.selectResultWithMemory}
+                result={result}
+              />
+
+              {isPredicted ? (
+                <div className="mt-1 rounded-lg border border-indigo-300/20 bg-indigo-300/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-100/75">
+                  Predicted best match
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
     </section>
   );
