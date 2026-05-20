@@ -1,0 +1,80 @@
+"use client";
+
+import type { TrackMatcherDynamicLaneDefinition } from "./trackMatcherDynamicLaneTypes";
+
+export const TRACK_MATCHER_DYNAMIC_LANES: TrackMatcherDynamicLaneDefinition[] = [
+  {
+    id: "deck-a",
+    title: "Deck A",
+    category: "comparison",
+    renderMode: "standard",
+    health: "healthy",
+    order: 10,
+    visible: true,
+    supportsPlayback: true,
+    supportsAnalysis: true,
+    supportsGeneration: false,
+    description: "Primary comparison lane for uploaded source audio.",
+    futureUse: "Feeds tempo matching, key comparison, and hybrid construction.",
+  },
+  {
+    id: "deck-b",
+    title: "Deck B",
+    category: "comparison",
+    renderMode: "standard",
+    health: "healthy",
+    order: 20,
+    visible: true,
+    supportsPlayback: true,
+    supportsAnalysis: true,
+    supportsGeneration: false,
+    description: "Secondary comparison lane for uploaded audio.",
+    futureUse: "Feeds transitions, harmonic fit, and arrangement analysis.",
+  },
+  {
+    id: "reference-song",
+    title: "Reference Song",
+    category: "reference",
+    renderMode: "compact",
+    health: "healthy",
+    order: 30,
+    visible: false,
+    supportsPlayback: false,
+    supportsAnalysis: true,
+    supportsGeneration: false,
+    description: "Reserved lane for influence and lineage matching.",
+    futureUse: "Supports Suno reference workflows and melody lineage tracing.",
+  },
+  {
+    id: "stem-bus",
+    title: "Stem Bus",
+    category: "stem",
+    renderMode: "compact",
+    health: "warning",
+    order: 40,
+    visible: false,
+    supportsPlayback: false,
+    supportsAnalysis: true,
+    supportsGeneration: false,
+    description: "Reserved lane group for separated stems.",
+    futureUse: "Supports vocal extraction, remix routing, and hybrid stems.",
+  },
+  {
+    id: "generated-candidate",
+    title: "Generated Candidate",
+    category: "generation",
+    renderMode: "focus",
+    health: "healthy",
+    order: 50,
+    visible: false,
+    supportsPlayback: true,
+    supportsAnalysis: true,
+    supportsGeneration: true,
+    description: "Reserved lane for AI-generated candidate outputs.",
+    futureUse: "Supports regeneration review and pronunciation verification.",
+  },
+];
+
+export function getTrackMatcherDynamicLanes() {
+  return TRACK_MATCHER_DYNAMIC_LANES;
+}

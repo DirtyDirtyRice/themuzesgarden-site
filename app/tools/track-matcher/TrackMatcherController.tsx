@@ -2,210 +2,178 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import {
+  type TrackMatcherAudioEngineMode,
+} from "./trackMatcherAudioEngine";
 import TrackMatcherControls from "./TrackMatcherControls";
 import TrackMatcherDetailsLink from "./TrackMatcherDetailsLink";
+import TrackMatcherDeckControls from "./controller/TrackMatcherDeckControls";
+import TrackMatcherLaneOverviewPanel from "./controller/TrackMatcherLaneOverviewPanel";
+import {
+  createEmptyTrackMatcherProPitchRuntimeState,
+  type TrackMatcherProPitchRuntimeState,
+} from "./trackMatcherProPitchDspRuntime";
 import TrackMatcherUploadPanel from "./TrackMatcherUploadPanel";
+import {
+  DEFAULT_SYNC_SNAPSHOT,
+  DEFAULT_TRACK_A,
+  DEFAULT_TRACK_B,
+} from "./controller/trackMatcherControllerConstants";
+import {
+  revokeFileUrl,
+} from "./controller/trackMatcherControllerMath";
+import {
+  useTrackMatcherDeckActions,
+} from "./controller/useTrackMatcherDeckActions";
+import {
+  useTrackMatcherProPitchPreparation,
+} from "./controller/useTrackMatcherProPitchPreparation";
+import {
+  useTrackMatcherDerivedState,
+  useTrackMatcherRuntimeEffects,
+  useTrackMatcherRuntimeRefs,
+} from "./controller/useTrackMatcherRuntimeRefs";
+import {
+  useTrackMatcherSyncController,
+} from "./controller/useTrackMatcherSyncController";
+import type {
+  TrackMatcherDeckId,
+  SyncSnapshot,
+} from "./controller/trackMatcherControllerTypes";
 
-export type TrackMode = "major" | "minor";
-
-export const TRACK_MATCHER_KEYS = [
-  "C",
-  "C#",
-  "D",
-  "D#",
-  "E",
-  "F",
-  "F#",
-  "G",
-  "G#",
-  "A",
-  "A#",
-  "B",
-] as const;
-
-type TrackMatcherTrackState = {
-  bpm: number;
-  keyIndex: number;
-  mode: TrackMode;
-  trackName: string;
-  fileUrl: string | null;
-};
-
-const DEFAULT_TRACK_A: TrackMatcherTrackState = {
-  bpm: 100,
-  keyIndex: 0,
-  mode: "major",
-  trackName: "",
-  fileUrl: null,
-};
-
-const DEFAULT_TRACK_B: TrackMatcherTrackState = {
-  bpm: 120,
-  keyIndex: 7,
-  mode: "minor",
-  trackName: "",
-  fileUrl: null,
-};
-
-function clampBpm(value: number) {
-  return Math.min(180, Math.max(60, Number(value.toFixed(2))));
-}
-
-function revokeFileUrl(fileUrl: string | null) {
-  if (!fileUrl) return;
-  window.URL.revokeObjectURL(fileUrl);
-}
+export { TRACK_MATCHER_KEYS } from "./controller/trackMatcherControllerConstants";
+export type { TrackMode } from "./controller/trackMatcherControllerTypes";
 
 export default function TrackMatcherController() {
-  const [trackA, setTrackA] = useState<TrackMatcherTrackState>(DEFAULT_TRACK_A);
-  const [trackB, setTrackB] = useState<TrackMatcherTrackState>(DEFAULT_TRACK_B);
+  const [trackA, setTrackA] = useState(DEFAULT_TRACK_A);
+  const [trackB, setTrackB] = useState(DEFAULT_TRACK_B);
+  const [runtimeA, setRuntimeA] = useState<TrackMatcherProPitchRuntimeState>(
+    () => createEmptyTrackMatcherProPitchRuntimeState(),
+  );
+  const [runtimeB, setRuntimeB] = useState<TrackMatcherProPitchRuntimeState>(
+    () => createEmptyTrackMatcherProPitchRuntimeState(),
+  );
+  const [activeDeckId, setActiveDeckId] = useState<TrackMatcherDeckId>("A");
+  const [audioMode, setAudioMode] = useState<TrackMatcherAudioEngineMode>(
+    "browser-speed-pitch",
+  );
   const [autoSyncBToA, setAutoSyncBToA] = useState(false);
   const [nudgeAmount] = useState(0.05);
+  const [syncSnapshot, setSyncSnapshot] = useState<SyncSnapshot>(
+    DEFAULT_SYNC_SNAPSHOT,
+  );
 
   const audioRefA = useRef<HTMLAudioElement | null>(null);
   const audioRefB = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    if (audioRefA.current) audioRefA.current.playbackRate = trackA.bpm / 100;
-  }, [trackA.bpm]);
+  const {
+    runtimeARef,
+    runtimeBRef,
+    fileUrlARef,
+    fileUrlBRef,
+  } = useTrackMatcherRuntimeRefs({
+    runtimeA,
+    runtimeB,
+    fileUrlA: trackA.fileUrl,
+    fileUrlB: trackB.fileUrl,
+  });
 
-  useEffect(() => {
-    if (audioRefB.current) audioRefB.current.playbackRate = trackB.bpm / 100;
-  }, [trackB.bpm]);
+  const {
+    closeRuntime,
+    prepareProPitchForTrack,
+  } = useTrackMatcherProPitchPreparation({
+    setRuntimeA,
+    setRuntimeB,
+  });
 
-  useEffect(() => {
-    if (!autoSyncBToA) return;
+  const {
+    activeDeckSnapshot,
+    activePlan,
+    activeRuntime,
+    canUseProPitch,
+    canUseProPitchA,
+    canUseProPitchB,
+    deckSnapshotA,
+    deckSnapshotB,
+    engineHealth,
+  } = useTrackMatcherDerivedState({
+    activeDeckId,
+    audioMode,
+    runtimeA,
+    runtimeB,
+    trackA,
+    trackB,
+  });
 
-    const syncInterval = window.setInterval(() => {
-      setTrackB((currentTrackB) => {
-        const difference = trackA.bpm - currentTrackB.bpm;
+  const {
+    setTrackAFile,
+    setTrackBFile,
+    setTrackABpm,
+    setTrackBBpm,
+    setTrackAKeyIndex,
+    setTrackBKeyIndex,
+    setTrackAMode,
+    setTrackBMode,
+    playBoth,
+    pauseBoth,
+    stopBoth,
+    nudgeBBackward,
+    nudgeBForward,
+    resetBToStart,
+    matchAToB,
+    matchBToA,
+  } = useTrackMatcherDeckActions({
+    trackA,
+    trackB,
+    setTrackA,
+    setTrackB,
+    setActiveDeckId,
+    audioRefA,
+    audioRefB,
+    audioMode,
+    canUseProPitchA,
+    canUseProPitchB,
+    setSyncSnapshot,
+    nudgeAmount,
+    prepareProPitchForTrack,
+  });
 
-        if (Math.abs(difference) < 0.05) {
-          return { ...currentTrackB, bpm: trackA.bpm };
-        }
+  useTrackMatcherRuntimeEffects({
+    audioMode,
+    autoSyncBToA,
+    canUseProPitchA,
+    canUseProPitchB,
+    trackA,
+    trackB,
+    runtimeA,
+    runtimeB,
+    audioRefA,
+    audioRefB,
+    setAudioMode,
+    setRuntimeA,
+    setRuntimeB,
+  });
 
-        return {
-          ...currentTrackB,
-          bpm: clampBpm(currentTrackB.bpm + difference * 0.25),
-        };
-      });
-    }, 300);
-
-    return () => window.clearInterval(syncInterval);
-  }, [autoSyncBToA, trackA.bpm]);
+  useTrackMatcherSyncController({
+    audioMode,
+    autoSyncBToA,
+    canUseProPitchB,
+    trackA,
+    trackB,
+    audioRefA,
+    audioRefB,
+    setTrackB,
+    setSyncSnapshot,
+  });
 
   useEffect(() => {
     return () => {
-      revokeFileUrl(trackA.fileUrl);
-      revokeFileUrl(trackB.fileUrl);
+      revokeFileUrl(fileUrlARef.current);
+      revokeFileUrl(fileUrlBRef.current);
+      closeRuntime(runtimeARef.current);
+      closeRuntime(runtimeBRef.current);
     };
-  }, [trackA.fileUrl, trackB.fileUrl]);
-
-  const setTrackAFile = (file: File) => {
-    const nextUrl = window.URL.createObjectURL(file);
-
-    setTrackA((currentTrackA) => {
-      revokeFileUrl(currentTrackA.fileUrl);
-      return { ...currentTrackA, trackName: file.name, fileUrl: nextUrl };
-    });
-  };
-
-  const setTrackBFile = (file: File) => {
-    const nextUrl = window.URL.createObjectURL(file);
-
-    setTrackB((currentTrackB) => {
-      revokeFileUrl(currentTrackB.fileUrl);
-      return { ...currentTrackB, trackName: file.name, fileUrl: nextUrl };
-    });
-  };
-
-  const setTrackABpm = (bpm: number) => {
-    setTrackA((currentTrackA) => ({ ...currentTrackA, bpm: clampBpm(bpm) }));
-  };
-
-  const setTrackBBpm = (bpm: number) => {
-    setTrackB((currentTrackB) => ({ ...currentTrackB, bpm: clampBpm(bpm) }));
-  };
-
-  const setTrackAKeyIndex = (keyIndex: number) => {
-    setTrackA((currentTrackA) => ({ ...currentTrackA, keyIndex }));
-  };
-
-  const setTrackBKeyIndex = (keyIndex: number) => {
-    setTrackB((currentTrackB) => ({ ...currentTrackB, keyIndex }));
-  };
-
-  const setTrackAMode = (mode: TrackMode) => {
-    setTrackA((currentTrackA) => ({ ...currentTrackA, mode }));
-  };
-
-  const setTrackBMode = (mode: TrackMode) => {
-    setTrackB((currentTrackB) => ({ ...currentTrackB, mode }));
-  };
-
-  const playBoth = () => {
-    if (!audioRefA.current || !audioRefB.current) return;
-
-    audioRefA.current.currentTime = 0;
-    audioRefB.current.currentTime = 0;
-
-    void audioRefA.current.play();
-    void audioRefB.current.play();
-  };
-
-  const pauseBoth = () => {
-    audioRefA.current?.pause();
-    audioRefB.current?.pause();
-  };
-
-  const stopBoth = () => {
-    if (audioRefA.current) {
-      audioRefA.current.pause();
-      audioRefA.current.currentTime = 0;
-    }
-
-    if (audioRefB.current) {
-      audioRefB.current.pause();
-      audioRefB.current.currentTime = 0;
-    }
-  };
-
-  const nudgeBBackward = () => {
-    if (!audioRefB.current) return;
-    audioRefB.current.currentTime = Math.max(0, audioRefB.current.currentTime - nudgeAmount);
-  };
-
-  const nudgeBForward = () => {
-    if (!audioRefB.current) return;
-
-    audioRefB.current.currentTime = Math.min(
-      audioRefB.current.duration || Number.POSITIVE_INFINITY,
-      audioRefB.current.currentTime + nudgeAmount,
-    );
-  };
-
-  const resetBToStart = () => {
-    if (!audioRefB.current) return;
-    audioRefB.current.currentTime = 0;
-  };
-
-  const matchBToA = () => {
-    setTrackB((currentTrackB) => ({
-      ...currentTrackB,
-      bpm: trackA.bpm,
-      keyIndex: trackA.keyIndex,
-      mode: trackA.mode,
-    }));
-  };
-
-  const matchAToB = () => {
-    setTrackA((currentTrackA) => ({
-      ...currentTrackA,
-      bpm: trackB.bpm,
-      keyIndex: trackB.keyIndex,
-      mode: trackB.mode,
-    }));
-  };
+  }, [closeRuntime, fileUrlARef, fileUrlBRef, runtimeARef, runtimeBRef]);
 
   return (
     <main className="min-h-screen bg-black p-8 text-white">
@@ -213,8 +181,10 @@ export default function TrackMatcherController() {
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-2xl">
             <div className="text-2xl font-bold">Track Matcher</div>
+
             <p className="mt-2 text-sm text-white/60">
-              Load Track A and Track B. Use Details for how syncing, BPM, key controls, and nudge timing work.
+              Load Track A and Track B. Use Details for how syncing, BPM, key
+              controls, and nudge timing work.
             </p>
           </div>
 
@@ -223,11 +193,28 @@ export default function TrackMatcherController() {
           </div>
         </div>
 
+        <TrackMatcherDeckControls
+          activeDeckSnapshot={activeDeckSnapshot}
+          deckSnapshotA={deckSnapshotA}
+          deckSnapshotB={deckSnapshotB}
+          engineHealth={engineHealth}
+          syncSnapshot={syncSnapshot}
+        />
+
+        <TrackMatcherLaneOverviewPanel />
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <TrackMatcherUploadPanel
+            audioModeLabel={
+              audioMode === "pro-pitch-dsp"
+                ? "Pro Pitch DSP"
+                : "Browser Mode"
+            }
             audioRef={audioRefA}
             bpm={trackA.bpm}
             fileUrl={trackA.fileUrl}
+            isActiveDeck={activeDeckId === "A"}
+            runtimeStatus={runtimeA.status}
             keyIndex={trackA.keyIndex}
             mode={trackA.mode}
             onBpmChange={setTrackABpm}
@@ -239,9 +226,16 @@ export default function TrackMatcherController() {
           />
 
           <TrackMatcherUploadPanel
+            audioModeLabel={
+              audioMode === "pro-pitch-dsp"
+                ? "Pro Pitch DSP"
+                : "Browser Mode"
+            }
             audioRef={audioRefB}
             bpm={trackB.bpm}
             fileUrl={trackB.fileUrl}
+            isActiveDeck={activeDeckId === "B"}
+            runtimeStatus={runtimeB.status}
             keyIndex={trackB.keyIndex}
             mode={trackB.mode}
             onBpmChange={setTrackBBpm}
@@ -254,7 +248,12 @@ export default function TrackMatcherController() {
         </div>
 
         <TrackMatcherControls
+          activeRuntimeStatus={activeRuntime.status}
+          audioMode={audioMode}
           autoSyncBToA={autoSyncBToA}
+          canUseProPitch={canUseProPitch}
+          dspWarning={activePlan?.warning ?? activeRuntime.error}
+          isPreparingProPitch={activeRuntime.status === "loading"}
           onMatchAToB={matchAToB}
           onMatchBToA={matchBToA}
           onNudgeBBackward={nudgeBBackward}
@@ -262,6 +261,7 @@ export default function TrackMatcherController() {
           onPauseBoth={pauseBoth}
           onPlayBoth={playBoth}
           onResetBToStart={resetBToStart}
+          onSetAudioMode={setAudioMode}
           onStopBoth={stopBoth}
           onToggleAutoSync={() => setAutoSyncBToA((current) => !current)}
         />
