@@ -20,6 +20,16 @@ type Project = {
   updated_at: string;
 };
 
+type ProjectControlCard = {
+  title: string;
+  eyebrow: string;
+  body: string;
+  actionLabel: string;
+  href?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+};
+
 const buttonClass =
   "inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/25 bg-black px-4 py-2 text-sm font-black text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -28,6 +38,12 @@ const inputClass =
 
 const selectClass =
   "w-full rounded-2xl border border-white/20 bg-black px-4 py-3 text-sm text-white outline-none focus:border-white";
+
+const panelClass = "rounded-3xl border border-white/20 bg-black p-6";
+const insetPanelClass = "rounded-3xl border border-white/15 bg-black p-5";
+const eyebrowClass =
+  "text-sm font-black uppercase tracking-[0.24em] text-white/70";
+const subTextClass = "text-sm leading-6 text-white/70";
 
 function formatKind(kind: ProjectKind) {
   switch (kind) {
@@ -94,6 +110,201 @@ function createProjectDownloadPayload(projects: Project[]) {
   };
 }
 
+function ProjectStatCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: number | string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-white/15 bg-black p-4">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
+        {label}
+      </p>
+      <div className="mt-2 text-3xl font-black text-white">{value}</div>
+      <p className="mt-2 text-sm leading-6 text-white/70">{detail}</p>
+    </div>
+  );
+}
+
+function ProjectControlCardView({ card }: { card: ProjectControlCard }) {
+  const content = (
+    <>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
+        {card.eyebrow}
+      </p>
+
+      <h3 className="mt-2 text-xl font-black text-white">{card.title}</h3>
+
+      <p className="mt-3 text-sm leading-6 text-white/70">{card.body}</p>
+
+      <span className={`${buttonClass} mt-4`}>{card.actionLabel}</span>
+    </>
+  );
+
+  if (card.href) {
+    return (
+      <Link href={card.href} className="block rounded-3xl transition-transform hover:-translate-y-0.5">
+        <article className={insetPanelClass}>{content}</article>
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={card.onClick}
+      disabled={card.disabled}
+      className="block w-full rounded-3xl text-left transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <article className={insetPanelClass}>{content}</article>
+    </button>
+  );
+}
+
+function ProjectControlCenter({
+  projectCount,
+  selectedCount,
+  hasProjects,
+  hasSelectedProjects,
+  loadingProjects,
+  onRefresh,
+  onDownloadSelected,
+}: {
+  projectCount: number;
+  selectedCount: number;
+  hasProjects: boolean;
+  hasSelectedProjects: boolean;
+  loadingProjects: boolean;
+  onRefresh: () => void;
+  onDownloadSelected: () => void;
+}) {
+  const cards: ProjectControlCard[] = [
+    {
+      eyebrow: "Continue work",
+      title: "Open Existing Project",
+      body: "Use the project list below to open a saved workspace, review tracks, and continue work.",
+      actionLabel: hasProjects ? "Go To Project List" : "Create First Project",
+      href: "#project-list",
+    },
+    {
+      eyebrow: "Start new",
+      title: "Create New Project",
+      body: "Use the create panel to start a fresh music, education, game, experiment, or collaboration project.",
+      actionLabel: "Go To Create",
+      href: "#create-project",
+    },
+    {
+      eyebrow: "Export",
+      title: "Download Selected",
+      body: "Select one or more project records, then download them as one project-folder JSON package.",
+      actionLabel: hasSelectedProjects ? "Download Selected" : "Select Projects First",
+      onClick: onDownloadSelected,
+      disabled: !hasSelectedProjects,
+    },
+    {
+      eyebrow: "Recovery path",
+      title: "Need Project Help?",
+      body: "Open Help and search for project overview, project tracks, setlist, project metadata, or send to project.",
+      actionLabel: "Open Help",
+      href: "/help",
+    },
+    {
+      eyebrow: "Fresh data",
+      title: "Refresh Projects",
+      body: "Reload projects from Supabase if the list looks stale after creating or changing project data.",
+      actionLabel: loadingProjects ? "Refreshing" : "Refresh List",
+      onClick: onRefresh,
+      disabled: loadingProjects,
+    },
+    {
+      eyebrow: "Current state",
+      title: "Project Selection",
+      body: `${selectedCount} selected out of ${projectCount} total projects. Use Select, Select All, Clear, and Download below.`,
+      actionLabel: "Review List",
+      href: "#project-list",
+    },
+  ];
+
+  return (
+    <section className={panelClass}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className={eyebrowClass}>Project Control Center</p>
+
+          <h2 className="mt-2 text-3xl font-black tracking-tight text-white">
+            Choose what you want to do with projects
+          </h2>
+
+          <p className="mt-3 max-w-4xl text-base leading-7 text-white/70">
+            Projects are the main workspace for organizing tracks, continuing
+            sessions, exporting records, and opening deeper project tools.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-white/20 bg-black px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-white">
+            {projectCount} Projects
+          </span>
+          <span className="rounded-full border border-white/20 bg-black px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-white">
+            {selectedCount} Selected
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {cards.map((card) => (
+          <ProjectControlCardView key={card.title} card={card} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ProjectRecentActivityPanel() {
+  return (
+    <section className={panelClass}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className={eyebrowClass}>Recent Activity</p>
+
+          <h2 className="mt-2 text-2xl font-black text-white">
+            Project history placeholder
+          </h2>
+
+          <p className={`mt-3 max-w-4xl ${subTextClass}`}>
+            This section is intentionally a placeholder for now. Later it can
+            show recently opened projects, recent track changes, project
+            downloads, setlist edits, and metadata updates.
+          </p>
+        </div>
+
+        <span className="rounded-full border border-white/20 bg-black px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-white/70">
+          Planned
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        {[
+          "Recently opened projects",
+          "Recent project track changes",
+          "Recent exports and downloads",
+        ].map((item) => (
+          <div key={item} className="rounded-2xl border border-white/15 bg-black p-4">
+            <p className="text-sm font-black text-white">{item}</p>
+            <p className="mt-2 text-sm leading-6 text-white/70">
+              Coming later after the stable project foundation is protected.
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function WorkspaceProjectsPage() {
   const { user, loading } = useAuth();
 
@@ -106,6 +317,17 @@ export default function WorkspaceProjectsPage() {
   const selectedProjects = useMemo(
     () => projects.filter((project) => selectedIds.includes(project.id)),
     [projects, selectedIds],
+  );
+
+  const musicProjectCount = useMemo(
+    () => projects.filter((project) => project.kind === "music").length,
+    [projects],
+  );
+
+  const sharedOrPublicProjectCount = useMemo(
+    () =>
+      projects.filter((project) => project.visibility !== "private").length,
+    [projects],
   );
 
   const hasSelectedProjects = selectedProjects.length > 0;
@@ -211,12 +433,10 @@ export default function WorkspaceProjectsPage() {
   return (
     <main className="min-h-screen bg-black px-5 py-8 text-white">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <header className="rounded-3xl border border-white/20 bg-black p-6">
+        <header className={panelClass}>
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.24em] text-white/70">
-                Workspace
-              </p>
+              <p className={eyebrowClass}>Workspace</p>
               <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
                 Your Projects
               </h1>
@@ -267,8 +487,46 @@ export default function WorkspaceProjectsPage() {
           </div>
         </header>
 
+        <ProjectControlCenter
+          projectCount={projects.length}
+          selectedCount={selectedProjects.length}
+          hasProjects={projects.length > 0}
+          hasSelectedProjects={hasSelectedProjects}
+          loadingProjects={loadingProjects}
+          onRefresh={loadProjects}
+          onDownloadSelected={downloadSelectedProjects}
+        />
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <ProjectStatCard
+            label="Total Projects"
+            value={projects.length}
+            detail="All project records currently loaded."
+          />
+
+          <ProjectStatCard
+            label="Selected"
+            value={selectedProjects.length}
+            detail="Projects ready for batch download."
+          />
+
+          <ProjectStatCard
+            label="Music"
+            value={musicProjectCount}
+            detail="Projects marked as music workspaces."
+          />
+
+          <ProjectStatCard
+            label="Shared / Public"
+            value={sharedOrPublicProjectCount}
+            detail="Projects not marked private."
+          />
+        </section>
+
+        <ProjectRecentActivityPanel />
+
         {errorMsg ? (
-          <section className="rounded-3xl border border-white/20 bg-black p-5">
+          <section className={panelClass}>
             <p className="font-black text-white">Project message</p>
             <p className="mt-2 text-sm text-white/70">{errorMsg}</p>
           </section>
@@ -276,14 +534,13 @@ export default function WorkspaceProjectsPage() {
 
         <section className="grid gap-6 lg:grid-cols-[360px_1fr]">
           <form
+            id="create-project"
             action={onCreate}
-            className="rounded-3xl border border-white/20 bg-black p-5"
+            className={panelClass}
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.2em] text-white/70">
-                  New Project
-                </p>
+                <p className={eyebrowClass}>New Project</p>
                 <h2 className="mt-2 text-2xl font-black text-white">
                   Create Project
                 </h2>
@@ -340,12 +597,10 @@ export default function WorkspaceProjectsPage() {
             </div>
           </form>
 
-          <section className="rounded-3xl border border-white/20 bg-black p-5">
+          <section id="project-list" className={panelClass}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.2em] text-white/70">
-                  Project List
-                </p>
+                <p className={eyebrowClass}>Project List</p>
                 <h2 className="mt-2 text-2xl font-black text-white">
                   {projects.length} Projects
                 </h2>
@@ -365,7 +620,8 @@ export default function WorkspaceProjectsPage() {
 
               {!loadingProjects && projects.length === 0 ? (
                 <p className="rounded-2xl border border-white/20 bg-black p-4 text-white">
-                  No projects yet.
+                  No projects yet. Use Create Project to make the first project
+                  workspace.
                 </p>
               ) : null}
 
@@ -428,10 +684,7 @@ export default function WorkspaceProjectsPage() {
                           Download
                         </button>
 
-                        <Link
-                          href="/workspace"
-                          className={buttonClass}
-                        >
+                        <Link href="/workspace" className={buttonClass}>
                           Workspace
                         </Link>
                       </div>
