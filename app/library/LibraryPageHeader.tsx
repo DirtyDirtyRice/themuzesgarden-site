@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import NestedTagPicker from "./NestedTagPicker";
 import { displayTagLabel } from "./libraryUtils";
 
+type LibraryDownloadFormat = "wav" | "mp3" | "flac" | "aiff" | "original";
+
 type Props = {
   filteredTrackCount: number;
   supabaseLoaded: boolean;
@@ -14,6 +16,33 @@ type Props = {
   onClearFilters: () => void;
   onClearSavedTags: () => void;
 };
+
+const buttonClass =
+  "inline-flex min-h-10 min-w-[128px] items-center justify-center rounded-xl border border-white/25 bg-black px-3 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
+const menuButtonClass =
+  "flex w-full items-center justify-between px-4 py-3 text-left text-sm font-bold text-white transition-transform duration-150 hover:translate-x-1";
+
+const chipClass =
+  "inline-flex items-center justify-center rounded-full border border-white/25 bg-black px-3 py-1 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
+const downloadFormatOptions: {
+  value: LibraryDownloadFormat;
+  label: string;
+}[] = [
+  { value: "wav", label: "WAV" },
+  { value: "mp3", label: "MP3" },
+  { value: "flac", label: "FLAC" },
+  { value: "aiff", label: "AIFF" },
+  { value: "original", label: "Original" },
+];
+
+function getDownloadFormatLabel(format: LibraryDownloadFormat) {
+  return (
+    downloadFormatOptions.find((option) => option.value === format)?.label ??
+    "WAV"
+  );
+}
 
 export function LibraryPageHeader({
   filteredTrackCount,
@@ -26,11 +55,16 @@ export function LibraryPageHeader({
   onClearSavedTags,
 }: Props) {
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [downloadFormat, setDownloadFormat] =
+    useState<LibraryDownloadFormat>("wav");
   const optionsRef = useRef<HTMLDivElement | null>(null);
+  const downloadRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function onDown(e: MouseEvent) {
       const target = e.target as Node;
+
       if (
         optionsOpen &&
         optionsRef.current &&
@@ -38,10 +72,21 @@ export function LibraryPageHeader({
       ) {
         setOptionsOpen(false);
       }
+
+      if (
+        downloadOpen &&
+        downloadRef.current &&
+        !downloadRef.current.contains(target)
+      ) {
+        setDownloadOpen(false);
+      }
     }
 
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOptionsOpen(false);
+      if (e.key === "Escape") {
+        setOptionsOpen(false);
+        setDownloadOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", onDown);
@@ -51,95 +96,149 @@ export function LibraryPageHeader({
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [optionsOpen]);
+  }, [downloadOpen, optionsOpen]);
+
+  function closeMenus() {
+    setOptionsOpen(false);
+    setDownloadOpen(false);
+  }
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{ color: "var(--text-strong)" }}
-          >
-            Library
-          </h1>
+      <div className="mb-4 rounded-3xl border border-white/25 bg-black p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Library</h1>
 
-          <div
-            className="mt-1 text-sm"
-            style={{ color: "var(--text-normal)" }}
-          >
-            {filteredTrackCount} track
-            {filteredTrackCount === 1 ? "" : "s"}
-            {supabaseLoaded
-              ? " • Daddy Library connected"
-              : " • Local fallback only"}
+            <div className="mt-1 text-sm text-white/70">
+              {filteredTrackCount} track
+              {filteredTrackCount === 1 ? "" : "s"}
+              {supabaseLoaded
+                ? " • Library connected"
+                : " • Local fallback only"}
+            </div>
+
+            <div className="mt-2 max-w-2xl text-sm text-white/70">
+              Library is the master song pool. Send tracks to projects, keep
+              WAV as the working format, and use MP3 when file size matters.
+            </div>
+
+            {supabaseErr ? (
+              <div className="mt-2 text-sm text-white/70">
+                Load note: {supabaseErr}
+              </div>
+            ) : null}
           </div>
 
-          {supabaseErr ? (
-            <div
-              className="mt-1 text-xs"
-              style={{ color: "var(--text-normal)" }}
-            >
-              Supabase load note: {supabaseErr}
+          <div className="flex flex-wrap items-center gap-2">
+            <NestedTagPicker
+              title="Tags"
+              onPickTagId={onAddFilterTag}
+              excludeTagIds={activeTags}
+            />
+
+            <div className="relative" ref={downloadRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setDownloadOpen((value) => !value);
+                  setOptionsOpen(false);
+                }}
+                className={buttonClass}
+              >
+                {getDownloadFormatLabel(downloadFormat)} ▾
+              </button>
+
+              {downloadOpen && (
+                <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-white/25 bg-black">
+                  {downloadFormatOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setDownloadFormat(option.value);
+                        setDownloadOpen(false);
+                      }}
+                      className={menuButtonClass}
+                    >
+                      <span>{option.label}</span>
+                      <span className="text-white/70">
+                        {downloadFormat === option.value ? "Selected" : ""}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : null}
-        </div>
 
-        <div className="flex items-center gap-2">
-          <NestedTagPicker
-            title="Tags"
-            onPickTagId={onAddFilterTag}
-            excludeTagIds={activeTags}
-          />
-
-          <div className="relative" ref={optionsRef}>
             <button
               type="button"
-              onClick={() => setOptionsOpen((v) => !v)}
-              className="rounded-lg border border-white bg-black px-3 py-2 text-sm"
-              style={{ color: "var(--text-normal)" }}
+              className={buttonClass}
+              onClick={() => {
+                closeMenus();
+              }}
             >
-              Options ▾
+              Download
             </button>
 
-            {optionsOpen && (
-              <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-white bg-black">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClearFilters();
-                    setOptionsOpen(false);
-                  }}
-                  className="w-full px-4 py-3 text-left text-sm"
-                  style={{ color: "var(--text-normal)" }}
-                >
-                  Clear filters
-                </button>
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={() => {
+                closeMenus();
+              }}
+            >
+              Send To
+            </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClearSavedTags();
-                    setOptionsOpen(false);
-                  }}
-                  className="w-full px-4 py-3 text-left text-sm"
-                  style={{ color: "var(--text-normal)" }}
-                >
-                  Clear saved track tags
-                </button>
+            <div className="relative" ref={optionsRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setOptionsOpen((value) => !value);
+                  setDownloadOpen(false);
+                }}
+                className={buttonClass}
+              >
+                Options ▾
+              </button>
 
-                <div className="border-t border-white">
+              {optionsOpen && (
+                <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-white/25 bg-black">
                   <button
                     type="button"
-                    onClick={() => setOptionsOpen(false)}
-                    className="w-full px-4 py-3 text-left text-sm"
-                    style={{ color: "var(--text-normal)" }}
+                    onClick={() => {
+                      onClearFilters();
+                      setOptionsOpen(false);
+                    }}
+                    className={menuButtonClass}
                   >
-                    Close
+                    <span>Clear filters</span>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClearSavedTags();
+                      setOptionsOpen(false);
+                    }}
+                    className={menuButtonClass}
+                  >
+                    <span>Clear saved track tags</span>
+                  </button>
+
+                  <div className="border-t border-white/25">
+                    <button
+                      type="button"
+                      onClick={() => setOptionsOpen(false)}
+                      className={menuButtonClass}
+                    >
+                      <span>Close</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -151,8 +250,7 @@ export function LibraryPageHeader({
               key={tagId}
               type="button"
               onClick={() => onRemoveFilterTag(tagId)}
-              className="rounded-full border border-white bg-black px-3 py-1 text-sm"
-              style={{ color: "var(--text-strong)" }}
+              className={chipClass}
               title="Remove filter"
             >
               {displayTagLabel(tagId)} ✕

@@ -27,6 +27,12 @@ type Props = {
   onUnlinkTrack: (trackId: string) => void;
 };
 
+const actionButtonClass =
+  "rounded-xl border border-white/25 bg-black px-3 py-2 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:opacity-60";
+
+const tagButtonClass =
+  "rounded-xl border border-white/25 bg-black px-2 py-0.5 text-[10px] font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
 export default function ProjectLibraryPanelTrackRow({
   track,
   isLinked,
@@ -51,8 +57,8 @@ export default function ProjectLibraryPanelTrackRow({
   return (
     <div
       className={[
-        "rounded border border-white bg-black p-3 flex items-center justify-between gap-3",
-        isSelected ? "shadow-[inset_0_0_0_1px_white]" : "",
+        "flex items-center justify-between gap-3 rounded-2xl border border-white/25 bg-black p-3",
+        isSelected ? "ring-1 ring-white/40" : "",
       ].join(" ")}
       onMouseEnter={onMouseEnter}
     >
@@ -61,16 +67,16 @@ export default function ProjectLibraryPanelTrackRow({
         onClick={() => onPrimaryAction(tid)}
         title={isLinked ? "Click row to unlink" : "Click row to link"}
       >
-        <div className="truncate text-sm font-medium text-white">
+        <div className="truncate text-sm font-bold text-white">
           {isSelected ? "↵ " : ""}
           {track.title ?? "Untitled"}
         </div>
 
         {track.artist ? (
-          <div className="truncate text-xs text-white">{track.artist}</div>
+          <div className="truncate text-xs text-white/70">{track.artist}</div>
         ) : null}
 
-        <div className="mt-1 text-[10px] text-white">
+        <div className="mt-1 text-[10px] text-white/70">
           Source: {getSourceLabel(track)} • Visibility: {visibilityLabel}
         </div>
 
@@ -80,7 +86,7 @@ export default function ProjectLibraryPanelTrackRow({
               <button
                 key={`${tid}:${tag}`}
                 type="button"
-                className="rounded border border-white bg-black px-2 py-0.5 text-[10px] text-white"
+                className={tagButtonClass}
                 onClick={(e) => {
                   e.stopPropagation();
                   setQ(tag);
@@ -95,12 +101,12 @@ export default function ProjectLibraryPanelTrackRow({
       </div>
 
       <div
-        className="flex shrink-0 items-center gap-2"
+        className="flex shrink-0 flex-wrap items-center gap-2"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
-          className="rounded border border-white bg-black px-3 py-2 text-xs text-white disabled:opacity-50"
+          className={actionButtonClass}
           onClick={() => onPlayTrackById(tid)}
           disabled={!playable}
           title={
@@ -112,7 +118,7 @@ export default function ProjectLibraryPanelTrackRow({
 
         <button
           type="button"
-          className="rounded border border-white bg-black px-3 py-2 text-xs text-white disabled:opacity-60"
+          className={actionButtonClass}
           onClick={() => onToggleTrackVisibility(track)}
           disabled={linkBusyId === tid}
           title={
@@ -127,7 +133,7 @@ export default function ProjectLibraryPanelTrackRow({
         {isLinked ? (
           <button
             type="button"
-            className="rounded border border-white bg-black px-3 py-2 text-xs text-white disabled:opacity-60"
+            className={actionButtonClass}
             onClick={() => onUnlinkTrack(tid)}
             disabled={linkBusyId === tid}
             title="Remove from this project"
@@ -137,7 +143,7 @@ export default function ProjectLibraryPanelTrackRow({
         ) : (
           <button
             type="button"
-            className="rounded border border-white bg-black px-3 py-2 text-xs text-white disabled:opacity-60"
+            className={actionButtonClass}
             onClick={() => onLinkTrack(tid)}
             disabled={linkBusyId === tid}
             title="Link into this project"

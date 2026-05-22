@@ -12,9 +12,10 @@ export default function ProjectPageShell(props: Props) {
   return (
     <div className="space-y-4">
       <div>{header}</div>
+
       <div>{tabs}</div>
 
-      <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-white/25 bg-black p-4 text-white">
         {content}
       </div>
     </div>

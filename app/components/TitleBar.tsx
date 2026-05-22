@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FocusEvent } from "react";
 
 import FindItPanel from "./find-it/FindItPanel";
 import { isActivePath } from "./find-it/findItPathUtils";
@@ -19,6 +19,20 @@ type DetailsRoute = {
   label: string;
 };
 
+type HelpMenuItem =
+  | {
+      kind: "button";
+      label: string;
+      detail: string;
+      onSelect: () => void;
+    }
+  | {
+      kind: "link";
+      label: string;
+      href: string;
+      detail: string;
+    };
+
 const PRIMARY_LINKS: TitleBarLink[] = [
   {
     label: "Home",
@@ -34,6 +48,11 @@ const PRIMARY_LINKS: TitleBarLink[] = [
     label: "Library",
     href: "/library",
     detail: "Open the music library",
+  },
+  {
+    label: "Upload",
+    href: "/upload",
+    detail: "Upload music into The Muzes Garden",
   },
   {
     label: "Listen",
@@ -88,6 +107,34 @@ const TRACK_MATCHER_CHILD_LINKS: TitleBarLink[] = [
   },
 ];
 
+const HELP_LINKS: TitleBarLink[] = [
+  {
+    label: "How Do I?",
+    href: "/help",
+    detail: "Step-by-step workflows for common member tasks",
+  },
+  {
+    label: "What Is This?",
+    href: "/help",
+    detail: "Plain-language explanations of app areas and concepts",
+  },
+  {
+    label: "Routes",
+    href: "/help",
+    detail: "How to get from one app area to another",
+  },
+  {
+    label: "Tips",
+    href: "/help",
+    detail: "Small reminders that prevent workflow confusion",
+  },
+  {
+    label: "What's New?",
+    href: "/help",
+    detail: "Recent additions and verified workflows",
+  },
+];
+
 const DETAILS_ROUTES: DetailsRoute[] = [
   {
     match: "/tools/track-matcher",
@@ -128,7 +175,7 @@ function getPrimaryLinkClass(active: boolean) {
 
 function getDropdownLinkClass(active: boolean) {
   return [
-    "block rounded-lg border px-3 py-2 text-sm transition-transform duration-150",
+    "block w-full rounded-lg border px-3 py-2 text-left text-sm transition-transform duration-150",
     "hover:scale-[0.99] active:scale-[0.98]",
     active
       ? "border-white bg-black text-white"
@@ -168,7 +215,7 @@ function TitleBarDropdown({
 }) {
   const pathname = usePathname();
 
-  function handleBlur(event: React.FocusEvent<HTMLDivElement>) {
+  function handleBlur(event: FocusEvent<HTMLDivElement>) {
     if (!event.currentTarget.contains(event.relatedTarget)) {
       onClose();
     }
@@ -224,6 +271,91 @@ function TitleBarDropdown({
   );
 }
 
+function HelpDropdown({
+  active,
+  items,
+  menuOpen,
+  onClose,
+  onOpen,
+}: {
+  active: boolean;
+  items: HelpMenuItem[];
+  menuOpen: boolean;
+  onClose: () => void;
+  onOpen: () => void;
+}) {
+  function handleBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      onClose();
+    }
+  }
+
+  return (
+    <div
+      className="relative"
+      onBlur={handleBlur}
+      onFocus={onOpen}
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+    >
+      <button
+        type="button"
+        onClick={() => (menuOpen ? onClose() : onOpen())}
+        aria-current={active ? "page" : undefined}
+        aria-expanded={menuOpen}
+        aria-haspopup="menu"
+        className={getPrimaryLinkClass(active)}
+        title="Open Help menu"
+      >
+        Help ▼
+      </button>
+
+      {menuOpen ? (
+        <div className="absolute right-0 top-full z-[1100] mt-2 min-w-[260px]">
+          <div className="rounded-xl border border-white/10 bg-black p-1 shadow-2xl">
+            {items.map((item) => {
+              if (item.kind === "button") {
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className={getDropdownLinkClass(false)}
+                    onClick={() => {
+                      item.onSelect();
+                      onClose();
+                    }}
+                    title={item.detail}
+                  >
+                    <span className="block font-semibold">{item.label}</span>
+                    <span className="mt-1 block text-xs leading-4 text-white/55">
+                      {item.detail}
+                    </span>
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={getDropdownLinkClass(false)}
+                  onClick={onClose}
+                  title={item.detail}
+                >
+                  <span className="block font-semibold">{item.label}</span>
+                  <span className="mt-1 block text-xs leading-4 text-white/55">
+                    {item.detail}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function TitleBar() {
   const pathname = usePathname();
 
@@ -233,9 +365,30 @@ export default function TitleBar() {
 
   const [metadataMenuOpen, setMetadataMenuOpen] = useState(false);
   const [trackMatcherMenuOpen, setTrackMatcherMenuOpen] = useState(false);
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false);
 
   const [findItOpen, setFindItOpen] = useState(false);
   const [findItSearchValue, setFindItSearchValue] = useState("");
+
+  const helpActive = isActivePath(pathname, "/help") || findItOpen;
+
+  const helpItems = useMemo<HelpMenuItem[]>(
+    () => [
+      {
+        kind: "button",
+        label: "Find It",
+        detail: "Open the current-page navigation helper",
+        onSelect: () => setFindItOpen((current) => !current),
+      },
+      ...HELP_LINKS.map((link) => ({
+        kind: "link" as const,
+        label: link.label,
+        href: link.href,
+        detail: link.detail ?? "Open Help",
+      })),
+    ],
+    []
+  );
 
   return (
     <header className="sticky top-0 z-[1000] border-b border-white/10 bg-black">
@@ -294,15 +447,13 @@ export default function TitleBar() {
             Details
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setFindItOpen((current) => !current)}
-            aria-expanded={findItOpen}
-            className={getPrimaryLinkClass(findItOpen)}
-            title="Open Find It navigation helper"
-          >
-            Find It
-          </button>
+          <HelpDropdown
+            active={helpActive}
+            items={helpItems}
+            menuOpen={helpMenuOpen}
+            onClose={() => setHelpMenuOpen(false)}
+            onOpen={() => setHelpMenuOpen(true)}
+          />
         </nav>
       </div>
 

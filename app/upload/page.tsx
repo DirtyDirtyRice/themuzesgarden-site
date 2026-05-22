@@ -17,6 +17,19 @@ type UploadedItem = {
 
 type UploadVisibility = "shared" | "private";
 
+const BUCKET = "audio";
+const FOLDER = "uploads";
+
+const buttonClass =
+  "rounded-xl border border-white/25 bg-black px-4 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
+
+const secondaryButtonClass =
+  "rounded-xl border border-white/25 bg-black px-3 py-2 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
+const panelClass = "rounded-2xl border border-white/25 bg-black p-5";
+
+const helperTextClass = "text-sm leading-6 text-white/70";
+
 function makeSafeFileName(original: string) {
   const cleaned = original
     .trim()
@@ -46,16 +59,27 @@ function newTrackId() {
   );
 }
 
+function getFileDisplayName(file: File) {
+  const relativePath = String((file as any).webkitRelativePath ?? "").trim();
+  return relativePath || file.name;
+}
+
+function isSupportedAudioFile(file: File) {
+  const name = file.name.toLowerCase();
+  return (
+    name.endsWith(".wav") ||
+    name.endsWith(".mp3") ||
+    name.endsWith(".flac") ||
+    name.endsWith(".aiff") ||
+    name.endsWith(".aif")
+  );
+}
+
 export default function UploadPage() {
   const router = useRouter();
 
-  // ✅ CHANGE THIS if your public bucket name is different
-  const BUCKET = "audio";
-
-  // Optional: files go into this folder inside the bucket
-  const FOLDER = "uploads";
-
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const folderInputRef = useRef<HTMLInputElement | null>(null);
 
   const [checkingSession, setCheckingSession] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -64,9 +88,11 @@ export default function UploadPage() {
   const [visibility, setVisibility] = useState<UploadVisibility>("shared");
   const [userId, setUserId] = useState<string | null>(null);
 
-  const accept = useMemo(() => ".mp3,audio/mpeg", []);
+  const accept = useMemo(
+    () => ".wav,.mp3,.flac,.aiff,.aif,audio/wav,audio/mpeg,audio/flac,audio/aiff",
+    []
+  );
 
-  // ✅ Member Protection: require an authenticated session to use /upload
   useEffect(() => {
     let mounted = true;
 
@@ -85,7 +111,6 @@ export default function UploadPage() {
           setUserId(session.user?.id ?? null);
         }
       } catch {
-        // If anything goes wrong, fail safe: send to members page
         router.replace("/members");
         return;
       } finally {
@@ -100,10 +125,23 @@ export default function UploadPage() {
     };
   }, [router]);
 
-  async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
+  function createUploadedTrack(it: UploadedItem): Track {
+    return {
+      id: it.trackId ?? newTrackId(),
+      title: titleFromFileName(it.name),
+      artist: "The Muzes Garden",
+      url: it.publicUrl,
+      tags: ["uploaded"],
+      visibility,
+      ownerId: userId ?? undefined,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  async function uploadFiles(fileList: FileList | null) {
     setError(null);
 
-    const files = Array.from(e.target.files ?? []);
+    const files = Array.from(fileList ?? []).filter(isSupportedAudioFile);
     if (!files.length) return;
 
     setIsUploading(true);
@@ -112,7 +150,8 @@ export default function UploadPage() {
       const nextItems: UploadedItem[] = [];
 
       for (const file of files) {
-        const safeName = makeSafeFileName(file.name);
+        const displayName = getFileDisplayName(file);
+        const safeName = makeSafeFileName(displayName.replace(/[\\/]+/g, " "));
         const path = `${FOLDER}/${safeName}`;
 
         const { error: upErr } = await supabase.storage
@@ -127,45 +166,29 @@ export default function UploadPage() {
 
         const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
         const publicUrl = data.publicUrl;
+        const trackId = newTrackId();
 
-        nextItems.push({
-          name: file.name,
+        const uploadedItem: UploadedItem = {
+          name: displayName,
           path,
           publicUrl,
-          addedToLibrary: false,
-        });
+          addedToLibrary: true,
+          trackId,
+        };
+
+        addUploadedTrack(createUploadedTrack(uploadedItem));
+        nextItems.push(uploadedItem);
       }
 
       setItems((prev) => [...nextItems, ...prev]);
-      if (inputRef.current) inputRef.current.value = "";
+
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (folderInputRef.current) folderInputRef.current.value = "";
     } catch (err: any) {
       setError(err?.message ?? "Upload failed.");
     } finally {
       setIsUploading(false);
     }
-  }
-
-  function addItemToLibrary(it: UploadedItem) {
-    const id = newTrackId();
-
-    const track: Track = {
-      id,
-      title: titleFromFileName(it.name),
-      artist: "The Muzes Garden",
-      url: it.publicUrl,
-      tags: ["uploaded"],
-      visibility,
-      ownerId: userId ?? undefined,
-      createdAt: new Date().toISOString(),
-    };
-
-    addUploadedTrack(track);
-
-    setItems((prev) =>
-      prev.map((x) =>
-        x.path === it.path ? { ...x, addedToLibrary: true, trackId: id } : x
-      )
-    );
   }
 
   async function copy(text: string) {
@@ -176,105 +199,131 @@ export default function UploadPage() {
     }
   }
 
-  // While we verify session, avoid showing upload UI to logged-out users
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-zinc-50 text-zinc-900">
+      <div className="min-h-screen bg-black text-white">
         <TopNav />
         <main className="mx-auto max-w-5xl px-5 py-10">
-          <h1 className="text-2xl font-semibold">Upload</h1>
-          <p className="mt-2 text-sm text-zinc-600">Checking session…</p>
+          <h1 className="text-3xl font-black text-white">Upload</h1>
+          <p className="mt-2 text-base text-white/70">Checking session…</p>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="min-h-screen bg-black text-white">
       <TopNav />
 
       <main className="mx-auto max-w-5xl px-5 py-10">
-        <h1 className="text-2xl font-semibold">Upload</h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          Upload MP3 files to Supabase Storage, then add them to your Library.
-        </p>
+        <h1 className="text-3xl font-black text-white">Upload</h1>
 
-        <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="mt-2 space-y-2 text-base leading-7 text-white/70">
+          <p>Upload audio files from your computer to add them to your Library.</p>
+          <p>
+            Click Choose files to add a single song, multiple songs, or choose a
+            song folder.
+          </p>
+        </div>
+
+        <section className={`mt-6 ${panelClass}`}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="text-sm font-medium">Select MP3 files</div>
-                <div className="mt-1 text-xs text-zinc-600">
-                  Bucket: <span className="font-mono">{BUCKET}</span> · Folder:{" "}
-                  <span className="font-mono">{FOLDER}</span>
+                <div className="text-base font-bold text-white">
+                  Choose audio files
+                </div>
+                <div className="mt-1 text-sm text-white/70">
+                  WAV, MP3, FLAC, AIFF, and AIF files are supported.
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <input
-                  ref={inputRef}
+                  ref={fileInputRef}
                   type="file"
                   accept={accept}
                   multiple
-                  onChange={onPickFiles}
+                  onChange={(event) => uploadFiles(event.target.files)}
                   className="hidden"
                 />
+
+                <input
+                  ref={folderInputRef}
+                  type="file"
+                  accept={accept}
+                  multiple
+                  onChange={(event) => uploadFiles(event.target.files)}
+                  className="hidden"
+                  {...({ webkitdirectory: "", directory: "" } as any)}
+                />
+
                 <button
-                  onClick={() => inputRef.current?.click()}
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  className={[
-                    "rounded-xl border px-4 py-2 text-sm transition",
-                    isUploading
-                      ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                      : "border-zinc-900 bg-zinc-900 text-white hover:opacity-90",
-                  ].join(" ")}
+                  className={buttonClass}
                 >
                   {isUploading ? "Uploading..." : "Choose files"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => folderInputRef.current?.click()}
+                  disabled={isUploading}
+                  className={buttonClass}
+                >
+                  Choose folder
                 </button>
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label htmlFor="upload-visibility" className="text-sm font-medium">
+              <label
+                htmlFor="upload-visibility"
+                className="text-sm font-bold text-white"
+              >
                 Visibility
               </label>
+
               <select
                 id="upload-visibility"
                 value={visibility}
-                onChange={(e) =>
-                  setVisibility(e.target.value as UploadVisibility)
+                onChange={(event) =>
+                  setVisibility(event.target.value as UploadVisibility)
                 }
-                className="w-full max-w-xs rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm"
+                className="w-full max-w-xs rounded-xl border border-white/25 bg-black px-3 py-2 text-sm text-white outline-none"
               >
                 <option value="shared">Shared</option>
                 <option value="private">Private</option>
               </select>
-              <div className="text-xs text-zinc-600">
-                New tracks added to Library from this upload screen will use this visibility.
+
+              <div className="text-sm leading-6 text-white/70">
+                New tracks added from this upload page will use this visibility
+                setting.
               </div>
             </div>
           </div>
 
-          {error && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error ? (
+            <div className="mt-4 rounded-xl border border-white/25 bg-black p-3 text-sm text-white/70">
               {error}
-              <div className="mt-2 text-xs text-red-700/80">
-                If this says bucket not found, change{" "}
-                <span className="font-mono">BUCKET</span> at the top of this file
-                to your real public bucket name.
+              <div className="mt-2 text-xs text-white/70">
+                If this says bucket not found, check the app audio storage
+                settings.
               </div>
             </div>
-          )}
+          ) : null}
         </section>
 
-        <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium">Uploaded</div>
-            <div className="text-xs text-zinc-600">{items.length} item(s)</div>
+        <section className={`mt-6 ${panelClass}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-base font-bold text-white">Uploaded</div>
+            <div className="text-sm text-white/70">{items.length} item(s)</div>
           </div>
 
           {items.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-5 text-sm text-zinc-700">
+            <div className="mt-4 rounded-2xl border border-white/25 bg-black p-5 text-sm text-white/70">
               No uploads yet.
             </div>
           ) : (
@@ -282,10 +331,10 @@ export default function UploadPage() {
               {items.map((it) => (
                 <div
                   key={it.path}
-                  className="rounded-2xl border border-zinc-200 bg-white p-4"
+                  className="rounded-2xl border border-white/25 bg-black p-4"
                 >
-                  <div className="text-sm font-semibold">{it.name}</div>
-                  <div className="mt-1 break-all font-mono text-xs text-zinc-600">
+                  <div className="text-sm font-bold text-white">{it.name}</div>
+                  <div className="mt-1 break-all font-mono text-xs text-white/70">
                     {it.path}
                   </div>
 
@@ -294,43 +343,46 @@ export default function UploadPage() {
                       href={it.publicUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs hover:bg-zinc-50"
+                      className={secondaryButtonClass}
                     >
-                      Open public URL
+                      Open audio
                     </a>
+
                     <button
+                      type="button"
                       onClick={() => copy(it.publicUrl)}
-                      className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs hover:bg-zinc-50"
+                      className={secondaryButtonClass}
                     >
                       Copy URL
                     </button>
 
-                    <button
-                      onClick={() => addItemToLibrary(it)}
-                      disabled={it.addedToLibrary}
-                      className={[
-                        "rounded-xl border px-3 py-2 text-xs transition",
-                        it.addedToLibrary
-                          ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                          : "border-zinc-900 bg-zinc-900 text-white hover:opacity-90",
-                      ].join(" ")}
-                    >
-                      {it.addedToLibrary ? "Added to Library" : "Add to Library"}
-                    </button>
+                    <span className="rounded-xl border border-white/25 bg-black px-3 py-2 text-xs font-bold text-white">
+                      Added to Library
+                    </span>
 
                     <audio className="mt-2 w-full" controls src={it.publicUrl} />
                   </div>
 
-                  {it.addedToLibrary && (
-                    <div className="mt-2 text-xs text-zinc-600">
-                      Tag added: <span className="font-mono">uploaded</span> • Visibility:{" "}
-                      <span className="font-mono">{visibility}</span>
+                  {it.addedToLibrary ? (
+                    <div className="mt-2 text-xs text-white/70">
+                      Tag added: <span className="font-mono">uploaded</span> •
+                      Visibility: <span className="font-mono">{visibility}</span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               ))}
             </div>
           )}
+        </section>
+
+        <section className={`mt-6 ${panelClass}`}>
+          <div className="text-base font-bold text-white">
+            Upload route
+          </div>
+          <p className={helperTextClass}>
+            Computer → Upload → Library → Project. Storage happens behind the
+            scenes so you do not need to manage songs in Supabase by hand.
+          </p>
         </section>
       </main>
     </div>

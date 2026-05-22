@@ -119,7 +119,7 @@ export default function ProjectLibraryPanel(props: {
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-white bg-black p-3 text-white">
+    <div className="space-y-2 rounded-2xl border border-white/25 bg-black p-3 text-white">
       <ProjectLibraryPanelHeader
         linkedCount={linkedCount}
         showingCount={showingCount}

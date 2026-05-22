@@ -12,6 +12,11 @@ type ProfileState =
   | { status: "READY"; profile: Profile }
   | { status: "ERROR"; message: string };
 
+const pageClass = "min-h-screen bg-black text-white";
+const panelClass = "rounded-2xl border border-white/25 bg-black p-5";
+const buttonClass =
+  "inline-flex min-h-10 items-center justify-center rounded-xl border border-white/25 bg-black px-4 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
 export default function WorkspacePage() {
   const { user, loading } = useAuth();
   const [pstate, setPstate] = useState<ProfileState>({ status: "IDLE" });
@@ -47,110 +52,119 @@ export default function WorkspacePage() {
     };
   }, [user?.id, user?.email]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) {
+    return (
+      <main className={pageClass}>
+        <div className="mx-auto max-w-2xl p-6 text-white">Loading...</div>
+      </main>
+    );
+  }
 
   if (!user) {
     return (
-      <main className="mx-auto max-w-2xl p-6 space-y-4">
-        <h1 className="text-2xl font-bold">Workspace</h1>
-        <div className="rounded-xl border p-5 space-y-2">
-          <div className="text-sm text-zinc-600">
-            You must be signed in to access your workspace.
+      <main className={pageClass}>
+        <div className="mx-auto max-w-2xl space-y-4 p-6">
+          <h1 className="text-2xl font-bold text-white">Workspace</h1>
+
+          <div className={`${panelClass} space-y-3`}>
+            <div className="text-sm text-white/70">
+              You must be signed in to access your workspace.
+            </div>
+
+            <Link className={buttonClass} href="/members">
+              Go to Members Sign In
+            </Link>
           </div>
-          <Link
-            className="inline-block rounded bg-black px-4 py-2 text-white"
-            href="/members"
-          >
-            Go to Members Sign In
-          </Link>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-2xl p-6 space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold">Your Workspace</h1>
-        <p className="text-sm text-zinc-600">Welcome back, {user.email}.</p>
-      </header>
+    <main className={pageClass}>
+      <div className="mx-auto max-w-2xl space-y-6 p-6">
+        <header className="space-y-1">
+          <h1 className="text-2xl font-bold text-white">Your Workspace</h1>
+          <p className="text-sm text-white/70">Welcome back, {user.email}.</p>
+        </header>
 
-      <section className="rounded-xl border p-5 space-y-2">
-        <div className="font-medium">Profile Status</div>
+        <section className={`${panelClass} space-y-2`}>
+          <div className="font-medium text-white">Profile Status</div>
 
-        {pstate.status === "IDLE" && (
-          <div className="text-sm text-zinc-600">Waiting…</div>
-        )}
+          {pstate.status === "IDLE" && (
+            <div className="text-sm text-white/70">Waiting…</div>
+          )}
 
-        {pstate.status === "LOADING" && (
-          <div className="text-sm text-zinc-600">
-            Creating / loading your profile…
-          </div>
-        )}
-
-        {pstate.status === "READY" && (
-          <div className="text-sm text-zinc-600">
-            Profile ready:{" "}
-            <span className="font-medium">
-              {pstate.profile.email ?? "(no email)"}
-            </span>
-            <div className="text-xs text-zinc-500 break-all">
-              id: {pstate.profile.id}
+          {pstate.status === "LOADING" && (
+            <div className="text-sm text-white/70">
+              Creating / loading your profile…
             </div>
-          </div>
-        )}
+          )}
 
-        {pstate.status === "ERROR" && (
-          <div className="text-sm text-red-600">
-            Profile error: {pstate.message}
-            <div className="text-xs text-zinc-500 mt-1">
-              This usually means the <code>profiles</code> table (or RLS policy)
-              isn’t set yet.
+          {pstate.status === "READY" && (
+            <div className="text-sm text-white/70">
+              Profile ready:{" "}
+              <span className="font-medium text-white">
+                {pstate.profile.email ?? "(no email)"}
+              </span>
+              <div className="break-all text-xs text-white/70">
+                id: {pstate.profile.id}
+              </div>
             </div>
+          )}
+
+          {pstate.status === "ERROR" && (
+            <div className="text-sm text-white/70">
+              Profile error: {pstate.message}
+              <div className="mt-1 text-xs text-white/70">
+                This usually means the <code>profiles</code> table or RLS policy
+                is not set yet.
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className={`${panelClass} space-y-3`}>
+          <div className="font-medium text-white">Quick Actions</div>
+
+          <div className="flex flex-wrap gap-2">
+            <Link className={buttonClass} href="/upload">
+              Upload Music
+            </Link>
+
+            <Link className={buttonClass} href="/workspace/library">
+              My Library
+            </Link>
+
+            <Link className={buttonClass} href="/workspace/projects">
+              Projects
+            </Link>
+
+            <Link className={buttonClass} href="/library">
+              Browse Library
+            </Link>
+
+            <Link className={buttonClass} href="/listen">
+              Listen
+            </Link>
+
+            <Link className={buttonClass} href="/live">
+              Live Engine
+            </Link>
           </div>
-        )}
-      </section>
+        </section>
 
-      <section className="rounded-xl border p-5 space-y-3">
-        <div className="font-medium">Quick Actions</div>
+        <section className={`${panelClass} space-y-3`}>
+          <div className="font-medium text-white">Account</div>
+          <div className="break-all text-sm text-white/70">
+            User ID: {user.id}
+          </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Link className="rounded border px-3 py-2 text-sm" href="/upload">
-            Upload Music
-          </Link>
-
-          <Link className="rounded border px-3 py-2 text-sm" href="/workspace/library">
-            My Library
-          </Link>
-
-          <Link className="rounded border px-3 py-2 text-sm" href="/workspace/projects">
-            Projects
-          </Link>
-
-          <Link className="rounded border px-3 py-2 text-sm" href="/library">
-            Browse Library
-          </Link>
-
-          <Link className="rounded border px-3 py-2 text-sm" href="/listen">
-            Listen
-          </Link>
-
-          <Link className="rounded border px-3 py-2 text-sm" href="/live">
-            Live Engine
-          </Link>
-        </div>
-      </section>
-
-      <section className="rounded-xl border p-5 space-y-2">
-        <div className="font-medium">Account</div>
-        <div className="text-sm text-zinc-600 break-all">User ID: {user.id}</div>
-        <button
-          onClick={handleSignOut}
-          className="mt-2 rounded bg-red-600 px-4 py-2 text-white"
-        >
-          Sign Out
-        </button>
-      </section>
+          <button onClick={handleSignOut} className={buttonClass}>
+            Sign Out
+          </button>
+        </section>
+      </div>
     </main>
   );
 }

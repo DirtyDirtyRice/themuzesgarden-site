@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { TRACKS_SEED } from "../../lib/tracksSeed";
 import { supabase } from "../../lib/supabaseClient";
 import { getUploadedTracks } from "../../lib/uploadedTracks";
 import { getSupabaseTracks } from "../../lib/getSupabaseTracks";
+import {
+  getSupabaseProjects,
+  type ProjectRow,
+} from "../../lib/getSupabaseProjects";
+import { addTracksToSupabaseProject } from "../../lib/addTracksToSupabaseProject";
 import { LS_KEY } from "./libraryData";
 import type { TrackLike } from "./libraryTypes";
 import {
@@ -33,6 +38,27 @@ export function useLibraryTracks({ router }: Args) {
       .map((row) => normalizeTrack(row))
       .filter(Boolean) as TrackLike[];
   });
+  const [projects, setProjects] = useState<ProjectRow[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [sendingToProject, setSendingToProject] = useState(false);
+  const [projectLinkMessage, setProjectLinkMessage] = useState<string | null>(
+    null
+  );
+
+  const loadProjects = useCallback(async () => {
+    setLoadingProjects(true);
+    setProjectLinkMessage(null);
+
+    try {
+      const rows = await getSupabaseProjects();
+      setProjects(rows);
+    } catch (err: any) {
+      setProjects([]);
+      setProjectLinkMessage(err?.message ?? "Failed to load projects.");
+    } finally {
+      setLoadingProjects(false);
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -61,6 +87,11 @@ export function useLibraryTracks({ router }: Args) {
       mounted = false;
     };
   }, [router]);
+
+  useEffect(() => {
+    if (checkingSession) return;
+    loadProjects();
+  }, [checkingSession, loadProjects]);
 
   useEffect(() => {
     if (checkingSession) return;
@@ -251,11 +282,61 @@ export function useLibraryTracks({ router }: Args) {
     );
   }
 
+  async function addSelectedTracksToProject(projectId: string, trackIds: string[]) {
+    const cleanProjectId = String(projectId ?? "").trim();
+    const cleanTrackIds = Array.from(
+      new Set(trackIds.map((trackId) => String(trackId ?? "").trim()))
+    ).filter(Boolean);
+
+    if (!cleanProjectId) {
+      setProjectLinkMessage("Choose a project first.");
+      return false;
+    }
+
+    if (cleanTrackIds.length === 0) {
+      setProjectLinkMessage("Choose at least one track first.");
+      return false;
+    }
+
+    setSendingToProject(true);
+    setProjectLinkMessage(null);
+
+    try {
+      const result = await addTracksToSupabaseProject({
+        projectId: cleanProjectId,
+        trackIds: cleanTrackIds,
+      });
+
+      const projectTitle =
+        projects.find((project) => project.id === cleanProjectId)?.title ??
+        "project";
+
+      setProjectLinkMessage(
+        `Sent ${result.linkedCount} track${
+          result.linkedCount === 1 ? "" : "s"
+        } to ${projectTitle}.`
+      );
+
+      return true;
+    } catch (err: any) {
+      setProjectLinkMessage(err?.message ?? "Failed to send tracks to project.");
+      return false;
+    } finally {
+      setSendingToProject(false);
+    }
+  }
+
   return {
     checkingSession,
     supabaseLoaded,
     supabaseErr,
     tracks,
+    projects,
+    loadingProjects,
+    sendingToProject,
+    projectLinkMessage,
+    loadProjects,
+    addSelectedTracksToProject,
     addTagToTrack,
     removeTagFromTrack,
     clearSavedTags,

@@ -20,9 +20,11 @@ export default function ProjectTabs({ tab, setTab }: Props) {
             type="button"
             onClick={() => setTab(t.key)}
             className={[
-              "min-w-[120px] rounded border border-white px-4 py-2 text-sm font-medium",
-              "bg-black text-white",
-              active ? "ring-1 ring-white" : "",
+              "min-w-[120px] rounded-xl border border-white/25 bg-black",
+              "px-4 py-2 text-sm font-bold text-white",
+              "transition-transform duration-150",
+              "hover:scale-[1.03] active:scale-[0.98]",
+              active ? "ring-1 ring-white/40" : "",
             ].join(" ")}
           >
             {t.label}

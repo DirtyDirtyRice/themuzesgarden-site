@@ -10,18 +10,30 @@ type Props = {
   excludeTagIds?: string[];
 };
 
+const buttonClass =
+  "rounded-xl border border-white/25 bg-black px-3 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
+const pickerButtonClass =
+  "w-full rounded-xl border border-white/25 bg-black px-3 py-2 text-left text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99]";
+
+const tagButtonClass =
+  "flex w-full items-center justify-between gap-3 rounded-xl border border-white/25 bg-black px-3 py-2 text-left transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99]";
+
 export default function NestedTagPicker(props: Props) {
   const { title, onPickTagId, excludeTagIds = [] } = props;
 
   const [open, setOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<TagCategory>("reference");
+  const [activeCategory, setActiveCategory] =
+    useState<TagCategory>("reference");
   const [search, setSearch] = useState("");
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function onDown(e: MouseEvent) {
       const t = e.target as Node;
-      if (open && rootRef.current && !rootRef.current.contains(t)) setOpen(false);
+      if (open && rootRef.current && !rootRef.current.contains(t)) {
+        setOpen(false);
+      }
     }
 
     function onKey(e: KeyboardEvent) {
@@ -56,7 +68,9 @@ export default function NestedTagPicker(props: Props) {
   const visibleTags = useMemo(() => {
     const list = tagsByCategory[activeCategory] ?? [];
     const q = search.trim().toLowerCase();
-    const filtered = q ? list.filter((t) => t.label.toLowerCase().includes(q)) : list;
+    const filtered = q
+      ? list.filter((t) => t.label.toLowerCase().includes(q))
+      : list;
 
     return filtered.filter((t) => !excludeTagIds.includes(t.id));
   }, [tagsByCategory, activeCategory, search, excludeTagIds]);
@@ -66,23 +80,23 @@ export default function NestedTagPicker(props: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="border rounded-lg px-3 py-2 text-sm bg-white text-black hover:bg-gray-50 shadow-sm"
+        className={buttonClass}
       >
         {title} ▾
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[520px] max-w-[92vw] border rounded-2xl bg-white shadow-xl z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b bg-white">
-            <div className="text-sm font-semibold text-black">{title}</div>
-            <div className="text-xs text-gray-600 mt-1">
+        <div className="absolute right-0 z-50 mt-2 w-[520px] max-w-[92vw] overflow-hidden rounded-2xl border border-white/25 bg-black">
+          <div className="border-b border-white/25 bg-black px-4 py-3">
+            <div className="text-sm font-bold text-white">{title}</div>
+            <div className="mt-1 text-xs text-white/70">
               Step 1: choose a category. Step 2: choose a tag.
             </div>
           </div>
 
           <div className="grid grid-cols-12">
-            <div className="col-span-5 border-r bg-gray-50">
-              <div className="p-2">
+            <div className="col-span-5 border-r border-white/25 bg-black">
+              <div className="space-y-2 p-2">
                 {CATEGORY_ORDER.map((cat) => {
                   const isActive = cat === activeCategory;
 
@@ -95,10 +109,8 @@ export default function NestedTagPicker(props: Props) {
                         setSearch("");
                       }}
                       className={[
-                        "w-full text-left px-3 py-2 rounded-xl text-sm",
-                        isActive
-                          ? "bg-white text-black shadow-sm border"
-                          : "text-gray-800 hover:bg-white/70",
+                        pickerButtonClass,
+                        isActive ? "ring-1 ring-white/40" : "",
                       ].join(" ")}
                     >
                       {CATEGORY_LABEL[cat]}
@@ -108,9 +120,9 @@ export default function NestedTagPicker(props: Props) {
               </div>
             </div>
 
-            <div className="col-span-7 bg-white">
-              <div className="p-3 border-b">
-                <div className="text-xs font-semibold text-gray-700">
+            <div className="col-span-7 bg-black">
+              <div className="border-b border-white/25 p-3">
+                <div className="text-xs font-bold text-white">
                   {CATEGORY_LABEL[activeCategory]}
                 </div>
 
@@ -118,13 +130,15 @@ export default function NestedTagPicker(props: Props) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search within this category…"
-                  className="mt-2 w-full border rounded-lg p-2 text-sm text-black bg-white"
+                  className="mt-2 w-full rounded-xl border border-white/25 bg-black p-2 text-sm text-white outline-none placeholder:text-white/70 focus:ring-1 focus:ring-white/40"
                 />
               </div>
 
-              <div className="max-h-80 overflow-y-auto p-2">
+              <div className="max-h-80 space-y-2 overflow-y-auto p-2">
                 {visibleTags.length === 0 ? (
-                  <div className="px-2 py-3 text-sm text-gray-600">No tags found.</div>
+                  <div className="px-2 py-3 text-sm text-white/70">
+                    No tags found.
+                  </div>
                 ) : (
                   visibleTags.map((t) => (
                     <button
@@ -133,12 +147,14 @@ export default function NestedTagPicker(props: Props) {
                       onClick={() => {
                         onPickTagId(t.id);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-gray-100 flex items-center justify-between"
+                      className={tagButtonClass}
                     >
-                      <span className="text-sm text-black">
-                        {t.category === "reference" ? `Sounds Like: ${t.label}` : t.label}
+                      <span className="text-sm font-bold text-white">
+                        {t.category === "reference"
+                          ? `Sounds Like: ${t.label}`
+                          : t.label}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-white/70">
                         {CATEGORY_LABEL[t.category]}
                       </span>
                     </button>
@@ -146,11 +162,11 @@ export default function NestedTagPicker(props: Props) {
                 )}
               </div>
 
-              <div className="p-2 border-t flex justify-end gap-2">
+              <div className="flex justify-end gap-2 border-t border-white/25 p-2">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="text-sm px-3 py-2 border rounded-lg bg-white hover:bg-gray-50"
+                  className={buttonClass}
                 >
                   Close
                 </button>

@@ -11,40 +11,6 @@ import { useLibraryFilters } from "./useLibraryFilters";
 
 type IncomingTagMode = "add" | "replace";
 
-const LIBRARY_PAGE_HOVER_FIX_STYLES = `
-  .library-page-hover-fix nav a:hover:not([aria-current="page"]),
-  .library-page-hover-fix nav button:hover:not([aria-current="page"]),
-  .library-page-hover-fix header a:hover:not([aria-current="page"]),
-  .library-page-hover-fix header button:hover:not([aria-current="page"]) {
-    color: #000000 !important;
-  }
-
-  .library-page-hover-fix nav a:hover:not([aria-current="page"]) *,
-  .library-page-hover-fix nav button:hover:not([aria-current="page"]) *,
-  .library-page-hover-fix header a:hover:not([aria-current="page"]) *,
-  .library-page-hover-fix header button:hover:not([aria-current="page"]) * {
-    color: #000000 !important;
-  }
-
-  .library-page-hover-fix nav a[aria-current="page"]:hover,
-  .library-page-hover-fix nav button[aria-current="page"]:hover,
-  .library-page-hover-fix header a[aria-current="page"]:hover,
-  .library-page-hover-fix header button[aria-current="page"]:hover {
-    color: #ffffff !important;
-  }
-
-  .library-page-hover-fix nav a[aria-current="page"]:hover *,
-  .library-page-hover-fix nav button[aria-current="page"]:hover *,
-  .library-page-hover-fix header a[aria-current="page"]:hover *,
-  .library-page-hover-fix header button[aria-current="page"]:hover * {
-    color: #ffffff !important;
-  }
-`;
-
-function LibraryPageHoverFix() {
-  return <style>{LIBRARY_PAGE_HOVER_FIX_STYLES}</style>;
-}
-
 export default function LibraryPage() {
   const router = useRouter();
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
@@ -55,6 +21,12 @@ export default function LibraryPage() {
     supabaseLoaded,
     supabaseErr,
     tracks,
+    projects,
+    loadingProjects,
+    sendingToProject,
+    projectLinkMessage,
+    loadProjects,
+    addSelectedTracksToProject,
     addTagToTrack,
     removeTagFromTrack,
     clearSavedTags,
@@ -210,8 +182,7 @@ export default function LibraryPage() {
 
   if (checkingSession) {
     return (
-      <div className="library-page-hover-fix min-h-screen bg-black">
-        <LibraryPageHoverFix />
+      <div className="min-h-screen bg-black">
         <TopNav />
 
         <div className="mx-auto max-w-6xl p-6">
@@ -223,16 +194,15 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="library-page-hover-fix min-h-screen bg-black">
-      <LibraryPageHoverFix />
+    <div className="min-h-screen bg-black">
       <TopNav />
 
       <div
         ref={libraryTopRef}
         className={[
-          "mx-auto max-w-6xl p-6 lg:pr-[32rem] transition-all duration-500",
+          "mx-auto max-w-6xl p-6 transition-all duration-300 lg:pr-[32rem]",
           flashFilterArea
-            ? "rounded-2xl ring-2 ring-white/40 bg-white/[0.02]"
+            ? "rounded-2xl border border-white/25 bg-black ring-2 ring-white/25"
             : "",
         ].join(" ")}
       >
@@ -249,11 +219,17 @@ export default function LibraryPage() {
 
         <LibraryTrackList
           tracks={filteredTracks}
+          projects={projects}
+          loadingProjects={loadingProjects}
+          sendingToProject={sendingToProject}
+          projectLinkMessage={projectLinkMessage}
           editingTrackId={editingTrackId}
           onSetEditingTrackId={setEditingTrackId}
           onAddFilterTag={addFilterTag}
           onAddTagToTrack={addTagToTrack}
           onRemoveTagFromTrack={removeTagFromTrack}
+          onRefreshProjects={loadProjects}
+          onAddTracksToProject={addSelectedTracksToProject}
         />
       </div>
     </div>

@@ -32,15 +32,27 @@ type MetadataItemPreview = {
 type Props = {
   track: GroundworkTrackLike;
   isEditing: boolean;
+  isSelected: boolean;
+  onToggleSelected: () => void;
   onSetEditing: () => void;
   onAddFilterTag: (tagId: string) => void;
   onAddTagToTrack: (trackId: string, tagId: string) => void;
   onRemoveTagFromTrack: (trackId: string, tagId: string) => void;
 };
 
+const actionButtonClass =
+  "rounded-xl border border-white/25 bg-black px-3 py-2 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
+const smallButtonClass =
+  "rounded-xl border border-white/25 bg-black px-2 py-1 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
+const panelClass = "mt-4 rounded-2xl border border-white/25 bg-black p-3";
+
 export function LibraryTrackCard({
   track,
   isEditing,
+  isSelected,
+  onToggleSelected,
   onSetEditing,
   onAddFilterTag,
   onAddTagToTrack,
@@ -111,30 +123,45 @@ export function LibraryTrackCard({
   return (
     <div
       ref={cardRef}
-      className="rounded-2xl border border-white bg-black p-4"
+      className={[
+        "rounded-2xl border bg-black p-4 text-white transition-all duration-200",
+        isSelected ? "border-white ring-2 ring-white/25" : "border-white/25",
+      ].join(" ")}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="font-semibold text-white">{trackTitle}</div>
+        <div className="flex min-w-0 gap-3">
+          <label className="mt-1 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/25 bg-black transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelected}
+              className="h-4 w-4 accent-white"
+              aria-label={`Select ${trackTitle}`}
+            />
+          </label>
 
-          <div className="text-sm text-white/70">{trackArtist}</div>
+          <div className="min-w-0">
+            <div className="font-bold text-white">{trackTitle}</div>
 
-          <div className="mt-1 text-xs text-white/60">
-            Source: {track.librarySourceLabel}
-            {" • "}
-            Visibility: {track.libraryVisibilityLabel}
-            {trackSourceProjectTitle
-              ? ` • Project: ${trackSourceProjectTitle}`
-              : null}
+            <div className="text-sm text-white/70">{trackArtist}</div>
+
+            <div className="mt-1 text-xs text-white/70">
+              Source: {track.librarySourceLabel}
+              {" • "}
+              Visibility: {track.libraryVisibilityLabel}
+              {trackSourceProjectTitle
+                ? ` • Project: ${trackSourceProjectTitle}`
+                : null}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             aria-expanded={showMetadata}
             onClick={() => setShowMetadata((value) => !value)}
-            className="rounded-lg border border-white px-2.5 py-1.5 text-xs text-white"
+            className={actionButtonClass}
           >
             Metadata
           </button>
@@ -143,7 +170,7 @@ export function LibraryTrackCard({
             type="button"
             aria-expanded={showTags}
             onClick={() => setShowTags((value) => !value)}
-            className="rounded-lg border border-white px-2.5 py-1.5 text-xs text-white"
+            className={actionButtonClass}
           >
             Tags
           </button>
@@ -152,7 +179,7 @@ export function LibraryTrackCard({
             type="button"
             aria-expanded={showDescription}
             onClick={() => setShowDescription((value) => !value)}
-            className="rounded-lg border border-white px-2.5 py-1.5 text-xs text-white"
+            className={actionButtonClass}
           >
             Description
           </button>
@@ -160,14 +187,14 @@ export function LibraryTrackCard({
       </div>
 
       {showMetadata && (
-        <div className="mt-4 rounded-xl border border-white p-3">
+        <div className={panelClass}>
           <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-semibold text-white">Metadata</div>
+            <div className="text-sm font-bold text-white">Metadata</div>
 
             <button
               type="button"
               onClick={handleOpenMetadataPage}
-              className="rounded border border-white px-2 py-1 text-xs text-white"
+              className={smallButtonClass}
             >
               Open full metadata
             </button>
@@ -175,14 +202,14 @@ export function LibraryTrackCard({
 
           <div className="mt-3 space-y-2">
             {metadataItems.length === 0 ? (
-              <div className="text-xs text-white/60">No metadata found.</div>
+              <div className="text-xs text-white/70">No metadata found.</div>
             ) : (
               metadataItems.slice(0, 5).map((item) => (
                 <div
                   key={item.id}
-                  className="rounded border border-white p-2"
+                  className="rounded-2xl border border-white/25 bg-black p-2"
                 >
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm font-bold text-white">
                     {item.label}
                   </div>
 
@@ -199,14 +226,14 @@ export function LibraryTrackCard({
       )}
 
       {showTags && (
-        <div className="mt-4 rounded-xl border border-white p-3">
+        <div className={panelClass}>
           <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-semibold text-white">Tags</div>
+            <div className="text-sm font-bold text-white">Tags</div>
 
             <button
               type="button"
               onClick={onSetEditing}
-              className="rounded border border-white px-2 py-1 text-xs text-white"
+              className={smallButtonClass}
             >
               {isEditing ? "Done" : "Edit tags"}
             </button>
@@ -214,14 +241,14 @@ export function LibraryTrackCard({
 
           <div className="mt-3 flex flex-wrap gap-2">
             {tagIds.length === 0 ? (
-              <span className="text-xs text-white/60">No tags yet.</span>
+              <span className="text-xs text-white/70">No tags yet.</span>
             ) : (
               tagIds.map((tagId) => (
                 <div key={`${trackId}-${tagId}`} className="flex gap-1">
                   <button
                     type="button"
                     onClick={() => onAddFilterTag(tagId)}
-                    className="rounded-full border border-white px-2 py-1 text-xs text-white"
+                    className={smallButtonClass}
                   >
                     {displayTagLabel(tagId)}
                   </button>
@@ -229,7 +256,7 @@ export function LibraryTrackCard({
                   <button
                     type="button"
                     onClick={() => onRemoveTagFromTrack(trackId, tagId)}
-                    className="rounded-full border border-white px-2 py-1 text-xs text-white"
+                    className={smallButtonClass}
                   >
                     ✕
                   </button>
@@ -251,8 +278,8 @@ export function LibraryTrackCard({
       )}
 
       {showDescription && (
-        <div className="mt-4 rounded-xl border border-white p-3">
-          <div className="text-sm font-semibold text-white">Description</div>
+        <div className={panelClass}>
+          <div className="text-sm font-bold text-white">Description</div>
 
           <div className="mt-2 text-sm text-white/70">
             {trackDescription || "No description yet."}

@@ -21,6 +21,71 @@ export function displayTagLabel(tagId: string) {
   return tag.label;
 }
 
+function cleanOptionalString(value: unknown) {
+  return String(value ?? "").trim() || undefined;
+}
+
+function normalizeAudioAssetFields(row: any): Record<string, string | undefined> {
+  const wav =
+    cleanOptionalString(row.wav) ??
+    cleanOptionalString(row.wav_url) ??
+    cleanOptionalString(row.wavUrl) ??
+    cleanOptionalString(row.master_wav) ??
+    cleanOptionalString(row.masterWav);
+
+  const mp3 =
+    cleanOptionalString(row.mp3) ??
+    cleanOptionalString(row.mp3_url) ??
+    cleanOptionalString(row.mp3Url) ??
+    cleanOptionalString(row.preview_mp3) ??
+    cleanOptionalString(row.previewMp3);
+
+  const flac =
+    cleanOptionalString(row.flac) ??
+    cleanOptionalString(row.flac_url) ??
+    cleanOptionalString(row.flacUrl);
+
+  const aiff =
+    cleanOptionalString(row.aiff) ??
+    cleanOptionalString(row.aif) ??
+    cleanOptionalString(row.aiff_url) ??
+    cleanOptionalString(row.aif_url) ??
+    cleanOptionalString(row.aiffUrl) ??
+    cleanOptionalString(row.aifUrl);
+
+  const original =
+    cleanOptionalString(row.original) ??
+    cleanOptionalString(row.original_url) ??
+    cleanOptionalString(row.originalUrl) ??
+    cleanOptionalString(row.original_upload) ??
+    cleanOptionalString(row.originalUpload);
+
+  const url =
+    wav ??
+    cleanOptionalString(row.url) ??
+    cleanOptionalString(row.publicUrl) ??
+    cleanOptionalString(row.public_url) ??
+    cleanOptionalString(row.signedUrl) ??
+    cleanOptionalString(row.signed_url) ??
+    mp3 ??
+    flac ??
+    aiff ??
+    original;
+
+  return {
+    wav,
+    mp3,
+    flac,
+    aiff,
+    original,
+    originalUpload: original,
+    masterAudio: wav ?? original ?? flac ?? aiff ?? mp3,
+    previewAudio: mp3 ?? wav ?? original ?? flac ?? aiff,
+    preferredDownloadFormat: "wav",
+    url,
+  };
+}
+
 export function normalizeTrack(row: any): TrackLike | null {
   if (!row) return null;
 
@@ -48,43 +113,31 @@ export function normalizeTrack(row: any): TrackLike | null {
     ).trim() || "Supabase";
 
   const tags = Array.isArray(row.tags)
-    ? ensureUnique(row.tags.map((x: any) => String(x ?? "").trim()).filter(Boolean))
+    ? ensureUnique(
+        row.tags.map((x: any) => String(x ?? "").trim()).filter(Boolean)
+      )
     : [];
 
   return {
     id,
     title,
     artist,
-    url:
-      String(
-        row.url ??
-          row.publicUrl ??
-          row.public_url ??
-          row.signedUrl ??
-          row.signed_url ??
-          ""
-      ).trim() || undefined,
-    mp3: String(row.mp3 ?? "").trim() || undefined,
-    path: String(row.path ?? "").trim() || undefined,
-    storage_path: String(row.storage_path ?? "").trim() || undefined,
-    file_path: String(row.file_path ?? "").trim() || undefined,
+    ...normalizeAudioAssetFields(row),
+    path: cleanOptionalString(row.path),
+    storage_path: cleanOptionalString(row.storage_path),
+    file_path: cleanOptionalString(row.file_path),
     tags,
-    createdAt: String(row.created_at ?? row.createdAt ?? "").trim() || undefined,
+    createdAt: cleanOptionalString(row.created_at ?? row.createdAt),
     sourceProjectTitle:
-      String(
-        row.source_project_title ??
-          row.project_title ??
-          row.project_name ??
-          ""
-      ).trim() || undefined,
+      cleanOptionalString(
+        row.source_project_title ?? row.project_title ?? row.project_name
+      ) || undefined,
     sourceProjectId:
-      String(
-        row.source_project_id ??
-          row.project_id ??
-          ""
-      ).trim() || undefined,
-    visibility: String(row.visibility ?? row.access_mode ?? "").trim() || undefined,
-    ownerUserId: String(row.owner_user_id ?? row.user_id ?? "").trim() || undefined,
+      cleanOptionalString(row.source_project_id ?? row.project_id) || undefined,
+    visibility:
+      cleanOptionalString(row.visibility ?? row.access_mode) || undefined,
+    ownerUserId:
+      cleanOptionalString(row.owner_user_id ?? row.user_id) || undefined,
   };
 }
 
