@@ -131,7 +131,6 @@ export default function TrackMatcherUploadPanel({
         </div>
       </div>
 
-      {/* TRACK */}
       <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm font-bold text-white">Track</div>
@@ -190,7 +189,6 @@ export default function TrackMatcherUploadPanel({
         )}
       </div>
 
-      {/* BPM */}
       <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <div className="flex items-center justify-between gap-3 text-sm text-white">
           <span>BPM: {bpm}</span>
@@ -229,7 +227,6 @@ export default function TrackMatcherUploadPanel({
         </div>
       </div>
 
-      {/* KEY */}
       <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <div className="flex items-center justify-between gap-3 text-sm text-white">
           <span>

@@ -1,9 +1,8 @@
 "use client";
 
-import TitleBar from "../components/TitleBar";
 import {
   glossaryItems,
-  helpCoreSectionSummaries,
+  helpJumpLinks,
   quickAnswers,
 } from "./helpFoundationDataCore";
 import {
@@ -23,7 +22,6 @@ import {
   whatIsThisCards,
 } from "./helpFoundationDataAreas";
 import { whatsNewCards } from "./helpFoundationDataUpdates";
-import { HelpHeroPanel } from "./helpFoundationHeroPanel";
 import {
   FindItSectionPanel,
   GlossaryPanel,
@@ -32,62 +30,154 @@ import {
   RouteMapPanel,
   WhatsNewPanel,
 } from "./helpFoundationSectionPanels";
-import { insetPanelClass, pageShellClass, panelClass, subTextClass } from "./helpFoundationStyles";
+import { pageShellClass } from "./helpFoundationStyles";
 import type { HelpCard } from "./helpFoundationTypes";
-import { RouteSteps, StatusPill } from "./helpFoundationUiAtoms";
 
-const verifiedWorkflowSteps = [
-  "Upload",
-  "Choose Folder",
-  "Library",
-  "Select Track",
-  "Choose Project",
-  "Send To",
-  "Project",
-  "Play",
-];
+type HelpControlCard = {
+  title: string;
+  body: string;
+  href: string;
+  actionLabel: string;
+  icon: string;
+  iconClass: string;
+};
 
-const foundationRules = [
-  "Open one Help branch at a time.",
-  "Use Find It when a member knows the goal but not the page.",
-  "Use Route Maps when exact click order matters.",
-  "Use How Do I when a workflow needs plain steps.",
-  "Use What Is This when a label needs plain-language meaning.",
-  "Keep Help based on verified workflows first.",
-  "Do not document fake controls as finished workflows.",
-  "Keep the TitleBar stable during this phase.",
-];
+type HelpMetricCard = {
+  label: string;
+  value: string;
+  detail: string;
+  icon: string;
+  iconClass: string;
+};
 
-const helpBranchCards = [
+type HelpQuickLinkCard = {
+  label: string;
+  href: string;
+  detail: string;
+  icon: string;
+  iconClass: string;
+};
+
+const mainClass =
+  "mx-auto flex w-full max-w-7xl flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10";
+
+const sectionRuleClass = "border-t border-white/10 pt-4";
+
+const panelClass =
+  "rounded-[2rem] border border-white/15 bg-black p-5 shadow-2xl shadow-black/35";
+
+const cardClass =
+  "rounded-3xl border border-white/15 bg-black p-5 shadow-2xl shadow-black/20";
+
+const buttonClass =
+  "inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/20 bg-black px-4 py-2 text-sm font-black text-white transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.98]";
+
+const eyebrowClass =
+  "text-xs font-black uppercase tracking-[0.28em] text-white/70";
+
+const bodyClass = "text-sm leading-6 text-white/70";
+
+const helpControlCards: HelpControlCard[] = [
   {
-    title: "Find It",
-    body: "Best first stop when the member knows what they want but does not know where it lives.",
-    route: ["Help", "Find It"],
+    title: "I'm Lost",
+    body: "Start with Find It when you know the goal but not the page.",
+    href: "#find-it",
+    actionLabel: "Open Find It",
+    icon: "?",
+    iconClass: "from-sky-500 to-blue-700",
   },
   {
     title: "How Do I?",
-    body: "Step-by-step guidance for common member workflows.",
-    route: ["Help", "How Do I"],
+    body: "Use workflow help for upload, projects, playback, and recovery.",
+    href: "#how-do-i",
+    actionLabel: "Open Workflows",
+    icon: "✓",
+    iconClass: "from-emerald-500 to-green-700",
   },
   {
-    title: "What Is This?",
-    body: "Plain-language meaning for app labels, areas, and controls.",
-    route: ["Help", "What Is This"],
+    title: "Route Maps",
+    body: "Use literal click paths when the order of steps matters.",
+    href: "#route-maps",
+    actionLabel: "Open Routes",
+    icon: "↳",
+    iconClass: "from-violet-600 to-fuchsia-500",
   },
   {
-    title: "Routes",
-    body: "Click-order paths for getting from one app area to another.",
-    route: ["Help", "Routes"],
+    title: "Definitions",
+    body: "Use What Is This and Glossary when app words need meaning.",
+    href: "#what-is-this",
+    actionLabel: "Open Terms",
+    icon: "Aa",
+    iconClass: "from-yellow-500 to-orange-600",
+  },
+];
+
+const helpMetricCards: HelpMetricCard[] = [
+  {
+    label: "Quick Answers",
+    value: String(quickAnswers.length),
+    detail: "Fast answers for common confusion",
+    icon: "!",
+    iconClass: "text-sky-400",
   },
   {
-    title: "Quick Answers",
-    body: "Fast answers for common confusion without opening the whole knowledge base.",
-    route: ["Help", "Quick Answers"],
+    label: "Routes",
+    value: String(routeMaps.length + routeCards.length),
+    detail: "Route maps and route cards",
+    icon: "↳",
+    iconClass: "text-violet-400",
   },
   {
-    title: "Glossary",
-    body: "Small definitions that keep Help language consistent.",
-    route: ["Help", "Glossary"],
+    label: "Workflows",
+    value: String(howDoICards.length),
+    detail: "How Do I workflow guides",
+    icon: "✓",
+    iconClass: "text-emerald-400",
+  },
+  {
+    label: "Glossary",
+    value: String(glossaryItems.length),
+    detail: "Plain-language definitions",
+    icon: "Aa",
+    iconClass: "text-yellow-400",
+  },
+];
+
+const quickLinkCards: HelpQuickLinkCard[] = [
+  {
+    label: "Find It",
+    href: "#find-it",
+    detail: "Search for the page, tool, or workflow",
+    icon: "⌕",
+    iconClass: "text-sky-400",
+  },
+  {
+    label: "Current Systems",
+    href: "#library-help",
+    detail: "Library, Projects, Player, and Search",
+    icon: "▣",
+    iconClass: "text-pink-400",
+  },
+  {
+    label: "System Status",
+    href: "#whats-new",
+    detail: "Recent foundation updates and status",
+    icon: "◇",
+    iconClass: "text-cyan-400",
+  },
+  {
+    label: "Metadata Help",
+    href: "#metadata-help",
+    detail: "Records, shelves, sections, and relationships",
+    icon: "✧",
+    iconClass: "text-fuchsia-400",
+  },
+  {
+    label: "Track Matcher",
+    href: "#track-matcher",
+    detail: "Comparison lanes and audio intelligence",
+    icon: "♬",
+    iconClass: "text-orange-400",
   },
 ];
 
@@ -178,82 +268,143 @@ const workspaceCards: HelpCard[] = [
   },
 ];
 
-function HelpFoundationStartPanel() {
+function HelpHero() {
   return (
-    <section className={panelClass}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-3xl">
-          <div className="text-xs font-bold uppercase tracking-[0.22em] text-white/70">
-            Help Control Center
-          </div>
+    <section className="grid gap-6 border-b border-white/10 pb-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div>
+        <p className={eyebrowClass}>The Muzes Garden</p>
 
-          <h2 className="mt-1 text-xl font-black text-white">
-            Open one help branch, then go as deep as you want
-          </h2>
+        <h1 className="mt-4 max-w-3xl text-5xl font-black leading-[0.92] tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">
+          Help is the recovery center.
+        </h1>
 
-          <p className={`mt-2 ${subTextClass}`}>
-            Help is now organized like a dropdown tree instead of a giant wall
-            of information. Start with Find It when you feel lost, or open the
-            branch that matches the thing you are trying to understand.
-          </p>
-        </div>
+        <p className="mt-6 max-w-3xl text-base leading-7 text-white/70">
+          Start with one question. Open one help branch. Go deeper only when you
+          need the details. The full Help encyclopedia is still here, but it no
+          longer owns the whole page at once.
+        </p>
 
-        <div className="flex flex-wrap gap-2">
-          <StatusPill label="SIMPLE TOP" />
-          <StatusPill label="DEEP DROPDOWNS" />
-          <StatusPill label="ADD FRIENDLY" />
+        <div className="mt-5 flex flex-wrap gap-3">
+          <a href="#find-it" className={buttonClass}>
+            Start Here
+          </a>
+
+          <a href="#deep-help-library" className={buttonClass}>
+            Open Full Help
+          </a>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {helpBranchCards.map((card) => (
-          <div key={card.title} className={insetPanelClass}>
-            <div className="text-sm font-bold text-white">{card.title}</div>
-            <p className={`mt-2 ${subTextClass}`}>{card.body}</p>
-            <RouteSteps steps={card.route} />
-          </div>
+      <div className="rounded-[2rem] border border-white/15 bg-black p-6 shadow-2xl shadow-black/25 lg:mx-auto lg:w-full lg:max-w-[520px]">
+        <p className={eyebrowClass}>How to use Help</p>
+
+        <h2 className="mt-3 text-2xl font-black leading-tight text-white">
+          Pick the closest question. Then follow the route chips.
+        </h2>
+
+        <p className="mt-4 text-base leading-7 text-white/70">
+          If you feel lost, use Find It first. If you need exact clicks, use
+          Route Maps. If a word is confusing, use What Is This or Glossary.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function HelpControlCenter() {
+  return (
+    <section className={sectionRuleClass}>
+      <p className={eyebrowClass}>Help Control Center</p>
+
+      <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {helpControlCards.map((card) => (
+          <article key={card.title} className={cardClass}>
+            <div className="flex items-start gap-4">
+              <div
+                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.iconClass} text-2xl font-black text-white shadow-2xl shadow-black/40`}
+              >
+                {card.icon}
+              </div>
+
+              <div className="min-w-0">
+                <h2 className="text-base font-black text-white">
+                  {card.title}
+                </h2>
+
+                <p className="mt-2 text-sm leading-6 text-white/70">
+                  {card.body}
+                </p>
+
+                <a href={card.href} className="mt-4 inline-flex">
+                  <span className={buttonClass}>{card.actionLabel}</span>
+                </a>
+              </div>
+            </div>
+          </article>
         ))}
       </div>
     </section>
   );
 }
 
-function HelpFoundationOverviewPanel() {
+function HelpAtAGlance() {
   return (
-    <section className={panelClass}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-3xl">
-          <div className="text-xs font-bold uppercase tracking-[0.22em] text-white/70">
-            Help Overview
-          </div>
+    <section className={sectionRuleClass}>
+      <p className={eyebrowClass}>At a Glance</p>
 
-          <h2 className="mt-1 text-xl font-black text-white">
-            The Help system now has a real backbone
-          </h2>
+      <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {helpMetricCards.map((metric) => (
+          <article key={metric.label} className={cardClass}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className={`text-sm font-black ${metric.iconClass}`}>
+                  {metric.label}
+                </p>
 
-          <p className={`mt-2 ${subTextClass}`}>
-            Find It, Route Maps, How Do I, What Is This, Quick Answers,
-            Glossary, Tips, and What&apos;s New work together so members can
-            find places, follow routes, understand words, and recover when they
-            feel lost.
-          </p>
-        </div>
+                <div className={`mt-1 text-4xl font-black ${metric.iconClass}`}>
+                  {metric.value}
+                </div>
+              </div>
 
-        <div className="flex flex-wrap gap-2">
-          <StatusPill label="HELP HOME" />
-          <StatusPill label="CONTROL CENTER" />
-        </div>
+              <div className={`text-4xl font-black ${metric.iconClass}`}>
+                {metric.icon}
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-white/70">
+              {metric.detail}
+            </p>
+          </article>
+        ))}
       </div>
+    </section>
+  );
+}
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {helpCoreSectionSummaries.map((summary) => (
+function HelpQuickLinks() {
+  return (
+    <section className={sectionRuleClass}>
+      <p className={eyebrowClass}>Quick Links</p>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {quickLinkCards.map((link) => (
           <a
-            key={summary.href}
-            href={summary.href}
-            className="rounded-2xl border border-white/10 bg-black/70 p-4 transition-transform hover:-translate-y-0.5"
+            key={link.label}
+            href={link.href}
+            className="flex min-h-16 items-center justify-between rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-black text-white transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            <div className="text-sm font-bold text-white">{summary.title}</div>
-            <p className={`mt-2 ${subTextClass}`}>{summary.body}</p>
+            <span className="flex min-w-0 items-center gap-3">
+              <span className={`text-lg ${link.iconClass}`}>{link.icon}</span>
+
+              <span className="min-w-0">
+                <span className="block truncate">{link.label}</span>
+                <span className="block truncate text-xs font-medium text-white/70">
+                  {link.detail}
+                </span>
+              </span>
+            </span>
+
+            <span className="text-white/70">›</span>
           </a>
         ))}
       </div>
@@ -261,50 +412,38 @@ function HelpFoundationOverviewPanel() {
   );
 }
 
-function HelpFoundationGuardrailsPanel() {
+function HelpRecentActivity() {
   return (
-    <section className={panelClass}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-3xl">
-          <div className="text-xs font-bold uppercase tracking-[0.22em] text-white/70">
-            Build Guardrails
-          </div>
+    <section className={sectionRuleClass}>
+      <p className={eyebrowClass}>Recovery Shortcut</p>
 
-          <h2 className="mt-1 text-xl font-black text-white">
-            Help grows from real app behavior
-          </h2>
+      <div className={`mt-3 ${panelClass}`}>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black text-4xl text-white">
+              ✧
+            </div>
 
-          <p className={`mt-2 ${subTextClass}`}>
-            This page can get much bigger over time, but it should stay split
-            into data files, small panels, and dropdown branches so the route
-            stays easy to protect.
-          </p>
-        </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-black text-white">
+                  The fastest route when you feel lost
+                </h2>
 
-        <div className="flex flex-wrap gap-2">
-          <StatusPill label="GREEN FIRST" />
-          <StatusPill label="NO NAV REDESIGN" />
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-black/70 p-4">
-          <div className="text-sm font-bold text-white">Verified route</div>
-
-          <RouteSteps steps={verifiedWorkflowSteps} />
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-black/70 p-4">
-          <div className="text-sm font-bold text-white">
-            Rules for future Help content
-          </div>
-
-          <div className="mt-3 grid gap-2">
-            {foundationRules.map((rule) => (
-              <div key={rule} className="text-sm leading-6 text-white/70">
-                {rule}
+                <span className="rounded-full border border-white/15 bg-black px-2 py-1 text-xs font-black text-white/70">
+                  ADD Friendly
+                </span>
               </div>
-            ))}
+
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
+                Open Help, choose Find It, search for the thing you want, then
+                follow the visible route chips one step at a time.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex h-20 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-4xl text-white/50 sm:w-32">
+            ◷
           </div>
         </div>
       </div>
@@ -312,173 +451,177 @@ function HelpFoundationGuardrailsPanel() {
   );
 }
 
-function HelpMainSections() {
+function DeepHelpLibrary() {
   return (
-    <>
-      <FindItSectionPanel />
+    <section id="deep-help-library" className={sectionRuleClass}>
+      <details className={`${panelClass} group overflow-hidden`}>
+        <summary className="-m-2 flex cursor-pointer list-none flex-wrap items-start justify-between gap-4 rounded-2xl p-2 transition-transform duration-150 hover:-translate-y-0.5 [&::-webkit-details-marker]:hidden">
+          <div>
+            <p className={eyebrowClass}>Full Help Library</p>
 
-      <HelpSection
-        id="how-do-i"
-        eyebrow="How Do I?"
-        title="Common member workflows"
-        body="Step-by-step routes for the things members will do most often. Verified workflows come first."
-        cards={howDoICards}
-      />
+            <h2 className="mt-2 text-2xl font-black text-white">
+              Open the detailed Help encyclopedia only when you need it.
+            </h2>
 
-      <HelpSection
-        id="what-is-this"
-        eyebrow="What Is This?"
-        title="Core app concepts"
-        body="Plain-language explanations for the major areas of The Muzes Garden."
-        cards={whatIsThisCards}
-      />
+            <p className={`mt-2 max-w-4xl ${bodyClass}`}>
+              The complete Help system is still preserved here. This keeps the
+              page simple at first, while still allowing every Help branch to go
+              deep when you choose to open it.
+            </p>
+          </div>
 
-      <HelpSection
-        id="routes"
-        eyebrow="Routes"
-        title="How to get from here to there"
-        body="Navigation paths for moving through the app without guessing."
-        cards={routeCards}
-      />
+          <div className="flex items-center gap-2">
+            <span className="rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black uppercase tracking-wide text-white/70">
+              {helpJumpLinks.length} branches
+            </span>
 
-      <QuickAnswersPanel answers={quickAnswers} />
-    </>
-  );
-}
+            <span className="rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black uppercase tracking-wide text-white/70 group-open:hidden">
+              Open
+            </span>
 
-function HelpAppAreaSections() {
-  return (
-    <>
-      <HelpSection
-        id="library-help"
-        eyebrow="Library"
-        title="Library help"
-        body="Help for uploaded tracks, Library search, tags, filters, track details, and audio sources."
-        cards={libraryCards}
-      />
+            <span className="hidden rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black uppercase tracking-wide text-white/70 group-open:inline-flex">
+              Close
+            </span>
+          </div>
+        </summary>
 
-      <HelpSection
-        id="projects-help"
-        eyebrow="Projects"
-        title="Projects help"
-        body="Help for project overview, project tracks, top tracks, project playback, metadata, and future relationships."
-        cards={projectCards}
-      />
+        <div className="mt-5 grid gap-5 border-t border-white/10 pt-5">
+          <FindItSectionPanel />
 
-      <HelpSection
-        id="player-help"
-        eyebrow="Player"
-        title="Player help"
-        body="Help for now playing, playback controls, current track information, and switching tracks."
-        cards={playerCards}
-      />
+          <HelpSection
+            id="how-do-i"
+            eyebrow="How Do I?"
+            title="Common member workflows"
+            body="Step-by-step routes for the things members will do most often. Verified workflows come first."
+            cards={howDoICards}
+          />
 
-      <HelpSection
-        id="search-help"
-        eyebrow="Search"
-        title="Search help"
-        body="Help for finding tracks, metadata, projects, Help answers, and future global results."
-        cards={searchCards}
-      />
-    </>
-  );
-}
+          <HelpSection
+            id="what-is-this"
+            eyebrow="What Is This?"
+            title="Core app concepts"
+            body="Plain-language explanations for the major areas of The Muzes Garden."
+            cards={whatIsThisCards}
+          />
 
-function HelpSpecialAreaSections() {
-  return (
-    <>
-      <RouteMapPanel maps={routeMaps} />
+          <HelpSection
+            id="routes"
+            eyebrow="Routes"
+            title="How to get from here to there"
+            body="Navigation paths for moving through the app without guessing."
+            cards={routeCards}
+          />
 
-      <HelpSection
-        id="track-matcher"
-        eyebrow="Track Matcher"
-        title="Track Matcher help foundation"
-        body="Plain-language guidance for comparing tracks, loading Track A and Track B, reviewing lanes, and understanding future intelligence panels."
-        cards={trackMatcherCards}
-      />
+          <QuickAnswersPanel answers={quickAnswers} />
 
-      <HelpSection
-        id="metadata-help"
-        eyebrow="Metadata"
-        title="Metadata help foundation"
-        body="Help guidance for the app knowledge system: library, shelves, sections, records, relationships, and details."
-        cards={metadataCards}
-      />
+          <HelpSection
+            id="library-help"
+            eyebrow="Library"
+            title="Library help"
+            body="Help for uploaded tracks, Library search, tags, filters, track details, and audio sources."
+            cards={libraryCards}
+          />
 
-      <HelpSection
-        id="relationships-help"
-        eyebrow="Relationships"
-        title="Relationships help"
-        body="Help for understanding how metadata records, Track Matcher lanes, projects, tracks, and future intelligence results connect."
-        cards={relationshipCards}
-      />
+          <HelpSection
+            id="projects-help"
+            eyebrow="Projects"
+            title="Projects help"
+            body="Help for project overview, project tracks, top tracks, project playback, metadata, and future relationships."
+            cards={projectCards}
+          />
 
-      <HelpSection
-        id="setlists"
-        eyebrow="Setlists"
-        title="Project setlist help foundation"
-        body="Basic guidance for understanding project order and future setlist controls."
-        cards={setlistCards}
-      />
+          <HelpSection
+            id="player-help"
+            eyebrow="Player"
+            title="Player help"
+            body="Help for now playing, playback controls, current track information, and switching tracks."
+            cards={playerCards}
+          />
 
-      <HelpSection
-        id="workspace-help"
-        eyebrow="Workspace"
-        title="Workspace help"
-        body="Help for Projects as the current workspace, Track Matcher as the comparison workspace, and future app organization areas."
-        cards={workspaceCards}
-      />
+          <HelpSection
+            id="search-help"
+            eyebrow="Search"
+            title="Search help"
+            body="Help for finding tracks, metadata, projects, Help answers, and future global results."
+            cards={searchCards}
+          />
 
-      <HelpSection
-        id="help-system"
-        eyebrow="Help System"
-        title="How this Help page works"
-        body="Help for Find It, Route Maps, How Do I, What Is This, Tips, and What's New."
-        cards={helpCards}
-      />
-    </>
-  );
-}
+          <RouteMapPanel maps={routeMaps} />
 
-function HelpSupportSections() {
-  return (
-    <>
-      <HelpSection
-        id="tips"
-        eyebrow="Tips"
-        title="Small things that prevent confusion"
-        body="Quick reminders for workflows that can be easy to miss."
-        cards={tipCards}
-      />
+          <HelpSection
+            id="track-matcher"
+            eyebrow="Track Matcher"
+            title="Track Matcher help foundation"
+            body="Plain-language guidance for comparing tracks, loading Track A and Track B, reviewing lanes, and understanding future intelligence panels."
+            cards={trackMatcherCards}
+          />
 
-      <GlossaryPanel items={glossaryItems} />
-      <WhatsNewPanel cards={whatsNewCards} />
-    </>
-  );
-}
+          <HelpSection
+            id="metadata-help"
+            eyebrow="Metadata"
+            title="Metadata help foundation"
+            body="Help guidance for the app knowledge system: library, shelves, sections, records, relationships, and details."
+            cards={metadataCards}
+          />
 
-function HelpFoundationBody() {
-  return (
-    <div className="mt-6 grid gap-6">
-      <HelpFoundationStartPanel />
-      <HelpFoundationOverviewPanel />
-      <HelpFoundationGuardrailsPanel />
-      <HelpMainSections />
-      <HelpAppAreaSections />
-      <HelpSpecialAreaSections />
-      <HelpSupportSections />
-    </div>
+          <HelpSection
+            id="relationships-help"
+            eyebrow="Relationships"
+            title="Relationships help"
+            body="Help for understanding how metadata records, Track Matcher lanes, projects, tracks, and future intelligence results connect."
+            cards={relationshipCards}
+          />
+
+          <HelpSection
+            id="setlists"
+            eyebrow="Setlists"
+            title="Project setlist help foundation"
+            body="Basic guidance for understanding project order and future setlist controls."
+            cards={setlistCards}
+          />
+
+          <HelpSection
+            id="workspace-help"
+            eyebrow="Workspace"
+            title="Workspace help"
+            body="Help for Projects as the current workspace, Track Matcher as the comparison workspace, and future app organization areas."
+            cards={workspaceCards}
+          />
+
+          <HelpSection
+            id="help-system"
+            eyebrow="Help System"
+            title="How this Help page works"
+            body="Help for Find It, Route Maps, How Do I, What Is This, Tips, and What's New."
+            cards={helpCards}
+          />
+
+          <HelpSection
+            id="tips"
+            eyebrow="Tips"
+            title="Small things that prevent confusion"
+            body="Quick reminders for workflows that can be easy to miss."
+            cards={tipCards}
+          />
+
+          <GlossaryPanel items={glossaryItems} />
+          <WhatsNewPanel cards={whatsNewCards} />
+        </div>
+      </details>
+    </section>
   );
 }
 
 function HelpFoundationLayout() {
   return (
     <div className={pageShellClass}>
-      <TitleBar />
-
-      <main className="mx-auto max-w-6xl px-5 py-10">
-        <HelpHeroPanel />
-        <HelpFoundationBody />
+      <main className={mainClass}>
+        <HelpHero />
+        <HelpControlCenter />
+        <HelpAtAGlance />
+        <HelpRecentActivity />
+        <HelpQuickLinks />
+        <DeepHelpLibrary />
       </main>
     </div>
   );

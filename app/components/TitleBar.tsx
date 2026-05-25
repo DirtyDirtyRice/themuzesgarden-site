@@ -91,9 +91,9 @@ const METADATA_CHILD_LINKS: TitleBarLink[] = [
 
 const TRACK_MATCHER_CHILD_LINKS: TitleBarLink[] = [
   {
-    label: "Track Matcher",
-    href: "/tools/track-matcher",
-    detail: "Open the main Track Matcher workspace",
+    label: "Finder",
+    href: "/tools/track-matcher/finder",
+    detail: "Search Library tracks and load them into Track Matcher",
   },
   {
     label: "Advanced",
