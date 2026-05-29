@@ -14,30 +14,30 @@ import {
 import { DEFAULT_TRACK_MATCHER_FINDER_QUERY } from "./trackMatcherFinderTypes";
 
 const finderBranchClass =
-  "group rounded-3xl border border-white/10 bg-white/[0.035] p-3 text-white shadow-xl transition-transform duration-150 hover:-translate-y-0.5";
+  "group rounded-2xl border border-white/10 bg-white/[0.03] p-2 text-white shadow-xl transition-transform duration-150 hover:-translate-y-0.5";
 
 const finderBranchSummaryClass =
-  "flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-2 py-1 text-left marker:hidden [&::-webkit-details-marker]:hidden";
+  "flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-2 py-1 text-left marker:hidden [&::-webkit-details-marker]:hidden";
 
 const finderBranchTitleClass =
-  "text-sm font-black uppercase tracking-[0.2em] text-white";
+  "text-xs font-black uppercase tracking-[0.18em] text-white";
 
 const finderBranchBodyClass =
-  "mt-3 rounded-2xl border border-white/10 bg-black/35 p-3";
+  "mt-2 rounded-xl border border-white/10 bg-black/35 p-2";
 
-const finderSmallTextClass = "text-sm leading-6 text-white/70";
+const finderSmallTextClass = "text-xs leading-5 text-white/70";
 
 const finderReferenceCardClass =
-  "rounded-2xl border border-white/10 bg-white/[0.04] p-3";
+  "rounded-xl border border-white/10 bg-white/[0.035] p-2";
 
 const finderReferenceTitleClass =
-  "text-xs font-black uppercase tracking-[0.18em] text-white/80";
+  "text-[0.65rem] font-black uppercase tracking-[0.16em] text-white/80";
 
-const finderReferenceBodyClass = "mt-2 text-xs leading-5 text-white/60";
+const finderReferenceBodyClass = "mt-1 text-xs leading-5 text-white/60";
 
 function BranchArrow() {
   return (
-    <span className="rounded-full border border-white/10 bg-white/[0.07] px-2 py-1 text-xs font-black text-white/70 transition group-open:rotate-90">
+    <span className="rounded-full border border-white/10 bg-white/[0.07] px-2 py-0.5 text-xs font-black text-white/70 transition group-open:rotate-90">
       ▶
     </span>
   );
@@ -57,9 +57,11 @@ function FinderBranch({
   return (
     <details className={finderBranchClass} open={defaultOpen}>
       <summary className={finderBranchSummaryClass}>
-        <div>
+        <div className="min-w-0">
           <p className={finderBranchTitleClass}>{title}</p>
-          <p className="mt-1 text-xs leading-5 text-white/60">{detail}</p>
+          <p className="mt-0.5 truncate text-xs leading-5 text-white/55">
+            {detail}
+          </p>
         </div>
 
         <BranchArrow />
@@ -80,12 +82,15 @@ function FinderDashboardTile({
   detail: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-      <p className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/45">
+    <div
+      className="group/tile rounded-xl border border-white/10 bg-white/[0.035] px-2.5 py-2"
+      title={detail}
+    >
+      <p className="text-[0.6rem] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </p>
-      <p className="mt-2 break-words text-lg font-black text-white">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-white/60">{detail}</p>
+      <p className="mt-1 truncate text-sm font-black text-white">{value}</p>
+      <p className="sr-only">{detail}</p>
     </div>
   );
 }
@@ -108,7 +113,7 @@ function FinderDashboard({
   }`;
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
       <FinderDashboardTile
         label="Library Tracks"
         value={libraryLabel}
@@ -150,7 +155,7 @@ function FinderReferenceCard({
 
 function FinderReference() {
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid gap-2 md:grid-cols-2">
       <FinderReferenceCard
         title="Sources"
         body="Finder searches the tracks passed into this panel. Source filtering remains inside Deep Search so Library, Supabase, uploads, projects, seed data, and unknown tracks stay searchable without becoming separate page branches."
@@ -191,6 +196,8 @@ export default function TrackMatcherFinderPanel({
   const hasQuery = currentSearch.length > 0;
   const activeBranchLabel = query.searchBranchLabel || "All";
   const resultLabel = `${results.length} song${results.length === 1 ? "" : "s"} found`;
+  const layoutGapClass = isCompact ? "mt-3 grid gap-2" : "mt-3 grid gap-2.5";
+  const resultGapClass = isCompact ? "grid gap-1.5" : "grid gap-2";
 
   function applyPreset(searchText: string) {
     setQuery((current) => ({
@@ -200,25 +207,37 @@ export default function TrackMatcherFinderPanel({
   }
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-black p-4 text-white shadow-2xl">
-      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/50">
-          Track Matcher Finder
-        </p>
+    <section className="rounded-2xl border border-white/10 bg-black p-2.5 text-white shadow-2xl">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[0.65rem] uppercase tracking-[0.28em] text-white/50">
+              Track Matcher Finder
+            </p>
 
-        <h2 className="mt-2 text-2xl font-semibold text-white">Finder</h2>
+            <h2 className="mt-1 text-xl font-semibold text-white">Finder</h2>
+          </div>
 
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
-          Find songs without flooding the page. Open one branch at a time, then
-          open one song when you need metadata, tags, routing, analysis, and
-          Load-To buttons.
+          <div className="flex flex-wrap items-center gap-2 text-xs font-black text-white/65">
+            <span className="rounded-full border border-white/10 bg-white/[0.07] px-2.5 py-1">
+              {resultLabel}
+            </span>
+            <span className="rounded-full border border-white/10 bg-white/[0.07] px-2.5 py-1">
+              {hasQuery ? currentSearch : "All songs"}
+            </span>
+          </div>
+        </div>
+
+        <p className="mt-1 max-w-3xl text-xs leading-5 text-white/65">
+          Dense Finder mode: search fast, scan song titles first, then open
+          Details only when you need metadata, tags, routing, or Load-To.
         </p>
       </div>
 
-      <div className={isCompact ? "mt-4 grid gap-3" : "mt-5 grid gap-4"}>
+      <div className={layoutGapClass}>
         <FinderBranch
           title="Finder Dashboard"
-          detail="Quick status for Library tracks, results, the current search, and the active Deep Search branch."
+          detail="Quick status for Library tracks, results, search, and Deep Search branch."
           defaultOpen
         >
           <FinderDashboard
@@ -245,7 +264,7 @@ export default function TrackMatcherFinderPanel({
             <button
               type="button"
               onClick={() => setQuery(DEFAULT_TRACK_MATCHER_FINDER_QUERY)}
-              className="mt-3 rounded-full border border-white/10 bg-white/[0.07] px-3 py-2 text-xs font-black text-white/70 transition-transform duration-150 hover:-translate-y-0.5 hover:text-white active:scale-[0.98]"
+              className="mt-2 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-xs font-black text-white/70 transition-transform duration-150 hover:-translate-y-0.5 hover:text-white active:scale-[0.98]"
             >
               Clear Finder
             </button>
@@ -270,29 +289,29 @@ export default function TrackMatcherFinderPanel({
           title="Song Results"
           detail={
             hasTracks
-              ? `${resultLabel}. Open this branch, then open only the song you want.`
+              ? `${resultLabel}. Scan rows first; open Details only on the song you want.`
               : "Waiting for Library wiring."
           }
           defaultOpen
         >
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-white/50">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-2.5 py-1.5">
+            <div className="min-w-0">
+              <p className="text-[0.65rem] uppercase tracking-[0.2em] text-white/45">
                 Results
               </p>
-              <p className="mt-1 text-sm font-black text-white/80">
+              <p className="mt-0.5 truncate text-xs font-black text-white/80">
                 {hasTracks ? resultLabel : "Waiting for Library wiring"}
               </p>
             </div>
 
-            <p className="text-xs leading-5 text-white/60">
-              Only the selected song expands into details.
+            <p className="text-xs leading-5 text-white/55">
+              Title-first rows. Details stay hidden until opened.
             </p>
           </div>
 
-          <div className={isCompact ? "grid gap-2" : "grid gap-3"}>
+          <div className={resultGapClass}>
             {results.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-white/60">
+              <div className="rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm leading-6 text-white/60">
                 {hasTracks
                   ? "No matches for this Finder search yet. Try rock, funk, keeper, stem, bass, drums, vocal, reference, or hybrid."
                   : "No Finder results yet. The Finder foundation is built, but this panel still needs to be wired to real Library tracks."}
@@ -311,7 +330,7 @@ export default function TrackMatcherFinderPanel({
 
         <FinderBranch
           title="Finder Reference"
-          detail="Sources, track types, routing, and future result expansion notes in one reference branch."
+          detail="Sources, track types, routing, and future result expansion notes."
         >
           <FinderReference />
         </FinderBranch>

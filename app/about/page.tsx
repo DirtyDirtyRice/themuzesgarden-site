@@ -1,266 +1,179 @@
 "use client";
 
-import Link from "next/link";
+import ManualShell from "./components/ManualShell";
+import ManualSystemGrid, {
+  type ManualSystemCard,
+} from "./components/ManualSystemGrid";
+import {
+  ManualInfoSection,
+  ManualInlineLink,
+} from "./components/ManualCards";
 
-const CORE_SYSTEMS = [
+const CORE_SYSTEMS: ManualSystemCard[] = [
   {
     title: "Projects",
     href: "/about/projects",
     summary:
-      "The containers for songs, generated audio, notes, metadata, and future creation work.",
-    status: "Core workspace system",
+      "Project containers for organizing songs, stems, prompts, notes, lyrics, and future AI work.",
+    whyItMatters:
+      "Projects are becoming the central containers that connect sounds, metadata, navigation, and future generation systems.",
+    status: "Working now",
   },
   {
     title: "Metadata System",
     href: "/about/metadata",
     summary:
-      "The knowledge library built from shelves, sections, records, relationships, and deeper explanation pages.",
-    status: "Core knowledge system",
+      "Structured music knowledge using shelves, sections, records, and relationships.",
+    whyItMatters:
+      "Metadata is the foundation for reusable music knowledge, future AI understanding, and relationship-aware navigation.",
+    status: "Building now",
   },
   {
     title: "Find It",
     href: "/about/find-it",
     summary:
-      "The navigation helper that tells you where you are and how to reach what you need.",
-    status: "Core guidance system",
+      "ADD-friendly navigation helper for finding routes, pages, records, and future knowledge links.",
+    whyItMatters:
+      "The app will eventually become too deep to navigate comfortably without intelligent guidance.",
+    status: "Building now",
   },
   {
     title: "Global Player",
     href: "/about/global-player",
     summary:
-      "The app-wide playback layer that keeps music available while users move through the workspace.",
-    status: "Core listening system",
+      "Persistent playback while moving through projects, metadata, and future creation tools.",
+    whyItMatters:
+      "Music work often begins with hearing something. The player keeps sound connected to the rest of the system.",
+    status: "Working now",
   },
 ];
 
-const FUTURE_SYSTEMS = [
+const FUTURE_SYSTEMS: ManualSystemCard[] = [
   {
     title: "AI Music Generator",
     href: "/about/ai-music-generator",
     summary:
-      "The planned generation system for prompts, pronunciation control, regeneration, and creative decision tracking.",
-    status: "Future creation system",
+      "Future prompt-based music creation with pronunciation planning and regeneration pipelines.",
+    whyItMatters:
+      "The goal is a controllable professional creation system, not a random prompt toy.",
+    status: "Planned",
   },
   {
     title: "Site Tree / Roadmap",
     href: "/about/site-tree",
     summary:
-      "The done, doing, and still-to-do map for the full Muzes Garden structure.",
-    status: "Future planning map",
+      "Track what is done, what is being built, and how systems connect together.",
+    whyItMatters:
+      "As the app grows, users need a clear map of where systems live and how they relate.",
+    status: "Building now",
   },
 ];
 
-const WHY_IT_MATTERS = [
-  "The app is becoming too deep for memory-only navigation.",
-  "The manual explains each system in plain language.",
-  "Find It turns that understanding into direct navigation.",
-  "Metadata will become the meaning layer behind everything.",
-];
-
-function SystemCard({
-  href,
-  status,
-  summary,
-  title,
-}: {
-  href: string;
-  status: string;
-  summary: string;
-  title: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/35 hover:bg-white/[0.06]"
-    >
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/45">
-        {status}
-      </p>
-
-      <h3 className="mt-3 text-xl font-semibold text-white group-hover:text-white">
-        {title}
-      </h3>
-
-      <p className="mt-3 text-sm leading-6 text-white/65">{summary}</p>
-
-      <p className="mt-4 text-sm font-semibold text-white/80 group-hover:text-white">
-        Open manual page →
-      </p>
-    </Link>
-  );
-}
-
 export default function AboutHomePage() {
   return (
-    <main className="min-h-screen bg-black px-6 py-10 text-white">
-      <div className="mx-auto w-full max-w-6xl">
-        <Link
-          href="/"
-          className="text-sm font-semibold text-white/60 hover:text-white"
-        >
-          ← Back Home
-        </Link>
+    <ManualShell
+      eyebrow="Manual"
+      title="The Muzes Garden Manual"
+      description="This manual is the beginning of the built-in encyclopedia and help layer for The Muzes Garden. The long-term goal is a connected knowledge system where pages, concepts, routes, music ideas, and future tools explain each other through linked information."
+    >
+      <ManualInfoSection title="What this manual is becoming">
+        <p>
+          Right now, the manual explains the major systems of the app. Over
+          time, important concepts inside the text should also become linkable.
+          A user should eventually be able to move from a page like{" "}
+          <ManualInlineLink href="/about/find-it">
+            Find It
+          </ManualInlineLink>{" "}
+          into deeper pages explaining navigation structure, metadata search,
+          relationship graphs, and future routing systems.
+        </p>
 
-        {/* NEW: FIND IT SHORTCUT */}
-        <section className="mt-6 rounded-3xl border border-blue-400/20 bg-blue-400/10 p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-200/70">
-            Find It Shortcut
+        <p>
+          The long-term idea is closer to a living encyclopedia than a normal
+          help page. The system should eventually support pages within pages,
+          relationship browsing, visual trees, and explanation layers similar to
+          large creative software manuals.
+        </p>
+
+        <p>
+          This manual is also meant to reduce confusion for users with ADD by
+          making routes, explanations, and relationships easier to follow step
+          by step.
+        </p>
+      </ManualInfoSection>
+
+      <ManualSystemGrid
+        title="Core Systems"
+        body="These are the systems currently shaping the foundation of The Muzes Garden."
+        systems={CORE_SYSTEMS}
+      />
+
+      <ManualSystemGrid
+        title="Future Systems"
+        body="These systems are planned or partially started and will expand as the architecture grows."
+        systems={FUTURE_SYSTEMS}
+      />
+
+      <ManualInfoSection title="How the systems connect">
+        <p>
+          The important architectural idea is that these systems are not
+          supposed to remain isolated from each other.
+        </p>
+
+        <p>
+          A future workflow might look like:
+        </p>
+
+        <div className="rounded-xl border border-white/10 bg-black/35 p-4">
+          <p className="text-sm leading-7 text-white/70">
+            Project → Track → Metadata Record → Relationship → Prompt →
+            Generator → Playback → Explanation → Navigation Path
           </p>
+        </div>
 
-          <h2 className="mt-2 text-xl font-semibold text-white">
-            Not sure where something is?
-          </h2>
+        <p>
+          That means a sound being played in the{" "}
+          <ManualInlineLink href="/about/global-player">
+            Global Player
+          </ManualInlineLink>{" "}
+          could eventually connect directly to metadata explanations, AI
+          generation history, lyric meaning, project context, or future editing
+          tools.
+        </p>
 
-          <p className="mt-2 text-sm text-blue-100/80">
-            Use Find It to search for what you need and get a step-by-step path
-            to it.
-          </p>
+        <p>
+          The{" "}
+          <ManualInlineLink href="/about/find-it">
+            Find It System
+          </ManualInlineLink>{" "}
+          is also evolving from a simple route helper into a true knowledge
+          navigation layer.
+        </p>
+      </ManualInfoSection>
 
-          <Link
-            href="/find-it"
-            className="mt-4 inline-block rounded-full border border-blue-300/40 px-4 py-2 text-sm font-semibold text-blue-100 hover:border-blue-200 hover:text-white"
-          >
-            Open Find It →
-          </Link>
-        </section>
+      <ManualInfoSection title="Current philosophy">
+        <p>
+          The Muzes Garden is intentionally being built slowly and structurally
+          instead of rushing random disconnected features into the app.
+        </p>
 
-        <section className="mt-7 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/45">
-            Manual Index
-          </p>
+        <p>
+          The current focus is:
+        </p>
 
-          <h1 className="mt-4 text-4xl font-bold md:text-5xl">
-            The Muzes Garden Manual
-          </h1>
+        <ul className="space-y-3 rounded-xl border border-white/10 bg-black/30 p-5 text-sm leading-7 text-white/65">
+          <li>• Keep the build green.</li>
+          <li>• Split oversized files before architecture becomes unstable.</li>
+          <li>• Create reusable systems instead of one-off hacks.</li>
+          <li>• Make navigation understandable for ADD-style workflows.</li>
+          <li>• Build future AI systems on structured metadata foundations.</li>
+        </ul>
 
-          <p className="mt-5 max-w-4xl text-lg leading-8 text-white/72">
-            This is the in-app book for The Muzes Garden. It explains the main
-            systems, how they connect, and how to move through the app with
-            confidence.
-          </p>
-
-          <div className="mt-6 grid gap-3 text-sm text-white/65 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-              <p className="font-semibold text-white">Step 1</p>
-              <p className="mt-2 leading-6">
-                Start with the system you are trying to understand.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-              <p className="font-semibold text-white">Step 2</p>
-              <p className="mt-2 leading-6">
-                Use links to move between connected systems.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-              <p className="font-semibold text-white">Step 3</p>
-              <p className="mt-2 leading-6">
-                Use Find It to jump directly to what you need.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-8">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/45">
-                Core Systems
-              </p>
-
-              <h2 className="mt-2 text-2xl font-semibold">
-                What the app depends on now
-              </h2>
-            </div>
-
-            <p className="max-w-xl text-sm leading-6 text-white/60">
-              These are the systems you will use the most. Learn them once, then
-              use Find It to move between them instantly.
-            </p>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {CORE_SYSTEMS.map((system) => (
-              <SystemCard key={system.href} {...system} />
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/45">
-                Future Systems
-              </p>
-
-              <h2 className="mt-2 text-2xl font-semibold">
-                What the app is being prepared for
-              </h2>
-            </div>
-
-            <p className="max-w-xl text-sm leading-6 text-white/60">
-              These systems are being built next and will connect directly into
-              the same navigation and metadata layers.
-            </p>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {FUTURE_SYSTEMS.map((system) => (
-              <SystemCard key={system.href} {...system} />
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10 rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/45">
-            Why It Matters
-          </p>
-
-          <h2 className="mt-2 text-2xl font-semibold">
-            The manual + Find It = full navigation system
-          </h2>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {WHY_IT_MATTERS.map((item) => (
-              <div
-                key={item}
-                className="rounded-2xl border border-white/10 bg-black/35 p-4"
-              >
-                <p className="text-sm leading-6 text-white/70">{item}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/35 p-4">
-            <p className="text-sm font-semibold text-white">
-              Best next reading path
-            </p>
-
-            <div className="mt-3 flex flex-wrap gap-2 text-sm">
-              <Link
-                href="/about/metadata"
-                className="rounded-full border border-white/10 px-3 py-2 text-white/70 hover:border-white/35 hover:text-white"
-              >
-                Metadata System
-              </Link>
-              <Link
-                href="/about/find-it"
-                className="rounded-full border border-white/10 px-3 py-2 text-white/70 hover:border-white/35 hover:text-white"
-              >
-                Find It
-              </Link>
-              <Link
-                href="/about/site-tree"
-                className="rounded-full border border-white/10 px-3 py-2 text-white/70 hover:border-white/35 hover:text-white"
-              >
-                Site Tree / Roadmap
-              </Link>
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
+        <p>
+          The result should eventually feel less like a normal music app and
+          more like a connected creative operating system.
+        </p>
+      </ManualInfoSection>
+    </ManualShell>
   );
 }

@@ -10,6 +10,9 @@ const finderActionButtonClass =
 const finderPillClass =
   "rounded-full border border-white/10 bg-white/[0.07] px-2 py-1 text-xs font-black text-white/60";
 
+const finderTinyPillClass =
+  "hidden shrink-0 rounded-full border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.12em] text-white/50 sm:inline-flex";
+
 const finderInfoCardClass =
   "rounded-2xl border border-white/10 bg-black/25 px-3 py-2";
 
@@ -130,164 +133,177 @@ export default function TrackMatcherFinderResultCard({
   const typeLabels = getTrackTypeLabels(track);
   const readyCommandCount = getReadyCommandCount(commands, hasAudioUrl);
   const { visibleTags, hiddenCount } = compactTags(track.tags);
+  const primaryTypeLabel = typeLabels[0] ?? "Song";
+  const hiddenTypeCount = Math.max(0, typeLabels.length - 1);
 
   return (
-    <details className="group rounded-2xl border border-white/10 bg-white/[0.04] p-3 transition-transform duration-150 hover:-translate-y-0.5">
-      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 marker:hidden [&::-webkit-details-marker]:hidden">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-base font-semibold text-white">
+    <details className="group rounded-xl border border-white/10 bg-white/[0.025] transition-transform duration-150 hover:-translate-y-0.5 hover:bg-white/[0.04] open:bg-white/[0.04]">
+      <summary className="grid cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-1.5 marker:hidden sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="truncate text-sm font-black leading-5 text-white sm:text-[0.95rem]">
               {track.title}
             </h3>
 
-            <span className={finderPillClass}>{track.source}</span>
-
-            {hasAudioUrl ? (
-              <span className="rounded-full border border-white/10 bg-white/[0.07] px-2 py-1 text-xs font-black text-white/70">
-                playable
+            {track.artist ? (
+              <span className="hidden min-w-0 truncate text-xs font-bold text-white/45 md:inline">
+                {track.artist}
               </span>
-            ) : (
-              <span className="rounded-full border border-white/10 bg-white/[0.07] px-2 py-1 text-xs font-black text-white/60">
-                no audio url
-              </span>
-            )}
+            ) : null}
           </div>
-
-          <p className="mt-1 truncate text-sm text-white/60">{track.artist}</p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <span className="rounded-full border border-white/10 bg-white/[0.07] px-3 py-1 text-xs font-black text-white/60">
-            Score {track.score}
-          </span>
-          <span className="rounded-full border border-white/10 bg-white/[0.07] px-3 py-1 text-xs font-black text-white/60">
-            {readyCommandCount} ready
-          </span>
-          <span className="rounded-full border border-white/10 bg-white/[0.07] px-2 py-1 text-xs font-black text-white/70 transition group-open:rotate-90">
-            ▶
-          </span>
-        </div>
+        <span className={finderTinyPillClass}>{primaryTypeLabel}</span>
+
+        <span className="hidden shrink-0 rounded-full border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.12em] text-white/45 lg:inline-flex">
+          {readyCommandCount} ready
+        </span>
+
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-white/[0.07] px-2.5 py-1 text-[0.7rem] font-black uppercase tracking-[0.12em] text-white/70 transition group-open:bg-white/[0.11] group-open:text-white">
+          Details
+          <span className="text-[0.65rem] transition group-open:rotate-90">›</span>
+        </span>
       </summary>
 
-      <div className="mt-4 grid gap-3">
-        <DetailBranch
-          title="Metadata"
-          detail="Song description, source status, score, and ready-command count."
-          defaultOpen
-        >
-          <div className="grid gap-3 md:grid-cols-[1fr_12rem]">
-            <div>
-              {track.description ? (
-                <p className="max-w-3xl text-sm leading-6 text-white/70">
-                  {track.description}
-                </p>
-              ) : (
-                <p className="text-sm leading-6 text-white/50">
-                  No description has been added for this track yet.
-                </p>
-              )}
+      <div className="border-t border-white/10 px-3 pb-3 pt-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-white/55">
+          <span className={finderPillClass}>{track.source}</span>
 
-              {!hasAudioUrl ? (
-                <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-bold text-white/60">
-                  No playable audio URL found yet. Search works, but this result
-                  cannot load into Track A or Track B until an audio path is
-                  available.
-                </p>
+          {hasAudioUrl ? (
+            <span className={finderPillClass}>Playable</span>
+          ) : (
+            <span className={finderPillClass}>No audio URL</span>
+          )}
+
+          <span className={finderPillClass}>Score {track.score}</span>
+          <span className={finderPillClass}>{readyCommandCount} ready</span>
+
+          {hiddenTypeCount > 0 ? (
+            <span className={finderPillClass}>+{hiddenTypeCount} type</span>
+          ) : null}
+        </div>
+
+        <div className="grid gap-3">
+          <DetailBranch
+            title="Metadata"
+            detail="Song description, source status, score, and ready-command count."
+            defaultOpen
+          >
+            <div className="grid gap-3 md:grid-cols-[1fr_12rem]">
+              <div>
+                {track.description ? (
+                  <p className="max-w-3xl text-sm leading-6 text-white/70">
+                    {track.description}
+                  </p>
+                ) : (
+                  <p className="text-sm leading-6 text-white/50">
+                    No description has been added for this track yet.
+                  </p>
+                )}
+
+                {!hasAudioUrl ? (
+                  <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-bold text-white/60">
+                    No playable audio URL found yet. Search works, but this
+                    result cannot load into Track A or Track B until an audio
+                    path is available.
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="grid gap-2">
+                <ResultInfoCard label="Score" value={track.score} />
+                <ResultInfoCard label="Ready" value={readyCommandCount} />
+              </div>
+            </div>
+          </DetailBranch>
+
+          <DetailBranch
+            title="Track Types"
+            detail="Stem, instrumental, reference, hybrid, or general track."
+          >
+            <div className="flex flex-wrap gap-2">
+              {typeLabels.length > 0 ? (
+                typeLabels.map((label) => (
+                  <span key={label} className={finderPillClass}>
+                    {label}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-white/50">
+                  Full song / general track
+                </span>
+              )}
+            </div>
+          </DetailBranch>
+
+          <DetailBranch
+            title="Tags"
+            detail="Metadata-derived search tags for this song."
+          >
+            <div className="flex flex-wrap gap-2">
+              {visibleTags.map((tag) => (
+                <span key={tag} className={finderPillClass}>
+                  {tag}
+                </span>
+              ))}
+
+              {hiddenCount > 0 ? (
+                <span className={finderPillClass}>+{hiddenCount} more</span>
+              ) : null}
+
+              {visibleTags.length === 0 && hiddenCount === 0 ? (
+                <span className="text-xs text-white/50">No tags yet.</span>
               ) : null}
             </div>
+          </DetailBranch>
 
-            <div className="grid gap-2">
-              <ResultInfoCard label="Score" value={track.score} />
-              <ResultInfoCard label="Ready" value={readyCommandCount} />
-            </div>
-          </div>
-        </DetailBranch>
-
-        <DetailBranch
-          title="Track Types"
-          detail="Stem, instrumental, reference, hybrid, or general track."
-        >
-          <div className="flex flex-wrap gap-2">
-            {typeLabels.length > 0 ? (
-              typeLabels.map((label) => (
-                <span key={label} className={finderPillClass}>
-                  {label}
+          <DetailBranch
+            title="Routing"
+            detail="Destination hints and future lane paths."
+          >
+            <div className="flex flex-wrap gap-2">
+              {track.destinationHints.map((destination) => (
+                <span key={destination} className={finderPillClass}>
+                  {formatDestination(destination)}
                 </span>
-              ))
-            ) : (
-              <span className="text-xs text-white/50">
-                Full song / general track
-              </span>
-            )}
-          </div>
-        </DetailBranch>
+              ))}
+            </div>
+          </DetailBranch>
 
-        <DetailBranch
-          title="Tags"
-          detail="Metadata-derived search tags for this song."
-        >
-          <div className="flex flex-wrap gap-2">
-            {visibleTags.map((tag) => (
-              <span key={tag} className={finderPillClass}>
-                {tag}
-              </span>
-            ))}
+          <DetailBranch
+            title="Load To"
+            detail="Send this selected song to Track A, Track B, analysis, or future lanes."
+          >
+            <div className="flex flex-wrap gap-2">
+              {commands.map((command) => {
+                const isDeckLoad =
+                  command.destination === "track-a" ||
+                  command.destination === "track-b";
+                const disabled =
+                  command.disabled || (isDeckLoad && !hasAudioUrl);
 
-            {hiddenCount > 0 ? (
-              <span className={finderPillClass}>+{hiddenCount} more</span>
-            ) : null}
-
-            {visibleTags.length === 0 && hiddenCount === 0 ? (
-              <span className="text-xs text-white/50">No tags yet.</span>
-            ) : null}
-          </div>
-        </DetailBranch>
-
-        <DetailBranch
-          title="Routing"
-          detail="Destination hints and future lane paths."
-        >
-          <div className="flex flex-wrap gap-2">
-            {track.destinationHints.map((destination) => (
-              <span key={destination} className={finderPillClass}>
-                {formatDestination(destination)}
-              </span>
-            ))}
-          </div>
-        </DetailBranch>
-
-        <DetailBranch
-          title="Load To"
-          detail="Send this selected song to Track A, Track B, analysis, or future lanes."
-        >
-          <div className="flex flex-wrap gap-2">
-            {commands.map((command) => {
-              const isDeckLoad =
-                command.destination === "track-a" ||
-                command.destination === "track-b";
-              const disabled = command.disabled || (isDeckLoad && !hasAudioUrl);
-
-              return (
-                <button
-                  key={command.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() =>
-                    !disabled && onLoadTrack?.(track, command.destination)
-                  }
-                  title={
-                    !hasAudioUrl && isDeckLoad
-                      ? "No playable audio URL found for this track yet."
-                      : command.disabledReason ?? command.detail
-                  }
-                  className={finderActionButtonClass}
-                >
-                  {command.label}
-                </button>
-              );
-            })}
-          </div>
-        </DetailBranch>
+                return (
+                  <button
+                    key={command.id}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() =>
+                      !disabled && onLoadTrack?.(track, command.destination)
+                    }
+                    title={
+                      !hasAudioUrl && isDeckLoad
+                        ? "No playable audio URL found for this track yet."
+                        : command.disabledReason ?? command.detail
+                    }
+                    className={finderActionButtonClass}
+                  >
+                    {command.label}
+                  </button>
+                );
+              })}
+            </div>
+          </DetailBranch>
+        </div>
       </div>
     </details>
   );

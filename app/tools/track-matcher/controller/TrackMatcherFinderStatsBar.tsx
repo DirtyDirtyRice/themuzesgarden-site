@@ -14,14 +14,20 @@ export default function TrackMatcherFinderStatsBar({ statistics }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2 text-xs text-white/70 sm:grid-cols-5">
+    <div className="grid grid-cols-2 gap-1.5 text-xs text-white/70 sm:grid-cols-5">
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2"
+          className="rounded-xl border border-white/10 bg-white/[0.035] px-2.5 py-1.5"
         >
-          <p className="text-white/40">{stat.label}</p>
-          <p className="mt-1 text-lg font-semibold text-white">{stat.value}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-[0.62rem] font-black uppercase tracking-[0.14em] text-white/45">
+              {stat.label}
+            </p>
+            <p className="text-sm font-black leading-none text-white">
+              {stat.value}
+            </p>
+          </div>
         </div>
       ))}
     </div>

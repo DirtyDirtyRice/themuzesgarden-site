@@ -27,19 +27,19 @@ type FinderBranch = {
 };
 
 const finderSmallButtonClass =
-  "rounded-full border border-white/10 bg-white/[0.07] px-3 py-1 text-xs font-black text-white/70 transition-transform duration-150 hover:-translate-y-0.5 hover:bg-white/[0.10] hover:text-white active:scale-[0.98]";
+  "rounded-lg border border-white/10 bg-white/[0.07] px-2 py-1 text-[0.7rem] font-black leading-none text-white/75 transition-transform duration-150 hover:-translate-y-0.5 hover:bg-white/[0.10] hover:text-white active:scale-[0.98]";
 
 const finderBranchClass =
-  "group rounded-2xl border border-white/10 bg-black/30 p-3";
+  "group rounded-xl border border-white/10 bg-black/30 p-2";
 
 const finderSubBranchClass =
-  "group rounded-2xl border border-white/10 bg-white/[0.04] p-3";
+  "group rounded-xl border border-white/10 bg-white/[0.04] p-2";
 
 const finderDeepBranchClass =
-  "group rounded-2xl border border-white/10 bg-black/30 p-3";
+  "group rounded-xl border border-white/10 bg-black/30 p-2";
 
 const finderBranchSummaryClass =
-  "flex cursor-pointer list-none items-center justify-between gap-3 marker:hidden [&::-webkit-details-marker]:hidden";
+  "flex cursor-pointer list-none items-center justify-between gap-2 marker:hidden [&::-webkit-details-marker]:hidden";
 
 const sourceTerms: Array<{
   label: string;
@@ -486,7 +486,7 @@ function formatBranchLabel(category: TrackMatcherFinderCategory) {
 
 function FinderBranchArrow() {
   return (
-    <span className="rounded-full border border-white/10 bg-white/[0.07] px-2 py-1 text-xs font-black text-white/60 transition group-open:rotate-90">
+    <span className="rounded-lg border border-white/10 bg-white/[0.07] px-2 py-0.5 text-[0.65rem] font-black text-white/60 transition group-open:rotate-90">
       ▶
     </span>
   );
@@ -524,16 +524,16 @@ function FinderTreeNodeView({
     <details className={hasChildren ? finderSubBranchClass : finderDeepBranchClass}>
       <summary className={finderBranchSummaryClass}>
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-white/75">
+          <p className="text-[0.68rem] font-black uppercase tracking-[0.14em] text-white/75">
             {node.label}
           </p>
-          <p className="mt-1 text-xs leading-5 text-white/45">{node.detail}</p>
+          <p className="mt-0.5 line-clamp-1 text-[0.68rem] leading-4 text-white/45">{node.detail}</p>
         </div>
 
         <FinderBranchArrow />
       </summary>
 
-      <div className="mt-3 grid gap-2">
+      <div className="mt-2 grid gap-1.5">
         {hasChildren
           ? node.children?.map((child) => (
               <FinderTreeNodeView
@@ -545,7 +545,7 @@ function FinderTreeNodeView({
           : null}
 
         {hasLeaves ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {node.leaves?.map((leaf) => (
               <SearchLeafButton
                 key={`${node.label}-${leaf.searchText}`}
@@ -649,46 +649,46 @@ export default function TrackMatcherFinderSearchControls({
     query.searchBranchLabel || formatBranchLabel(query.searchCategory);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs uppercase tracking-[0.28em] text-white/50">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[0.68rem] uppercase tracking-[0.22em] text-white/50">
           Finder Search
         </p>
         <p className="text-xs text-white/50">{resultCount} results</p>
       </div>
 
-      <div className="grid gap-2 md:grid-cols-[1fr_15rem]">
+      <div className="grid gap-2 md:grid-cols-[1fr_12rem]">
         <input
           value={query.searchText}
           onChange={(event) => setSearchText(event.target.value)}
           placeholder="Search rock, funk, keeper, stem, bass, drums, vocal..."
-          className="w-full rounded-2xl border border-white/10 bg-white/[0.07] px-4 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:border-white/30"
+          className="w-full rounded-xl border border-white/10 bg-white/[0.07] px-3 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:border-white/30"
         />
 
-        <details className="group relative rounded-2xl border border-white/10 bg-white/[0.07]">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 marker:hidden [&::-webkit-details-marker]:hidden">
+        <details className="group relative rounded-xl border border-white/10 bg-white/[0.07]">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 marker:hidden [&::-webkit-details-marker]:hidden">
             <div className="min-w-0">
-              <p className="text-[0.65rem] font-black uppercase tracking-[0.18em] text-white/45">
+              <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-white/45">
                 Deep Search
               </p>
-              <p className="truncate text-sm font-black text-white/80">
+              <p className="truncate text-xs font-black text-white/80">
                 {activeBranchLabel}
               </p>
             </div>
 
-            <span className="rounded-full border border-white/10 bg-black/30 px-2 py-1 text-xs font-black text-white/70 transition group-open:rotate-90">
+            <span className="rounded-lg border border-white/10 bg-black/30 px-2 py-0.5 text-[0.65rem] font-black text-white/70 transition group-open:rotate-90">
               ▶
             </span>
           </summary>
 
-          <div className="z-20 mt-2 grid gap-2 rounded-2xl border border-white/10 bg-black p-3 shadow-2xl md:absolute md:right-0 md:top-full md:max-h-[70vh] md:w-[38rem] md:overflow-y-auto">
+          <div className="z-20 mt-2 grid gap-1.5 rounded-xl border border-white/10 bg-black p-2 shadow-2xl md:absolute md:right-0 md:top-full md:max-h-[68vh] md:w-[30rem] md:overflow-y-auto">
             <button
               type="button"
               onClick={resetAllSearch}
-              className="rounded-2xl border border-white/10 bg-white/[0.07] px-3 py-3 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:bg-white/[0.10]"
+              className="rounded-xl border border-white/10 bg-white/[0.07] px-2 py-2 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:bg-white/[0.10]"
             >
-              <p className="text-sm font-black text-white">All</p>
-              <p className="mt-1 text-xs leading-5 text-white/55">
+              <p className="text-xs font-black text-white">All</p>
+              <p className="mt-0.5 line-clamp-1 text-[0.68rem] leading-4 text-white/55">
                 Reset Finder to the broad all-tracks search.
               </p>
             </button>
@@ -697,10 +697,10 @@ export default function TrackMatcherFinderSearchControls({
               <details key={branch.id} className={finderBranchClass}>
                 <summary className={finderBranchSummaryClass}>
                   <div>
-                    <p className="text-sm font-black uppercase tracking-[0.18em] text-white/80">
+                    <p className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-white/80">
                       {branch.label}
                     </p>
-                    <p className="mt-1 text-xs leading-5 text-white/50">
+                    <p className="mt-0.5 line-clamp-1 text-[0.68rem] leading-4 text-white/50">
                       {branch.detail}
                     </p>
                   </div>
@@ -708,9 +708,9 @@ export default function TrackMatcherFinderSearchControls({
                   <FinderBranchArrow />
                 </summary>
 
-                <div className="mt-3 grid gap-2">
+                <div className="mt-2 grid gap-1.5">
                   {branch.id === "source" ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {sourceTerms.map((source) => (
                         <button
                           key={source.value}
@@ -740,10 +740,10 @@ export default function TrackMatcherFinderSearchControls({
             <details className={finderBranchClass}>
               <summary className={finderBranchSummaryClass}>
                 <div>
-                  <p className="text-sm font-black uppercase tracking-[0.18em] text-white/80">
+                  <p className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-white/80">
                     Quick Searches
                   </p>
-                  <p className="mt-1 text-xs leading-5 text-white/50">
+                  <p className="mt-0.5 line-clamp-1 text-[0.68rem] leading-4 text-white/50">
                     The old quick-search buttons are preserved here instead of
                     filling the main page.
                   </p>
