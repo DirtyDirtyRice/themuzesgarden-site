@@ -4,12 +4,9 @@ import { AiAnalysisPlaceholderWorkspace, AiRoutingWorkspace, FutureWaveformWorks
 import { MetadataGraphPrepWorkspace, RelationshipRouteExpansionWorkspace, TrackAMetadataWorkspace, TrackARelationshipWorkspace, TrackBMetadataWorkspace, TrackBRelationshipWorkspace, TrackMetadataReadinessWorkspace } from "./components/MultiTrackMetadataSections";
 import { TrackLoadRoutingWorkspace, TrackSlotHierarchyWorkspace, TrackWorkspace } from "./components/MultiTrackWorkspace";
 import { InfoCard, StatusPill, panelClass } from "./components/MultiTrackShared";
-import { MultiTrackControllerSummary } from "./controller/MultiTrackControllerSummary";
-import { createDefaultMultiTrackSessionSnapshot } from "./session/multiTrackSessionState";
+import MultiTrackController from "./controller/MultiTrackController";
 
 export default function MultiTrackAnalysisPage() {
-  const sessionSnapshot = createDefaultMultiTrackSessionSnapshot();
-
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white">
       <section className="mx-auto grid max-w-7xl gap-5">
@@ -56,12 +53,12 @@ export default function MultiTrackAnalysisPage() {
           />
           <InfoCard
             label="Next Wiring"
-            value="Controller ready"
-            detail="Future steps can connect real track state, library records, waveforms, and saved analysis data."
+            value="Controller active"
+            detail="The Multi-Track controller now owns session state, adapter previews, registry metrics, and future routing structure."
           />
         </section>
 
-        <MultiTrackControllerSummary snapshot={sessionSnapshot} />
+        <MultiTrackController />
 
         <TrackLoadRoutingWorkspace />
         <TrackSlotHierarchyWorkspace />
