@@ -3,9 +3,48 @@ import type {
   MultiTrackEngineState,
 } from "./multiTrackEngineTypes";
 
-export function createMultiTrackEngineSnapshot(state: MultiTrackEngineState): MultiTrackEngineSnapshot {
+const MAX_MULTI_TRACK_ENGINE_SNAPSHOTS = 12;
+
+function createSnapshotId(state: MultiTrackEngineState): string {
+  const nextSnapshotNumber = state.snapshots.length + 1;
+  const timestamp = Date.now();
+
+  return `snapshot-${nextSnapshotNumber}-${timestamp}`;
+}
+
+function trimMultiTrackEngineSnapshots(
+  snapshots: MultiTrackEngineSnapshot[],
+): MultiTrackEngineSnapshot[] {
+  return snapshots.slice(0, MAX_MULTI_TRACK_ENGINE_SNAPSHOTS);
+}
+
+export function getSnapshotSummary(state: MultiTrackEngineState): string {
+  const trackATitle = state.trackA.title || "Track A";
+  const trackBTitle = state.trackB.title || "Track B";
+  const score = Math.round(state.comparison.weightedScore);
+
+  return `${trackATitle} / ${trackBTitle} — ${score}% engine match`;
+}
+
+export function getLatestMultiTrackEngineSnapshot(
+  state: MultiTrackEngineState,
+): MultiTrackEngineSnapshot | null {
+  return state.snapshots[0] ?? null;
+}
+
+export function getMultiTrackEngineSnapshotCount(state: MultiTrackEngineState): number {
+  return state.snapshots.length;
+}
+
+export function hasMultiTrackEngineSnapshots(state: MultiTrackEngineState): boolean {
+  return state.snapshots.length > 0;
+}
+
+export function createMultiTrackEngineSnapshot(
+  state: MultiTrackEngineState,
+): MultiTrackEngineSnapshot {
   return {
-    snapshotId: `snapshot-${state.snapshots.length + 1}`,
+    snapshotId: createSnapshotId(state),
     createdAtLabel: new Date().toISOString(),
     summary: getSnapshotSummary(state),
     trackA: structuredClone(state.trackA),
@@ -23,10 +62,28 @@ export function saveMultiTrackEngineSnapshot(state: MultiTrackEngineState): Mult
   return {
     ...state,
     editedAtLabel: snapshot.createdAtLabel,
-    snapshots: [snapshot, ...state.snapshots].slice(0, 12),
+    snapshots: trimMultiTrackEngineSnapshots([snapshot, ...state.snapshots]),
   };
 }
 
-export function getSnapshotSummary(state: MultiTrackEngineState): string {
-  return `${state.trackA.title} / ${state.trackB.title} — ${state.comparison.weightedScore}% engine match`;
+export function restoreMultiTrackEngineSnapshot(
+  state: MultiTrackEngineState,
+  snapshotId: string,
+): MultiTrackEngineState {
+  const snapshot = state.snapshots.find((savedSnapshot) => savedSnapshot.snapshotId === snapshotId);
+
+  if (!snapshot) {
+    return state;
+  }
+
+  return {
+    ...state,
+    editedAtLabel: new Date().toISOString(),
+    trackA: structuredClone(snapshot.trackA),
+    trackB: structuredClone(snapshot.trackB),
+    comparison: structuredClone(snapshot.comparison),
+    timeline: structuredClone(snapshot.timeline),
+    analysis: structuredClone(snapshot.analysis),
+    decision: structuredClone(snapshot.decision),
+  };
 }
