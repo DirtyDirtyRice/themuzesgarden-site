@@ -5,6 +5,7 @@ import { MetadataGraphPrepWorkspace, RelationshipRouteExpansionWorkspace, TrackA
 import { TrackLoadRoutingWorkspace, TrackSlotHierarchyWorkspace, TrackWorkspace } from "./components/MultiTrackWorkspace";
 import { InfoCard, StatusPill, panelClass } from "./components/MultiTrackShared";
 import MultiTrackController from "./controller/MultiTrackController";
+import { MultiTrackEngineDashboard } from "./components/engine-dashboard/MultiTrackEngineDashboard";
 
 export default function MultiTrackAnalysisPage() {
   return (
@@ -59,6 +60,7 @@ export default function MultiTrackAnalysisPage() {
         </section>
 
         <MultiTrackController />
+        <MultiTrackEngineDashboard />
 
         <TrackLoadRoutingWorkspace />
         <TrackSlotHierarchyWorkspace />
