@@ -7,13 +7,61 @@ import { MultiTrackEngineHealthPanel } from "../dashboard/MultiTrackEngineHealth
 import { MultiTrackSnapshotPanel } from "../dashboard/MultiTrackSnapshotPanel";
 import { MultiTrackQuickActionsPanel } from "../dashboard/MultiTrackQuickActionsPanel";
 import { MultiTrackRelationshipPanel } from "../relationship/MultiTrackRelationshipPanel";
+import { MultiTrackActionQueuePanel } from "./MultiTrackActionQueuePanel";
+import { MultiTrackComparisonMatrixPanel } from "./MultiTrackComparisonMatrixPanel";
+import { MultiTrackDecisionCenterPanel } from "./MultiTrackDecisionCenterPanel";
+import { MultiTrackDecisionRouteControlPanel } from "./MultiTrackDecisionRouteControlPanel";
+import { MultiTrackEngineAlertsPanel } from "./MultiTrackEngineAlertsPanel";
+import { MultiTrackEngineLoadDemoPanel } from "./MultiTrackEngineLoadDemoPanel";
+import { MultiTrackEngineMetricsPanel } from "./MultiTrackEngineMetricsPanel";
+import { MultiTrackEngineReadinessRail } from "./MultiTrackEngineReadinessRail";
+import { MultiTrackFindingControlPanel } from "./MultiTrackFindingControlPanel";
+import { MultiTrackLaneStatusPanel } from "./MultiTrackLaneStatusPanel";
+import { MultiTrackMarkerCueControlPanel } from "./MultiTrackMarkerCueControlPanel";
+import { MultiTrackSessionNotesPanel } from "./MultiTrackSessionNotesPanel";
+import { MultiTrackSnapshotControlPanel } from "./MultiTrackSnapshotControlPanel";
+import { MultiTrackTimelineWorkspacePanel } from "./MultiTrackTimelineWorkspacePanel";
+import { MultiTrackTrackPrepPanel } from "./MultiTrackTrackPrepPanel";
+import { MultiTrackTransportControlPanel } from "./MultiTrackTransportControlPanel";
 
 const panelClass =
   "rounded-3xl border border-white/10 bg-black p-5 text-white shadow-2xl";
 
 export function MultiTrackEngineDashboard() {
   const engine = useMultiTrackEngine();
-  const { engineState } = engine;
+  const {
+    engineState,
+    trackPair,
+    readiness,
+    readinessLabel,
+    readinessDetail,
+    snapshotCount,
+    markerCount,
+    cueCount,
+    findingCount,
+    longestTrackDurationSeconds,
+    visibleMarkers,
+    visibleCues,
+    canSaveSnapshot,
+    canExportComparison,
+    updateTrack,
+    muteTrack,
+    soloTrack,
+    lockTrack,
+    addMarker,
+    removeMarker,
+    addCue,
+    removeCue,
+    addFinding,
+    clearFindings,
+    setDecisionRoute,
+    setPlayhead,
+    setLoop,
+    setTransportStatus,
+    toggleSnapToMarkers,
+    saveSnapshot,
+    resetEngine,
+  } = engine;
 
   return (
     <section className={panelClass}>
@@ -35,9 +83,94 @@ export function MultiTrackEngineDashboard() {
       <div className="mt-5 grid gap-5">
         <MultiTrackOverviewPanel engineState={engineState} />
 
+        <MultiTrackEngineReadinessRail
+          readiness={readiness}
+          readinessLabel={readinessLabel}
+          readinessDetail={readinessDetail}
+          snapshotCount={snapshotCount}
+          markerCount={markerCount}
+          cueCount={cueCount}
+          findingCount={findingCount}
+        />
+
         <MultiTrackReadinessPanel engineState={engineState} />
 
+        <MultiTrackEngineLoadDemoPanel trackPair={trackPair} updateTrack={updateTrack} />
+
+        <MultiTrackTrackPrepPanel
+          trackPair={trackPair}
+          muteTrack={muteTrack}
+          soloTrack={soloTrack}
+          lockTrack={lockTrack}
+        />
+
+        <MultiTrackEngineMetricsPanel engineState={engineState} />
+
+        <MultiTrackComparisonMatrixPanel engineState={engineState} />
+
+        <MultiTrackLaneStatusPanel engineState={engineState} />
+
         <MultiTrackRelationshipPanel relationshipState={engineState.relationship} />
+
+        <MultiTrackDecisionCenterPanel
+          engineState={engineState}
+          canSaveSnapshot={canSaveSnapshot}
+          canExportComparison={canExportComparison}
+        />
+
+        <MultiTrackDecisionRouteControlPanel
+          engineState={engineState}
+          setDecisionRoute={setDecisionRoute}
+        />
+
+        <MultiTrackTimelineWorkspacePanel
+          engineState={engineState}
+          markerCount={markerCount}
+          cueCount={cueCount}
+          visibleMarkers={visibleMarkers}
+          visibleCues={visibleCues}
+          longestTrackDurationSeconds={longestTrackDurationSeconds}
+        />
+
+        <MultiTrackTransportControlPanel
+          engineState={engineState}
+          setTransportStatus={setTransportStatus}
+          setPlayhead={setPlayhead}
+          setLoop={setLoop}
+          toggleSnapToMarkers={toggleSnapToMarkers}
+        />
+
+        <MultiTrackMarkerCueControlPanel
+          visibleMarkers={visibleMarkers}
+          visibleCues={visibleCues}
+          addMarker={addMarker}
+          removeMarker={removeMarker}
+          addCue={addCue}
+          removeCue={removeCue}
+        />
+
+        <MultiTrackActionQueuePanel engineState={engineState} />
+
+        <MultiTrackEngineAlertsPanel
+          engineState={engineState}
+          findingCount={findingCount}
+        />
+
+        <MultiTrackFindingControlPanel
+          engineState={engineState}
+          addFinding={addFinding}
+          clearFindings={clearFindings}
+        />
+
+        <MultiTrackSnapshotControlPanel
+          engineState={engineState}
+          snapshotCount={snapshotCount}
+          canSaveSnapshot={canSaveSnapshot}
+          saveSnapshot={saveSnapshot}
+          resetEngine={resetEngine}
+        />
+
+        <MultiTrackSessionNotesPanel engineState={engineState} />
 
         <MultiTrackEngineHealthPanel engineState={engineState} />
 
