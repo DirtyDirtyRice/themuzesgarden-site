@@ -41,6 +41,7 @@ import {
   getMultiTrackEngineTrackPair,
   getTrackReadiness,
 } from "./multiTrackEngineTrackHelpers";
+import { recalculateMultiTrackEngineRelationshipState } from "./multiTrackEngineRelationshipHelpers";
 
 export { getAnalysisFindingCounts, recalculateLaneReadiness };
 export {
@@ -80,6 +81,10 @@ export {
   getMultiTrackEngineTrackPair,
   getTrackReadiness,
 };
+export {
+  createMultiTrackEngineRelationshipState,
+  recalculateMultiTrackEngineRelationshipState,
+} from "./multiTrackEngineRelationshipHelpers";
 export {
   getMultiTrackEngineVisibleCues,
   getMultiTrackEngineVisibleMarkers,
@@ -253,7 +258,7 @@ export function recalculateMultiTrackEngineState(state: MultiTrackEngineState): 
   });
   const findingCounts = getAnalysisFindingCounts(state.analysis.findings);
 
-  return {
+  const nextStateBase: MultiTrackEngineState = {
     ...state,
     editedAtLabel: new Date().toISOString(),
     trackA: {
@@ -301,5 +306,13 @@ export function recalculateMultiTrackEngineState(state: MultiTrackEngineState): 
       canSave: weightedScore >= 60 && engineReadiness !== "blocked",
       canExport: weightedScore >= 80 && engineReadiness === "ready",
     },
+  };
+
+  return {
+    ...nextStateBase,
+    relationship: recalculateMultiTrackEngineRelationshipState(
+      nextStateBase.relationship,
+      nextStateBase,
+    ),
   };
 }

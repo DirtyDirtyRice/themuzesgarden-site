@@ -1,3 +1,5 @@
+import type { MultiTrackEngineRelationshipState } from "./multiTrackEngineRelationshipTypes";
+
 export type MultiTrackEngineTrackSlotId = "track-a" | "track-b";
 
 export type MultiTrackEngineReadinessLevel =
@@ -207,6 +209,7 @@ export type MultiTrackEngineSnapshot = {
   trackB: MultiTrackEngineTrackState;
   comparison: MultiTrackEngineComparisonState;
   timeline: MultiTrackEngineTimelineState;
+  relationship: MultiTrackEngineRelationshipState;
   analysis: MultiTrackEngineAnalysisState;
   decision: MultiTrackEngineDecisionState;
 };
@@ -219,6 +222,7 @@ export type MultiTrackEngineState = {
   trackB: MultiTrackEngineTrackState;
   comparison: MultiTrackEngineComparisonState;
   timeline: MultiTrackEngineTimelineState;
+  relationship: MultiTrackEngineRelationshipState;
   analysis: MultiTrackEngineAnalysisState;
   decision: MultiTrackEngineDecisionState;
   snapshots: MultiTrackEngineSnapshot[];

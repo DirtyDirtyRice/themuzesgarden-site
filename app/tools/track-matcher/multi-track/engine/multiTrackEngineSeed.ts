@@ -1,3 +1,4 @@
+import { DEFAULT_MULTI_TRACK_ENGINE_RELATIONSHIP_STATE } from "./multiTrackEngineRelationshipSeed";
 import type {
   MultiTrackEngineAnalysisState,
   MultiTrackEngineComparisonState,
@@ -290,6 +291,7 @@ export const DEFAULT_MULTI_TRACK_ENGINE_STATE: MultiTrackEngineState = {
   trackB: DEFAULT_MULTI_TRACK_ENGINE_TRACK_B,
   comparison: DEFAULT_MULTI_TRACK_ENGINE_COMPARISON,
   timeline: DEFAULT_MULTI_TRACK_ENGINE_TIMELINE,
+  relationship: DEFAULT_MULTI_TRACK_ENGINE_RELATIONSHIP_STATE,
   analysis: DEFAULT_MULTI_TRACK_ENGINE_ANALYSIS,
   decision: DEFAULT_MULTI_TRACK_ENGINE_DECISION,
   snapshots: [],

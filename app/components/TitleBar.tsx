@@ -96,6 +96,11 @@ const TRACK_MATCHER_CHILD_LINKS: TitleBarLink[] = [
     detail: "Search Library tracks and load them into Track Matcher",
   },
   {
+    label: "Multi Track",
+    href: "/tools/track-matcher/multi-track",
+    detail: "Open the multi-track engine workspace",
+  },
+  {
     label: "Advanced",
     href: "/tools/track-matcher/advanced",
     detail: "Open the advanced Track Matcher workbench",

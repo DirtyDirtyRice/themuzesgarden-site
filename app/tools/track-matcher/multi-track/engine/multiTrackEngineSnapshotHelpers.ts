@@ -51,6 +51,7 @@ export function createMultiTrackEngineSnapshot(
     trackB: structuredClone(state.trackB),
     comparison: structuredClone(state.comparison),
     timeline: structuredClone(state.timeline),
+    relationship: structuredClone(state.relationship),
     analysis: structuredClone(state.analysis),
     decision: structuredClone(state.decision),
   };
@@ -83,6 +84,7 @@ export function restoreMultiTrackEngineSnapshot(
     trackB: structuredClone(snapshot.trackB),
     comparison: structuredClone(snapshot.comparison),
     timeline: structuredClone(snapshot.timeline),
+    relationship: structuredClone(snapshot.relationship),
     analysis: structuredClone(snapshot.analysis),
     decision: structuredClone(snapshot.decision),
   };
