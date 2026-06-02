@@ -1,6 +1,7 @@
 "use client";
 
 import { useMultiTrackEngine } from "../../engine/useMultiTrackEngine";
+import { MultiTrackInsightV2Panel } from "../insight-v2/MultiTrackInsightV2Panel";
 import { MultiTrackOverviewPanel } from "../dashboard/MultiTrackOverviewPanel";
 import { MultiTrackReadinessPanel } from "../dashboard/MultiTrackReadinessPanel";
 import { MultiTrackEngineHealthPanel } from "../dashboard/MultiTrackEngineHealthPanel";
@@ -105,6 +106,8 @@ export function MultiTrackEngineDashboard() {
         />
 
         <MultiTrackEngineMetricsPanel engineState={engineState} />
+
+        <MultiTrackInsightV2Panel engineState={engineState} />
 
         <MultiTrackComparisonMatrixPanel engineState={engineState} />
 
