@@ -2,10 +2,14 @@
 
 import type { MultiTrackEngineState } from "../../engine/multiTrackEngineTypes";
 import { MultiTrackInsightComparisonPanel } from "./MultiTrackInsightComparisonPanel";
+import { MultiTrackInsightDecisionPanel } from "./MultiTrackInsightDecisionPanel";
 import { buildMultiTrackInsightV2Cards } from "./MultiTrackInsightV2Helpers";
 import { MultiTrackInsightReadinessPanel } from "./MultiTrackInsightReadinessPanel";
 import { MultiTrackInsightRecommendationPanel } from "./MultiTrackInsightRecommendationPanel";
+import { MultiTrackInsightSnapshotPanel } from "./MultiTrackInsightSnapshotPanel";
+import { MultiTrackInsightSyncPanel } from "./MultiTrackInsightSyncPanel";
 import { MultiTrackInsightTimelinePanel } from "./MultiTrackInsightTimelinePanel";
+import { MultiTrackInsightWorkflowPanel } from "./MultiTrackInsightWorkflowPanel";
 
 type Props = {
   engineState: MultiTrackEngineState;
@@ -44,6 +48,10 @@ export function MultiTrackInsightV2Panel({ engineState }: Props) {
 
       <div className="mt-5 grid gap-3 xl:grid-cols-2">
         <MultiTrackInsightRecommendationPanel insightCards={insightCards} />
+        <MultiTrackInsightWorkflowPanel engineState={engineState} />
+        <MultiTrackInsightSyncPanel engineState={engineState} />
+        <MultiTrackInsightDecisionPanel engineState={engineState} />
+        <MultiTrackInsightSnapshotPanel engineState={engineState} />
         <MultiTrackInsightComparisonPanel engineState={engineState} />
         <MultiTrackInsightTimelinePanel engineState={engineState} />
         <MultiTrackInsightReadinessPanel engineState={engineState} />
