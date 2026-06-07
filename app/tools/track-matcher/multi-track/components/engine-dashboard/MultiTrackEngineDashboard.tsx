@@ -2,6 +2,7 @@
 
 import { useMultiTrackEngine } from "../../engine/useMultiTrackEngine";
 import { MultiTrackInsightV2Panel } from "../insight-v2/MultiTrackInsightV2Panel";
+import { MultiTrackTrackSourcePanel } from "../source-workspace/MultiTrackTrackSourcePanel";
 import { MultiTrackOverviewPanel } from "../dashboard/MultiTrackOverviewPanel";
 import { MultiTrackReadinessPanel } from "../dashboard/MultiTrackReadinessPanel";
 import { MultiTrackEngineHealthPanel } from "../dashboard/MultiTrackEngineHealthPanel";
@@ -95,6 +96,8 @@ export function MultiTrackEngineDashboard() {
         />
 
         <MultiTrackReadinessPanel engineState={engineState} />
+
+        <MultiTrackTrackSourcePanel trackPair={trackPair} updateTrack={updateTrack} />
 
         <MultiTrackEngineLoadDemoPanel trackPair={trackPair} updateTrack={updateTrack} />
 
