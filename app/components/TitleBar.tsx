@@ -45,11 +45,6 @@ const PRIMARY_LINKS: TitleBarLink[] = [
     detail: "Open the project workspace",
   },
   {
-    label: "Library",
-    href: "/library",
-    detail: "Open the music library",
-  },
-  {
     label: "Upload",
     href: "/upload",
     detail: "Upload music into The Muzes Garden",
@@ -68,6 +63,34 @@ const PRIMARY_LINKS: TitleBarLink[] = [
     label: "Members",
     href: "/members",
     detail: "Open member tools",
+  },
+];
+
+const LIBRARY_CHILD_LINKS: TitleBarLink[] = [
+  {
+    label: "Library Home",
+    href: "/library",
+    detail: "Open the main music library",
+  },
+  {
+    label: "Lyrics",
+    href: "/library/lyrics",
+    detail: "Write, search, and download lyric text files",
+  },
+  {
+    label: "Multi-Stems",
+    href: "/library/multi-stems",
+    detail: "Future home for stem groups and stem sets",
+  },
+  {
+    label: "Stories",
+    href: "/library/stories",
+    detail: "Future home for song stories and notes",
+  },
+  {
+    label: "Miscellaneous",
+    href: "/library/miscellaneous",
+    detail: "Future home for extra creative files",
   },
 ];
 
@@ -246,7 +269,7 @@ function TitleBarDropdown({
       </Link>
 
       {menuOpen ? (
-        <div className="absolute right-0 top-full z-[1100] mt-2 min-w-[220px]">
+        <div className="absolute right-0 top-full z-[1100] mt-2 min-w-[240px]">
           <div className="rounded-xl border border-white/10 bg-black p-1 shadow-2xl">
             {links.map((link) => {
               const childActive = isActivePath(pathname, link.href);
@@ -365,9 +388,11 @@ export default function TitleBar() {
   const pathname = usePathname();
 
   const detailsRoute = useMemo(() => getDetailsRoute(pathname), [pathname]);
+  const libraryActive = isActivePath(pathname, "/library");
   const metadataActive = isActivePath(pathname, "/metadata");
   const trackMatcherActive = isActivePath(pathname, "/tools/track-matcher");
 
+  const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [metadataMenuOpen, setMetadataMenuOpen] = useState(false);
   const [trackMatcherMenuOpen, setTrackMatcherMenuOpen] = useState(false);
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
@@ -425,6 +450,15 @@ export default function TitleBar() {
               </Link>
             );
           })}
+
+          <TitleBarDropdown
+            active={libraryActive}
+            label="Library"
+            links={LIBRARY_CHILD_LINKS}
+            menuOpen={libraryMenuOpen}
+            onClose={() => setLibraryMenuOpen(false)}
+            onOpen={() => setLibraryMenuOpen(true)}
+          />
 
           <TitleBarDropdown
             active={trackMatcherActive}
