@@ -1,0 +1,171 @@
+import type {
+  MultiTrackSurvivorPromotionCandidate,
+  MultiTrackSurvivorPromotionKeeperBankSlot,
+  MultiTrackSurvivorPromotionWorkspaceState,
+} from "./MultiTrackSurvivorPromotionEngineTypes";
+
+export const multiTrackSurvivorPromotionCandidatesSeed: MultiTrackSurvivorPromotionCandidate[] = [
+  {
+    id: "survivor-candidate-main-hook-a",
+    title: "Main Hook Survivor A",
+    sourceVersionIds: ["suno-version-01", "suno-version-04", "suno-version-07"],
+    sourceClusterId: "idea-cluster-main-hook",
+    phraseMatchIds: ["phrase-match-hook-a", "phrase-match-hook-c"],
+    riffColorIds: ["riff-color-gold-hook", "riff-color-orange-response"],
+    sectionLabel: "Hook",
+    startBar: 17,
+    endBar: 25,
+    score: 94,
+    confidence: 91,
+    decision: "promote",
+    readiness: "ready",
+    evidence: [
+      {
+        id: "evidence-main-hook-repeat",
+        label: "Repeated across versions",
+        detail: "The hook shape survives across three generated versions with strong phrase similarity.",
+        lane: "phrase-match",
+        signalKind: "repeated-phrase",
+        strength: 95,
+        confidence: 90,
+      },
+      {
+        id: "evidence-main-hook-cluster",
+        label: "Cluster anchor",
+        detail: "This idea is the strongest anchor inside the main hook cluster.",
+        lane: "idea-cluster",
+        signalKind: "cluster-anchor",
+        strength: 93,
+        confidence: 92,
+      },
+    ],
+    risks: [],
+    notes: [
+      "Promote as a keeper candidate.",
+      "Later wiring can send this into a keeper bank or arrangement builder.",
+    ],
+  },
+  {
+    id: "survivor-candidate-verse-riff-b",
+    title: "Verse Riff Survivor B",
+    sourceVersionIds: ["suno-version-02", "suno-version-05"],
+    sourceClusterId: "idea-cluster-verse-riff",
+    phraseMatchIds: ["phrase-match-verse-b"],
+    riffColorIds: ["riff-color-blue-verse"],
+    sectionLabel: "Verse",
+    startBar: 5,
+    endBar: 13,
+    score: 82,
+    confidence: 76,
+    decision: "review",
+    readiness: "needs-review",
+    evidence: [
+      {
+        id: "evidence-verse-riff-color",
+        label: "Stable riff color",
+        detail: "The riff color remains similar, but phrase confidence is lower than the hook.",
+        lane: "riff-color",
+        signalKind: "stable-riff",
+        strength: 81,
+        confidence: 74,
+      },
+    ],
+    risks: [
+      {
+        id: "risk-verse-low-confidence",
+        label: "Needs ear check",
+        detail: "Confidence is good but not high enough for automatic keeper promotion.",
+        riskKind: "manual-review-required",
+        severity: 52,
+        canAutoResolve: false,
+      },
+    ],
+    notes: [
+      "Keep visible for review.",
+      "Do not reject until human listening confirms whether the riff has emotional value.",
+    ],
+  },
+  {
+    id: "survivor-candidate-bridge-lift-c",
+    title: "Bridge Lift Survivor C",
+    sourceVersionIds: ["suno-version-03", "suno-version-08", "suno-version-10"],
+    sourceClusterId: "idea-cluster-bridge-lift",
+    phraseMatchIds: ["phrase-match-bridge-lift"],
+    riffColorIds: ["riff-color-purple-lift"],
+    sectionLabel: "Bridge",
+    startBar: 33,
+    endBar: 41,
+    score: 88,
+    confidence: 84,
+    decision: "hold",
+    readiness: "needs-review",
+    evidence: [
+      {
+        id: "evidence-bridge-strong-section",
+        label: "Strong section lift",
+        detail: "The bridge lift appears to create useful energy before the final hook.",
+        lane: "survivor-score",
+        signalKind: "strong-section",
+        strength: 88,
+        confidence: 84,
+      },
+    ],
+    risks: [
+      {
+        id: "risk-bridge-duplicate",
+        label: "Possible duplicate role",
+        detail: "The bridge lift may compete with the main hook instead of supporting it.",
+        riskKind: "duplicate-survivor",
+        severity: 38,
+        canAutoResolve: false,
+      },
+    ],
+    notes: [
+      "Hold for arrangement testing.",
+      "Could become a pre-hook, bridge lift, or final chorus ramp.",
+    ],
+  },
+];
+
+export const multiTrackSurvivorPromotionKeeperBankSlotsSeed: MultiTrackSurvivorPromotionKeeperBankSlot[] = [
+  {
+    id: "keeper-bank-main-hooks",
+    label: "Main Hooks",
+    description: "Highest confidence hook survivors that can become the emotional center of the song.",
+    acceptedCandidateIds: ["survivor-candidate-main-hook-a"],
+    pendingCandidateIds: [],
+    readiness: "ready",
+  },
+  {
+    id: "keeper-bank-verse-riffs",
+    label: "Verse Riffs",
+    description: "Groove and riff ideas that may support the vocal or main melodic theme.",
+    acceptedCandidateIds: [],
+    pendingCandidateIds: ["survivor-candidate-verse-riff-b"],
+    readiness: "needs-review",
+  },
+  {
+    id: "keeper-bank-bridge-lifts",
+    label: "Bridge Lifts",
+    description: "Energy lift ideas for bridges, pre-hooks, and final chorus setups.",
+    acceptedCandidateIds: [],
+    pendingCandidateIds: ["survivor-candidate-bridge-lift-c"],
+    readiness: "needs-review",
+  },
+];
+
+export const multiTrackSurvivorPromotionWorkspaceSeed: MultiTrackSurvivorPromotionWorkspaceState = {
+  engineId: "multi-track-survivor-promotion-engine",
+  engineTitle: "Multi-Track Survivor Promotion Engine",
+  enginePurpose:
+    "Review aligned versions, phrase matches, riff colors, and idea clusters to identify musical survivors that should be promoted toward keeper banks.",
+  readiness: "ready",
+  candidates: multiTrackSurvivorPromotionCandidatesSeed,
+  keeperBankSlots: multiTrackSurvivorPromotionKeeperBankSlotsSeed,
+  nextActions: [
+    "Keep this engine preserved only.",
+    "Do not wire into the page yet.",
+    "Later connect real alignment, phrase matching, riff color, and idea cluster outputs.",
+    "Later promote approved survivors into keeper banks.",
+  ],
+};
