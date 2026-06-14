@@ -1,10 +1,8 @@
-
-import Link from "next/link";
-
 import type { LyricEntry } from "./lyricsTypes";
 
 type LyricsLibraryEntryCardProps = {
   entry: LyricEntry;
+  onViewEntry: (entry: LyricEntry) => void;
   onEditEntry: (entry: LyricEntry) => void;
   onDownloadEntry: (entry: LyricEntry) => void;
   onDuplicateEntry: (entry: LyricEntry) => void;
@@ -13,6 +11,7 @@ type LyricsLibraryEntryCardProps = {
 
 export default function LyricsLibraryEntryCard({
   entry,
+  onViewEntry,
   onEditEntry,
   onDownloadEntry,
   onDuplicateEntry,
@@ -23,24 +22,28 @@ export default function LyricsLibraryEntryCard({
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-white">{entry.title}</h3>
+
           <p className="mt-1 text-sm text-white/65">
             {entry.artist || "Unknown artist"}
           </p>
+
           <p className="mt-2 text-xs text-white/55">
             Tags: {entry.tags || "None"}
           </p>
+
           <p className="mt-2 text-xs text-white/45">
             Created: {entry.createdAt} · Updated: {entry.updatedAt}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Link
-            href={`/library/lyrics/${encodeURIComponent(entry.id)}`}
+          <button
+            type="button"
+            onClick={() => onViewEntry(entry)}
             className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
           >
             View
-          </Link>
+          </button>
 
           <button
             type="button"

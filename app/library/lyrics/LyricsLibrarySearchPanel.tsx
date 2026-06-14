@@ -7,6 +7,7 @@ type LyricsLibrarySearchPanelProps = {
   folderStatus: string;
   onSearchChange: (value: string) => void;
   onSaveShownToFolder: () => void;
+  onViewEntry: (entry: LyricEntry) => void;
   onEditEntry: (entry: LyricEntry) => void;
   onDownloadEntry: (entry: LyricEntry) => void;
   onDuplicateEntry: (entry: LyricEntry) => void;
@@ -19,6 +20,7 @@ export default function LyricsLibrarySearchPanel({
   folderStatus,
   onSearchChange,
   onSaveShownToFolder,
+  onViewEntry,
   onEditEntry,
   onDownloadEntry,
   onDuplicateEntry,
@@ -29,6 +31,7 @@ export default function LyricsLibrarySearchPanel({
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-white">Search Lyrics</h2>
+
           <p className="mt-1 text-sm text-white/60">
             Search by title, artist, tag, or words inside the lyrics.
           </p>
@@ -65,6 +68,7 @@ export default function LyricsLibrarySearchPanel({
           <LyricsLibraryEntryCard
             key={entry.id}
             entry={entry}
+            onViewEntry={onViewEntry}
             onEditEntry={onEditEntry}
             onDownloadEntry={onDownloadEntry}
             onDuplicateEntry={onDuplicateEntry}
