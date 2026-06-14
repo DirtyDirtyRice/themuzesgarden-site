@@ -1,4 +1,9 @@
-import type { RefObject } from "react";
+import type { InputHTMLAttributes, RefObject } from "react";
+
+type FolderInputProps = InputHTMLAttributes<HTMLInputElement> & {
+  webkitdirectory?: string;
+  directory?: string;
+};
 
 type LyricsLibraryEditorProps = {
   editingEntryId: string | null;
@@ -7,6 +12,7 @@ type LyricsLibraryEditorProps = {
   tags: string;
   body: string;
   fileInputRef: RefObject<HTMLInputElement | null>;
+  folderInputRef: RefObject<HTMLInputElement | null>;
   onTitleChange: (value: string) => void;
   onArtistChange: (value: string) => void;
   onTagsChange: (value: string) => void;
@@ -15,6 +21,12 @@ type LyricsLibraryEditorProps = {
   onClearForm: () => void;
   onResetStarter: () => void;
   onImportFiles: (files: FileList | null) => void;
+  onImportFolder: (files: FileList | null) => void;
+};
+
+const folderInputProps: FolderInputProps = {
+  webkitdirectory: "",
+  directory: "",
 };
 
 export default function LyricsLibraryEditor({
@@ -24,6 +36,7 @@ export default function LyricsLibraryEditor({
   tags,
   body,
   fileInputRef,
+  folderInputRef,
   onTitleChange,
   onArtistChange,
   onTagsChange,
@@ -32,6 +45,7 @@ export default function LyricsLibraryEditor({
   onClearForm,
   onResetStarter,
   onImportFiles,
+  onImportFolder,
 }: LyricsLibraryEditorProps) {
   return (
     <div className="rounded-2xl border border-white/15 bg-black p-5">
@@ -43,7 +57,7 @@ export default function LyricsLibraryEditor({
           <p className="mt-1 text-sm text-white/60">
             {editingEntryId
               ? "Update the selected lyric entry."
-              : "Paste lyrics or import TXT files."}
+              : "Paste lyrics, import TXT files, or import a TXT folder."}
           </p>
         </div>
 
@@ -118,7 +132,15 @@ export default function LyricsLibraryEditor({
           onClick={() => fileInputRef.current?.click()}
           className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
         >
-          Import TXT
+          Import TXT Files
+        </button>
+
+        <button
+          type="button"
+          onClick={() => folderInputRef.current?.click()}
+          className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+        >
+          Import TXT Folder
         </button>
 
         <button
@@ -139,9 +161,20 @@ export default function LyricsLibraryEditor({
         onChange={(event) => onImportFiles(event.target.files)}
       />
 
+      <input
+        ref={folderInputRef}
+        type="file"
+        accept=".txt,text/plain"
+        multiple
+        className="hidden"
+        onChange={(event) => onImportFolder(event.target.files)}
+        {...folderInputProps}
+      />
+
       <p className="mt-3 text-xs leading-5 text-white/55">
-        Browser save is local to this browser. Database save can come later
-        after the page stays green.
+        Use Import TXT Folder to bring in a folder of TXT lyric files. Each TXT
+        file becomes its own searchable lyric entry. Choose Folder + Save Shown
+        TXT is export only.
       </p>
     </div>
   );
