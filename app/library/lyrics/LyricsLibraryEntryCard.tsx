@@ -1,3 +1,6 @@
+
+import Link from "next/link";
+
 import type { LyricEntry } from "./lyricsTypes";
 
 type LyricsLibraryEntryCardProps = {
@@ -32,6 +35,13 @@ export default function LyricsLibraryEntryCard({
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/library/lyrics/${encodeURIComponent(entry.id)}`}
+            className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+          >
+            View
+          </Link>
+
           <button
             type="button"
             onClick={() => onEditEntry(entry)}
@@ -66,7 +76,7 @@ export default function LyricsLibraryEntryCard({
         </div>
       </div>
 
-      <pre className="mt-4 max-h-[280px] overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-black p-3 text-sm leading-6 text-white/75">
+      <pre className="mt-4 max-h-[180px] overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-black p-3 text-sm leading-6 text-white/75">
         {entry.body}
       </pre>
     </article>
