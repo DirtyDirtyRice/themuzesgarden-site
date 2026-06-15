@@ -6,6 +6,7 @@ import LyricsLibraryEditor from "./LyricsLibraryEditor";
 import LyricsLibraryHero from "./LyricsLibraryHero";
 import LyricsLibraryImportStatusPanel from "./LyricsLibraryImportStatusPanel";
 import LyricsLibrarySearchPanel from "./LyricsLibrarySearchPanel";
+import LyricsLibraryStatsPanel from "./LyricsLibraryStatsPanel";
 import LyricsLibraryViewerClient from "./LyricsLibraryViewerClient";
 import {
   deleteLyricEntry,
@@ -20,6 +21,7 @@ import {
   saveShownLyricsToFolder,
 } from "./lyricsImportController";
 import { EMPTY_IMPORT_REPORT } from "./lyricsImportTypes";
+import { buildLyricsLibraryStats } from "./lyricsLibraryStatsHelpers";
 import { STARTER_LYRICS } from "./lyricsSeed";
 import { getStartingLyrics, saveLyricsToBrowser } from "./lyricsStorage";
 import type { LyricEntry } from "./lyricsTypes";
@@ -100,6 +102,11 @@ export default function LyricsLibraryClient() {
       return haystack.includes(search);
     });
   }, [entries, searchValue]);
+
+  const lyricsStats = useMemo(
+    () => buildLyricsLibraryStats(entries, filteredEntries),
+    [entries, filteredEntries]
+  );
 
   const selectedViewerEntry = useMemo(
     () => getSelectedLyricViewerEntry(entries, selectedViewerEntryId),
@@ -231,6 +238,8 @@ export default function LyricsLibraryClient() {
     <main className="min-h-screen bg-black px-4 py-8 text-white md:px-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <LyricsLibraryHero entryCount={entries.length} saveStatus={saveStatus} />
+
+        <LyricsLibraryStatsPanel stats={lyricsStats} />
 
         <LyricsLibraryImportStatusPanel importReport={importReport} />
 
