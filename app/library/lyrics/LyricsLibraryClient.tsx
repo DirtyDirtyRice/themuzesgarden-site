@@ -6,13 +6,28 @@ import LyricsLibraryEditor from "./LyricsLibraryEditor";
 import LyricsLibraryHero from "./LyricsLibraryHero";
 import LyricsLibraryImportStatusPanel from "./LyricsLibraryImportStatusPanel";
 import LyricsLibrarySearchPanel from "./LyricsLibrarySearchPanel";
-import { downloadLyricTextFile, saveLyricsToFolder } from "./lyricsFileActions";
-import { importLyricFilesFromFileList } from "./lyricsImportHelpers";
+import LyricsLibraryViewerClient from "./LyricsLibraryViewerClient";
+import { downloadLyricTextFile } from "./lyricsFileActions";
+import {
+  deleteLyricEntry,
+  duplicateLyricEntry,
+  editLyricEntry,
+  resetLyricsForm,
+  saveLyricEntry,
+} from "./lyricsCrudHelpers";
+import {
+  importLyricsFromInput,
+  saveShownLyricsToFolder,
+} from "./lyricsImportController";
 import { EMPTY_IMPORT_REPORT } from "./lyricsImportTypes";
 import { STARTER_LYRICS } from "./lyricsSeed";
 import { getStartingLyrics, saveLyricsToBrowser } from "./lyricsStorage";
 import type { LyricEntry } from "./lyricsTypes";
-import { findLyricEntryById } from "./lyricsViewerHelpers";
+import {
+  closeLyricViewer,
+  getSelectedLyricViewerEntry,
+  viewLyricEntry,
+} from "./lyricsViewerController";
 
 export default function LyricsLibraryClient() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -87,110 +102,85 @@ export default function LyricsLibraryClient() {
   }, [entries, searchValue]);
 
   const selectedViewerEntry = useMemo(
-    () => findLyricEntryById(entries, selectedViewerEntryId),
+    () => getSelectedLyricViewerEntry(entries, selectedViewerEntryId),
     [entries, selectedViewerEntryId]
   );
 
   function clearForm() {
-    setTitle("");
-    setArtist("");
-    setTags("");
-    setBody("");
-    setEditingEntryId(null);
+    resetLyricsForm({
+      setTitle,
+      setArtist,
+      setTags,
+      setBody,
+      setEditingEntryId,
+    });
   }
 
   function handleViewEntry(entry: LyricEntry) {
-    setSelectedViewerEntryId(entry.id);
-    setSaveStatus(`Viewing ${entry.title}`);
+    viewLyricEntry({
+      entry,
+      setSelectedViewerEntryId,
+      setSaveStatus,
+    });
+  }
+
+  function handleCloseViewer() {
+    closeLyricViewer({
+      setSelectedViewerEntryId,
+      setSaveStatus,
+    });
   }
 
   function handleSaveEntry() {
-    const cleanTitle = title.trim();
-    const cleanBody = body.trim();
-
-    if (!cleanTitle || !cleanBody) {
-      setSaveStatus("Title and lyrics are required");
-      return;
-    }
-
-    const now = new Date().toLocaleString();
-
-    if (editingEntryId) {
-      setEntries((current) =>
-        current.map((entry) =>
-          entry.id === editingEntryId
-            ? {
-                ...entry,
-                title: cleanTitle,
-                artist: artist.trim() || "Unknown artist",
-                tags: tags.trim(),
-                body: cleanBody,
-                updatedAt: now,
-              }
-            : entry
-        )
-      );
-
-      setSelectedViewerEntryId(editingEntryId);
-      setSaveStatus("Lyric entry updated and saved");
-      clearForm();
-      return;
-    }
-
-    const newEntry: LyricEntry = {
-      id: `lyric-${Date.now()}`,
-      title: cleanTitle,
-      artist: artist.trim() || "Unknown artist",
-      tags: tags.trim(),
-      body: cleanBody,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    setEntries((current) => [newEntry, ...current]);
-    setSelectedViewerEntryId(newEntry.id);
-    setSaveStatus("Lyric entry added and saved");
-    clearForm();
+    saveLyricEntry({
+      title,
+      artist,
+      tags,
+      body,
+      editingEntryId,
+      setEntries,
+      setSelectedViewerEntryId,
+      setSaveStatus,
+      setTitle,
+      setArtist,
+      setTags,
+      setBody,
+      setEditingEntryId,
+    });
   }
 
   function handleEditEntry(entry: LyricEntry) {
-    setEditingEntryId(entry.id);
-    setSelectedViewerEntryId(entry.id);
-    setTitle(entry.title);
-    setArtist(entry.artist);
-    setTags(entry.tags);
-    setBody(entry.body);
-    setSaveStatus(`Editing ${entry.title}`);
+    editLyricEntry({
+      entry,
+      setEditingEntryId,
+      setSelectedViewerEntryId,
+      setTitle,
+      setArtist,
+      setTags,
+      setBody,
+      setSaveStatus,
+    });
   }
 
   function handleDuplicateEntry(entry: LyricEntry) {
-    const now = new Date().toLocaleString();
-
-    const duplicatedEntry: LyricEntry = {
-      ...entry,
-      id: `lyric-${Date.now()}`,
-      title: `${entry.title} Copy`,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    setEntries((current) => [duplicatedEntry, ...current]);
-    setSelectedViewerEntryId(duplicatedEntry.id);
-    setSaveStatus("Lyric entry duplicated and saved");
+    duplicateLyricEntry({
+      entry,
+      setEntries,
+      setSelectedViewerEntryId,
+      setSaveStatus,
+    });
   }
 
   function handleDeleteEntry(entryId: string) {
-    setEntries((current) => current.filter((entry) => entry.id !== entryId));
-
-    if (editingEntryId === entryId) {
-      clearForm();
-    }
-
-    if (selectedViewerEntryId === entryId) {
-      setSelectedViewerEntryId(null);
-    }
-
-    setSaveStatus("Lyric entry deleted and saved");
+    deleteLyricEntry({
+      entryId,
+      editingEntryId,
+      selectedViewerEntryId,
+      setEntries,
+      setSelectedViewerEntryId,
+      setSaveStatus,
+      resetForm: clearForm,
+    });
   }
 
   function handleResetStarter() {
@@ -202,61 +192,39 @@ export default function LyricsLibraryClient() {
     setSaveStatus("Lyrics reset to starter entry");
   }
 
-  async function handleSaveShownToFolder() {
-    try {
-      setFolderStatus("Opening folder picker...");
-      await saveLyricsToFolder(filteredEntries);
-      setFolderStatus(`Saved ${filteredEntries.length} lyric text file(s).`);
-    } catch {
-      setFolderStatus("Folder save was canceled or blocked.");
-    }
-  }
-
-  async function importLyricFiles(files: FileList | null, sourceLabel: string) {
-    if (!files || files.length === 0) {
-      setImportReport({
-        ...EMPTY_IMPORT_REPORT,
-        status: `${sourceLabel} canceled or found 0 files`,
-      });
-      return;
-    }
-
-    try {
-      const result = await importLyricFilesFromFileList({
-        files,
-        onProgress: setImportReport,
-      });
-
-      setEntries((current) => [...result.entries, ...current]);
-      setSelectedViewerEntryId(result.entries[0]?.id || null);
-      setSearchValue("");
-      setSaveStatus(
-        `Imported ${result.entries.length} readable lyric file(s). Skipped ${result.skippedFiles} file(s).`
-      );
-      setImportReport(result.report);
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-
-      if (folderInputRef.current) {
-        folderInputRef.current.value = "";
-      }
-    } catch {
-      setSaveStatus("Import failed");
-      setImportReport({
-        ...EMPTY_IMPORT_REPORT,
-        status: "FAILED",
-      });
-    }
+  function handleSaveShownToFolder() {
+    void saveShownLyricsToFolder({
+      filteredEntries,
+      setFolderStatus,
+    });
   }
 
   function handleImportFiles(files: FileList | null) {
-    void importLyricFiles(files, "File import");
+    void importLyricsFromInput({
+      files,
+      sourceLabel: "File import",
+      fileInputRef,
+      folderInputRef,
+      setEntries,
+      setSelectedViewerEntryId,
+      setSearchValue,
+      setSaveStatus,
+      setImportReport,
+    });
   }
 
   function handleImportFolder(files: FileList | null) {
-    void importLyricFiles(files, "Folder import");
+    void importLyricsFromInput({
+      files,
+      sourceLabel: "Folder import",
+      fileInputRef,
+      folderInputRef,
+      setEntries,
+      setSelectedViewerEntryId,
+      setSearchValue,
+      setSaveStatus,
+      setImportReport,
+    });
   }
 
   return (
@@ -266,59 +234,12 @@ export default function LyricsLibraryClient() {
 
         <LyricsLibraryImportStatusPanel importReport={importReport} />
 
-        {selectedViewerEntry ? (
-          <section className="rounded-2xl border border-white/15 bg-black p-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-white/55">
-                  Viewing Lyrics
-                </p>
-
-                <h2 className="mt-2 text-2xl font-bold text-white">
-                  {selectedViewerEntry.title}
-                </h2>
-
-                <p className="mt-1 text-sm text-white/70">
-                  {selectedViewerEntry.artist || "Unknown artist"}
-                </p>
-
-                <p className="mt-2 text-xs text-white/55">
-                  Tags: {selectedViewerEntry.tags || "None"}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleEditEntry(selectedViewerEntry)}
-                  className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-                >
-                  Edit
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => downloadLyricTextFile(selectedViewerEntry)}
-                  className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-                >
-                  Download TXT
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedViewerEntryId(null)}
-                  className="rounded-lg border border-white/35 bg-black px-3 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-                >
-                  Close Viewer
-                </button>
-              </div>
-            </div>
-
-            <pre className="mt-5 min-h-[320px] whitespace-pre-wrap rounded-xl border border-white/10 bg-black p-5 text-base leading-7 text-white">
-              {selectedViewerEntry.body}
-            </pre>
-          </section>
-        ) : null}
+        <LyricsLibraryViewerClient
+          entry={selectedViewerEntry}
+          onEditEntry={handleEditEntry}
+          onDownloadEntry={downloadLyricTextFile}
+          onCloseViewer={handleCloseViewer}
+        />
 
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <LyricsLibraryEditor
