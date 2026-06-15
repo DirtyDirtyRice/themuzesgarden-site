@@ -7,7 +7,6 @@ import LyricsLibraryHero from "./LyricsLibraryHero";
 import LyricsLibraryImportStatusPanel from "./LyricsLibraryImportStatusPanel";
 import LyricsLibrarySearchPanel from "./LyricsLibrarySearchPanel";
 import LyricsLibraryViewerClient from "./LyricsLibraryViewerClient";
-import { downloadLyricTextFile } from "./lyricsFileActions";
 import {
   deleteLyricEntry,
   duplicateLyricEntry,
@@ -15,6 +14,7 @@ import {
   resetLyricsForm,
   saveLyricEntry,
 } from "./lyricsCrudHelpers";
+import { downloadLyricTextFile } from "./lyricsFileActions";
 import {
   importLyricsFromInput,
   saveShownLyricsToFolder,
