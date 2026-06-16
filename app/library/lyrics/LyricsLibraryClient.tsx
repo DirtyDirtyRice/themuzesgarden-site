@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import LyricsLibraryEditor from "./LyricsLibraryEditor";
 import LyricsLibraryHero from "./LyricsLibraryHero";
 import LyricsLibraryImportStatusPanel from "./LyricsLibraryImportStatusPanel";
+import LyricsLibraryInsightsPanel from "./LyricsLibraryInsightsPanel";
 import LyricsLibrarySearchPanel from "./LyricsLibrarySearchPanel";
 import LyricsLibraryStatsPanel from "./LyricsLibraryStatsPanel";
 import LyricsLibraryViewerClient from "./LyricsLibraryViewerClient";
@@ -21,6 +22,7 @@ import {
   saveShownLyricsToFolder,
 } from "./lyricsImportController";
 import { EMPTY_IMPORT_REPORT } from "./lyricsImportTypes";
+import { buildLyricsLibraryInsights } from "./lyricsLibraryInsightsHelpers";
 import { buildLyricsLibraryStats } from "./lyricsLibraryStatsHelpers";
 import { STARTER_LYRICS } from "./lyricsSeed";
 import { getStartingLyrics, saveLyricsToBrowser } from "./lyricsStorage";
@@ -106,6 +108,11 @@ export default function LyricsLibraryClient() {
   const lyricsStats = useMemo(
     () => buildLyricsLibraryStats(entries, filteredEntries),
     [entries, filteredEntries]
+  );
+
+  const lyricsInsights = useMemo(
+    () => buildLyricsLibraryInsights(entries, lyricsStats),
+    [entries, lyricsStats]
   );
 
   const selectedViewerEntry = useMemo(
@@ -240,6 +247,8 @@ export default function LyricsLibraryClient() {
         <LyricsLibraryHero entryCount={entries.length} saveStatus={saveStatus} />
 
         <LyricsLibraryStatsPanel stats={lyricsStats} />
+
+        <LyricsLibraryInsightsPanel insights={lyricsInsights} />
 
         <LyricsLibraryImportStatusPanel importReport={importReport} />
 
