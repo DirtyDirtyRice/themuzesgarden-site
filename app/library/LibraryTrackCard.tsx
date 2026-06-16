@@ -122,7 +122,12 @@ export function LibraryTrackCard({
 
   function handleOpenLyricsPage() {
     const safeId = encodeURIComponent(trackId);
-    router.push(`/library/lyrics?trackId=${safeId}`);
+    const safeTitle = encodeURIComponent(trackTitle);
+    const safeArtist = encodeURIComponent(trackArtist);
+
+    router.push(
+      `/library/lyrics?trackId=${safeId}&trackTitle=${safeTitle}&trackArtist=${safeArtist}`
+    );
   }
 
   return (
