@@ -120,6 +120,11 @@ export function LibraryTrackCard({
     router.push(`/metadata/${safeId}?attachTrackId=${safeId}`);
   }
 
+  function handleOpenLyricsPage() {
+    const safeId = encodeURIComponent(trackId);
+    router.push(`/library/lyrics?trackId=${safeId}`);
+  }
+
   return (
     <div
       ref={cardRef}
@@ -157,6 +162,14 @@ export function LibraryTrackCard({
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={handleOpenLyricsPage}
+            className={actionButtonClass}
+          >
+            Lyrics
+          </button>
+
           <button
             type="button"
             aria-expanded={showMetadata}
