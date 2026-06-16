@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import LyricsLibraryClient from "./LyricsLibraryClient";
 
 export default function LyricsLibraryPage() {
-  return <LyricsLibraryClient />;
+  return (
+    <Suspense fallback={null}>
+      <LyricsLibraryClient />
+    </Suspense>
+  );
 }

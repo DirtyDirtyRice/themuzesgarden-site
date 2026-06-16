@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import LyricsLibraryEditor from "./LyricsLibraryEditor";
@@ -34,6 +35,9 @@ import {
 } from "./lyricsViewerController";
 
 export default function LyricsLibraryClient() {
+  const searchParams = useSearchParams();
+  const openedFromTrackId = searchParams.get("trackId");
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -245,6 +249,22 @@ export default function LyricsLibraryClient() {
     <main className="min-h-screen bg-black px-4 py-8 text-white md:px-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <LyricsLibraryHero entryCount={entries.length} saveStatus={saveStatus} />
+
+        {openedFromTrackId ? (
+          <section className="rounded-2xl border border-white/15 bg-black p-5">
+            <p className="text-xs uppercase tracking-[0.25em] text-white/55">
+              Opened From Library Track
+            </p>
+
+            <h2 className="mt-2 text-xl font-semibold text-white">
+              Lyrics workspace opened from a track card
+            </h2>
+
+            <p className="mt-2 text-sm text-white/65">
+              Track ID: {openedFromTrackId}
+            </p>
+          </section>
+        ) : null}
 
         <LyricsLibraryStatsPanel stats={lyricsStats} />
 
