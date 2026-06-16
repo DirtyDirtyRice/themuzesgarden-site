@@ -6,6 +6,10 @@ import { getMetadataByTarget } from "@/lib/metadata/metadataApi";
 import NestedTagPicker from "./NestedTagPicker";
 import type { TrackLike } from "./libraryTypes";
 import { displayTagLabel } from "./libraryUtils";
+import {
+  getCleanLibraryTrackTitle,
+  hasDifferentFullTitle,
+} from "./titleMatchingHelpers";
 
 function getTagIds(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -62,7 +66,9 @@ export function LibraryTrackCard({
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   const trackId = String(track.id ?? "");
-  const trackTitle = String(track.title ?? "Untitled track");
+  const fullTrackTitle = String(track.title ?? "Untitled track");
+  const trackTitle = getCleanLibraryTrackTitle(fullTrackTitle);
+  const showFullTrackTitle = hasDifferentFullTitle(fullTrackTitle, trackTitle);
   const trackArtist = String(track.artist ?? "");
   const trackSourceProjectTitle = track.sourceProjectTitle
     ? String(track.sourceProjectTitle)
@@ -76,15 +82,19 @@ export function LibraryTrackCard({
   const [showMetadata, setShowMetadata] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
+  const [showFullTitle, setShowFullTitle] = useState(false);
 
   useEffect(() => {
-    if ((showMetadata || showTags || showDescription) && cardRef.current) {
+    if (
+      (showMetadata || showTags || showDescription || showFullTitle) &&
+      cardRef.current
+    ) {
       cardRef.current.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
     }
-  }, [showMetadata, showTags, showDescription]);
+  }, [showMetadata, showTags, showDescription, showFullTitle]);
 
   const metadataItems = useMemo<MetadataItemPreview[]>(() => {
     const raw = getMetadataByTarget("track", trackId);
@@ -153,6 +163,16 @@ export function LibraryTrackCard({
           <div className="min-w-0">
             <div className="font-bold text-white">{trackTitle}</div>
 
+            {showFullTrackTitle ? (
+              <button
+                type="button"
+                onClick={() => setShowFullTitle((value) => !value)}
+                className="mt-1 text-xs font-semibold text-white/70 underline decoration-white/30 underline-offset-4 transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99]"
+              >
+                Full title
+              </button>
+            ) : null}
+
             <div className="text-sm text-white/70">{trackArtist}</div>
 
             <div className="mt-1 text-xs text-white/70">
@@ -203,6 +223,16 @@ export function LibraryTrackCard({
           </button>
         </div>
       </div>
+
+      {showFullTitle && (
+        <div className={panelClass}>
+          <div className="text-sm font-bold text-white">Full title</div>
+
+          <div className="mt-2 text-sm leading-6 text-white/70">
+            {fullTrackTitle}
+          </div>
+        </div>
+      )}
 
       {showMetadata && (
         <div className={panelClass}>
