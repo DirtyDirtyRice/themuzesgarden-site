@@ -1,21 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { downloadLyricTextFile } from "../lyricsFileActions";
-import { getStartingLyrics } from "../lyricsStorage";
-import type { LyricEntry } from "../lyricsTypes";
-import { findLyricEntryById } from "../lyricsViewerHelpers";
+import { downloadLyricTextFile } from "../lyrics/lyricsFileActions";
+import { getStartingLyrics } from "../lyrics/lyricsStorage";
+import type { LyricEntry } from "../lyrics/lyricsTypes";
+import { findLyricEntryById } from "../lyrics/lyricsViewerHelpers";
 
-type LyricDirectPageClientProps = {
-  lyricId: string;
-};
-
-export default function LyricDirectPageClient({
-  lyricId,
-}: LyricDirectPageClientProps) {
+export default function LyricViewPageClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const lyricId = searchParams.get("lyricId") || "";
 
   const [entries, setEntries] = useState<LyricEntry[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -50,13 +46,11 @@ export default function LyricDirectPageClient({
 
   function handleDownloadEntry() {
     if (!entry) return;
-
     downloadLyricTextFile(entry);
   }
 
   function handleEditInLibrary() {
     if (!entry) return;
-
     router.push(`/library/lyrics?lyricId=${encodeURIComponent(entry.id)}`);
   }
 
@@ -83,7 +77,7 @@ export default function LyricDirectPageClient({
               <button
                 type="button"
                 onClick={handleBackToLyricsLibrary}
-                className="rounded-lg border border-white/35 bg-black px-3 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+                className="rounded-lg border border-white/35 bg-black px-3 py-2 text-sm font-semibold text-white/80"
               >
                 Back To Lyrics Library
               </button>
@@ -93,7 +87,7 @@ export default function LyricDirectPageClient({
                   <button
                     type="button"
                     onClick={handleEditInLibrary}
-                    className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+                    className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white"
                   >
                     Edit In Library
                   </button>
@@ -101,7 +95,7 @@ export default function LyricDirectPageClient({
                   <button
                     type="button"
                     onClick={handleDownloadEntry}
-                    className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+                    className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white"
                   >
                     Download TXT
                   </button>
@@ -129,12 +123,6 @@ export default function LyricDirectPageClient({
               {hasLoaded
                 ? "No lyric was found for this direct link."
                 : "Loading lyric from browser storage..."}
-            </p>
-
-            <p className="mt-2 text-sm text-white/65">
-              {hasLoaded
-                ? "Go back to the Lyrics Library and choose another lyric."
-                : "This should only take a moment."}
             </p>
           </section>
         )}
