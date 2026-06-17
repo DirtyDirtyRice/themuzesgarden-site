@@ -10,6 +10,8 @@ import {
   getCleanLibraryTrackTitle,
   hasDifferentFullTitle,
 } from "./titleMatchingHelpers";
+import { findExactLyricTitleMatch } from "./lyrics/lyricsTrackMatchHelpers";
+import { getStartingLyrics } from "./lyrics/lyricsStorage";
 
 function getTagIds(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -83,6 +85,7 @@ export function LibraryTrackCard({
   const [showTags, setShowTags] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const [showFullTitle, setShowFullTitle] = useState(false);
+  const [lyricsButtonStatus, setLyricsButtonStatus] = useState("");
 
   useEffect(() => {
     if (
@@ -130,13 +133,23 @@ export function LibraryTrackCard({
     router.push(`/metadata/${safeId}?attachTrackId=${safeId}`);
   }
 
-  function handleOpenLyricsPage() {
+  async function handleOpenLyricsPage() {
+    setLyricsButtonStatus("Checking lyrics...");
+
+    const entries = await getStartingLyrics();
+    const exactMatch = findExactLyricTitleMatch(entries, trackTitle);
+
+    if (exactMatch) {
+      router.push(`/library/lyrics/${encodeURIComponent(exactMatch.id)}`);
+      return;
+    }
+
     const safeId = encodeURIComponent(trackId);
     const safeTitle = encodeURIComponent(trackTitle);
     const safeArtist = encodeURIComponent(trackArtist);
 
     router.push(
-      `/library/lyrics?trackId=${safeId}&trackTitle=${safeTitle}&trackArtist=${safeArtist}`
+      `/library/lyrics/matches?trackId=${safeId}&trackTitle=${safeTitle}&trackArtist=${safeArtist}`
     );
   }
 
@@ -183,6 +196,12 @@ export function LibraryTrackCard({
                 ? ` • Project: ${trackSourceProjectTitle}`
                 : null}
             </div>
+
+            {lyricsButtonStatus ? (
+              <div className="mt-2 text-xs text-white/55">
+                {lyricsButtonStatus}
+              </div>
+            ) : null}
           </div>
         </div>
 
