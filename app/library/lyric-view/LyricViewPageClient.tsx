@@ -8,6 +8,97 @@ import { getStartingLyrics } from "../lyrics/lyricsStorage";
 import type { LyricEntry } from "../lyrics/lyricsTypes";
 import { findLyricEntryById } from "../lyrics/lyricsViewerHelpers";
 
+function normalizeLyricSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function getImportedBodyTitle(body: string): string {
+  const lines = body.split("\n");
+
+  const titleLine = lines.find((line) =>
+    line.trim().toLowerCase().startsWith("title:")
+  );
+
+  if (!titleLine) return "";
+
+  return titleLine.replace(/^title:/i, "").trim();
+}
+
+function isStarterOrMetadataBody(body: string): boolean {
+  const normalizedBody = normalizeLyricSearchText(body);
+
+  if (!normalizedBody) return true;
+
+  return (
+    normalizedBody.includes("paste your real lyrics here") ||
+    normalizedBody.includes("this starter entry proves") ||
+    normalizedBody.includes("later this can connect to wav") ||
+    normalizedBody.includes("created starter") ||
+    normalizedBody.includes("updated starter")
+  );
+}
+
+function getLyricBodyScore(entry: LyricEntry): number {
+  const normalizedBody = normalizeLyricSearchText(entry.body);
+  const normalizedTitle = normalizeLyricSearchText(entry.title);
+  const normalizedTags = normalizeLyricSearchText(entry.tags);
+
+  let score = 0;
+
+  if (normalizedTitle) score += 20;
+  if (normalizedTags.includes("lyrics")) score += 10;
+  if (normalizedBody.length > 300) score += 20;
+  if (normalizedBody.length > 700) score += 20;
+  if (normalizedBody.includes("verse")) score += 15;
+  if (normalizedBody.includes("chorus")) score += 15;
+  if (normalizedBody.includes("bridge")) score += 10;
+  if (isStarterOrMetadataBody(entry.body)) score -= 100;
+
+  return score;
+}
+
+function findBestLyricMatch(
+  entries: LyricEntry[],
+  lyricId: string
+): LyricEntry | null {
+  const directEntry = findLyricEntryById(entries, lyricId);
+
+  if (!directEntry) {
+    return entries[0] || null;
+  }
+
+  const importedBodyTitle = getImportedBodyTitle(directEntry.body);
+  const directTitle = directEntry.title || importedBodyTitle;
+  const targetTitle = normalizeLyricSearchText(importedBodyTitle || directTitle);
+
+  if (!targetTitle) {
+    return directEntry;
+  }
+
+  const titleMatches = entries
+    .filter((entry) => normalizeLyricSearchText(entry.title) === targetTitle)
+    .sort((first, second) => getLyricBodyScore(second) - getLyricBodyScore(first));
+
+  const bestTitleMatch = titleMatches[0] || null;
+
+  if (!bestTitleMatch) {
+    return directEntry;
+  }
+
+  if (bestTitleMatch.id === directEntry.id) {
+    return directEntry;
+  }
+
+  if (getLyricBodyScore(bestTitleMatch) > getLyricBodyScore(directEntry)) {
+    return bestTitleMatch;
+  }
+
+  return directEntry;
+}
+
 export default function LyricViewPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,9 +126,18 @@ export default function LyricViewPageClient() {
     };
   }, []);
 
-  const entry = useMemo(
+  const directEntry = useMemo(
     () => findLyricEntryById(entries, lyricId),
     [entries, lyricId]
+  );
+
+  const entry = useMemo(
+    () => findBestLyricMatch(entries, lyricId),
+    [entries, lyricId]
+  );
+
+  const isShowingMatchedLyric = Boolean(
+    directEntry && entry && directEntry.id !== entry.id
   );
 
   function handleBackToLyricsLibrary() {
@@ -71,6 +171,12 @@ export default function LyricViewPageClient() {
               <p className="mt-2 text-sm text-white/70">
                 {entry?.artist || "Lyrics open here as their own page."}
               </p>
+
+              {isShowingMatchedLyric ? (
+                <p className="mt-2 text-xs text-white/55">
+                  Matched real lyric by title from imported lyric file.
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-wrap gap-2">

@@ -9,6 +9,10 @@ export function normalizeLyricMatchTitle(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function isStarterLyricMatchEntry(entry: LyricEntry): boolean {
+  return entry.id.startsWith("starter-");
+}
+
 export function getLyricTitleMatchScore(
   trackTitle: string,
   lyricTitle: string
@@ -38,11 +42,17 @@ export function findExactLyricTitleMatch(
 
   if (!normalizedTrackTitle) return null;
 
-  return (
-    entries.find(
-      (entry) => normalizeLyricMatchTitle(entry.title) === normalizedTrackTitle
-    ) || null
+  const exactMatches = entries.filter(
+    (entry) => normalizeLyricMatchTitle(entry.title) === normalizedTrackTitle
   );
+
+  if (exactMatches.length === 0) return null;
+
+  const realExactMatch = exactMatches.find(
+    (entry) => !isStarterLyricMatchEntry(entry)
+  );
+
+  return realExactMatch || exactMatches[0] || null;
 }
 
 export function findPossibleLyricTitleMatches(
@@ -56,6 +66,26 @@ export function findPossibleLyricTitleMatches(
       score: getLyricTitleMatchScore(trackTitle, entry.title),
     }))
     .filter((item) => item.score > 0)
-    .sort((first, second) => second.score - first.score)
+    .sort((first, second) => {
+      if (second.score !== first.score) {
+        return second.score - first.score;
+      }
+
+      if (
+        isStarterLyricMatchEntry(first.entry) &&
+        !isStarterLyricMatchEntry(second.entry)
+      ) {
+        return 1;
+      }
+
+      if (
+        !isStarterLyricMatchEntry(first.entry) &&
+        isStarterLyricMatchEntry(second.entry)
+      ) {
+        return -1;
+      }
+
+      return 0;
+    })
     .slice(0, limit);
 }
