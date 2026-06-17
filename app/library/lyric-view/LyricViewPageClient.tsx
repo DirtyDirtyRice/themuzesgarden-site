@@ -41,7 +41,7 @@ export default function LyricViewPageClient() {
   );
 
   function handleBackToLyricsLibrary() {
-    router.push("/library/lyrics");
+    router.push("/library");
   }
 
   function handleDownloadEntry() {
@@ -51,7 +51,7 @@ export default function LyricViewPageClient() {
 
   function handleEditInLibrary() {
     if (!entry) return;
-    router.push(`/library/lyrics?lyricId=${encodeURIComponent(entry.id)}`);
+    router.push("/library");
   }
 
   return (
@@ -79,7 +79,7 @@ export default function LyricViewPageClient() {
                 onClick={handleBackToLyricsLibrary}
                 className="rounded-lg border border-white/35 bg-black px-3 py-2 text-sm font-semibold text-white/80"
               >
-                Back To Lyrics Library
+                Back To Library
               </button>
 
               {entry ? (

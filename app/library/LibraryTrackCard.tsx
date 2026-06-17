@@ -140,7 +140,9 @@ export function LibraryTrackCard({
     const exactMatch = findExactLyricTitleMatch(entries, trackTitle);
 
     if (exactMatch) {
-      router.push(`/library/lyrics/${encodeURIComponent(exactMatch.id)}`);
+      router.push(
+        `/library/lyric-view?lyricId=${encodeURIComponent(exactMatch.id)}`
+      );
       return;
     }
 

@@ -53,11 +53,13 @@ export default function LyricsMatchSelectionClient() {
   useEffect(() => {
     if (!hasLoaded || !exactMatch) return;
 
-    router.replace(`/library/lyrics/${encodeURIComponent(exactMatch.id)}`);
+    router.replace(
+      `/library/lyric-view?lyricId=${encodeURIComponent(exactMatch.id)}`
+    );
   }, [exactMatch, hasLoaded, router]);
 
   function handleOpenLyric(entry: LyricEntry) {
-    router.push(`/library/lyrics/${encodeURIComponent(entry.id)}`);
+    router.push(`/library/lyric-view?lyricId=${encodeURIComponent(entry.id)}`);
   }
 
   function handleBackToLibrary() {
@@ -65,7 +67,7 @@ export default function LyricsMatchSelectionClient() {
   }
 
   function handleOpenLyricsLibrary() {
-    router.push("/library/lyrics");
+    router.push("/library");
   }
 
   return (
@@ -107,7 +109,7 @@ export default function LyricsMatchSelectionClient() {
                 onClick={handleOpenLyricsLibrary}
                 className="rounded-lg border border-white bg-black px-3 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
               >
-                Open Lyrics Library
+                Open Library
               </button>
             </div>
           </div>
@@ -132,7 +134,7 @@ export default function LyricsMatchSelectionClient() {
                 </p>
 
                 <p className="mt-2 text-sm text-white/65">
-                  Open the Lyrics Library to import, create, or rename a lyric.
+                  Open the Library to import, create, or rename a lyric.
                 </p>
               </div>
             ) : null}
