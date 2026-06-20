@@ -37,7 +37,7 @@ export function ProjectSearchPanel({
             Find Project
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/70">
-            {filteredProjects.length} shown of {projects.length} projects.
+            {filteredProjects.length} matching of {projects.length} projects.
           </p>
         </div>
 
@@ -56,13 +56,15 @@ export function ProjectSearchPanel({
           <span className="text-sm font-black text-white">
             Project Dropdown
           </span>
+
           <select
             value={selectedProjectId}
             onChange={(event) => onSelectedProjectChange(event.target.value)}
             className={`${selectClass} mt-2`}
           >
-            <option value="">Show matching projects</option>
-            {projects.map((project) => (
+            <option value="">Choose a project to open...</option>
+
+            {filteredProjects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.title}
               </option>
@@ -86,8 +88,7 @@ export function ProjectSearchPanel({
 
           {searchMode === "all" ? (
             <div className="rounded-2xl border border-white/15 bg-black px-4 py-3 text-sm text-white/70">
-              Showing all projects. Use the dropdown when the project list gets
-              large.
+              All projects are inside the dropdown above.
             </div>
           ) : (
             <input

@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
+import SharedUploadButtons from "../../../shared/uploads/SharedUploadButtons";
 import type { Project } from "./projectDetailsTypes";
 
 type ProjectDownloadFormat = "wav" | "mp3" | "flac" | "aiff" | "original";
@@ -74,14 +75,6 @@ export default function ProjectHeader({ project, onFilesSelected }: Props) {
     useState<ProjectDownloadFormat>("wav");
   const [downloadOpen, setDownloadOpen] = useState(false);
 
-  const uploadFileRef = useRef<HTMLInputElement | null>(null);
-  const uploadFolderRef = useRef<HTMLInputElement | null>(null);
-
-  function handleSelectedFiles(fileList: FileList | null) {
-    const files = Array.from(fileList ?? []);
-    onFilesSelected(files);
-  }
-
   return (
     <div className="space-y-4">
       <div className="text-2xl font-black text-white">
@@ -137,39 +130,7 @@ export default function ProjectHeader({ project, onFilesSelected }: Props) {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={buttonClass}
-          onClick={() => uploadFileRef.current?.click()}
-        >
-          Upload File
-        </button>
-
-        <button
-          type="button"
-          className={buttonClass}
-          onClick={() => uploadFolderRef.current?.click()}
-        >
-          Upload Folder
-        </button>
-      </div>
-
-      <input
-        ref={uploadFileRef}
-        type="file"
-        className="hidden"
-        onChange={(event) => handleSelectedFiles(event.target.files)}
-      />
-
-      <input
-        ref={uploadFolderRef}
-        type="file"
-        className="hidden"
-        multiple
-        {...({ webkitdirectory: "" } as any)}
-        onChange={(event) => handleSelectedFiles(event.target.files)}
-      />
+      <SharedUploadButtons onFilesSelected={onFilesSelected} />
     </div>
   );
 }

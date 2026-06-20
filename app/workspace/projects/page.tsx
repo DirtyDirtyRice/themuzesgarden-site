@@ -7,12 +7,9 @@ import { createSupabaseProject } from "../../../lib/createSupabaseProject";
 import {
   createDownloadStamp,
   downloadJsonFile,
-  slugifyDownloadFileName,
 } from "../../shared/downloads/downloadFileHelpers";
-import { downloadFolderManifest } from "../../shared/downloads/downloadFolderHelpers";
 import { ProjectCreatePanel } from "./ProjectCreatePanel";
 import { ProjectDetailsPanel } from "./ProjectDetailsPanel";
-import { ProjectListPanel } from "./ProjectListPanel";
 import { ProjectSearchPanel } from "./ProjectSearchPanel";
 import { buttonClass, eyebrowClass, panelClass } from "./projectPageStyles";
 import type {
@@ -61,11 +58,6 @@ export default function WorkspaceProjectsPage() {
     [projects, selectedProjectId],
   );
 
-  const visibleProjects = useMemo(
-    () => (selectedDropdownProject ? [selectedDropdownProject] : searchedProjects),
-    [searchedProjects, selectedDropdownProject],
-  );
-
   const musicProjectCount = useMemo(
     () => projects.filter((project) => project.kind === "music").length,
     [projects],
@@ -88,55 +80,8 @@ export default function WorkspaceProjectsPage() {
     goToProject(selectedProjectId);
   }
 
-  function toggleSelectedProject(id: string) {
-    setSelectedIds((currentIds) =>
-      currentIds.includes(id)
-        ? currentIds.filter((currentId) => currentId !== id)
-        : [...currentIds, id],
-    );
-  }
-
-  function selectAllVisibleProjects() {
-    setSelectedIds(visibleProjects.map((project) => project.id));
-  }
-
   function clearSelectedProjects() {
     setSelectedIds([]);
-  }
-
-  function downloadProject(project: Project) {
-    downloadJsonFile({
-      fileName: `${slugifyDownloadFileName(project.title)}-${project.id}.json`,
-      payload: createProjectDownloadPayload([project]),
-    });
-  }
-
-  function downloadProjectFolder(project: Project) {
-    downloadFolderManifest({
-      folderName: project.title,
-      files: [
-        {
-          path: "Project Info/project.json",
-          payload: project,
-        },
-        {
-          path: "Tracks/tracks.json",
-          payload: [],
-        },
-        {
-          path: "Lyrics/lyrics.json",
-          payload: [],
-        },
-        {
-          path: "Notes/notes.json",
-          payload: [],
-        },
-        {
-          path: "Metadata/metadata.json",
-          payload: [],
-        },
-      ],
-    });
   }
 
   function downloadSelectedProjects() {
@@ -168,6 +113,11 @@ export default function WorkspaceProjectsPage() {
     if (loading || !user) return;
     loadProjects();
   }, [loading, user?.id]);
+
+  useEffect(() => {
+    if (!selectedDropdownProject) return;
+    setSelectedIds([selectedDropdownProject.id]);
+  }, [selectedDropdownProject]);
 
   async function onCreate(formData: FormData) {
     const title = clampTitle(String(formData.get("title") ?? ""));
@@ -213,14 +163,46 @@ export default function WorkspaceProjectsPage() {
     <main className="min-h-screen bg-black px-5 py-6 text-white">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-5">
         <header className={panelClass}>
-          <p className={eyebrowClass}>Workspace</p>
-          <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
-            Your Projects
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-white/70">
-            {visibleProjects.length} shown of {projects.length} projects ·{" "}
-            {selectedProjects.length} selected
-          </p>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className={eyebrowClass}>Workspace</p>
+              <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
+                Your Projects
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-white/70">
+                {searchedProjects.length} matching of {projects.length} projects
+                · {selectedProjects.length} selected
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              <button
+                type="button"
+                className={buttonClass}
+                onClick={() => setShowProjectDetails((current) => !current)}
+              >
+                {showProjectDetails ? "Hide Project Details" : "Project Details"}
+              </button>
+
+              <button
+                type="button"
+                className={buttonClass}
+                onClick={clearSelectedProjects}
+                disabled={!hasSelectedProjects}
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                className={buttonClass}
+                onClick={downloadSelectedProjects}
+                disabled={!hasSelectedProjects}
+              >
+                Download Selected
+              </button>
+            </div>
+          </div>
         </header>
 
         <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
@@ -232,50 +214,19 @@ export default function WorkspaceProjectsPage() {
             searchMode={searchMode}
             searchValue={searchValue}
             selectedProjectId={selectedProjectId}
-            onSearchModeChange={setSearchMode}
-            onSearchValueChange={setSearchValue}
+            onSearchModeChange={(mode) => {
+              setSearchMode(mode);
+              setSelectedProjectId("");
+              setSelectedIds([]);
+            }}
+            onSearchValueChange={(value) => {
+              setSearchValue(value);
+              setSelectedProjectId("");
+              setSelectedIds([]);
+            }}
             onSelectedProjectChange={setSelectedProjectId}
             onOpenSelectedProject={openSelectedDropdownProject}
           />
-        </section>
-
-        <section className={panelClass}>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={() => setShowProjectDetails((current) => !current)}
-            >
-              {showProjectDetails ? "Hide Project Details" : "Project Details"}
-            </button>
-
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={selectAllVisibleProjects}
-              disabled={visibleProjects.length === 0}
-            >
-              Select Shown
-            </button>
-
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={clearSelectedProjects}
-              disabled={!hasSelectedProjects}
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={downloadSelectedProjects}
-              disabled={!hasSelectedProjects}
-            >
-              Download Selected
-            </button>
-          </div>
         </section>
 
         {showProjectDetails ? (
@@ -298,17 +249,11 @@ export default function WorkspaceProjectsPage() {
           </section>
         ) : null}
 
-        <ProjectListPanel
-          projects={projects}
-          filteredProjects={visibleProjects}
-          selectedIds={selectedIds}
-          selectedCount={selectedProjects.length}
-          loadingProjects={loadingProjects}
-          onOpenProject={goToProject}
-          onToggleSelected={toggleSelectedProject}
-          onDownloadProject={downloadProject}
-          onDownloadProjectFolder={downloadProjectFolder}
-        />
+        {loadingProjects ? (
+          <section className={panelClass}>
+            <p className="text-white">Loading projects...</p>
+          </section>
+        ) : null}
       </section>
     </main>
   );
