@@ -1,24 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopNav from "../components/TopNav";
 import { supabase } from "../../lib/supabaseClient";
-import type { Track } from "../../types/track";
-import { addUploadedTrack } from "../../lib/uploadedTracks";
-
-type UploadedItem = {
-  name: string;
-  path: string;
-  publicUrl: string;
-  addedToLibrary: boolean;
-  trackId?: string;
-};
-
-type UploadVisibility = "shared" | "private";
-
-const BUCKET = "audio";
-const FOLDER = "uploads";
+import {
+  projectUploadAccept,
+  summarizeUploadResult,
+  uploadProjectAudioFiles,
+  type UploadedProjectItem,
+  type UploadVisibility,
+} from "../shared/uploads/projectUploadHelpers";
 
 const buttonClass =
   "rounded-xl border border-white/25 bg-black px-4 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
@@ -30,51 +22,6 @@ const panelClass = "rounded-2xl border border-white/25 bg-black p-5";
 
 const helperTextClass = "text-sm leading-6 text-white/70";
 
-function makeSafeFileName(original: string) {
-  const cleaned = original
-    .trim()
-    .replace(/\s+/g, " ")
-    .replace(/[^\w.\- ]+/g, "");
-  const parts = cleaned.split(".");
-  const ext = parts.length > 1 ? parts.pop() : "mp3";
-  const base = parts.join(".") || "audio";
-
-  const c = globalThis.crypto as unknown as { randomUUID?: () => string };
-  const id =
-    c?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-
-  return `${base}-${id}.${ext}`;
-}
-
-function titleFromFileName(name: string) {
-  const base = name.replace(/\.[^/.]+$/, "");
-  return base.trim() || "Untitled";
-}
-
-function newTrackId() {
-  const c = globalThis.crypto as unknown as { randomUUID?: () => string };
-  return (
-    c?.randomUUID?.() ??
-    `upl_${Date.now()}_${Math.random().toString(16).slice(2)}`
-  );
-}
-
-function getFileDisplayName(file: File) {
-  const relativePath = String((file as any).webkitRelativePath ?? "").trim();
-  return relativePath || file.name;
-}
-
-function isSupportedAudioFile(file: File) {
-  const name = file.name.toLowerCase();
-  return (
-    name.endsWith(".wav") ||
-    name.endsWith(".mp3") ||
-    name.endsWith(".flac") ||
-    name.endsWith(".aiff") ||
-    name.endsWith(".aif")
-  );
-}
-
 export default function UploadPage() {
   const router = useRouter();
 
@@ -83,15 +30,12 @@ export default function UploadPage() {
 
   const [checkingSession, setCheckingSession] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [items, setItems] = useState<UploadedItem[]>([]);
+  const [items, setItems] = useState<UploadedProjectItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [skippedFiles, setSkippedFiles] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<UploadVisibility>("shared");
   const [userId, setUserId] = useState<string | null>(null);
-
-  const accept = useMemo(
-    () => ".wav,.mp3,.flac,.aiff,.aif,audio/wav,audio/mpeg,audio/flac,audio/aiff",
-    []
-  );
 
   useEffect(() => {
     let mounted = true;
@@ -125,67 +69,31 @@ export default function UploadPage() {
     };
   }, [router]);
 
-  function createUploadedTrack(it: UploadedItem): Track {
-    return {
-      id: it.trackId ?? newTrackId(),
-      title: titleFromFileName(it.name),
-      artist: "The Muzes Garden",
-      url: it.publicUrl,
-      tags: ["uploaded"],
-      visibility,
-      ownerId: userId ?? undefined,
-      createdAt: new Date().toISOString(),
-    };
-  }
-
   async function uploadFiles(fileList: FileList | null) {
     setError(null);
+    setUploadMessage(null);
+    setSkippedFiles([]);
 
-    const files = Array.from(fileList ?? []).filter(isSupportedAudioFile);
+    const files = Array.from(fileList ?? []);
     if (!files.length) return;
 
     setIsUploading(true);
 
     try {
-      const nextItems: UploadedItem[] = [];
+      const result = await uploadProjectAudioFiles({
+        files,
+        visibility,
+        userId,
+      });
 
-      for (const file of files) {
-        const displayName = getFileDisplayName(file);
-        const safeName = makeSafeFileName(displayName.replace(/[\\/]+/g, " "));
-        const path = `${FOLDER}/${safeName}`;
-
-        const { error: upErr } = await supabase.storage
-          .from(BUCKET)
-          .upload(path, file, {
-            cacheControl: "3600",
-            upsert: false,
-            contentType: file.type || "audio/mpeg",
-          });
-
-        if (upErr) throw upErr;
-
-        const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-        const publicUrl = data.publicUrl;
-        const trackId = newTrackId();
-
-        const uploadedItem: UploadedItem = {
-          name: displayName,
-          path,
-          publicUrl,
-          addedToLibrary: true,
-          trackId,
-        };
-
-        addUploadedTrack(createUploadedTrack(uploadedItem));
-        nextItems.push(uploadedItem);
-      }
-
-      setItems((prev) => [...nextItems, ...prev]);
+      setItems((prev) => [...result.uploadedItems, ...prev]);
+      setSkippedFiles(result.skippedFiles);
+      setUploadMessage(summarizeUploadResult(result));
 
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (folderInputRef.current) folderInputRef.current.value = "";
-    } catch (err: any) {
-      setError(err?.message ?? "Upload failed.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setIsUploading(false);
     }
@@ -242,7 +150,7 @@ export default function UploadPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept={accept}
+                  accept={projectUploadAccept}
                   multiple
                   onChange={(event) => uploadFiles(event.target.files)}
                   className="hidden"
@@ -251,7 +159,7 @@ export default function UploadPage() {
                 <input
                   ref={folderInputRef}
                   type="file"
-                  accept={accept}
+                  accept={projectUploadAccept}
                   multiple
                   onChange={(event) => uploadFiles(event.target.files)}
                   className="hidden"
@@ -305,6 +213,25 @@ export default function UploadPage() {
             </div>
           </div>
 
+          {uploadMessage ? (
+            <div className="mt-4 rounded-xl border border-white/25 bg-black p-3 text-sm text-white/70">
+              {uploadMessage}
+            </div>
+          ) : null}
+
+          {skippedFiles.length > 0 ? (
+            <div className="mt-3 rounded-xl border border-white/25 bg-black p-3 text-sm text-white/70">
+              <div className="font-bold text-white">Skipped unsupported files</div>
+              <div className="mt-2 space-y-1">
+                {skippedFiles.slice(0, 10).map((fileName) => (
+                  <div key={fileName} className="break-all text-xs text-white/70">
+                    {fileName}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {error ? (
             <div className="mt-4 rounded-xl border border-white/25 bg-black p-3 text-sm text-white/70">
               {error}
@@ -328,19 +255,19 @@ export default function UploadPage() {
             </div>
           ) : (
             <div className="mt-4 grid gap-3">
-              {items.map((it) => (
+              {items.map((item) => (
                 <div
-                  key={it.path}
+                  key={item.path}
                   className="rounded-2xl border border-white/25 bg-black p-4"
                 >
-                  <div className="text-sm font-bold text-white">{it.name}</div>
+                  <div className="text-sm font-bold text-white">{item.name}</div>
                   <div className="mt-1 break-all font-mono text-xs text-white/70">
-                    {it.path}
+                    {item.path}
                   </div>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <a
-                      href={it.publicUrl}
+                      href={item.publicUrl}
                       target="_blank"
                       rel="noreferrer"
                       className={secondaryButtonClass}
@@ -350,7 +277,7 @@ export default function UploadPage() {
 
                     <button
                       type="button"
-                      onClick={() => copy(it.publicUrl)}
+                      onClick={() => copy(item.publicUrl)}
                       className={secondaryButtonClass}
                     >
                       Copy URL
@@ -360,10 +287,10 @@ export default function UploadPage() {
                       Added to Library
                     </span>
 
-                    <audio className="mt-2 w-full" controls src={it.publicUrl} />
+                    <audio className="mt-2 w-full" controls src={item.publicUrl} />
                   </div>
 
-                  {it.addedToLibrary ? (
+                  {item.addedToLibrary ? (
                     <div className="mt-2 text-xs text-white/70">
                       Tag added: <span className="font-mono">uploaded</span> •
                       Visibility: <span className="font-mono">{visibility}</span>
@@ -376,12 +303,11 @@ export default function UploadPage() {
         </section>
 
         <section className={`mt-6 ${panelClass}`}>
-          <div className="text-base font-bold text-white">
-            Upload route
-          </div>
+          <div className="text-base font-bold text-white">Upload route</div>
           <p className={helperTextClass}>
-            Computer → Upload → Library → Project. Storage happens behind the
-            scenes so you do not need to manage songs in Supabase by hand.
+            Computer → Shared Upload Engine → Library → Project. Storage happens
+            behind the scenes so you do not need to manage songs in Supabase by
+            hand.
           </p>
         </section>
       </main>

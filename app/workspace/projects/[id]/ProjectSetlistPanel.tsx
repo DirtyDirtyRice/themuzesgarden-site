@@ -14,6 +14,7 @@ import ProjectUploadPanel from "./ProjectUploadPanel";
 import { clamp01 } from "./projectDetailsUtils";
 import type { ProjectSetlistControllerState } from "./projectSetlistController";
 import {
+  summarizeUploadResult,
   uploadProjectAudioFiles,
   type UploadedProjectItem,
 } from "../../../shared/uploads/projectUploadHelpers";
@@ -25,7 +26,9 @@ export default function ProjectSetlistPanel({
 }) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedItems, setUploadedItems] = useState<UploadedProjectItem[]>([]);
+  const [skippedFiles, setSkippedFiles] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   async function handleUploadFiles() {
@@ -33,18 +36,27 @@ export default function ProjectSetlistPanel({
 
     setUploading(true);
     setUploadError(null);
+    setUploadMessage(null);
+    setSkippedFiles([]);
 
     try {
-      const uploaded = await uploadProjectAudioFiles({
+      const result = await uploadProjectAudioFiles({
         files: selectedFiles,
         visibility: "shared",
         userId: null,
       });
 
-      setUploadedItems((current) => [...uploaded, ...current]);
+      for (const item of result.uploadedItems) {
+        await controller.handleLinkTrack(item.trackId);
+      }
+
+      setUploadedItems((current) => [...result.uploadedItems, ...current]);
+      setSkippedFiles(result.skippedFiles);
+      setUploadMessage(summarizeUploadResult(result));
       setSelectedFiles([]);
-      void controller.handleRefreshLibrary();
-      void controller.handleRefreshOverview();
+
+      await controller.handleRefreshLibrary();
+      await controller.handleRefreshOverview();
     } catch (error: unknown) {
       setUploadError(
         error instanceof Error ? error.message : "Project upload failed.",
@@ -141,11 +153,15 @@ export default function ProjectSetlistPanel({
       <ProjectUploadPanel
         selectedFiles={selectedFiles}
         uploadedItems={uploadedItems}
+        skippedFiles={skippedFiles}
         uploading={uploading}
+        uploadMessage={uploadMessage}
         uploadError={uploadError}
         onUploadFiles={handleUploadFiles}
         onClearFiles={() => {
           setSelectedFiles([]);
+          setSkippedFiles([]);
+          setUploadMessage(null);
           setUploadError(null);
         }}
       />

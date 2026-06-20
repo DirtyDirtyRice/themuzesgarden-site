@@ -12,6 +12,11 @@ export type UploadedProjectItem = {
   trackId: string;
 };
 
+export type UploadProjectAudioFilesResult = {
+  uploadedItems: UploadedProjectItem[];
+  skippedFiles: string[];
+};
+
 const BUCKET = "audio";
 const FOLDER = "uploads";
 
@@ -87,6 +92,31 @@ export function createProjectUploadedTrack({
   };
 }
 
+export function summarizeUploadResult(result: UploadProjectAudioFilesResult) {
+  const uploadedCount = result.uploadedItems.length;
+  const skippedCount = result.skippedFiles.length;
+
+  if (uploadedCount === 0 && skippedCount === 0) {
+    return "No files selected.";
+  }
+
+  if (uploadedCount === 0 && skippedCount > 0) {
+    return `No supported audio files found. Skipped ${skippedCount} file${
+      skippedCount === 1 ? "" : "s"
+    }.`;
+  }
+
+  if (skippedCount === 0) {
+    return `Uploaded ${uploadedCount} file${uploadedCount === 1 ? "" : "s"}.`;
+  }
+
+  return `Uploaded ${uploadedCount} file${
+    uploadedCount === 1 ? "" : "s"
+  }. Skipped ${skippedCount} unsupported file${
+    skippedCount === 1 ? "" : "s"
+  }.`;
+}
+
 export async function uploadProjectAudioFiles({
   files,
   visibility,
@@ -95,8 +125,11 @@ export async function uploadProjectAudioFiles({
   files: File[];
   visibility: UploadVisibility;
   userId: string | null;
-}) {
+}): Promise<UploadProjectAudioFilesResult> {
   const supportedFiles = files.filter(isSupportedProjectAudioFile);
+  const skippedFiles = files
+    .filter((file) => !isSupportedProjectAudioFile(file))
+    .map(getProjectUploadDisplayName);
 
   const uploadedItems: UploadedProjectItem[] = [];
 
@@ -142,5 +175,8 @@ export async function uploadProjectAudioFiles({
     uploadedItems.push(uploadedItem);
   }
 
-  return uploadedItems;
+  return {
+    uploadedItems,
+    skippedFiles,
+  };
 }

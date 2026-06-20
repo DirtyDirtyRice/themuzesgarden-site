@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopNav from "../components/TopNav";
 import {
+  summarizeUploadResult,
   uploadProjectAudioFiles,
   type UploadedProjectItem,
 } from "../shared/uploads/projectUploadHelpers";
@@ -22,7 +23,7 @@ export default function LibraryPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [, setUploadedItems] = useState<UploadedProjectItem[]>([]);
+  const setUploadedItems = useState<UploadedProjectItem[]>([])[1];
 
   const {
     checkingSession,
@@ -145,19 +146,19 @@ export default function LibraryPage() {
 
     setUploading(true);
     setUploadError(null);
-    setUploadMessage(`Uploading ${files.length} file${files.length === 1 ? "" : "s"}...`);
+    setUploadMessage(
+      `Uploading ${files.length} file${files.length === 1 ? "" : "s"}...`
+    );
 
     try {
-      const uploaded = await uploadProjectAudioFiles({
+      const result = await uploadProjectAudioFiles({
         files,
         visibility: "shared",
         userId: null,
       });
 
-      setUploadedItems((current) => [...uploaded, ...current]);
-      setUploadMessage(
-        `Uploaded ${uploaded.length} file${uploaded.length === 1 ? "" : "s"} to Library. Refresh if they do not appear immediately.`
-      );
+      setUploadedItems((current) => [...result.uploadedItems, ...current]);
+      setUploadMessage(summarizeUploadResult(result));
 
       router.refresh();
     } catch (error: unknown) {
