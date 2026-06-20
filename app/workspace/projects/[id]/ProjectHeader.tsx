@@ -8,6 +8,7 @@ type ProjectDownloadFormat = "wav" | "mp3" | "flac" | "aiff" | "original";
 type Props = {
   project: Project | null;
   rightSlot?: React.ReactNode;
+  onFilesSelected: (files: File[]) => void;
 };
 
 const buttonClass =
@@ -28,9 +29,7 @@ const downloadFormats: {
 ];
 
 function getDownloadFormatLabel(format: ProjectDownloadFormat) {
-  return (
-    downloadFormats.find((option) => option.value === format)?.label ?? "WAV"
-  );
+  return downloadFormats.find((option) => option.value === format)?.label ?? "WAV";
 }
 
 function slugifyFileName(value: string) {
@@ -44,10 +43,7 @@ function slugifyFileName(value: string) {
   );
 }
 
-function downloadProjectManifest(
-  project: Project,
-  format: ProjectDownloadFormat,
-) {
+function downloadProjectManifest(project: Project, format: ProjectDownloadFormat) {
   const payload = {
     exportedAtIso: new Date().toISOString(),
     source: "The Muzes Garden",
@@ -73,14 +69,18 @@ function downloadProjectManifest(
   URL.revokeObjectURL(url);
 }
 
-export default function ProjectHeader({ project }: Props) {
+export default function ProjectHeader({ project, onFilesSelected }: Props) {
   const [downloadFormat, setDownloadFormat] =
     useState<ProjectDownloadFormat>("wav");
-
   const [downloadOpen, setDownloadOpen] = useState(false);
 
   const uploadFileRef = useRef<HTMLInputElement | null>(null);
   const uploadFolderRef = useRef<HTMLInputElement | null>(null);
+
+  function handleSelectedFiles(fileList: FileList | null) {
+    const files = Array.from(fileList ?? []);
+    onFilesSelected(files);
+  }
 
   return (
     <div className="space-y-4">
@@ -111,7 +111,6 @@ export default function ProjectHeader({ project }: Props) {
                   }}
                 >
                   <span>{option.label}</span>
-
                   <span className="text-white/70">
                     {downloadFormat === option.value ? "Selected" : ""}
                   </span>
@@ -160,9 +159,7 @@ export default function ProjectHeader({ project }: Props) {
         ref={uploadFileRef}
         type="file"
         className="hidden"
-        onChange={() => {
-          console.log("Project Upload File placeholder");
-        }}
+        onChange={(event) => handleSelectedFiles(event.target.files)}
       />
 
       <input
@@ -171,9 +168,7 @@ export default function ProjectHeader({ project }: Props) {
         className="hidden"
         multiple
         {...({ webkitdirectory: "" } as any)}
-        onChange={() => {
-          console.log("Project Upload Folder placeholder");
-        }}
+        onChange={(event) => handleSelectedFiles(event.target.files)}
       />
     </div>
   );

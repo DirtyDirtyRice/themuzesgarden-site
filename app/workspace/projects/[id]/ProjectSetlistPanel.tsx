@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import PlaybackHelper from "../../../components/PlaybackHelper";
 import ProjectHeader from "./ProjectHeader";
 import ProjectKeyboardShortcuts from "./ProjectKeyboardShortcuts";
@@ -9,6 +10,7 @@ import ProjectTabs from "./ProjectTabs";
 import ProjectDetailsBackLink from "./ProjectDetailsBackLink";
 import ProjectDetailsBreadcrumbs from "./ProjectDetailsBreadcrumbs";
 import ProjectDetailsContentRouter from "./ProjectDetailsContentRouter";
+import ProjectUploadPanel from "./ProjectUploadPanel";
 import { clamp01 } from "./projectDetailsUtils";
 import type { ProjectSetlistControllerState } from "./projectSetlistController";
 
@@ -17,6 +19,8 @@ export default function ProjectSetlistPanel({
 }: {
   controller: ProjectSetlistControllerState;
 }) {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6 text-white">
       <ProjectDetailsBreadcrumbs />
@@ -25,6 +29,7 @@ export default function ProjectSetlistPanel({
         header={
           <ProjectHeader
             project={controller.project}
+            onFilesSelected={setSelectedFiles}
             rightSlot={
               <div className="break-all text-xs text-white/45">
                 ID: {controller.id}
@@ -98,6 +103,11 @@ export default function ProjectSetlistPanel({
             />
           ) : null
         }
+      />
+
+      <ProjectUploadPanel
+        selectedFiles={selectedFiles}
+        onClearFiles={() => setSelectedFiles([])}
       />
 
       <ProjectDetailsBackLink />
