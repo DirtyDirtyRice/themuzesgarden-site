@@ -24,6 +24,9 @@ type LyricsLibraryEditorProps = {
   onImportFolder: (files: FileList | null) => void;
 };
 
+const LYRIC_FILE_ACCEPT =
+  ".txt,.text,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf";
+
 const folderInputProps: FolderInputProps = {
   webkitdirectory: "",
   directory: "",
@@ -49,27 +52,65 @@ export default function LyricsLibraryEditor({
 }: LyricsLibraryEditorProps) {
   return (
     <div className="rounded-2xl border border-white/15 bg-black p-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-4">
         <div>
           <h2 className="text-xl font-semibold text-white">
             {editingEntryId ? "Edit Lyrics" : "Add Lyrics"}
           </h2>
+
           <p className="mt-1 text-sm text-white/60">
             {editingEntryId
               ? "Update the selected lyric entry."
-              : "Paste lyrics, import TXT files, or import a TXT folder."}
+              : "Paste lyrics, import lyric files, or import a lyric folder."}
           </p>
         </div>
 
-        {editingEntryId ? (
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={onSaveEntry}
+            className="rounded-lg border border-white bg-black px-4 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+          >
+            {editingEntryId ? "Save Changes" : "Add Lyrics Entry"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-lg border border-white bg-black px-4 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+          >
+            Import Lyric Files
+          </button>
+
+          <button
+            type="button"
+            onClick={() => folderInputRef.current?.click()}
+            className="rounded-lg border border-white bg-black px-4 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+          >
+            Import Lyric Folder
+          </button>
+
           <button
             type="button"
             onClick={onClearForm}
-            className="rounded-lg border border-white/35 bg-black px-3 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+            className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
           >
-            Cancel Edit
+            {editingEntryId ? "Cancel Edit" : "Clear Form"}
           </button>
-        ) : null}
+
+          <button
+            type="button"
+            onClick={onResetStarter}
+            className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+          >
+            Reset Starter
+          </button>
+        </div>
+
+        <p className="text-xs leading-5 text-white/55">
+          Import supports TXT, MD, and PDF lyric files. DOC and DOCX can be
+          tracked, but real text extraction is not wired yet.
+        </p>
       </div>
 
       <label className="mt-5 block text-sm font-semibold text-white">
@@ -106,56 +147,14 @@ export default function LyricsLibraryEditor({
       <textarea
         value={body}
         onChange={(event) => onBodyChange(event.target.value)}
-        className="mt-2 min-h-[260px] w-full rounded-lg border border-white/25 bg-black px-3 py-2 text-sm leading-6 text-white outline-none"
+        className="mt-2 min-h-[220px] w-full rounded-lg border border-white/25 bg-black px-3 py-2 text-sm leading-6 text-white outline-none"
         placeholder="Paste or type lyrics here..."
       />
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={onSaveEntry}
-          className="rounded-lg border border-white bg-black px-4 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-        >
-          {editingEntryId ? "Save Changes" : "Add Lyrics Entry"}
-        </button>
-
-        <button
-          type="button"
-          onClick={onClearForm}
-          className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-        >
-          Clear Form
-        </button>
-
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-        >
-          Import TXT Files
-        </button>
-
-        <button
-          type="button"
-          onClick={() => folderInputRef.current?.click()}
-          className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-        >
-          Import TXT Folder
-        </button>
-
-        <button
-          type="button"
-          onClick={onResetStarter}
-          className="rounded-lg border border-white/35 bg-black px-4 py-2 text-sm font-semibold text-white/80 transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
-        >
-          Reset Starter
-        </button>
-      </div>
 
       <input
         ref={fileInputRef}
         type="file"
-        accept=".txt,text/plain"
+        accept={LYRIC_FILE_ACCEPT}
         multiple
         className="hidden"
         onChange={(event) => onImportFiles(event.target.files)}
@@ -164,18 +163,12 @@ export default function LyricsLibraryEditor({
       <input
         ref={folderInputRef}
         type="file"
-        accept=".txt,text/plain"
+        accept={LYRIC_FILE_ACCEPT}
         multiple
         className="hidden"
         onChange={(event) => onImportFolder(event.target.files)}
         {...folderInputProps}
       />
-
-      <p className="mt-3 text-xs leading-5 text-white/55">
-        Use Import TXT Folder to bring in a folder of TXT lyric files. Each TXT
-        file becomes its own searchable lyric entry. Choose Folder + Save Shown
-        TXT is export only.
-      </p>
     </div>
   );
 }

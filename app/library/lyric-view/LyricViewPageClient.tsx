@@ -15,6 +15,19 @@ function normalizeLyricSearchText(value: string): string {
     .trim();
 }
 
+function removeFileExtension(value: string): string {
+  return value.replace(/\.(txt|text|md|markdown|doc|docx|pdf|rtf|odt)$/i, "");
+}
+
+function normalizeComparableLine(value: string): string {
+  return removeFileExtension(value)
+    .replace(/[-_]+/g, " ")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 function getImportedBodyTitle(body: string): string {
   const lines = body.split("\n");
 
@@ -41,8 +54,59 @@ function isStarterOrMetadataBody(body: string): boolean {
   );
 }
 
+function isImportPlaceholderLine(line: string): boolean {
+  const cleaned = line.trim().toLowerCase();
+
+  if (!cleaned) return true;
+  if (cleaned.startsWith("[imported ")) return true;
+  if (cleaned.startsWith("file type accepted")) return true;
+  if (cleaned.startsWith("current version imports")) return true;
+  if (cleaned.startsWith("title:")) return true;
+  if (cleaned.startsWith("artist:")) return true;
+  if (cleaned.startsWith("tags:")) return true;
+  if (cleaned.startsWith("created:")) return true;
+  if (cleaned.startsWith("updated:")) return true;
+  if (cleaned === "lyrics") return true;
+
+  return false;
+}
+
+function getCleanLyricBody(entry: LyricEntry): string {
+  const titleLine = normalizeComparableLine(entry.title);
+
+  const lyricLines = entry.body
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (isImportPlaceholderLine(line)) {
+        return false;
+      }
+
+      const comparableLine = normalizeComparableLine(line);
+
+      if (!comparableLine) {
+        return false;
+      }
+
+      if (comparableLine === titleLine) {
+        return false;
+      }
+
+      return true;
+    });
+
+  return lyricLines.join("\n").trim();
+}
+
+function getDisplayLyricBody(entry: LyricEntry): string {
+  const cleanBody = getCleanLyricBody(entry);
+
+  return cleanBody || entry.body;
+}
+
 function getLyricBodyScore(entry: LyricEntry): number {
-  const normalizedBody = normalizeLyricSearchText(entry.body);
+  const cleanBody = getCleanLyricBody(entry);
+  const normalizedBody = normalizeLyricSearchText(cleanBody || entry.body);
   const normalizedTitle = normalizeLyricSearchText(entry.title);
   const normalizedTags = normalizeLyricSearchText(entry.tags);
 
@@ -50,6 +114,7 @@ function getLyricBodyScore(entry: LyricEntry): number {
 
   if (normalizedTitle) score += 20;
   if (normalizedTags.includes("lyrics")) score += 10;
+  if (cleanBody) score += 80;
   if (normalizedBody.length > 300) score += 20;
   if (normalizedBody.length > 700) score += 20;
   if (normalizedBody.includes("verse")) score += 15;
@@ -136,22 +201,33 @@ export default function LyricViewPageClient() {
     [entries, lyricId]
   );
 
+  const displayBody = useMemo(
+    () => (entry ? getDisplayLyricBody(entry) : ""),
+    [entry]
+  );
+
   const isShowingMatchedLyric = Boolean(
     directEntry && entry && directEntry.id !== entry.id
   );
 
+  const isShowingCleanedBody = Boolean(
+    entry && displayBody && displayBody !== entry.body
+  );
+
   function handleBackToLyricsLibrary() {
-    router.push("/library");
+    router.push("/library/lyrics");
   }
 
   function handleDownloadEntry() {
     if (!entry) return;
-    downloadLyricTextFile(entry);
+    downloadLyricTextFile({
+      ...entry,
+      body: displayBody,
+    });
   }
 
   function handleEditInLibrary() {
-    if (!entry) return;
-    router.push("/library");
+    router.push("/library/lyrics");
   }
 
   return (
@@ -175,6 +251,12 @@ export default function LyricViewPageClient() {
               {isShowingMatchedLyric ? (
                 <p className="mt-2 text-xs text-white/55">
                   Matched real lyric by title from imported lyric file.
+                </p>
+              ) : null}
+
+              {isShowingCleanedBody ? (
+                <p className="mt-2 text-xs text-white/55">
+                  Showing cleaned lyric body only.
                 </p>
               ) : null}
             </div>
@@ -220,7 +302,7 @@ export default function LyricViewPageClient() {
             </div>
 
             <pre className="mt-5 min-h-[420px] whitespace-pre-wrap rounded-xl border border-white/10 bg-black p-5 text-base leading-7 text-white">
-              {entry.body}
+              {displayBody}
             </pre>
           </section>
         ) : (

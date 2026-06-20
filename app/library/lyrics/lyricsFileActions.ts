@@ -18,6 +18,36 @@ const FUTURE_EXTENSIONS = [
   "abw",
 ];
 
+type PdfTextItem = {
+  str?: string;
+};
+
+type PdfTextContent = {
+  items: PdfTextItem[];
+};
+
+type PdfPage = {
+  getTextContent: () => Promise<PdfTextContent>;
+};
+
+type PdfDocument = {
+  numPages: number;
+  getPage: (pageNumber: number) => Promise<PdfPage>;
+};
+
+type PdfLoadTask = {
+  promise: Promise<PdfDocument>;
+};
+
+type PdfJsModule = {
+  GlobalWorkerOptions: {
+    workerSrc: string;
+  };
+  getDocument: (options: {
+    data: Uint8Array;
+  }) => PdfLoadTask;
+};
+
 export function getFileExtension(fileName: string): string {
   const parts = fileName.toLowerCase().split(".");
   return parts.length > 1 ? parts.pop() || "" : "";
@@ -53,13 +83,17 @@ export async function readLyricImportFile(file: File): Promise<string> {
     return readTextFile(file);
   }
 
+  if (extension === "pdf") {
+    return readPdfTextFile(file);
+  }
+
   return `[Imported ${extension.toUpperCase()} file]
 
 ${file.name}
 
 File type accepted for future processing.
 
-Current version imports TXT content only.`;
+Current version imports TXT and PDF content only.`;
 }
 
 export function makeSafeSlug(value: string): string {
@@ -175,4 +209,71 @@ export function readTextFile(file: File): Promise<string> {
 
     reader.readAsText(file);
   });
+}
+
+function getPdfImportErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message || error.name;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  return "Unknown PDF import error.";
+}
+
+export async function readPdfTextFile(file: File): Promise<string> {
+  try {
+    const pdfjs = (await import("pdfjs-dist/legacy/build/pdf.mjs")) as PdfJsModule;
+
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/legacy/build/pdf.worker.mjs",
+      import.meta.url,
+    ).toString();
+
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+
+    const pdfDocument = await pdfjs.getDocument({
+      data: fileBytes,
+    }).promise;
+
+    const pageTexts: string[] = [];
+
+    for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+      const page = await pdfDocument.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+
+      const pageText = textContent.items
+        .map((item) => item.str || "")
+        .join("\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
+      if (pageText) {
+        pageTexts.push(pageText);
+      }
+    }
+
+    const extractedText = pageTexts.join("\n\n").trim();
+
+    return extractedText || `[Imported PDF file]
+
+${file.name}
+
+PDF text extraction found no readable lyric text.`;
+  } catch (error) {
+    const errorMessage = getPdfImportErrorMessage(error);
+
+    console.error("PDF IMPORT ERROR:", error);
+
+    return `[Imported PDF file]
+
+${file.name}
+
+PDF text extraction failed.
+
+Error:
+${errorMessage}`;
+  }
 }

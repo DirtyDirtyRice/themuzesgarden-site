@@ -1,15 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import LyricsLibraryEditor from "./LyricsLibraryEditor";
-import LyricsLibraryHero from "./LyricsLibraryHero";
 import LyricsLibraryImportStatusPanel from "./LyricsLibraryImportStatusPanel";
 import LyricsLibraryInsightsPanel from "./LyricsLibraryInsightsPanel";
 import LyricsLibrarySearchPanel from "./LyricsLibrarySearchPanel";
 import LyricsLibraryStatsPanel from "./LyricsLibraryStatsPanel";
-import LyricsLibraryViewerClient from "./LyricsLibraryViewerClient";
 import {
   deleteLyricEntry,
   duplicateLyricEntry,
@@ -28,11 +26,6 @@ import { buildLyricsLibraryStats } from "./lyricsLibraryStatsHelpers";
 import { STARTER_LYRICS } from "./lyricsSeed";
 import { getStartingLyrics, saveLyricsToBrowser } from "./lyricsStorage";
 import type { LyricEntry } from "./lyricsTypes";
-import {
-  closeLyricViewer,
-  getSelectedLyricViewerEntry,
-  viewLyricEntry,
-} from "./lyricsViewerController";
 
 function normalizeTitle(value: string): string {
   return value.trim().toLowerCase();
@@ -57,6 +50,7 @@ function getTitleMatchScore(trackTitle: string, lyricTitle: string): number {
 }
 
 export default function LyricsLibraryClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const openedFromTrackId = searchParams.get("trackId");
   const openedFromTrackTitle = searchParams.get("trackTitle") || "";
@@ -77,6 +71,7 @@ export default function LyricsLibraryClient() {
   const [selectedViewerEntryId, setSelectedViewerEntryId] =
     useState<string | null>(null);
   const [importReport, setImportReport] = useState(EMPTY_IMPORT_REPORT);
+  const [showMoreLyricInfo, setShowMoreLyricInfo] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -146,13 +141,9 @@ export default function LyricsLibraryClient() {
 
     if (!search) return entries;
 
-    return entries.filter((entry) => {
-      const haystack = [entry.title, entry.artist, entry.tags, entry.body]
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(search);
-    });
+    return entries.filter((entry) =>
+      entry.title.toLowerCase().includes(search)
+    );
   }, [entries, searchValue]);
 
   const lyricsStats = useMemo(
@@ -163,11 +154,6 @@ export default function LyricsLibraryClient() {
   const lyricsInsights = useMemo(
     () => buildLyricsLibraryInsights(entries, lyricsStats),
     [entries, lyricsStats]
-  );
-
-  const selectedViewerEntry = useMemo(
-    () => getSelectedLyricViewerEntry(entries, selectedViewerEntryId),
-    [entries, selectedViewerEntryId]
   );
 
   function clearForm() {
@@ -181,18 +167,8 @@ export default function LyricsLibraryClient() {
   }
 
   function handleViewEntry(entry: LyricEntry) {
-    viewLyricEntry({
-      entry,
-      setSelectedViewerEntryId,
-      setSaveStatus,
-    });
-  }
-
-  function handleCloseViewer() {
-    closeLyricViewer({
-      setSelectedViewerEntryId,
-      setSaveStatus,
-    });
+    setSaveStatus(`Opening ${entry.title}`);
+    router.push(`/library/lyric-view?lyricId=${encodeURIComponent(entry.id)}`);
   }
 
   function handleSaveEntry() {
@@ -302,9 +278,41 @@ export default function LyricsLibraryClient() {
   }
 
   return (
-    <main className="min-h-screen bg-black px-4 py-8 text-white md:px-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <LyricsLibraryHero entryCount={entries.length} saveStatus={saveStatus} />
+    <main className="min-h-screen bg-black px-4 py-6 text-white md:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
+        <section className="rounded-2xl border border-white/15 bg-black p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-white/55">
+                Library Lyrics
+              </p>
+
+              <h1 className="mt-1 text-2xl font-bold text-white">
+                Lyrics Library
+              </h1>
+
+              <p className="mt-1 text-sm text-white/65">
+                {entries.length} total lyrics · {filteredEntries.length} matched
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowMoreLyricInfo((current) => !current)}
+              className="rounded-lg border border-white bg-black px-4 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
+            >
+              {showMoreLyricInfo ? "Hide Lyric Info" : "More Lyric Info"}
+            </button>
+          </div>
+
+          {showMoreLyricInfo ? (
+            <div className="mt-5 flex flex-col gap-5">
+              <LyricsLibraryStatsPanel stats={lyricsStats} />
+              <LyricsLibraryInsightsPanel insights={lyricsInsights} />
+              <LyricsLibraryImportStatusPanel importReport={importReport} />
+            </div>
+          ) : null}
+        </section>
 
         {openedFromTrackId ? (
           <section className="rounded-2xl border border-white/15 bg-black p-5">
@@ -372,7 +380,7 @@ export default function LyricsLibraryClient() {
                               onClick={() => handleViewEntry(item.entry)}
                               className="rounded-lg border border-white bg-black px-3 py-2 text-xs font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
                             >
-                              View
+                              Open Lyrics
                             </button>
 
                             <button
@@ -399,20 +407,7 @@ export default function LyricsLibraryClient() {
           </section>
         ) : null}
 
-        <LyricsLibraryStatsPanel stats={lyricsStats} />
-
-        <LyricsLibraryInsightsPanel insights={lyricsInsights} />
-
-        <LyricsLibraryImportStatusPanel importReport={importReport} />
-
-        <LyricsLibraryViewerClient
-          entry={selectedViewerEntry}
-          onEditEntry={handleEditEntry}
-          onDownloadEntry={downloadLyricTextFile}
-          onCloseViewer={handleCloseViewer}
-        />
-
-        <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <LyricsLibraryEditor
             editingEntryId={editingEntryId}
             title={title}
@@ -434,6 +429,7 @@ export default function LyricsLibraryClient() {
 
           <LyricsLibrarySearchPanel
             filteredEntries={filteredEntries}
+            totalEntries={entries.length}
             searchValue={searchValue}
             folderStatus={folderStatus}
             onSearchChange={setSearchValue}
