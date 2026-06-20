@@ -4,8 +4,8 @@ import { PROJECT_TAB_CONFIG } from "./projectTabConfig";
 import type { Tab } from "./projectDetailsTypes";
 
 type Props = {
-  tab: Tab;
-  setTab: (t: Tab) => void;
+  tab: Tab | null;
+  setTab: (t: Tab | null) => void;
 };
 
 export default function ProjectTabs({ tab, setTab }: Props) {
@@ -18,7 +18,7 @@ export default function ProjectTabs({ tab, setTab }: Props) {
           <button
             key={t.key}
             type="button"
-            onClick={() => setTab(t.key)}
+            onClick={() => setTab(active ? null : t.key)}
             className={[
               "min-w-[120px] rounded-xl border border-white/25 bg-black",
               "px-4 py-2 text-sm font-bold text-white",

@@ -8,7 +8,7 @@ import ProjectOverviewWorkspace from "./ProjectOverviewWorkspace";
 import type { Tab } from "./projectDetailsTypes";
 
 export default function ProjectDetailsContentRouter(props: {
-  tab: Tab;
+  tab: Tab | null;
   project: any;
   overviewLoading: boolean;
   overviewErr: string | null;
@@ -133,6 +133,10 @@ export default function ProjectDetailsContentRouter(props: {
     onUnlinkTrack,
     onLinkTrack,
   } = props;
+
+  if (!tab) {
+    return null;
+  }
 
   if (tab === "overview") {
     return (

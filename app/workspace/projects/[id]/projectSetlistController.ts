@@ -40,7 +40,7 @@ export function useProjectSetlistController({
   loading,
   user,
 }: ProjectSetlistControllerArgs) {
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab | null>(null);
   const [setlistOrder, setSetlistOrder] = useState<string[]>([]);
   const [previewTrackId, setPreviewTrackId] = useState<string | null>(null);
   const [metadataTargetType, setMetadataTargetType] =
@@ -78,7 +78,7 @@ export function useProjectSetlistController({
         return cleanOrder;
       });
     },
-    [id, projectOverview.setProject]
+    [id, projectOverview.setProject],
   );
 
   const projectNotes = useProjectNotes({
@@ -99,17 +99,17 @@ export function useProjectSetlistController({
 
   const orderedLinkedTracks = useMemo(
     () => selectOrderedTracks(projectLibrary.linkedTracks, setlistOrder),
-    [projectLibrary.linkedTracks, setlistOrder]
+    [projectLibrary.linkedTracks, setlistOrder],
   );
 
   const topLinkedTracks = useMemo(
     () => selectTopLinkedTracks(orderedLinkedTracks, 5),
-    [orderedLinkedTracks]
+    [orderedLinkedTracks],
   );
 
   const playbackSourceTracks = useMemo(
     () => (tab === "library" ? projectLibrary.allTracks : orderedLinkedTracks),
-    [tab, projectLibrary.allTracks, orderedLinkedTracks]
+    [tab, projectLibrary.allTracks, orderedLinkedTracks],
   );
 
   const projectPlayback = useProjectPlayback({
@@ -133,15 +133,16 @@ export function useProjectSetlistController({
 
   const previewSourceTracks = useMemo(
     () => (tab === "library" ? projectLibrary.allTracks : orderedLinkedTracks),
-    [tab, projectLibrary.allTracks, orderedLinkedTracks]
+    [tab, projectLibrary.allTracks, orderedLinkedTracks],
   );
 
   const previewTrack = useMemo(
     () => selectNowPlayingTrack(previewSourceTracks, previewTrackId),
-    [previewSourceTracks, previewTrackId]
+    [previewSourceTracks, previewTrackId],
   );
 
-  const overviewErr = projectOverview.overviewErr ?? projectLibrary.overviewErr ?? null;
+  const overviewErr =
+    projectOverview.overviewErr ?? projectLibrary.overviewErr ?? null;
   const overviewLoading =
     projectOverview.overviewLoading || projectLibrary.overviewLoading;
   const miniVisible =
@@ -151,10 +152,10 @@ export function useProjectSetlistController({
   const moveSetlistItem = useCallback(
     (trackId: string, direction: "up" | "down") => {
       updateSetlistOrderWithPersistence((previousOrder) =>
-        moveTrackInSetlistOrder(previousOrder, trackId, direction)
+        moveTrackInSetlistOrder(previousOrder, trackId, direction),
       );
     },
-    [updateSetlistOrderWithPersistence]
+    [updateSetlistOrderWithPersistence],
   );
 
   const selectTrackMetadataTarget = useCallback((trackId: string) => {
@@ -172,7 +173,7 @@ export function useProjectSetlistController({
     id,
     loading,
     user,
-    tab,
+    tab: tab ?? "overview",
     project: projectOverview.project,
     orderedLinkedTracks,
     previewTrackId,
@@ -186,7 +187,7 @@ export function useProjectSetlistController({
   });
 
   useProjectKeyboardPlaybackBindings({
-    tab,
+    tab: tab ?? "overview",
     notesQuery: projectNotes.notesQuery,
     showKeys,
     setShowKeys,
@@ -215,7 +216,9 @@ export function useProjectSetlistController({
     topLinkedTracks,
     nowPlayingId,
     setPreviewTrackId,
-    resolvedPreviewTrackId: previewTrack ? String(previewTrack.id) : previewTrackId,
+    resolvedPreviewTrackId: previewTrack
+      ? String(previewTrack.id)
+      : previewTrackId,
     metadataTargetType,
     metadataTargetId,
     playbackHandlers,

@@ -15,9 +15,11 @@ export default function ProjectPageShell(props: Props) {
 
       <div>{tabs}</div>
 
-      <div className="rounded-2xl border border-white/25 bg-black p-4 text-white">
-        {content}
-      </div>
+      {content ? (
+        <div className="rounded-2xl border border-white/25 bg-black p-4 text-white">
+          {content}
+        </div>
+      ) : null}
     </div>
   );
 }

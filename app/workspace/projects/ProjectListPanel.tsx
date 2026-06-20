@@ -38,7 +38,7 @@ export function ProjectListPanel({
         </p>
       </div>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 max-h-[48rem] space-y-3 overflow-y-auto pr-1">
         {loadingProjects ? (
           <p className="rounded-2xl border border-white/20 bg-black p-4 text-white">
             Loading projects...

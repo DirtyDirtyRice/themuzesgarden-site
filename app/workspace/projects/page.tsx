@@ -13,13 +13,8 @@ import { downloadFolderManifest } from "../../shared/downloads/downloadFolderHel
 import { ProjectCreatePanel } from "./ProjectCreatePanel";
 import { ProjectDetailsPanel } from "./ProjectDetailsPanel";
 import { ProjectListPanel } from "./ProjectListPanel";
-import {
-  buttonClass,
-  eyebrowClass,
-  inputClass,
-  panelClass,
-  selectClass,
-} from "./projectPageStyles";
+import { ProjectSearchPanel } from "./ProjectSearchPanel";
+import { buttonClass, eyebrowClass, panelClass } from "./projectPageStyles";
 import type {
   Project,
   ProjectKind,
@@ -43,18 +38,32 @@ export default function WorkspaceProjectsPage() {
   const [showProjectDetails, setShowProjectDetails] = useState(false);
   const [searchMode, setSearchMode] = useState<ProjectSearchMode>("title");
   const [searchValue, setSearchValue] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState("");
 
   const selectedProjects = useMemo(
     () => projects.filter((project) => selectedIds.includes(project.id)),
     [projects, selectedIds],
   );
 
-  const filteredProjects = useMemo(
+  const searchedProjects = useMemo(
     () =>
       projects.filter((project) =>
         projectMatchesSearch(project, searchMode, searchValue),
       ),
     [projects, searchMode, searchValue],
+  );
+
+  const selectedDropdownProject = useMemo(
+    () =>
+      selectedProjectId
+        ? projects.find((project) => project.id === selectedProjectId) || null
+        : null,
+    [projects, selectedProjectId],
+  );
+
+  const visibleProjects = useMemo(
+    () => (selectedDropdownProject ? [selectedDropdownProject] : searchedProjects),
+    [searchedProjects, selectedDropdownProject],
   );
 
   const musicProjectCount = useMemo(
@@ -74,6 +83,11 @@ export default function WorkspaceProjectsPage() {
     window.location.href = `/workspace/projects/${id}`;
   }
 
+  function openSelectedDropdownProject() {
+    if (!selectedProjectId) return;
+    goToProject(selectedProjectId);
+  }
+
   function toggleSelectedProject(id: string) {
     setSelectedIds((currentIds) =>
       currentIds.includes(id)
@@ -82,8 +96,8 @@ export default function WorkspaceProjectsPage() {
     );
   }
 
-  function selectAllFilteredProjects() {
-    setSelectedIds(filteredProjects.map((project) => project.id));
+  function selectAllVisibleProjects() {
+    setSelectedIds(visibleProjects.map((project) => project.id));
   }
 
   function clearSelectedProjects() {
@@ -199,84 +213,70 @@ export default function WorkspaceProjectsPage() {
     <main className="min-h-screen bg-black px-5 py-6 text-white">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-5">
         <header className={panelClass}>
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className={eyebrowClass}>Workspace</p>
-              <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
-                Your Projects
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-white/70">
-                {filteredProjects.length} shown of {projects.length} projects ·{" "}
-                {selectedProjects.length} selected
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                className={buttonClass}
-                onClick={() => setShowProjectDetails((current) => !current)}
-              >
-                {showProjectDetails ? "Hide Project Details" : "Project Details"}
-              </button>
-
-              <button
-                type="button"
-                className={buttonClass}
-                onClick={selectAllFilteredProjects}
-                disabled={filteredProjects.length === 0}
-              >
-                Select Shown
-              </button>
-
-              <button
-                type="button"
-                className={buttonClass}
-                onClick={clearSelectedProjects}
-                disabled={!hasSelectedProjects}
-              >
-                Clear
-              </button>
-
-              <button
-                type="button"
-                className={buttonClass}
-                onClick={downloadSelectedProjects}
-                disabled={!hasSelectedProjects}
-              >
-                Download Selected
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-[220px_1fr]">
-            <select
-              value={searchMode}
-              onChange={(event) =>
-                setSearchMode(event.target.value as ProjectSearchMode)
-              }
-              className={selectClass}
-            >
-              <option value="title">Search by title</option>
-              <option value="kind">Search by kind</option>
-              <option value="visibility">Search by visibility</option>
-              <option value="all">Show all projects</option>
-            </select>
-
-            {searchMode === "all" ? (
-              <div className="rounded-2xl border border-white/15 bg-black px-4 py-3 text-sm text-white/70">
-                Showing all projects.
-              </div>
-            ) : (
-              <input
-                value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                className={inputClass}
-                placeholder="Search projects..."
-              />
-            )}
-          </div>
+          <p className={eyebrowClass}>Workspace</p>
+          <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
+            Your Projects
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-white/70">
+            {visibleProjects.length} shown of {projects.length} projects ·{" "}
+            {selectedProjects.length} selected
+          </p>
         </header>
+
+        <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
+          <ProjectCreatePanel creating={creating} onCreate={onCreate} />
+
+          <ProjectSearchPanel
+            projects={projects}
+            filteredProjects={searchedProjects}
+            searchMode={searchMode}
+            searchValue={searchValue}
+            selectedProjectId={selectedProjectId}
+            onSearchModeChange={setSearchMode}
+            onSearchValueChange={setSearchValue}
+            onSelectedProjectChange={setSelectedProjectId}
+            onOpenSelectedProject={openSelectedDropdownProject}
+          />
+        </section>
+
+        <section className={panelClass}>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={() => setShowProjectDetails((current) => !current)}
+            >
+              {showProjectDetails ? "Hide Project Details" : "Project Details"}
+            </button>
+
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={selectAllVisibleProjects}
+              disabled={visibleProjects.length === 0}
+            >
+              Select Shown
+            </button>
+
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={clearSelectedProjects}
+              disabled={!hasSelectedProjects}
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={downloadSelectedProjects}
+              disabled={!hasSelectedProjects}
+            >
+              Download Selected
+            </button>
+          </div>
+        </section>
 
         {showProjectDetails ? (
           <ProjectDetailsPanel
@@ -298,21 +298,17 @@ export default function WorkspaceProjectsPage() {
           </section>
         ) : null}
 
-        <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
-          <ProjectCreatePanel creating={creating} onCreate={onCreate} />
-
-          <ProjectListPanel
-            projects={projects}
-            filteredProjects={filteredProjects}
-            selectedIds={selectedIds}
-            selectedCount={selectedProjects.length}
-            loadingProjects={loadingProjects}
-            onOpenProject={goToProject}
-            onToggleSelected={toggleSelectedProject}
-            onDownloadProject={downloadProject}
-            onDownloadProjectFolder={downloadProjectFolder}
-          />
-        </section>
+        <ProjectListPanel
+          projects={projects}
+          filteredProjects={visibleProjects}
+          selectedIds={selectedIds}
+          selectedCount={selectedProjects.length}
+          loadingProjects={loadingProjects}
+          onOpenProject={goToProject}
+          onToggleSelected={toggleSelectedProject}
+          onDownloadProject={downloadProject}
+          onDownloadProjectFolder={downloadProjectFolder}
+        />
       </section>
     </main>
   );
