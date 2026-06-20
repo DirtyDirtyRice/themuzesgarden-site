@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import SharedUploadButtons from "../shared/uploads/SharedUploadButtons";
 import NestedTagPicker from "./NestedTagPicker";
 import { displayTagLabel } from "./libraryUtils";
 
@@ -11,6 +12,10 @@ type Props = {
   supabaseLoaded: boolean;
   supabaseErr: string | null;
   activeTags: string[];
+  uploading: boolean;
+  uploadMessage: string | null;
+  uploadError: string | null;
+  onFilesSelected: (files: File[]) => void;
   onAddFilterTag: (tagId: string) => void;
   onRemoveFilterTag: (tagId: string) => void;
   onClearFilters: () => void;
@@ -49,6 +54,10 @@ export function LibraryPageHeader({
   supabaseLoaded,
   supabaseErr,
   activeTags,
+  uploading,
+  uploadMessage,
+  uploadError,
+  onFilesSelected,
   onAddFilterTag,
   onRemoveFilterTag,
   onClearFilters,
@@ -58,6 +67,7 @@ export function LibraryPageHeader({
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [downloadFormat, setDownloadFormat] =
     useState<LibraryDownloadFormat>("wav");
+
   const optionsRef = useRef<HTMLDivElement | null>(null);
   const downloadRef = useRef<HTMLDivElement | null>(null);
 
@@ -119,8 +129,8 @@ export function LibraryPageHeader({
             </div>
 
             <div className="mt-2 max-w-2xl text-sm text-white/70">
-              Library is the master song pool. Send tracks to projects, keep
-              WAV as the working format, and use MP3 when file size matters.
+              Library is the master song pool. Send tracks to projects, keep WAV
+              as the working format, and use MP3 when file size matters.
             </div>
 
             {supabaseErr ? (
@@ -128,9 +138,22 @@ export function LibraryPageHeader({
                 Load note: {supabaseErr}
               </div>
             ) : null}
+
+            {uploadMessage ? (
+              <div className="mt-2 text-sm text-white/70">{uploadMessage}</div>
+            ) : null}
+
+            {uploadError ? (
+              <div className="mt-2 text-sm text-white/70">{uploadError}</div>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <SharedUploadButtons
+              disabled={uploading}
+              onFilesSelected={onFilesSelected}
+            />
+
             <NestedTagPicker
               title="Tags"
               onPickTagId={onAddFilterTag}
@@ -171,23 +194,11 @@ export function LibraryPageHeader({
               )}
             </div>
 
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={() => {
-                closeMenus();
-              }}
-            >
+            <button type="button" className={buttonClass} onClick={closeMenus}>
               Download
             </button>
 
-            <button
-              type="button"
-              className={buttonClass}
-              onClick={() => {
-                closeMenus();
-              }}
-            >
+            <button type="button" className={buttonClass} onClick={closeMenus}>
               Send To
             </button>
 

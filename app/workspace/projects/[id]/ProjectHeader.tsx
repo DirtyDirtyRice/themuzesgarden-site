@@ -70,15 +70,23 @@ function downloadProjectManifest(project: Project, format: ProjectDownloadFormat
   URL.revokeObjectURL(url);
 }
 
-export default function ProjectHeader({ project, onFilesSelected }: Props) {
+export default function ProjectHeader({
+  project,
+  rightSlot,
+  onFilesSelected,
+}: Props) {
   const [downloadFormat, setDownloadFormat] =
     useState<ProjectDownloadFormat>("wav");
   const [downloadOpen, setDownloadOpen] = useState(false);
 
   return (
     <div className="space-y-4">
-      <div className="text-2xl font-black text-white">
-        {project?.title ?? "Untitled Project"}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="text-2xl font-black text-white">
+          {project?.title ?? "Untitled Project"}
+        </div>
+
+        {rightSlot ? <div>{rightSlot}</div> : null}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -128,9 +136,9 @@ export default function ProjectHeader({ project, onFilesSelected }: Props) {
         <button type="button" className={buttonClass}>
           Send To
         </button>
-      </div>
 
-      <SharedUploadButtons onFilesSelected={onFilesSelected} />
+        <SharedUploadButtons onFilesSelected={onFilesSelected} />
+      </div>
     </div>
   );
 }

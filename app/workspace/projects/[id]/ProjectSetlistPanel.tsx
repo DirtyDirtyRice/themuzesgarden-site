@@ -13,6 +13,10 @@ import ProjectDetailsContentRouter from "./ProjectDetailsContentRouter";
 import ProjectUploadPanel from "./ProjectUploadPanel";
 import { clamp01 } from "./projectDetailsUtils";
 import type { ProjectSetlistControllerState } from "./projectSetlistController";
+import {
+  uploadProjectAudioFiles,
+  type UploadedProjectItem,
+} from "../../../shared/uploads/projectUploadHelpers";
 
 export default function ProjectSetlistPanel({
   controller,
@@ -20,6 +24,35 @@ export default function ProjectSetlistPanel({
   controller: ProjectSetlistControllerState;
 }) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedItems, setUploadedItems] = useState<UploadedProjectItem[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleUploadFiles() {
+    if (selectedFiles.length === 0) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const uploaded = await uploadProjectAudioFiles({
+        files: selectedFiles,
+        visibility: "shared",
+        userId: null,
+      });
+
+      setUploadedItems((current) => [...uploaded, ...current]);
+      setSelectedFiles([]);
+      void controller.handleRefreshLibrary();
+      void controller.handleRefreshOverview();
+    } catch (error: unknown) {
+      setUploadError(
+        error instanceof Error ? error.message : "Project upload failed.",
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6 text-white">
@@ -107,7 +140,14 @@ export default function ProjectSetlistPanel({
 
       <ProjectUploadPanel
         selectedFiles={selectedFiles}
-        onClearFiles={() => setSelectedFiles([])}
+        uploadedItems={uploadedItems}
+        uploading={uploading}
+        uploadError={uploadError}
+        onUploadFiles={handleUploadFiles}
+        onClearFiles={() => {
+          setSelectedFiles([]);
+          setUploadError(null);
+        }}
       />
 
       <ProjectDetailsBackLink />

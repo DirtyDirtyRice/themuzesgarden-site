@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopNav from "../components/TopNav";
+import {
+  uploadProjectAudioFiles,
+  type UploadedProjectItem,
+} from "../shared/uploads/projectUploadHelpers";
 import { buildLibraryGroundworkTracks } from "./libraryTrackGroundwork";
 import { LibraryPageHeader } from "./LibraryPageHeader";
 import { LibraryTrackList } from "./LibraryTrackList";
@@ -15,6 +19,10 @@ export default function LibraryPage() {
   const router = useRouter();
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [flashFilterArea, setFlashFilterArea] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [, setUploadedItems] = useState<UploadedProjectItem[]>([]);
 
   const {
     checkingSession,
@@ -132,6 +140,36 @@ export default function LibraryPage() {
     triggerFilterFeedback();
   }
 
+  async function handleLibraryFilesSelected(files: File[]) {
+    if (files.length === 0 || uploading) return;
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadMessage(`Uploading ${files.length} file${files.length === 1 ? "" : "s"}...`);
+
+    try {
+      const uploaded = await uploadProjectAudioFiles({
+        files,
+        visibility: "shared",
+        userId: null,
+      });
+
+      setUploadedItems((current) => [...uploaded, ...current]);
+      setUploadMessage(
+        `Uploaded ${uploaded.length} file${uploaded.length === 1 ? "" : "s"} to Library. Refresh if they do not appear immediately.`
+      );
+
+      router.refresh();
+    } catch (error: unknown) {
+      setUploadError(
+        error instanceof Error ? error.message : "Library upload failed."
+      );
+      setUploadMessage(null);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   useEffect(() => {
     function onSearchTag(event: Event) {
       const custom = event as CustomEvent<{
@@ -211,6 +249,10 @@ export default function LibraryPage() {
           supabaseLoaded={supabaseLoaded}
           supabaseErr={supabaseErr}
           activeTags={activeTags}
+          uploading={uploading}
+          uploadMessage={uploadMessage}
+          uploadError={uploadError}
+          onFilesSelected={handleLibraryFilesSelected}
           onAddFilterTag={addFilterTag}
           onRemoveFilterTag={removeFilterTag}
           onClearFilters={clearFilters}
