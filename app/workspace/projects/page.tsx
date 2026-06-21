@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../components/AuthProvider";
 import { getSupabaseProjects } from "../../../lib/getSupabaseProjects";
 import { createSupabaseProject } from "../../../lib/createSupabaseProject";
+import { supabase } from "../../../lib/supabaseClient";
+import {
+  getSupabaseTracks,
+  type SupabaseTrack,
+} from "../../../lib/getSupabaseTracks";
 import {
   createDownloadStamp,
   downloadJsonFile,
@@ -28,6 +33,57 @@ import {
   projectMatchesSearch,
 } from "./projectPageHelpers";
 
+type ProjectAudioDownloadItem = {
+  id: string;
+  title: string;
+  url: string;
+};
+
+function slugifyDownloadName(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "project-song"
+  );
+}
+
+function downloadAudioUrl(url: string, fileName: string) {
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.rel = "noreferrer";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function downloadAudioItems(items: ProjectAudioDownloadItem[]) {
+  items.forEach((item, index) => {
+    window.setTimeout(() => {
+      downloadAudioUrl(item.url, slugifyDownloadName(item.title));
+    }, index * 300);
+  });
+}
+
+function buildDownloadItemsFromTracks(
+  linkedIds: Set<string>,
+  tracks: SupabaseTrack[],
+): ProjectAudioDownloadItem[] {
+  return tracks
+    .filter((track) => linkedIds.has(String(track.id)))
+    .filter((track) => Boolean(track.url))
+    .map((track) => ({
+      id: track.id,
+      title: track.title || "project-song",
+      url: track.url,
+    }));
+}
+
 export default function WorkspaceProjectsPage() {
   const { user, loading } = useAuth();
 
@@ -43,6 +99,9 @@ export default function WorkspaceProjectsPage() {
   const [uploadingProjectId, setUploadingProjectId] = useState<string | null>(
     null,
   );
+  const [downloadingProjectId, setDownloadingProjectId] = useState<
+    string | null
+  >(null);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 
   const selectedProjects = useMemo(
@@ -102,6 +161,66 @@ export default function WorkspaceProjectsPage() {
     });
   }
 
+  async function getProjectAudioItems(projectId: string) {
+    const { data, error } = await supabase
+      .from("project_tracks")
+      .select("track_id")
+      .eq("project_id", projectId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const linkedIds = new Set<string>(
+      (data ?? []).map((row: any) => String(row.track_id)),
+    );
+
+    if (linkedIds.size === 0) {
+      return [];
+    }
+
+    const tracks = await getSupabaseTracks();
+
+    return buildDownloadItemsFromTracks(linkedIds, tracks);
+  }
+
+  async function downloadProjectAudioFiles(project: Project) {
+    setDownloadingProjectId(project.id);
+    setErrorMsg(null);
+    setUploadMessage(`Preparing downloads for ${project.title}...`);
+
+    try {
+      const items = await getProjectAudioItems(project.id);
+
+      if (items.length === 0) {
+        setUploadMessage(
+          `No downloadable audio files found for ${project.title}.`,
+        );
+        return;
+      }
+
+      downloadAudioItems(items);
+      setUploadMessage(
+        `Started ${items.length} download${items.length === 1 ? "" : "s"} for ${
+          project.title
+        }.`,
+      );
+    } catch (error: unknown) {
+      setErrorMsg(
+        error instanceof Error
+          ? error.message
+          : "Failed to download project audio.",
+      );
+      setUploadMessage(null);
+    } finally {
+      setDownloadingProjectId(null);
+    }
+  }
+
+  async function downloadProjectAudioFolder(project: Project) {
+    await downloadProjectAudioFiles(project);
+  }
+
   async function uploadFilesToProject(projectId: string, files: File[]) {
     if (!projectId || files.length === 0 || uploadingProjectId) return;
 
@@ -118,13 +237,26 @@ export default function WorkspaceProjectsPage() {
         userId: user?.id ?? null,
       });
 
+      for (const item of result.uploadedItems) {
+        const { error } = await supabase.from("project_tracks").insert({
+          project_id: projectId,
+          track_id: item.trackId,
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      }
+
       setUploadMessage(summarizeUploadResult(result));
       setSelectedProjectId(projectId);
       setSelectedIds([projectId]);
       await loadProjects();
     } catch (error: unknown) {
       setErrorMsg(
-        error instanceof Error ? error.message : "Failed to upload project files.",
+        error instanceof Error
+          ? error.message
+          : "Failed to upload project files.",
       );
       setUploadMessage(null);
     } finally {
@@ -260,6 +392,7 @@ export default function WorkspaceProjectsPage() {
             searchValue={searchValue}
             selectedProjectId={selectedProjectId}
             uploadingProjectId={uploadingProjectId}
+            downloadingProjectId={downloadingProjectId}
             onSearchModeChange={(mode) => {
               setSearchMode(mode);
               setSelectedProjectId("");
@@ -273,6 +406,8 @@ export default function WorkspaceProjectsPage() {
             onSelectedProjectChange={setSelectedProjectId}
             onOpenSelectedProject={openSelectedDropdownProject}
             onUploadFilesToProject={uploadFilesToProject}
+            onDownloadProjectFiles={downloadProjectAudioFiles}
+            onDownloadProjectFolder={downloadProjectAudioFolder}
           />
         </section>
 

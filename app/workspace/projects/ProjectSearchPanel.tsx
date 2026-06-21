@@ -8,15 +8,7 @@ import {
   panelClass,
   selectClass,
 } from "./projectPageStyles";
-import {
-  createProjectDownloadPayload,
-  formatDate,
-  formatKind,
-} from "./projectPageHelpers";
-import {
-  createDownloadStamp,
-  downloadJsonFile,
-} from "../../shared/downloads/downloadFileHelpers";
+import { formatDate, formatKind } from "./projectPageHelpers";
 
 export function ProjectSearchPanel({
   projects,
@@ -25,11 +17,14 @@ export function ProjectSearchPanel({
   searchValue,
   selectedProjectId,
   uploadingProjectId,
+  downloadingProjectId,
   onSearchModeChange,
   onSearchValueChange,
   onSelectedProjectChange,
   onOpenSelectedProject,
   onUploadFilesToProject,
+  onDownloadProjectFiles,
+  onDownloadProjectFolder,
 }: {
   projects: Project[];
   filteredProjects: Project[];
@@ -37,29 +32,18 @@ export function ProjectSearchPanel({
   searchValue: string;
   selectedProjectId: string;
   uploadingProjectId: string | null;
+  downloadingProjectId: string | null;
   onSearchModeChange: (mode: ProjectSearchMode) => void;
   onSearchValueChange: (value: string) => void;
   onSelectedProjectChange: (id: string) => void;
   onOpenSelectedProject: () => void;
   onUploadFilesToProject: (projectId: string, files: File[]) => void;
+  onDownloadProjectFiles: (project: Project) => void;
+  onDownloadProjectFolder: (project: Project) => void;
 }) {
   function openProject(projectId: string) {
     if (!projectId) return;
     window.location.href = `/workspace/projects/${projectId}`;
-  }
-
-  function downloadProject(project: Project) {
-    downloadJsonFile({
-      fileName: `muzes-garden-project-${createDownloadStamp()}.json`,
-      payload: createProjectDownloadPayload([project]),
-    });
-  }
-
-  function downloadProjectFolder(project: Project) {
-    downloadJsonFile({
-      fileName: `muzes-garden-project-folder-${createDownloadStamp()}.json`,
-      payload: createProjectDownloadPayload([project]),
-    });
   }
 
   return (
@@ -136,8 +120,7 @@ export function ProjectSearchPanel({
           <div>
             <div className={eyebrowClass}>Project Cards</div>
             <div className="mt-1 text-xs text-white/70">
-              Open, upload files, upload folders, and download project data from
-              each card.
+              Open, upload real audio, and download real linked project audio.
             </div>
           </div>
 
@@ -149,7 +132,9 @@ export function ProjectSearchPanel({
             <div className="grid gap-3">
               {filteredProjects.map((project) => {
                 const uploading = uploadingProjectId === project.id;
+                const downloading = downloadingProjectId === project.id;
                 const selected = selectedProjectId === project.id;
+                const busy = uploading || downloading;
 
                 return (
                   <div
@@ -212,15 +197,18 @@ export function ProjectSearchPanel({
                         </div>
 
                         <SharedUploadButtons
-                          disabled={uploading}
+                          disabled={busy}
                           onFilesSelected={(files) =>
                             onUploadFilesToProject(project.id, files)
                           }
                         />
 
                         <SharedDownloadButtons
-                          onDownloadFiles={() => downloadProject(project)}
-                          onDownloadFolder={() => downloadProjectFolder(project)}
+                          disabled={busy}
+                          onDownloadFiles={() => onDownloadProjectFiles(project)}
+                          onDownloadFolder={() =>
+                            onDownloadProjectFolder(project)
+                          }
                         />
                       </div>
                     </div>
@@ -228,6 +216,12 @@ export function ProjectSearchPanel({
                     {uploading ? (
                       <div className="mt-3 rounded-xl border border-white/20 bg-black p-3 text-xs text-white/70">
                         Uploading into this project...
+                      </div>
+                    ) : null}
+
+                    {downloading ? (
+                      <div className="mt-3 rounded-xl border border-white/20 bg-black p-3 text-xs text-white/70">
+                        Preparing real project audio downloads...
                       </div>
                     ) : null}
                   </div>
