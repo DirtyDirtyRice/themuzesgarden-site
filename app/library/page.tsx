@@ -55,10 +55,13 @@ export default function LibraryPage() {
 
   const {
     activeTags,
+    searchQuery,
     filteredTracks,
+    setSearchQuery,
     addFilterTag,
     removeFilterTag,
     clearFilters,
+    clearSearch,
   } = useLibraryFilters({
     visibleTracks,
   });
@@ -253,6 +256,9 @@ export default function LibraryPage() {
           uploading={uploading}
           uploadMessage={uploadMessage}
           uploadError={uploadError}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          onClearSearch={clearSearch}
           onFilesSelected={handleLibraryFilesSelected}
           onAddFilterTag={addFilterTag}
           onRemoveFilterTag={removeFilterTag}

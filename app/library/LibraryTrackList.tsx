@@ -23,6 +23,19 @@ type ProjectOptionLike = {
   title?: unknown;
 };
 
+type LastSentProject = {
+  id: string;
+  title: string;
+  sentCount: number;
+};
+
+type GroupedLibraryTrack = {
+  id: string;
+  title: string;
+  copyCount: number;
+  tracks: GroundworkTrackLike[];
+};
+
 type Props = {
   tracks: GroundworkTrackLike[];
   projects: ProjectOptionLike[];
@@ -68,6 +81,10 @@ function getTrackAudioUrl(track: GroundworkTrackLike) {
   );
 }
 
+function getProjectTitle(project: ProjectOptionLike | null | undefined) {
+  return cleanText(project?.title) || "Untitled project";
+}
+
 function slugifyDownloadName(value: string) {
   return (
     value
@@ -76,6 +93,108 @@ function slugifyDownloadName(value: string) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 80) || "library-track"
+  );
+}
+
+function normalizeLibraryTitle(value: string) {
+  return (
+    value
+      .replace(/\.[a-z0-9]+$/i, "")
+      .replace(/\s+/g, " ")
+      .trim() || "Untitled Track"
+  );
+}
+
+function stripCopyWords(value: string) {
+  const copyWords = [
+    "rock",
+    "funk",
+    "hiphop",
+    "trap",
+    "jazz",
+    "edm",
+    "house",
+    "techno",
+    "ambient",
+    "lofi",
+    "keeper",
+    "keeper1",
+    "keeper2",
+    "keeper3",
+    "suno",
+    "master",
+    "mix",
+    "demo",
+    "draft",
+    "final",
+    "version",
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "v5",
+    "wav",
+    "mp3",
+    "flac",
+    "aiff",
+    "stem",
+    "stems",
+    "instrumental",
+    "vocal",
+    "vocals",
+    "drums",
+    "bass",
+    "guitar",
+    "keys",
+  ];
+
+  const words = normalizeLibraryTitle(value).split(" ");
+  const keptWords = [...words];
+
+  while (keptWords.length > 1) {
+    const lastWord = keptWords[keptWords.length - 1]
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+    if (!copyWords.includes(lastWord)) break;
+    keptWords.pop();
+  }
+
+  return keptWords.join(" ").trim() || value;
+}
+
+function getGroupTitle(track: GroundworkTrackLike) {
+  return stripCopyWords(getTrackTitle(track));
+}
+
+function getGroupId(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function buildGroupedTracks(tracks: GroundworkTrackLike[]): GroupedLibraryTrack[] {
+  const groups = new Map<string, GroupedLibraryTrack>();
+
+  tracks.forEach((track) => {
+    const title = getGroupTitle(track);
+    const id = getGroupId(title);
+    const existing = groups.get(id);
+
+    if (existing) {
+      existing.tracks.push(track);
+      existing.copyCount = existing.tracks.length;
+      return;
+    }
+
+    groups.set(id, {
+      id,
+      title,
+      copyCount: 1,
+      tracks: [track],
+    });
+  });
+
+  return Array.from(groups.values()).sort((first, second) =>
+    first.title.localeCompare(second.title)
   );
 }
 
@@ -117,7 +236,12 @@ export function LibraryTrackList({
   onAddTracksToProject,
 }: Props) {
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
+  const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [lastSentProject, setLastSentProject] =
+    useState<LastSentProject | null>(null);
+
+  const groupedTracks = useMemo(() => buildGroupedTracks(tracks), [tracks]);
 
   const visibleTrackIds = useMemo(() => {
     return tracks.map((track) => cleanId(track.id)).filter(Boolean);
@@ -133,13 +257,23 @@ export function LibraryTrackList({
     return tracks.filter((track) => selectedSet.has(cleanId(track.id)));
   }, [tracks, selectedVisibleTrackIds]);
 
+  const selectedProject = useMemo(() => {
+    if (!selectedProjectId) return null;
+
+    return (
+      projects.find((project) => cleanId(project.id) === selectedProjectId) ??
+      null
+    );
+  }, [projects, selectedProjectId]);
+
   const downloadableSelectedTracks = useMemo(() => {
     return selectedTracks.filter((track) => getTrackAudioUrl(track));
   }, [selectedTracks]);
 
   const selectedCount = selectedVisibleTrackIds.length;
   const hasTracks = visibleTrackIds.length > 0;
-  const allVisibleSelected = hasTracks && selectedCount === visibleTrackIds.length;
+  const allVisibleSelected =
+    hasTracks && selectedCount === visibleTrackIds.length;
   const canSend =
     selectedCount > 0 && selectedProjectId.length > 0 && !sendingToProject;
   const canDownloadSelected = downloadableSelectedTracks.length > 0;
@@ -155,6 +289,41 @@ export function LibraryTrackList({
     );
   }
 
+  function getGroupTrackIds(group: GroupedLibraryTrack) {
+    return group.tracks.map((track) => cleanId(track.id)).filter(Boolean);
+  }
+
+  function isGroupExpanded(groupId: string) {
+    return expandedGroupIds.includes(groupId);
+  }
+
+  function toggleGroupExpanded(groupId: string) {
+    setExpandedGroupIds((currentIds) =>
+      currentIds.includes(groupId)
+        ? currentIds.filter((currentId) => currentId !== groupId)
+        : [...currentIds, groupId]
+    );
+  }
+
+  function toggleGroupSelected(group: GroupedLibraryTrack) {
+    const groupTrackIds = getGroupTrackIds(group);
+    const selectedSet = new Set(selectedTrackIds);
+    const allSelected = groupTrackIds.every((trackId) =>
+      selectedSet.has(trackId)
+    );
+
+    if (allSelected) {
+      setSelectedTrackIds((currentIds) =>
+        currentIds.filter((trackId) => !groupTrackIds.includes(trackId))
+      );
+      return;
+    }
+
+    setSelectedTrackIds((currentIds) =>
+      Array.from(new Set([...currentIds, ...groupTrackIds]))
+    );
+  }
+
   function selectAllVisibleTracks() {
     setSelectedTrackIds(visibleTrackIds);
   }
@@ -163,13 +332,25 @@ export function LibraryTrackList({
     setSelectedTrackIds([]);
   }
 
+  function openProject(projectId: string) {
+    if (!projectId) return;
+    window.location.href = `/workspace/projects/${projectId}`;
+  }
+
   async function handleSendToProject() {
-    const ok = await onAddTracksToProject(
-      selectedProjectId,
-      selectedVisibleTrackIds
-    );
+    const sentCount = selectedVisibleTrackIds.length;
+    const projectId = selectedProjectId;
+    const projectTitle = getProjectTitle(selectedProject);
+
+    const ok = await onAddTracksToProject(projectId, selectedVisibleTrackIds);
 
     if (ok) {
+      setLastSentProject({
+        id: projectId,
+        title: projectTitle,
+        sentCount,
+      });
+
       setSelectedTrackIds([]);
     }
   }
@@ -187,11 +368,11 @@ export function LibraryTrackList({
               Library Actions
             </p>
             <h2 className="mt-1 text-xl font-black text-white">
-              Multi-select tracks
+              Select titles → Choose project → Send To → Open Project
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/70">
-              Select one or more Library tracks, choose a project, then send or
-              download the selected audio.
+              Pick one grouped song title to send every copy underneath it, or
+              expand the title and choose individual versions.
             </p>
           </div>
 
@@ -199,7 +380,9 @@ export function LibraryTrackList({
             <button
               type="button"
               className={toolbarButtonClass}
-              onClick={allVisibleSelected ? clearSelectedTracks : selectAllVisibleTracks}
+              onClick={
+                allVisibleSelected ? clearSelectedTracks : selectAllVisibleTracks
+              }
               disabled={!hasTracks}
             >
               {allVisibleSelected ? "Clear All" : "Select All"}
@@ -227,14 +410,17 @@ export function LibraryTrackList({
 
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
           <div className="rounded-2xl border border-white/25 bg-black px-4 py-3 text-sm font-bold text-white">
-            Selected tracks: {selectedCount} · Downloadable:{" "}
-            {downloadableSelectedTracks.length}
+            Grouped titles: {groupedTracks.length} · Selected copies:{" "}
+            {selectedCount} · Downloadable: {downloadableSelectedTracks.length}
           </div>
 
           <select
             className={selectClass}
             value={selectedProjectId}
-            onChange={(event) => setSelectedProjectId(event.target.value)}
+            onChange={(event) => {
+              setSelectedProjectId(event.target.value);
+              setLastSentProject(null);
+            }}
             disabled={loadingProjects || projects.length === 0}
           >
             <option value="">
@@ -242,7 +428,7 @@ export function LibraryTrackList({
                 ? "Loading projects..."
                 : projects.length === 0
                   ? "No projects found"
-                  : "Send To Project..."}
+                  : "Choose Project..."}
             </option>
 
             {projects.map((project) => {
@@ -267,6 +453,56 @@ export function LibraryTrackList({
             {sendingToProject ? "Sending..." : "Send To"}
           </button>
         </div>
+
+        {selectedProject ? (
+          <div className="mt-3 rounded-2xl border border-white/20 bg-black p-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="text-sm font-black text-white">
+                  Selected project: {getProjectTitle(selectedProject)}
+                </div>
+                <div className="mt-1 text-xs text-white/70">
+                  Send selected copies here, then open the project to play or
+                  arrange them.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className={toolbarButtonClass}
+                onClick={() => openProject(selectedProjectId)}
+                disabled={!selectedProjectId}
+              >
+                Open Project
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {lastSentProject ? (
+          <div className="mt-3 rounded-2xl border border-white/25 bg-black p-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="text-sm font-black text-white">
+                  Sent {lastSentProject.sentCount} track
+                  {lastSentProject.sentCount === 1 ? "" : "s"} to{" "}
+                  {lastSentProject.title}.
+                </div>
+                <div className="mt-1 text-xs text-white/70">
+                  Next step: open the project and confirm the songs are attached.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className={toolbarButtonClass}
+                onClick={() => openProject(lastSentProject.id)}
+              >
+                Open Project
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-3 rounded-2xl border border-white/20 bg-black p-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -295,25 +531,82 @@ export function LibraryTrackList({
         ) : null}
       </section>
 
-      {tracks.map((track) => {
-        const trackId = cleanId(track.id);
-        const isEditing = editingTrackId === trackId;
-        const isSelected = selectedTrackIds.includes(trackId);
+      {groupedTracks.map((group) => {
+        const groupTrackIds = getGroupTrackIds(group);
+        const selectedSet = new Set(selectedTrackIds);
+        const selectedInGroup = groupTrackIds.filter((trackId) =>
+          selectedSet.has(trackId)
+        ).length;
+        const allGroupSelected =
+          groupTrackIds.length > 0 && selectedInGroup === groupTrackIds.length;
+        const expanded = isGroupExpanded(group.id);
 
         return (
-          <LibraryTrackCard
-            key={trackId}
-            track={track as any}
-            isEditing={isEditing}
-            isSelected={isSelected}
-            onToggleSelected={() => toggleTrackSelected(trackId)}
-            onSetEditing={() =>
-              onSetEditingTrackId(isEditing ? null : trackId)
-            }
-            onAddFilterTag={onAddFilterTag}
-            onAddTagToTrack={onAddTagToTrack}
-            onRemoveTagFromTrack={onRemoveTagFromTrack}
-          />
+          <section
+            key={group.id}
+            className="rounded-3xl border border-white/25 bg-black p-4 text-white"
+          >
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h3 className="text-lg font-black text-white">
+                  {group.title}{" "}
+                  <span className="text-sm text-white/70">
+                    ({group.copyCount}{" "}
+                    {group.copyCount === 1 ? "copy" : "copies"})
+                  </span>
+                </h3>
+
+                <p className="mt-1 text-xs font-bold text-white/70">
+                  Selected copies: {selectedInGroup} / {groupTrackIds.length}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className={toolbarButtonClass}
+                  onClick={() => toggleGroupSelected(group)}
+                  disabled={groupTrackIds.length === 0}
+                >
+                  {allGroupSelected ? "Clear Copies" : "Select All Copies"}
+                </button>
+
+                <button
+                  type="button"
+                  className={toolbarButtonClass}
+                  onClick={() => toggleGroupExpanded(group.id)}
+                >
+                  {expanded ? "Hide Copies" : "Show Copies"}
+                </button>
+              </div>
+            </div>
+
+            {expanded ? (
+              <div className="mt-4 space-y-3">
+                {group.tracks.map((track) => {
+                  const trackId = cleanId(track.id);
+                  const isEditing = editingTrackId === trackId;
+                  const isSelected = selectedTrackIds.includes(trackId);
+
+                  return (
+                    <LibraryTrackCard
+                      key={trackId}
+                      track={track as any}
+                      isEditing={isEditing}
+                      isSelected={isSelected}
+                      onToggleSelected={() => toggleTrackSelected(trackId)}
+                      onSetEditing={() =>
+                        onSetEditingTrackId(isEditing ? null : trackId)
+                      }
+                      onAddFilterTag={onAddFilterTag}
+                      onAddTagToTrack={onAddTagToTrack}
+                      onRemoveTagFromTrack={onRemoveTagFromTrack}
+                    />
+                  );
+                })}
+              </div>
+            ) : null}
+          </section>
         );
       })}
 

@@ -7,12 +7,37 @@ function getTagIds(value: unknown): string[] {
   return value.map((item) => String(item ?? "").trim()).filter(Boolean);
 }
 
+function getSearchText(track: unknown): string {
+  const record = track as {
+    title?: unknown;
+    name?: unknown;
+    fileName?: unknown;
+    filename?: unknown;
+    artist?: unknown;
+    tags?: unknown;
+    searchText?: unknown;
+  };
+
+  return [
+    record.searchText,
+    record.title,
+    record.name,
+    record.fileName,
+    record.filename,
+    record.artist,
+    ...getTagIds(record.tags),
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
 type Args<TTrack> = {
   visibleTracks: TTrack[];
 };
 
 export function useLibraryFilters<TTrack>({ visibleTracks }: Args<TTrack>) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   function addFilterTag(tagId: string) {
     setActiveTags((prev) => (prev.includes(tagId) ? prev : [...prev, tagId]));
@@ -26,21 +51,34 @@ export function useLibraryFilters<TTrack>({ visibleTracks }: Args<TTrack>) {
     setActiveTags([]);
   }
 
+  function clearSearch() {
+    setSearchQuery("");
+  }
+
   const filteredTracks = useMemo(() => {
-    if (!activeTags.length) return visibleTracks;
+    const cleanSearch = searchQuery.trim().toLowerCase();
 
     return visibleTracks.filter((track) => {
       const tags = (track as { tags?: unknown }).tags;
       const ids = getTagIds(tags);
-      return activeTags.every((tag) => ids.includes(tag));
+
+      const matchesTags = activeTags.every((tag) => ids.includes(tag));
+
+      if (!matchesTags) return false;
+      if (!cleanSearch) return true;
+
+      return getSearchText(track).includes(cleanSearch);
     });
-  }, [visibleTracks, activeTags]);
+  }, [visibleTracks, activeTags, searchQuery]);
 
   return {
     activeTags,
+    searchQuery,
     filteredTracks,
+    setSearchQuery,
     addFilterTag,
     removeFilterTag,
     clearFilters,
+    clearSearch,
   };
 }

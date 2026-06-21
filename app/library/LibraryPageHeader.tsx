@@ -15,6 +15,9 @@ type Props = {
   uploading: boolean;
   uploadMessage: string | null;
   uploadError: string | null;
+  searchQuery?: string;
+  onSearchQueryChange?: (value: string) => void;
+  onClearSearch?: () => void;
   onFilesSelected: (files: File[]) => void;
   onAddFilterTag: (tagId: string) => void;
   onRemoveFilterTag: (tagId: string) => void;
@@ -30,6 +33,9 @@ const menuButtonClass =
 
 const chipClass =
   "inline-flex items-center justify-center rounded-full border border-white/25 bg-black px-3 py-1 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+
+const searchInputClass =
+  "min-h-12 w-full rounded-2xl border border-white/25 bg-black px-4 py-3 text-base font-bold text-white outline-none placeholder:text-white/50 focus:border-white";
 
 const downloadFormatOptions: {
   value: LibraryDownloadFormat;
@@ -57,6 +63,9 @@ export function LibraryPageHeader({
   uploading,
   uploadMessage,
   uploadError,
+  searchQuery = "",
+  onSearchQueryChange,
+  onClearSearch,
   onFilesSelected,
   onAddFilterTag,
   onRemoveFilterTag,
@@ -129,8 +138,8 @@ export function LibraryPageHeader({
             </div>
 
             <div className="mt-2 max-w-2xl text-sm text-white/70">
-              Library is the master song pool. Send tracks to projects, keep WAV
-              as the working format, and use MP3 when file size matters.
+              Library is the master song pool. Search first, then send grouped
+              titles or individual copies to projects.
             </div>
 
             {supabaseErr ? (
@@ -251,6 +260,32 @@ export function LibraryPageHeader({
               )}
             </div>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-white/20 bg-black p-3">
+          <label className="block">
+            <span className="text-sm font-black text-white">
+              Search Library
+            </span>
+
+            <div className="mt-2 grid gap-2 md:grid-cols-[1fr_auto]">
+              <input
+                value={searchQuery}
+                onChange={(event) => onSearchQueryChange?.(event.target.value)}
+                className={searchInputClass}
+                placeholder="Search titles, copies, tags, artists..."
+              />
+
+              <button
+                type="button"
+                className={buttonClass}
+                onClick={onClearSearch}
+                disabled={!searchQuery}
+              >
+                Clear Search
+              </button>
+            </div>
+          </label>
         </div>
       </div>
 

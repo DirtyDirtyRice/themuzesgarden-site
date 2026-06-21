@@ -10,6 +10,8 @@ import {
 } from "./projectPageStyles";
 import { formatDate, formatKind } from "./projectPageHelpers";
 
+const SHOW_ALL_PROJECTS_VALUE = "__show_all_projects__";
+
 export function ProjectSearchPanel({
   projects,
   filteredProjects,
@@ -41,27 +43,45 @@ export function ProjectSearchPanel({
   onDownloadProjectFiles: (project: Project) => void;
   onDownloadProjectFolder: (project: Project) => void;
 }) {
+  const showingAllProjects = selectedProjectId === SHOW_ALL_PROJECTS_VALUE;
+
+  const visibleProjects = showingAllProjects
+    ? filteredProjects
+    : selectedProjectId
+      ? filteredProjects.filter((project) => project.id === selectedProjectId)
+      : [];
+
   function openProject(projectId: string) {
-    if (!projectId) return;
+    if (!projectId || projectId === SHOW_ALL_PROJECTS_VALUE) return;
     window.location.href = `/workspace/projects/${projectId}`;
+  }
+
+  function handleDropdownChange(projectId: string) {
+    onSelectedProjectChange(projectId);
+  }
+
+  function handleOpenSelectedProject() {
+    if (showingAllProjects) return;
+    onOpenSelectedProject();
   }
 
   return (
     <section className={panelClass}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className={eyebrowClass}>Search Projects</p>
-          <h2 className="mt-2 text-2xl font-black text-white">Find Project</h2>
+          <p className={eyebrowClass}>Project Dropdown</p>
+          <h2 className="mt-2 text-2xl font-black text-white">Choose Project</h2>
           <p className="mt-2 text-sm leading-6 text-white/70">
-            {filteredProjects.length} matching of {projects.length} projects.
+            Pick one project, or choose Show All Projects when you want the full
+            card list.
           </p>
         </div>
 
         <button
           type="button"
           className={buttonClass}
-          onClick={onOpenSelectedProject}
-          disabled={!selectedProjectId}
+          onClick={handleOpenSelectedProject}
+          disabled={!selectedProjectId || showingAllProjects}
         >
           Open Selected
         </button>
@@ -70,15 +90,18 @@ export function ProjectSearchPanel({
       <div className="mt-5 space-y-4">
         <label className="block">
           <span className="text-sm font-black text-white">
-            Project Dropdown
+            Projects
           </span>
 
           <select
             value={selectedProjectId}
-            onChange={(event) => onSelectedProjectChange(event.target.value)}
+            onChange={(event) => handleDropdownChange(event.target.value)}
             className={`${selectClass} mt-2`}
           >
-            <option value="">Choose a project to open...</option>
+            <option value="">Choose a project...</option>
+            <option value={SHOW_ALL_PROJECTS_VALUE}>
+              Show All Projects ({filteredProjects.length})
+            </option>
 
             {filteredProjects.map((project) => (
               <option key={project.id} value={project.id}>
@@ -104,7 +127,7 @@ export function ProjectSearchPanel({
 
           {searchMode === "all" ? (
             <div className="rounded-2xl border border-white/15 bg-black px-4 py-3 text-sm text-white/70">
-              All projects are inside the cards below.
+              Search mode is showing all dropdown choices.
             </div>
           ) : (
             <input
@@ -138,17 +161,26 @@ export function ProjectSearchPanel({
           <div>
             <div className={eyebrowClass}>Project Cards</div>
             <div className="mt-1 text-xs text-white/70">
-              Each card now works like a mini project control center.
+              {selectedProjectId
+                ? `${visibleProjects.length} card${
+                    visibleProjects.length === 1 ? "" : "s"
+                  } showing.`
+                : "Choose a project from the dropdown first."}
             </div>
           </div>
 
-          {filteredProjects.length === 0 ? (
+          {!selectedProjectId ? (
+            <div className="rounded-2xl border border-white/20 bg-black p-4 text-sm text-white/70">
+              No project cards are open yet. Choose a project or Show All
+              Projects.
+            </div>
+          ) : visibleProjects.length === 0 ? (
             <div className="rounded-2xl border border-white/20 bg-black p-4 text-sm text-white/70">
               No matching projects.
             </div>
           ) : (
             <div className="grid gap-3">
-              {filteredProjects.map((project, index) => {
+              {visibleProjects.map((project, index) => {
                 const uploading = uploadingProjectId === project.id;
                 const downloading = downloadingProjectId === project.id;
                 const selected = selectedProjectId === project.id;

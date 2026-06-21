@@ -3,6 +3,14 @@ import {
   type DecoratedLibraryTrack,
 } from "./libraryTrackDecorators";
 
+export type GroupedLibraryTrack<TTrack extends Record<string, unknown>> = {
+  id: string;
+  title: string;
+  copyCount: number;
+  tracks: Array<DecoratedLibraryTrack<TTrack>>;
+  searchText: string;
+};
+
 function inferTrackSource(track: Record<string, unknown>): unknown {
   const explicitSource = track.source ?? track.librarySource ?? track.origin;
   if (explicitSource != null) return explicitSource;
@@ -109,7 +117,6 @@ function inferAudioAssetFields(track: Record<string, unknown>) {
   };
 }
 
-// 🔥 NEW: extract tags from title
 function extractTagsFromTitle(title: string): string[] {
   const words = title.toLowerCase().split(/[\s_-]+/);
 
@@ -126,7 +133,7 @@ function extractTagsFromTitle(title: string): string[] {
     "lofi",
   ];
 
-  return Array.from(new Set(words.filter((w) => knownTags.includes(w))));
+  return Array.from(new Set(words.filter((word) => knownTags.includes(word))));
 }
 
 function enrichTrackWithGeneratedTags<TTrack extends Record<string, unknown>>(
@@ -154,6 +161,115 @@ function enrichTrackWithAudioAssets<TTrack extends Record<string, unknown>>(
   };
 }
 
+function getTrackTitle(track: Record<string, unknown>): string {
+  return (
+    getFirstCleanString(
+      track.title,
+      track.name,
+      track.fileName,
+      track.filename,
+      track.originalName,
+      track.original_name
+    ) ?? "Untitled Track"
+  );
+}
+
+function normalizeTitleForGrouping(title: string): string {
+  return title
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function stripKnownCopyWords(title: string): string {
+  const copyWords = [
+    "rock",
+    "funk",
+    "hiphop",
+    "trap",
+    "jazz",
+    "edm",
+    "house",
+    "techno",
+    "ambient",
+    "lofi",
+    "keeper",
+    "keeper1",
+    "keeper2",
+    "keeper3",
+    "suno",
+    "master",
+    "mix",
+    "demo",
+    "draft",
+    "final",
+    "version",
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "v5",
+    "wav",
+    "mp3",
+    "flac",
+    "aiff",
+    "stem",
+    "stems",
+    "instrumental",
+    "vocal",
+    "vocals",
+    "drums",
+    "bass",
+    "guitar",
+    "keys",
+  ];
+
+  const words = normalizeTitleForGrouping(title).split(" ");
+  const keptWords = [...words];
+
+  while (keptWords.length > 1) {
+    const lastWord = keptWords[keptWords.length - 1]
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+    if (!copyWords.includes(lastWord)) break;
+
+    keptWords.pop();
+  }
+
+  return keptWords.join(" ").trim() || title;
+}
+
+function getLibraryGroupTitle(track: Record<string, unknown>): string {
+  const explicitGroupTitle = getFirstCleanString(
+    track.groupTitle,
+    track.libraryGroupTitle,
+    track.songTitle,
+    track.baseTitle
+  );
+
+  if (explicitGroupTitle) return normalizeTitleForGrouping(explicitGroupTitle);
+
+  return stripKnownCopyWords(getTrackTitle(track));
+}
+
+function getLibraryGroupId(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function buildGroupSearchText<TTrack extends Record<string, unknown>>(
+  title: string,
+  tracks: Array<DecoratedLibraryTrack<TTrack>>
+): string {
+  return [
+    title,
+    ...tracks.map((track) => getTrackTitle(track)),
+    ...tracks.flatMap((track) => normalizeTagIds(track.tags)),
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
 export function buildLibraryGroundworkTracks<
   TTrack extends Record<string, unknown>
 >(tracks: TTrack[]): Array<DecoratedLibraryTrack<TTrack>> {
@@ -167,4 +283,34 @@ export function buildLibraryGroundworkTracks<
       sharedWithMemberIds: inferSharedWithMemberIds(track),
     })
   );
+}
+
+export function buildGroupedLibraryGroundworkTracks<
+  TTrack extends Record<string, unknown>
+>(tracks: TTrack[]): Array<GroupedLibraryTrack<TTrack>> {
+  const decoratedTracks = buildLibraryGroundworkTracks(tracks);
+  const groups = new Map<string, Array<DecoratedLibraryTrack<TTrack>>>();
+
+  for (const track of decoratedTracks) {
+    const title = getLibraryGroupTitle(track);
+    const groupId = getLibraryGroupId(title);
+
+    const current = groups.get(groupId) ?? [];
+    current.push(track);
+    groups.set(groupId, current);
+  }
+
+  return Array.from(groups.entries())
+    .map(([id, groupedTracks]) => {
+      const title = getLibraryGroupTitle(groupedTracks[0]);
+
+      return {
+        id,
+        title,
+        copyCount: groupedTracks.length,
+        tracks: groupedTracks,
+        searchText: buildGroupSearchText(title, groupedTracks),
+      };
+    })
+    .sort((first, second) => first.title.localeCompare(second.title));
 }
