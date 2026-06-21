@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import SharedDownloadButtons from "../shared/downloads/SharedDownloadButtons";
 import { LibraryTrackCard } from "./LibraryTrackCard";
 
 type GroundworkTrackLike = {
@@ -8,6 +9,10 @@ type GroundworkTrackLike = {
   title?: unknown;
   artist?: unknown;
   tags?: unknown;
+  url?: unknown;
+  fileUrl?: unknown;
+  publicUrl?: unknown;
+  audioUrl?: unknown;
   librarySourceLabel?: unknown;
   libraryVisibilityLabel?: unknown;
   sourceProjectTitle?: unknown;
@@ -46,6 +51,57 @@ function cleanId(value: unknown): string {
   return String(value ?? "").trim();
 }
 
+function cleanText(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function getTrackTitle(track: GroundworkTrackLike) {
+  return cleanText(track.title) || "library-track";
+}
+
+function getTrackAudioUrl(track: GroundworkTrackLike) {
+  return (
+    cleanText(track.url) ||
+    cleanText(track.fileUrl) ||
+    cleanText(track.publicUrl) ||
+    cleanText(track.audioUrl)
+  );
+}
+
+function slugifyDownloadName(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "library-track"
+  );
+}
+
+function downloadUrl(url: string, fileName: string) {
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.rel = "noreferrer";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function downloadTracks(tracks: GroundworkTrackLike[]) {
+  tracks.forEach((track, index) => {
+    const url = getTrackAudioUrl(track);
+    if (!url) return;
+
+    window.setTimeout(() => {
+      downloadUrl(url, slugifyDownloadName(getTrackTitle(track)));
+    }, index * 300);
+  });
+}
+
 export function LibraryTrackList({
   tracks,
   projects,
@@ -72,11 +128,21 @@ export function LibraryTrackList({
     return selectedTrackIds.filter((trackId) => visibleSet.has(trackId));
   }, [selectedTrackIds, visibleTrackIds]);
 
+  const selectedTracks = useMemo(() => {
+    const selectedSet = new Set(selectedVisibleTrackIds);
+    return tracks.filter((track) => selectedSet.has(cleanId(track.id)));
+  }, [tracks, selectedVisibleTrackIds]);
+
+  const downloadableSelectedTracks = useMemo(() => {
+    return selectedTracks.filter((track) => getTrackAudioUrl(track));
+  }, [selectedTracks]);
+
   const selectedCount = selectedVisibleTrackIds.length;
   const hasTracks = visibleTrackIds.length > 0;
   const allVisibleSelected = hasTracks && selectedCount === visibleTrackIds.length;
   const canSend =
     selectedCount > 0 && selectedProjectId.length > 0 && !sendingToProject;
+  const canDownloadSelected = downloadableSelectedTracks.length > 0;
 
   function toggleTrackSelected(trackId: string) {
     const cleanTrackId = cleanId(trackId);
@@ -108,6 +174,10 @@ export function LibraryTrackList({
     }
   }
 
+  function handleDownloadSelected() {
+    downloadTracks(downloadableSelectedTracks);
+  }
+
   return (
     <div className="space-y-3">
       <section className="rounded-3xl border border-white/25 bg-black p-4 text-white">
@@ -120,8 +190,8 @@ export function LibraryTrackList({
               Multi-select tracks
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/70">
-              Select one or more Library tracks, choose a project, then send the
-              tracks into that project.
+              Select one or more Library tracks, choose a project, then send or
+              download the selected audio.
             </p>
           </div>
 
@@ -157,7 +227,8 @@ export function LibraryTrackList({
 
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
           <div className="rounded-2xl border border-white/25 bg-black px-4 py-3 text-sm font-bold text-white">
-            Selected tracks: {selectedCount}
+            Selected tracks: {selectedCount} · Downloadable:{" "}
+            {downloadableSelectedTracks.length}
           </div>
 
           <select
@@ -195,6 +266,26 @@ export function LibraryTrackList({
           >
             {sendingToProject ? "Sending..." : "Send To"}
           </button>
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-white/20 bg-black p-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="text-sm font-black text-white">
+                Selected Track Downloads
+              </div>
+              <div className="mt-1 text-xs text-white/70">
+                Download Files and Download Folder both pull the selected Library
+                audio files.
+              </div>
+            </div>
+
+            <SharedDownloadButtons
+              disabled={!canDownloadSelected}
+              onDownloadFiles={handleDownloadSelected}
+              onDownloadFolder={handleDownloadSelected}
+            />
+          </div>
         </div>
 
         {projectLinkMessage ? (

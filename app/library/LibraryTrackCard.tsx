@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getMetadataByTarget } from "@/lib/metadata/metadataApi";
+import SharedDownloadButtons from "../shared/downloads/SharedDownloadButtons";
 import NestedTagPicker from "./NestedTagPicker";
 import type { TrackLike } from "./libraryTypes";
 import { displayTagLabel } from "./libraryUtils";
@@ -27,6 +28,10 @@ type GroundworkTrackLike = TrackLike & {
   libraryVisibilityLabel?: string;
   sourceProjectTitle?: string | null;
   description?: string | null;
+  url?: string | null;
+  fileUrl?: string | null;
+  publicUrl?: string | null;
+  audioUrl?: string | null;
 };
 
 type MetadataItemPreview = {
@@ -47,12 +52,44 @@ type Props = {
 };
 
 const actionButtonClass =
-  "rounded-xl border border-white/25 bg-black px-3 py-2 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+  "rounded-xl border border-white/25 bg-black px-3 py-2 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
 
 const smallButtonClass =
-  "rounded-xl border border-white/25 bg-black px-2 py-1 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+  "rounded-xl border border-white/25 bg-black px-2 py-1 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
 
 const panelClass = "mt-4 rounded-2xl border border-white/25 bg-black p-3";
+
+function slugifyDownloadName(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "library-track"
+  );
+}
+
+function getTrackAudioUrl(track: GroundworkTrackLike) {
+  return (
+    getCleanText(track.url) ||
+    getCleanText(track.fileUrl) ||
+    getCleanText(track.publicUrl) ||
+    getCleanText(track.audioUrl)
+  );
+}
+
+function downloadUrl(url: string, fileName: string) {
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.rel = "noreferrer";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
 
 export function LibraryTrackCard({
   track,
@@ -78,6 +115,7 @@ export function LibraryTrackCard({
   const trackDescription = getCleanText(
     (track as Record<string, unknown>).description
   );
+  const trackAudioUrl = getTrackAudioUrl(track);
 
   const tagIds = getTagIds(track.tags);
 
@@ -85,11 +123,16 @@ export function LibraryTrackCard({
   const [showTags, setShowTags] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const [showFullTitle, setShowFullTitle] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
   const [lyricsButtonStatus, setLyricsButtonStatus] = useState("");
 
   useEffect(() => {
     if (
-      (showMetadata || showTags || showDescription || showFullTitle) &&
+      (showMetadata ||
+        showTags ||
+        showDescription ||
+        showFullTitle ||
+        showPlayer) &&
       cardRef.current
     ) {
       cardRef.current.scrollIntoView({
@@ -97,7 +140,7 @@ export function LibraryTrackCard({
         block: "start",
       });
     }
-  }, [showMetadata, showTags, showDescription, showFullTitle]);
+  }, [showMetadata, showTags, showDescription, showFullTitle, showPlayer]);
 
   const metadataItems = useMemo<MetadataItemPreview[]>(() => {
     const raw = getMetadataByTarget("track", trackId);
@@ -155,6 +198,19 @@ export function LibraryTrackCard({
     );
   }
 
+  function handleDownloadTrack() {
+    if (!trackAudioUrl) return;
+    downloadUrl(trackAudioUrl, slugifyDownloadName(trackTitle));
+  }
+
+  function handleSelectSong() {
+    if (!isSelected) {
+      onToggleSelected();
+    }
+
+    setShowPlayer(true);
+  }
+
   return (
     <div
       ref={cardRef}
@@ -176,7 +232,21 @@ export function LibraryTrackCard({
           </label>
 
           <div className="min-w-0">
-            <div className="font-bold text-white">{trackTitle}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="font-bold text-white">{trackTitle}</div>
+
+              {isSelected ? (
+                <span className="rounded-xl border border-white/25 bg-black px-2 py-1 text-[11px] font-bold text-white">
+                  SELECTED SONG
+                </span>
+              ) : null}
+
+              {trackAudioUrl ? (
+                <span className="rounded-xl border border-white/25 bg-black px-2 py-1 text-[11px] font-bold text-white">
+                  AUDIO READY
+                </span>
+              ) : null}
+            </div>
 
             {showFullTrackTitle ? (
               <button
@@ -208,6 +278,23 @@ export function LibraryTrackCard({
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={handleSelectSong}
+            className={actionButtonClass}
+          >
+            Select Song
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowPlayer((value) => !value)}
+            disabled={!trackAudioUrl}
+            className={actionButtonClass}
+          >
+            Play
+          </button>
+
           <button
             type="button"
             onClick={handleOpenLyricsPage}
@@ -244,6 +331,55 @@ export function LibraryTrackCard({
           </button>
         </div>
       </div>
+
+      <div className="mt-4 rounded-2xl border border-white/20 bg-black p-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="text-sm font-bold text-white">
+              Library Track Actions
+            </div>
+            <div className="mt-1 text-xs text-white/70">
+              Select, play, download, send to project, inspect lyrics, and edit
+              metadata from this card.
+            </div>
+          </div>
+
+          <SharedDownloadButtons
+            disabled={!trackAudioUrl}
+            onDownloadFiles={handleDownloadTrack}
+            onDownloadFolder={handleDownloadTrack}
+          />
+        </div>
+      </div>
+
+      {showPlayer && (
+        <div className={panelClass}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-bold text-white">Selected Song</div>
+              <div className="mt-1 text-xs text-white/70">
+                {trackTitle} {trackArtist ? `• ${trackArtist}` : ""}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowPlayer(false)}
+              className={smallButtonClass}
+            >
+              Close Player
+            </button>
+          </div>
+
+          {trackAudioUrl ? (
+            <audio className="mt-3 w-full" controls src={trackAudioUrl} />
+          ) : (
+            <div className="mt-3 text-sm text-white/70">
+              No audio URL found for this track.
+            </div>
+          )}
+        </div>
+      )}
 
       {showFullTitle && (
         <div className={panelClass}>
