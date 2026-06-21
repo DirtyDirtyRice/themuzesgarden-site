@@ -1,3 +1,4 @@
+import SharedDownloadButtons from "../../shared/downloads/SharedDownloadButtons";
 import SharedUploadButtons from "../../shared/uploads/SharedUploadButtons";
 import type { Project, ProjectSearchMode } from "./projectPageTypes";
 import {
@@ -7,6 +8,15 @@ import {
   panelClass,
   selectClass,
 } from "./projectPageStyles";
+import {
+  createProjectDownloadPayload,
+  formatDate,
+  formatKind,
+} from "./projectPageHelpers";
+import {
+  createDownloadStamp,
+  downloadJsonFile,
+} from "../../shared/downloads/downloadFileHelpers";
 
 export function ProjectSearchPanel({
   projects,
@@ -33,10 +43,24 @@ export function ProjectSearchPanel({
   onOpenSelectedProject: () => void;
   onUploadFilesToProject: (projectId: string, files: File[]) => void;
 }) {
-  const selectedProject =
-    filteredProjects.find((project) => project.id === selectedProjectId) ||
-    projects.find((project) => project.id === selectedProjectId) ||
-    null;
+  function openProject(projectId: string) {
+    if (!projectId) return;
+    window.location.href = `/workspace/projects/${projectId}`;
+  }
+
+  function downloadProject(project: Project) {
+    downloadJsonFile({
+      fileName: `muzes-garden-project-${createDownloadStamp()}.json`,
+      payload: createProjectDownloadPayload([project]),
+    });
+  }
+
+  function downloadProjectFolder(project: Project) {
+    downloadJsonFile({
+      fileName: `muzes-garden-project-folder-${createDownloadStamp()}.json`,
+      payload: createProjectDownloadPayload([project]),
+    });
+  }
 
   return (
     <section className={panelClass}>
@@ -96,7 +120,7 @@ export function ProjectSearchPanel({
 
           {searchMode === "all" ? (
             <div className="rounded-2xl border border-white/15 bg-black px-4 py-3 text-sm text-white/70">
-              All projects are inside the dropdown above.
+              All projects are inside the cards below.
             </div>
           ) : (
             <input
@@ -108,33 +132,110 @@ export function ProjectSearchPanel({
           )}
         </div>
 
-        {selectedProject ? (
-          <div className="rounded-2xl border border-white/20 bg-black p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div>
-                <div className="text-sm font-black text-white">
-                  {selectedProject.title}
-                </div>
-
-                <div className="mt-1 text-xs text-white/70">
-                  Upload files or a folder directly into this selected project.
-                </div>
-
-                <div className="mt-1 text-xs text-white/70">
-                  Kind: {selectedProject.kind} · Visibility:{" "}
-                  {selectedProject.visibility}
-                </div>
-              </div>
-
-              <SharedUploadButtons
-                disabled={uploadingProjectId === selectedProject.id}
-                onFilesSelected={(files) =>
-                  onUploadFilesToProject(selectedProject.id, files)
-                }
-              />
+        <div className="space-y-3 pt-2">
+          <div>
+            <div className={eyebrowClass}>Project Cards</div>
+            <div className="mt-1 text-xs text-white/70">
+              Open, upload files, upload folders, and download project data from
+              each card.
             </div>
           </div>
-        ) : null}
+
+          {filteredProjects.length === 0 ? (
+            <div className="rounded-2xl border border-white/20 bg-black p-4 text-sm text-white/70">
+              No matching projects.
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {filteredProjects.map((project) => {
+                const uploading = uploadingProjectId === project.id;
+                const selected = selectedProjectId === project.id;
+
+                return (
+                  <div
+                    key={project.id}
+                    className={[
+                      "rounded-2xl border bg-black p-4",
+                      selected ? "border-white/40" : "border-white/20",
+                    ].join(" ")}
+                  >
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => onSelectedProjectChange(project.id)}
+                            className="text-left text-sm font-black text-white transition-transform duration-150 hover:scale-[1.02]"
+                          >
+                            {project.title}
+                          </button>
+
+                          {selected ? (
+                            <span className="rounded-xl border border-white/25 bg-black px-2 py-1 text-[11px] font-bold text-white">
+                              SELECTED
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="mt-1 text-xs text-white/70">
+                          {formatKind(project.kind)} · {project.visibility}
+                        </div>
+
+                        <div className="mt-1 text-xs text-white/70">
+                          Updated: {formatDate(project.updated_at)}
+                        </div>
+
+                        {project.description ? (
+                          <div className="mt-2 text-sm leading-6 text-white/70">
+                            {project.description}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="flex flex-col gap-2 lg:items-end">
+                        <div className="flex flex-wrap gap-2 lg:justify-end">
+                          <button
+                            type="button"
+                            className={buttonClass}
+                            onClick={() => openProject(project.id)}
+                          >
+                            Open
+                          </button>
+
+                          <button
+                            type="button"
+                            className={buttonClass}
+                            onClick={() => onSelectedProjectChange(project.id)}
+                          >
+                            Select
+                          </button>
+                        </div>
+
+                        <SharedUploadButtons
+                          disabled={uploading}
+                          onFilesSelected={(files) =>
+                            onUploadFilesToProject(project.id, files)
+                          }
+                        />
+
+                        <SharedDownloadButtons
+                          onDownloadFiles={() => downloadProject(project)}
+                          onDownloadFolder={() => downloadProjectFolder(project)}
+                        />
+                      </div>
+                    </div>
+
+                    {uploading ? (
+                      <div className="mt-3 rounded-xl border border-white/20 bg-black p-3 text-xs text-white/70">
+                        Uploading into this project...
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
