@@ -38,6 +38,11 @@ type Props = {
   miniPlayerPinned: boolean;
 };
 
+const panelClass = "rounded-2xl border border-white/25 bg-black p-3 shadow-lg";
+const buttonClass =
+  "rounded-xl border border-white/25 bg-black px-2 py-1 text-xs font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
+const textSoftClass = "text-xs text-white/70";
+
 export default function ProjectMiniPlayer(props: Props) {
   const {
     visible,
@@ -87,11 +92,12 @@ export default function ProjectMiniPlayer(props: Props) {
   const hasTrack = !!nowPlayingTrack;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-50 w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 space-y-2">
-      <div className="rounded-2xl border bg-white p-3 shadow-lg space-y-2">
+    <div className="fixed bottom-4 left-1/2 z-50 w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 space-y-2 text-white">
+      <div className={`${panelClass} space-y-2`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <button
+              type="button"
               className="min-w-0 text-left"
               onClick={() => {
                 nowPlayingCardRef?.current?.scrollIntoView({
@@ -101,13 +107,13 @@ export default function ProjectMiniPlayer(props: Props) {
               }}
               title="Jump to Now Playing"
             >
-              <div className="truncate text-sm font-medium">
+              <div className="truncate text-sm font-bold text-white">
                 {hasTrack ? "▶ " : ""}
                 {nowPlayingTrack?.title ?? "No track playing"}
               </div>
             </button>
 
-            <div className="truncate text-xs text-zinc-500">
+            <div className={`truncate ${textSoftClass}`}>
               {nowPlayingTrack?.artist ?? "—"}
               {playbackIndex >= 0 && playbackCount > 0 ? (
                 <>
@@ -118,66 +124,54 @@ export default function ProjectMiniPlayer(props: Props) {
             </div>
           </div>
 
-          <div className="truncate text-xs text-zinc-500">
+          <div className={`truncate ${textSoftClass}`}>
             Up next: {upNextTrack?.title ?? "—"}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            className="rounded border px-2 py-1 text-xs"
-            onClick={onShowKeys}
-            title="Show keyboard shortcuts"
-          >
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={buttonClass} onClick={onShowKeys}>
             Keys
           </button>
 
-          <button
-            className="rounded border px-2 py-1 text-xs"
-            onClick={onTogglePinned}
-            title={miniPlayerPinned ? "Unpin mini player" : "Pin mini player"}
-          >
+          <button type="button" className={buttonClass} onClick={onTogglePinned}>
             {miniPlayerPinned ? "Unpin" : "Pin"}
           </button>
 
-          <button
-            className="rounded border px-2 py-1 text-xs"
-            onClick={onToggleShuffle}
-            title="Shuffle"
-          >
+          <button type="button" className={buttonClass} onClick={onToggleShuffle}>
             {shuffleOn ? "Shuffle: On" : "Shuffle: Off"}
           </button>
 
           <button
-            className="rounded border px-2 py-1 text-xs disabled:opacity-60"
+            type="button"
+            className={buttonClass}
             onClick={onPrev}
             disabled={!canPrev}
-            title="Previous"
           >
             Prev
           </button>
 
           <button
-            className="rounded border px-2 py-1 text-xs disabled:opacity-60"
+            type="button"
+            className={buttonClass}
             onClick={onNext}
             disabled={!canNext}
-            title="Next"
           >
             Next
           </button>
 
           <button
-            className="rounded border px-2 py-1 text-xs"
+            type="button"
+            className={buttonClass}
             onClick={onTogglePlayPause}
-            title="Play / Pause"
           >
             {!hasTrack ? "Play" : isPaused ? "Resume" : "Pause"}
           </button>
 
           <button
-            className="rounded border px-2 py-1 text-xs disabled:opacity-60"
+            type="button"
+            className={buttonClass}
             onClick={onStop}
-            title="Stop"
             disabled={!hasTrack}
           >
             Stop
@@ -185,18 +179,14 @@ export default function ProjectMiniPlayer(props: Props) {
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-white p-3 shadow-lg space-y-2">
-        <div className="flex items-center justify-between gap-2 text-xs text-zinc-600">
+      <div className={`${panelClass} space-y-2`}>
+        <div className="flex items-center justify-between gap-2 text-xs text-white/70">
           <div>
             {fmtTime(safeElapsed)} / {fmtTime(safeDuration)}
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              className="rounded border px-2 py-1 text-xs"
-              onClick={onToggleMuted}
-              title="Mute"
-            >
+            <button type="button" className={buttonClass} onClick={onToggleMuted}>
               {muted ? "Muted" : "Mute"}
             </button>
 
@@ -213,17 +203,13 @@ export default function ProjectMiniPlayer(props: Props) {
               title="Volume"
             />
 
-            <button
-              className="rounded border px-2 py-1 text-xs"
-              onClick={onToggleLoop}
-              title="Loop mode"
-            >
+            <button type="button" className={buttonClass} onClick={onToggleLoop}>
               Loop:{" "}
               {loopMode === "off"
                 ? "Off"
                 : loopMode === "track"
-                ? "Track"
-                : "Setlist"}
+                  ? "Track"
+                  : "Setlist"}
             </button>
           </div>
         </div>

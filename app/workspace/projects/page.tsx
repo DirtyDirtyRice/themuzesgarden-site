@@ -8,6 +8,10 @@ import {
   createDownloadStamp,
   downloadJsonFile,
 } from "../../shared/downloads/downloadFileHelpers";
+import {
+  summarizeUploadResult,
+  uploadProjectAudioFiles,
+} from "../../shared/uploads/projectUploadHelpers";
 import { ProjectCreatePanel } from "./ProjectCreatePanel";
 import { ProjectDetailsPanel } from "./ProjectDetailsPanel";
 import { ProjectSearchPanel } from "./ProjectSearchPanel";
@@ -36,6 +40,10 @@ export default function WorkspaceProjectsPage() {
   const [searchMode, setSearchMode] = useState<ProjectSearchMode>("title");
   const [searchValue, setSearchValue] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [uploadingProjectId, setUploadingProjectId] = useState<string | null>(
+    null,
+  );
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 
   const selectedProjects = useMemo(
     () => projects.filter((project) => selectedIds.includes(project.id)),
@@ -82,6 +90,7 @@ export default function WorkspaceProjectsPage() {
 
   function clearSelectedProjects() {
     setSelectedIds([]);
+    setSelectedProjectId("");
   }
 
   function downloadSelectedProjects() {
@@ -91,6 +100,36 @@ export default function WorkspaceProjectsPage() {
       fileName: `muzes-garden-project-folder-${createDownloadStamp()}.json`,
       payload: createProjectDownloadPayload(selectedProjects),
     });
+  }
+
+  async function uploadFilesToProject(projectId: string, files: File[]) {
+    if (!projectId || files.length === 0 || uploadingProjectId) return;
+
+    setUploadingProjectId(projectId);
+    setErrorMsg(null);
+    setUploadMessage(
+      `Uploading ${files.length} file${files.length === 1 ? "" : "s"}...`,
+    );
+
+    try {
+      const result = await uploadProjectAudioFiles({
+        files,
+        visibility: "shared",
+        userId: user?.id ?? null,
+      });
+
+      setUploadMessage(summarizeUploadResult(result));
+      setSelectedProjectId(projectId);
+      setSelectedIds([projectId]);
+      await loadProjects();
+    } catch (error: unknown) {
+      setErrorMsg(
+        error instanceof Error ? error.message : "Failed to upload project files.",
+      );
+      setUploadMessage(null);
+    } finally {
+      setUploadingProjectId(null);
+    }
   }
 
   async function loadProjects() {
@@ -173,6 +212,12 @@ export default function WorkspaceProjectsPage() {
                 {searchedProjects.length} matching of {projects.length} projects
                 · {selectedProjects.length} selected
               </p>
+
+              {uploadMessage ? (
+                <p className="mt-2 text-sm leading-6 text-white/70">
+                  {uploadMessage}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-wrap gap-2 lg:justify-end">
@@ -214,6 +259,7 @@ export default function WorkspaceProjectsPage() {
             searchMode={searchMode}
             searchValue={searchValue}
             selectedProjectId={selectedProjectId}
+            uploadingProjectId={uploadingProjectId}
             onSearchModeChange={(mode) => {
               setSearchMode(mode);
               setSelectedProjectId("");
@@ -226,6 +272,7 @@ export default function WorkspaceProjectsPage() {
             }}
             onSelectedProjectChange={setSelectedProjectId}
             onOpenSelectedProject={openSelectedDropdownProject}
+            onUploadFilesToProject={uploadFilesToProject}
           />
         </section>
 

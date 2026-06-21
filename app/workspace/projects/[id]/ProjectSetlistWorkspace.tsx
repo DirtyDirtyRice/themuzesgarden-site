@@ -66,11 +66,13 @@ function StatusPill({ label }: { label: string }) {
 
 function TrackActionRow({
   tid,
+  isNowPlaying,
   onPlayTrackById,
   onPreviewTrack,
   onSelectTrackMetadataTarget,
 }: {
   tid: string;
+  isNowPlaying: boolean;
   onPlayTrackById: (tid: string) => void;
   onPreviewTrack: (tid: string) => void;
   onSelectTrackMetadataTarget: (tid: string) => void;
@@ -78,13 +80,26 @@ function TrackActionRow({
   return (
     <div className="flex flex-wrap gap-2">
       <button
+        type="button"
         className={actionButtonClass}
-        onClick={() => onPlayTrackById(tid)}
+        onClick={() => {
+          onPreviewTrack(tid);
+          onSelectTrackMetadataTarget(tid);
+        }}
       >
-        Play
+        Select Song
       </button>
 
       <button
+        type="button"
+        className={actionButtonClass}
+        onClick={() => onPlayTrackById(tid)}
+      >
+        {isNowPlaying ? "Play Again" : "Play"}
+      </button>
+
+      <button
+        type="button"
         className={actionButtonClass}
         onClick={() => onSelectTrackMetadataTarget(tid)}
       >
@@ -92,6 +107,7 @@ function TrackActionRow({
       </button>
 
       <button
+        type="button"
         className={actionButtonClass}
         onClick={() => {
           onPreviewTrack(tid);
@@ -187,13 +203,11 @@ export default function ProjectSetlistWorkspace({
 
       {orderedLinkedTracks.length === 0 ? (
         <div className={insetPanelClass}>
-          <div className={subTextClass}>
-            No ordered tracks yet.
-          </div>
+          <div className={subTextClass}>No ordered tracks yet.</div>
 
           <div className="mt-2 text-xs text-white/70">
-            Upload songs, send them from Library into this project, then
-            return here to arrange playback order.
+            Upload songs, send them from Library into this project, then return
+            here to arrange playback order.
           </div>
         </div>
       ) : (
@@ -217,17 +231,13 @@ export default function ProjectSetlistWorkspace({
                     <div className="flex flex-wrap gap-2">
                       <StatusPill label={`POSITION ${idx + 1}`} />
 
-                      {isNow && (
-                        <StatusPill label="NOW PLAYING" />
-                      )}
+                      {isNow ? <StatusPill label="NOW PLAYING" /> : null}
 
-                      {isPreview && (
-                        <StatusPill label="PREVIEW" />
-                      )}
+                      {isPreview ? <StatusPill label="SELECTED SONG" /> : null}
 
-                      {isMetadataTarget && (
+                      {isMetadataTarget ? (
                         <StatusPill label="METADATA TARGET" />
-                      )}
+                      ) : null}
                     </div>
 
                     <div>
@@ -248,6 +258,7 @@ export default function ProjectSetlistWorkspace({
                   <div className="flex flex-wrap gap-2">
                     <TrackActionRow
                       tid={tid}
+                      isNowPlaying={isNow}
                       onPlayTrackById={onPlayTrackById}
                       onPreviewTrack={onPreviewTrack}
                       onSelectTrackMetadataTarget={
@@ -256,6 +267,7 @@ export default function ProjectSetlistWorkspace({
                     />
 
                     <button
+                      type="button"
                       className={smallActionButtonClass}
                       onClick={() => onMoveSetlistItem(tid, "up")}
                       disabled={idx === 0}
@@ -264,6 +276,7 @@ export default function ProjectSetlistWorkspace({
                     </button>
 
                     <button
+                      type="button"
                       className={smallActionButtonClass}
                       onClick={() => onMoveSetlistItem(tid, "down")}
                       disabled={idx === orderedLinkedTracks.length - 1}
