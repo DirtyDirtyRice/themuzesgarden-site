@@ -16,8 +16,11 @@ type Props = {
   uploadMessage: string | null;
   uploadError: string | null;
   searchQuery?: string;
+  projectSearchQuery?: string;
   onSearchQueryChange?: (value: string) => void;
+  onProjectSearchQueryChange?: (value: string) => void;
   onClearSearch?: () => void;
+  onClearProjectSearch?: () => void;
   onFilesSelected: (files: File[]) => void;
   onAddFilterTag: (tagId: string) => void;
   onRemoveFilterTag: (tagId: string) => void;
@@ -26,7 +29,7 @@ type Props = {
 };
 
 const buttonClass =
-  "inline-flex min-h-10 min-w-[128px] items-center justify-center rounded-xl border border-white/25 bg-black px-3 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]";
+  "inline-flex min-h-10 min-w-[128px] items-center justify-center rounded-xl border border-white/25 bg-black px-3 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:text-white/50 disabled:hover:scale-100";
 
 const menuButtonClass =
   "flex w-full items-center justify-between px-4 py-3 text-left text-sm font-bold text-white transition-transform duration-150 hover:translate-x-1";
@@ -64,8 +67,11 @@ export function LibraryPageHeader({
   uploadMessage,
   uploadError,
   searchQuery = "",
+  projectSearchQuery = "",
   onSearchQueryChange,
+  onProjectSearchQueryChange,
   onClearSearch,
+  onClearProjectSearch,
   onFilesSelected,
   onAddFilterTag,
   onRemoveFilterTag,
@@ -138,8 +144,8 @@ export function LibraryPageHeader({
             </div>
 
             <div className="mt-2 max-w-2xl text-sm text-white/70">
-              Library is the master song pool. Search first, then send grouped
-              titles or individual copies to projects.
+              Search Library first, then choose a project and send grouped
+              titles or individual copies.
             </div>
 
             {supabaseErr ? (
@@ -263,29 +269,55 @@ export function LibraryPageHeader({
         </div>
 
         <div className="mt-4 rounded-2xl border border-white/20 bg-black p-3">
-          <label className="block">
-            <span className="text-sm font-black text-white">
-              Search Library
-            </span>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <label className="block">
+              <span className="text-sm font-black text-white">
+                Search Library
+              </span>
 
-            <div className="mt-2 grid gap-2 md:grid-cols-[1fr_auto]">
               <input
                 value={searchQuery}
                 onChange={(event) => onSearchQueryChange?.(event.target.value)}
-                className={searchInputClass}
+                className={`${searchInputClass} mt-2`}
                 placeholder="Search titles, copies, tags, artists..."
               />
+            </label>
 
-              <button
-                type="button"
-                className={buttonClass}
-                onClick={onClearSearch}
-                disabled={!searchQuery}
-              >
-                Clear Search
-              </button>
-            </div>
-          </label>
+            <label className="block">
+              <span className="text-sm font-black text-white">
+                Search Projects
+              </span>
+
+              <input
+                value={projectSearchQuery}
+                onChange={(event) =>
+                  onProjectSearchQueryChange?.(event.target.value)
+                }
+                className={`${searchInputClass} mt-2`}
+                placeholder="Search project title, genre, artist, member..."
+              />
+            </label>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={onClearSearch}
+              disabled={!searchQuery}
+            >
+              Clear Library Search
+            </button>
+
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={onClearProjectSearch}
+              disabled={!projectSearchQuery}
+            >
+              Clear Project Search
+            </button>
+          </div>
         </div>
       </div>
 

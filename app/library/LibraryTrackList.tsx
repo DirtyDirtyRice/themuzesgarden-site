@@ -38,6 +38,8 @@ type GroupedLibraryTrack = {
 
 type Props = {
   tracks: GroundworkTrackLike[];
+  searchQuery: string;
+  projectSearchQuery: string;
   projects: ProjectOptionLike[];
   loadingProjects: boolean;
   sendingToProject: boolean;
@@ -223,6 +225,8 @@ function downloadTracks(tracks: GroundworkTrackLike[]) {
 
 export function LibraryTrackList({
   tracks,
+  searchQuery,
+  projectSearchQuery,
   projects,
   loadingProjects,
   sendingToProject,
@@ -242,6 +246,17 @@ export function LibraryTrackList({
     useState<LastSentProject | null>(null);
 
   const groupedTracks = useMemo(() => buildGroupedTracks(tracks), [tracks]);
+  const hasSearchQuery = searchQuery.trim().length > 0;
+
+  const filteredProjects = useMemo(() => {
+    const cleanSearch = projectSearchQuery.trim().toLowerCase();
+
+    if (!cleanSearch) return projects;
+
+    return projects.filter((project) =>
+      String(project.title ?? "").toLowerCase().includes(cleanSearch)
+    );
+  }, [projects, projectSearchQuery]);
 
   const visibleTrackIds = useMemo(() => {
     return tracks.map((track) => cleanId(track.id)).filter(Boolean);
@@ -271,7 +286,7 @@ export function LibraryTrackList({
   }, [selectedTracks]);
 
   const selectedCount = selectedVisibleTrackIds.length;
-  const hasTracks = visibleTrackIds.length > 0;
+  const hasTracks = hasSearchQuery && visibleTrackIds.length > 0;
   const allVisibleSelected =
     hasTracks && selectedCount === visibleTrackIds.length;
   const canSend =
@@ -325,6 +340,7 @@ export function LibraryTrackList({
   }
 
   function selectAllVisibleTracks() {
+    if (!hasSearchQuery) return;
     setSelectedTrackIds(visibleTrackIds);
   }
 
@@ -368,11 +384,11 @@ export function LibraryTrackList({
               Library Actions
             </p>
             <h2 className="mt-1 text-xl font-black text-white">
-              Select titles → Choose project → Send To → Open Project
+              Search title → Select copies → Choose project → Send To
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/70">
-              Pick one grouped song title to send every copy underneath it, or
-              expand the title and choose individual versions.
+              Library starts blank. Search first, then select a grouped title or
+              expand it and choose individual song files.
             </p>
           </div>
 
@@ -410,8 +426,9 @@ export function LibraryTrackList({
 
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
           <div className="rounded-2xl border border-white/25 bg-black px-4 py-3 text-sm font-bold text-white">
-            Grouped titles: {groupedTracks.length} · Selected copies:{" "}
-            {selectedCount} · Downloadable: {downloadableSelectedTracks.length}
+            Grouped titles: {hasSearchQuery ? groupedTracks.length : 0} ·
+            Selected copies: {selectedCount} · Downloadable:{" "}
+            {downloadableSelectedTracks.length}
           </div>
 
           <select
@@ -421,17 +438,17 @@ export function LibraryTrackList({
               setSelectedProjectId(event.target.value);
               setLastSentProject(null);
             }}
-            disabled={loadingProjects || projects.length === 0}
+            disabled={loadingProjects || filteredProjects.length === 0}
           >
             <option value="">
               {loadingProjects
                 ? "Loading projects..."
-                : projects.length === 0
-                  ? "No projects found"
+                : filteredProjects.length === 0
+                  ? "No matching projects"
                   : "Choose Project..."}
             </option>
 
-            {projects.map((project) => {
+            {filteredProjects.map((project) => {
               const projectId = cleanId(project.id);
               const projectTitle = String(project.title ?? "Untitled project");
               if (!projectId) return null;
@@ -531,89 +548,108 @@ export function LibraryTrackList({
         ) : null}
       </section>
 
-      {groupedTracks.map((group) => {
-        const groupTrackIds = getGroupTrackIds(group);
-        const selectedSet = new Set(selectedTrackIds);
-        const selectedInGroup = groupTrackIds.filter((trackId) =>
-          selectedSet.has(trackId)
-        ).length;
-        const allGroupSelected =
-          groupTrackIds.length > 0 && selectedInGroup === groupTrackIds.length;
-        const expanded = isGroupExpanded(group.id);
-
-        return (
-          <section
-            key={group.id}
-            className="rounded-3xl border border-white/25 bg-black p-4 text-white"
-          >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h3 className="text-lg font-black text-white">
-                  {group.title}{" "}
-                  <span className="text-sm text-white/70">
-                    ({group.copyCount}{" "}
-                    {group.copyCount === 1 ? "copy" : "copies"})
-                  </span>
-                </h3>
-
-                <p className="mt-1 text-xs font-bold text-white/70">
-                  Selected copies: {selectedInGroup} / {groupTrackIds.length}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  className={toolbarButtonClass}
-                  onClick={() => toggleGroupSelected(group)}
-                  disabled={groupTrackIds.length === 0}
-                >
-                  {allGroupSelected ? "Clear Copies" : "Select All Copies"}
-                </button>
-
-                <button
-                  type="button"
-                  className={toolbarButtonClass}
-                  onClick={() => toggleGroupExpanded(group.id)}
-                >
-                  {expanded ? "Hide Copies" : "Show Copies"}
-                </button>
-              </div>
-            </div>
-
-            {expanded ? (
-              <div className="mt-4 space-y-3">
-                {group.tracks.map((track) => {
-                  const trackId = cleanId(track.id);
-                  const isEditing = editingTrackId === trackId;
-                  const isSelected = selectedTrackIds.includes(trackId);
-
-                  return (
-                    <LibraryTrackCard
-                      key={trackId}
-                      track={track as any}
-                      isEditing={isEditing}
-                      isSelected={isSelected}
-                      onToggleSelected={() => toggleTrackSelected(trackId)}
-                      onSetEditing={() =>
-                        onSetEditingTrackId(isEditing ? null : trackId)
-                      }
-                      onAddFilterTag={onAddFilterTag}
-                      onAddTagToTrack={onAddTagToTrack}
-                      onRemoveTagFromTrack={onRemoveTagFromTrack}
-                    />
-                  );
-                })}
-              </div>
-            ) : null}
-          </section>
-        );
-      })}
-
-      {tracks.length === 0 && (
+      {!hasSearchQuery ? (
         <div className="rounded-2xl border border-white/25 bg-black p-6 text-sm text-white/70">
-          No tracks found in the Library yet.
+          Search Library first. Type a song title, copy name, tag, or artist
+          above to show grouped results.
         </div>
+      ) : groupedTracks.length === 0 ? (
+        <div className="rounded-2xl border border-white/25 bg-black p-6 text-sm text-white/70">
+          No tracks found for that search.
+        </div>
+      ) : (
+        groupedTracks.map((group) => {
+          const groupTrackIds = getGroupTrackIds(group);
+          const selectedSet = new Set(selectedTrackIds);
+          const selectedInGroup = groupTrackIds.filter((trackId) =>
+            selectedSet.has(trackId)
+          ).length;
+          const allGroupSelected =
+            groupTrackIds.length > 0 &&
+            selectedInGroup === groupTrackIds.length;
+          const expanded = isGroupExpanded(group.id);
+
+          return (
+            <section
+              key={group.id}
+              className="rounded-3xl border border-white/25 bg-black p-4 text-white"
+            >
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex min-w-0 gap-3">
+                  <label className="mt-1 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/25 bg-black transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]">
+                    <input
+                      type="checkbox"
+                      checked={allGroupSelected}
+                      onChange={() => toggleGroupSelected(group)}
+                      className="h-4 w-4 accent-white"
+                      aria-label={`Select all copies of ${group.title}`}
+                    />
+                  </label>
+
+                  <div>
+                    <h3 className="text-lg font-black text-white">
+                      {group.title}{" "}
+                      <span className="text-sm text-white/70">
+                        ({group.copyCount}{" "}
+                        {group.copyCount === 1 ? "copy" : "copies"})
+                      </span>
+                    </h3>
+
+                    <p className="mt-1 text-xs font-bold text-white/70">
+                      Selected copies: {selectedInGroup} /{" "}
+                      {groupTrackIds.length}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    className={toolbarButtonClass}
+                    onClick={() => toggleGroupSelected(group)}
+                    disabled={groupTrackIds.length === 0}
+                  >
+                    {allGroupSelected ? "Clear Copies" : "Select All Copies"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={toolbarButtonClass}
+                    onClick={() => toggleGroupExpanded(group.id)}
+                  >
+                    {expanded ? "Hide Copies" : "Show Copies"}
+                  </button>
+                </div>
+              </div>
+
+              {expanded ? (
+                <div className="mt-4 space-y-3">
+                  {group.tracks.map((track) => {
+                    const trackId = cleanId(track.id);
+                    const isEditing = editingTrackId === trackId;
+                    const isSelected = selectedTrackIds.includes(trackId);
+
+                    return (
+                      <LibraryTrackCard
+                        key={trackId}
+                        track={track as any}
+                        isEditing={isEditing}
+                        isSelected={isSelected}
+                        onToggleSelected={() => toggleTrackSelected(trackId)}
+                        onSetEditing={() =>
+                          onSetEditingTrackId(isEditing ? null : trackId)
+                        }
+                        onAddFilterTag={onAddFilterTag}
+                        onAddTagToTrack={onAddTagToTrack}
+                        onRemoveTagFromTrack={onRemoveTagFromTrack}
+                      />
+                    );
+                  })}
+                </div>
+              ) : null}
+            </section>
+          );
+        })
       )}
     </div>
   );

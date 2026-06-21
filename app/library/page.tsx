@@ -23,6 +23,7 @@ export default function LibraryPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [projectSearchQuery, setProjectSearchQuery] = useState("");
   const setUploadedItems = useState<UploadedProjectItem[]>([])[1];
 
   const {
@@ -257,8 +258,11 @@ export default function LibraryPage() {
           uploadMessage={uploadMessage}
           uploadError={uploadError}
           searchQuery={searchQuery}
+          projectSearchQuery={projectSearchQuery}
           onSearchQueryChange={setSearchQuery}
+          onProjectSearchQueryChange={setProjectSearchQuery}
           onClearSearch={clearSearch}
+          onClearProjectSearch={() => setProjectSearchQuery("")}
           onFilesSelected={handleLibraryFilesSelected}
           onAddFilterTag={addFilterTag}
           onRemoveFilterTag={removeFilterTag}
@@ -268,6 +272,8 @@ export default function LibraryPage() {
 
         <LibraryTrackList
           tracks={filteredTracks}
+          searchQuery={searchQuery}
+          projectSearchQuery={projectSearchQuery}
           projects={projects}
           loadingProjects={loadingProjects}
           sendingToProject={sendingToProject}
