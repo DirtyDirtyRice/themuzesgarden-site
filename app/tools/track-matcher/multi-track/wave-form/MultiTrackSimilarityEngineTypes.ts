@@ -1,3 +1,5 @@
+// app/tools/track-matcher/multi-track/wave-form/MultiTrackSimilarityEngineTypes.ts
+
 export type MultiTrackSimilarityEngineReadiness =
   | "ready"
   | "needs-waveform"
@@ -45,6 +47,16 @@ export type MultiTrackSimilarityEngineFeatureKind =
   | "loudness-bias"
   | "unknown";
 
+export type MultiTrackSimilarityEngineRiffColorGroup =
+  | "white"
+  | "blue"
+  | "green"
+  | "yellow"
+  | "orange"
+  | "purple"
+  | "red"
+  | "pink";
+
 export type MultiTrackSimilarityEngineFeature = {
   featureId: string;
   kind: MultiTrackSimilarityEngineFeatureKind;
@@ -84,6 +96,12 @@ export type MultiTrackSimilarityEngineMatch = {
   recommendation: string;
   status: MultiTrackSimilarityEngineStatus;
   risk: MultiTrackSimilarityEngineRisk;
+
+  riffFamilyId?: string;
+  riffColorGroup?: MultiTrackSimilarityEngineRiffColorGroup;
+  keeperCandidate?: boolean;
+  extractionCandidate?: boolean;
+  selectedTrackIds?: string[];
 };
 
 export type MultiTrackSimilarityEngineSource = {

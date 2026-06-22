@@ -1,3 +1,5 @@
+// app/tools/track-matcher/multi-track/wave-form/MultiTrackSimilarityEngineSeed.ts
+
 import type {
   MultiTrackSimilarityEngineSource,
   MultiTrackSimilarityEngineWorkspace,
@@ -213,6 +215,11 @@ export const multiTrackSimilarityEngineWorkspace: MultiTrackSimilarityEngineWork
         "Send to riff grouping and survivor analysis as a strong candidate, not a final keeper yet.",
       status: "estimated",
       risk: "medium",
+      riffFamilyId: "riff-family-main-hook-blue",
+      riffColorGroup: "blue",
+      keeperCandidate: true,
+      extractionCandidate: true,
+      selectedTrackIds: ["similarity-track-a", "similarity-suno-v7"],
     },
     {
       matchId: "match-track-a-hook-to-suno-v7-final",
@@ -224,12 +231,15 @@ export const multiTrackSimilarityEngineWorkspace: MultiTrackSimilarityEngineWork
       timingDriftMs: 280,
       energyDifference: 0.12,
       transientOverlap: 0.63,
-      detail:
-        "Moderate similarity. Final hook may be a later mutation of the original idea.",
-      recommendation:
-        "Keep as a secondary survivor candidate until mutation mapping runs.",
+      detail: "Moderate similarity. Final hook may be a later mutation of the original idea.",
+      recommendation: "Keep as a secondary survivor candidate until mutation mapping runs.",
       status: "seeded",
       risk: "medium",
+      riffFamilyId: "riff-family-main-hook-blue",
+      riffColorGroup: "blue",
+      keeperCandidate: false,
+      extractionCandidate: true,
+      selectedTrackIds: ["similarity-track-a", "similarity-suno-v7"],
     },
     {
       matchId: "match-track-a-variation-to-suno-v7-bridge",
@@ -247,6 +257,11 @@ export const multiTrackSimilarityEngineWorkspace: MultiTrackSimilarityEngineWork
         "Do not promote to survivor until pattern genome confirms stronger evidence.",
       status: "seeded",
       risk: "high",
+      riffFamilyId: "riff-family-variation-yellow",
+      riffColorGroup: "yellow",
+      keeperCandidate: false,
+      extractionCandidate: false,
+      selectedTrackIds: ["similarity-track-a", "similarity-suno-v7"],
     },
   ],
   findings: [
