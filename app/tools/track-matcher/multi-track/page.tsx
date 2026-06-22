@@ -1,11 +1,52 @@
-import { ComparisonScoringWorkspace, ComparisonWorkspace, ConfidenceSystemWorkspace, DecisionCenterWorkspace, PromptReferenceWorkspace, RelationshipRoutingWorkspace, RelationshipWorkspace, SyncPrepWorkspace } from "./components/MultiTrackCoreSections";
-import { AnalysisHistoryWorkspace, ComparisonNotesWorkspace, ControllerAdapterPrepWorkspace, FutureWiringWorkspace, SaveAnalysisPlaceholder, SaveAnalysisWorkspace, SaveFieldChecklistWorkspace, SaveRecordShapeWorkspace, WorkflowWorkspace } from "./components/MultiTrackAnalysisSections";
-import { AiAnalysisPlaceholderWorkspace, AiRoutingWorkspace, FutureWaveformWorkspace, MarkerLaneRoutingWorkspace, StemRoutingWorkspace, TimelineLaneSystemWorkspace, TimelineMarkerWorkspace, WaveformPrepWorkspace } from "./components/MultiTrackTimelineSections";
-import { MetadataGraphPrepWorkspace, RelationshipRouteExpansionWorkspace, TrackAMetadataWorkspace, TrackARelationshipWorkspace, TrackBMetadataWorkspace, TrackBRelationshipWorkspace, TrackMetadataReadinessWorkspace } from "./components/MultiTrackMetadataSections";
-import { TrackLoadRoutingWorkspace, TrackSlotHierarchyWorkspace, TrackWorkspace } from "./components/MultiTrackWorkspace";
+import {
+  ComparisonScoringWorkspace,
+  ComparisonWorkspace,
+  ConfidenceSystemWorkspace,
+  DecisionCenterWorkspace,
+  PromptReferenceWorkspace,
+  RelationshipRoutingWorkspace,
+  RelationshipWorkspace,
+  SyncPrepWorkspace,
+} from "./components/MultiTrackCoreSections";
+import {
+  AiAnalysisPlaceholderWorkspace,
+  AiRoutingWorkspace,
+  FutureWaveformWorkspace,
+  MarkerLaneRoutingWorkspace,
+  StemRoutingWorkspace,
+  TimelineLaneSystemWorkspace,
+  TimelineMarkerWorkspace,
+  WaveformPrepWorkspace,
+} from "./components/MultiTrackTimelineSections";
+import {
+  AnalysisHistoryWorkspace,
+  ComparisonNotesWorkspace,
+  ControllerAdapterPrepWorkspace,
+  FutureWiringWorkspace,
+  SaveAnalysisPlaceholder,
+  SaveAnalysisWorkspace,
+  SaveFieldChecklistWorkspace,
+  SaveRecordShapeWorkspace,
+  WorkflowWorkspace,
+} from "./components/MultiTrackAnalysisSections";
+import {
+  MetadataGraphPrepWorkspace,
+  RelationshipRouteExpansionWorkspace,
+  TrackAMetadataWorkspace,
+  TrackARelationshipWorkspace,
+  TrackBMetadataWorkspace,
+  TrackBRelationshipWorkspace,
+  TrackMetadataReadinessWorkspace,
+} from "./components/MultiTrackMetadataSections";
+import {
+  TrackLoadRoutingWorkspace,
+  TrackSlotHierarchyWorkspace,
+  TrackWorkspace,
+} from "./components/MultiTrackWorkspace";
 import { InfoCard, StatusPill, panelClass } from "./components/MultiTrackShared";
 import MultiTrackController from "./controller/MultiTrackController";
 import { MultiTrackEngineDashboard } from "./components/engine-dashboard/MultiTrackEngineDashboard";
+import MultiTrackTenTrackEditingSurface from "./components/MultiTrackTenTrackEditingSurface";
 
 export default function MultiTrackAnalysisPage() {
   return (
@@ -19,12 +60,12 @@ export default function MultiTrackAnalysisPage() {
             Multi-Track Analysis
           </h1>
           <p className="mt-3 max-w-4xl text-sm leading-6 text-white/70">
-            Expanded workspace for Track A, Track B, comparison notes, sync ideas,
-            structure analysis, stems, instruments, future waveform inspection,
-            confidence scoring, save records, and AI analysis prep.
+            Expanded workspace for editing up to 10 tracks at a time, comparing
+            versions, scoring keepers, rejecting weak takes, preparing waveform
+            inspection, routing stems, and building future arrangement decisions.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <StatusPill label="Phase 4.1" />
+            <StatusPill label="10 Track Editing" />
             <StatusPill label="Split Files" />
             <StatusPill label="Main Page Safe" />
             <StatusPill label="Track A / Track B" />
@@ -39,27 +80,28 @@ export default function MultiTrackAnalysisPage() {
         <section className="grid gap-3 md:grid-cols-4">
           <InfoCard
             label="Workspace"
-            value="Multi-Track"
-            detail="A separate area for deeper work without crowding the normal Track Matcher page."
+            value="10 Tracks"
+            detail="A separate editing surface for version comparison without crowding the normal Track Matcher page."
           />
           <InfoCard
-            label="Phase 4.1 Upgrade"
-            value="Real architecture"
-            detail="Adds scoring signals, confidence systems, save record shape, AI routing, sync prep, and metadata graph prep."
+            label="Current Upgrade"
+            value="Batch editing"
+            detail="Adds ten editable slots for title, BPM, key, volume, mute, solo, keep/reject, and notes."
           />
           <InfoCard
             label="Build Strategy"
-            value="Split safe"
-            detail="Keeps the Track Matcher main page and Finder cosmetics untouched while this page grows."
+            value="Add friendly"
+            detail="Keeps the Track Matcher main page, Finder, and existing engine dashboard untouched."
           />
           <InfoCard
             label="Next Wiring"
-            value="Controller active"
-            detail="The Multi-Track controller now owns session state, adapter previews, registry metrics, and future routing structure."
+            value="Audio slots"
+            detail="Future pass can connect each slot to real Library tracks and waveform lanes."
           />
         </section>
 
         <MultiTrackController />
+        <MultiTrackTenTrackEditingSurface />
         <MultiTrackEngineDashboard />
 
         <TrackLoadRoutingWorkspace />
