@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -300,6 +299,53 @@ export default function MultiTrackSimilarityEngineWorkspacePanel() {
                 <p className="rounded-full border border-white/10 px-3 py-1 text-xs font-black text-white/70">
                   {getSimilarityEngineStrengthLabel(match.matchStrength)}
                 </p>
+              </div>
+
+              <div className="mt-3 grid gap-2 md:grid-cols-5">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/50">
+                    Riff Family
+                  </p>
+                  <p className="mt-1 text-sm font-black text-white">
+                    {match.riffFamilyId ?? "Unassigned"}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/50">
+                    Color Group
+                  </p>
+                  <p className="mt-1 text-sm font-black text-white">
+                    {match.riffColorGroup ?? "white"}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/50">
+                    Keeper
+                  </p>
+                  <p className="mt-1 text-sm font-black text-white">
+                    {match.keeperCandidate ? "Keeper Candidate" : "Not Marked"}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/50">
+                    Extraction
+                  </p>
+                  <p className="mt-1 text-sm font-black text-white">
+                    {match.extractionCandidate ? "Extraction Candidate" : "Not Marked"}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/50">
+                    Selected Tracks
+                  </p>
+                  <p className="mt-1 text-sm font-black text-white">
+                    {match.selectedTrackIds?.length ?? 0}
+                  </p>
+                </div>
               </div>
 
               <div className="mt-3 h-3 overflow-hidden rounded-full border border-white/10 bg-white/[0.04]">
