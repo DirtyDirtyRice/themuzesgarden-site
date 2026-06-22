@@ -4,6 +4,7 @@ export const multiTrackBridgeWorkspaceSeed: MultiTrackBridgeWorkspace = {
   title: "Similarity to Strongest Idea Bridge",
   summary:
     "Seed-safe bridge connecting the existing Similarity, Riff Grouping, Extraction, Keeper, and Strongest Idea engines without creating a new analysis engine.",
+  metrics: [],
   steps: [],
   pathRows: [],
   locks: [

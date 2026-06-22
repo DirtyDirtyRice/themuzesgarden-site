@@ -8,27 +8,7 @@ import {
 import { multiTrackKeeperEngineWorkspaceState } from "./MultiTrackKeeperEngineSeed";
 import { createStrongestIdeaEngineReport } from "./MultiTrackStrongestIdeaEngineHelpers";
 import { strongestIdeaEngineSeedState } from "./MultiTrackStrongestIdeaEngineSeed";
-
-export type MultiTrackBridgeStep = {
-  step: string;
-  title: string;
-  status: string;
-  detail: string;
-};
-
-export type MultiTrackBridgePathRow = {
-  label: string;
-  value: string;
-  detail: string;
-};
-
-export type MultiTrackBridgeWorkspace = {
-  title: string;
-  summary: string;
-  steps: MultiTrackBridgeStep[];
-  pathRows: MultiTrackBridgePathRow[];
-  locks: MultiTrackBridgePathRow[];
-};
+import type { MultiTrackBridgeWorkspace } from "./MultiTrackBridgeTypes";
 
 export function getMultiTrackBridgeWorkspace(): MultiTrackBridgeWorkspace {
   const similarityWorkspace = getMultiTrackSimilarityEngineWorkspace();
@@ -49,6 +29,48 @@ export function getMultiTrackBridgeWorkspace(): MultiTrackBridgeWorkspace {
     title: "Similarity to Strongest Idea Bridge",
     summary:
       "Seed-safe bridge connecting the existing Similarity, Riff Grouping, Extraction, Keeper, and Strongest Idea engines without creating a new analysis engine.",
+    metrics: [
+      {
+        label: "Similarity Matches",
+        value: similarityWorkspace.matches.length,
+        detail: "Match evidence available for riff-family routing.",
+      },
+      {
+        label: "Riff Families",
+        value: riffGroupingWorkspace.groups.length,
+        detail: "Grouped riff families ready for extraction planning.",
+      },
+      {
+        label: "Extraction Plans",
+        value: extractionWorkspace.plans.length,
+        detail: "Drift-corrected extraction plans available.",
+      },
+      {
+        label: "Keeper Candidates",
+        value: keeperWorkspace.candidates.length,
+        detail: "Keeper candidates ranked inside the keeper engine.",
+      },
+      {
+        label: "Strongest Ideas",
+        value: strongestIdeaReport.summary.totalCandidates,
+        detail: "Strongest idea candidates ranked for final promotion.",
+      },
+      {
+        label: "Winner Score",
+        value: strongestIdeaReport.summary.strongestScore,
+        detail: strongestIdeaReport.summary.strongestCandidateTitle,
+      },
+      {
+        label: "Ready",
+        value: strongestIdeaReport.summary.readyCandidates,
+        detail: "Strongest idea candidates marked ready.",
+      },
+      {
+        label: "Review",
+        value: strongestIdeaReport.summary.needsReviewCount,
+        detail: "Strongest idea candidates still needing review.",
+      },
+    ],
     steps: [
       {
         step: "01",
@@ -110,20 +132,16 @@ export function getMultiTrackBridgeWorkspace(): MultiTrackBridgeWorkspace {
     ],
     locks: [
       {
-        label: "No new engine",
-        value: "Bridge only",
-        detail: "This file only connects existing seed-safe engine outputs.",
+        title: "No new engine",
+        body: "This bridge only connects existing seed-safe engine outputs.",
       },
       {
-        label: "No controller wiring",
-        value: "Isolated",
-        detail: "This does not touch the page, route, controller, or audio runtime.",
+        title: "No controller wiring",
+        body: "This does not touch the page, route, controller, or audio runtime.",
       },
       {
-        label: "Safe bridge",
-        value: "Read-only",
-        detail:
-          "The bridge reads existing workspaces and displays the current promotion chain.",
+        title: "Safe bridge",
+        body: "The bridge reads existing workspaces and displays the current promotion chain.",
       },
     ],
   };
