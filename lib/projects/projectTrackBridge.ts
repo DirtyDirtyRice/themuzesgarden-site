@@ -1,3 +1,7 @@
-// Placeholder for Project Track Bridge
-// TODO: Compatibility layer for existing pages.
-export {};
+import { resolveProjectTracks } from "./projectTrackResolver";
+
+export async function buildProjectTrackBridge(
+  projectTrackIds: string[]
+) {
+  return await resolveProjectTracks(projectTrackIds);
+}
