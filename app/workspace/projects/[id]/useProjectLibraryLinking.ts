@@ -3,7 +3,9 @@
 import { useCallback, useMemo, useState } from "react";
 import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
+import { getUploadedTracks } from "../../../../lib/uploadedTracks";
 import { logProjectActivity } from "../../../../lib/projectActivity";
+import { mergeTrackLists } from "../../../library/libraryUtils";
 import { looksLikeUuid } from "./projectDetailsUtils";
 
 type UseProjectLibraryLinkingArgs = {
@@ -66,19 +68,35 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
     return true;
   }, [supabase, projectId]);
 
-  const ensureTracksLoadedOnce = useCallback(async () => {
-    if (allTracks.length > 0) return allTracks;
+const ensureTracksLoadedOnce = useCallback(async () => {
+    if (allTracks.length > 0) {
+      return allTracks;
+    }
 
-    const tracks = await getSupabaseTracks();
-    let safeTracks = Array.isArray(tracks) ? tracks : [];
+  const supabaseTracks = await getSupabaseTracks();
+const uploadedTracks = getUploadedTracks();
+
+const mergedTracks = mergeTrackLists(
+  (Array.isArray(supabaseTracks) ? supabaseTracks : []).map((track: any) => ({
+    ...track,
+    artist: track.artist ?? "",
+  })),
+  (Array.isArray(uploadedTracks) ? uploadedTracks : []).map((track: any) => ({
+    ...track,
+    artist: track.artist ?? "",
+  }))
+);
+
+let safeTracks = Array.isArray(mergedTracks) ? mergedTracks : [];
 
     // 🔥 NEW: OWNER PERMISSION LOGIC
     const isOwner =
       userId && projectOwnerId && String(userId) === String(projectOwnerId);
-
-    if (!isOwner) {
-      safeTracks = safeTracks.filter((t: any) => t.visibility !== "private");
-    }
+if (!isOwner) {
+  safeTracks = safeTracks.filter(
+    (t: any) => String(t.visibility ?? "shared") !== "private"
+  );
+}
 
     setAllTracks(safeTracks);
     return safeTracks;
@@ -187,8 +205,10 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
 
         if (error) throw new Error(error.message);
 
-        const linkedTrack =
-          allTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
+    const loadedTracks = await ensureTracksLoadedOnce();
+
+const linkedTrack =
+  loadedTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
 
         logProjectActivity(
           projectId,
@@ -212,7 +232,16 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
         setLinkBusyId(null);
       }
     },
-    [supabase, projectId, linkedTrackIds, ensureProjectExists, allTracks, setSetlistOrder]
+    
+    [
+  supabase,
+  projectId,
+  linkedTrackIds,
+  ensureProjectExists,
+  allTracks,
+  ensureTracksLoadedOnce,
+  setSetlistOrder,
+]
   );
 
   const unlinkTrack = useCallback(
@@ -243,8 +272,10 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
 
         if (error) throw new Error(error.message);
 
+        const loadedTracks = await ensureTracksLoadedOnce();
+
         const unlinkedTrack =
-          allTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
+          loadedTracks.find((t: any) => String(t?.id) === String(trackId)) ?? null;
 
         logProjectActivity(
           projectId,
@@ -266,7 +297,14 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
         setLinkBusyId(null);
       }
     },
-    [supabase, projectId, linkedTrackIds, allTracks, setSetlistOrder]
+    [
+      supabase,
+      projectId,
+      linkedTrackIds,
+      allTracks,
+      ensureTracksLoadedOnce,
+      setSetlistOrder,
+    ]
   );
 
   return {
