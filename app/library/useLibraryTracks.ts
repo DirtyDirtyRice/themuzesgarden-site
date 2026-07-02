@@ -6,6 +6,7 @@ import { TRACKS_SEED } from "../../lib/tracksSeed";
 import { supabase } from "../../lib/supabaseClient";
 import { getUploadedTracks } from "../../lib/uploadedTracks";
 import { getSupabaseTracks } from "../../lib/getSupabaseTracks";
+import { getUnifiedTrackLibrary } from "../../lib/tracks/unifiedTrackLibrary";
 import {
   getSupabaseProjects,
   type ProjectRow,
@@ -102,28 +103,30 @@ export function useLibraryTracks({ router }: Args) {
       setSupabaseErr(null);
 
       try {
-        const supabaseRows = await getSupabaseTracks();
+        const unifiedRows = await getUnifiedTrackLibrary();
+
         if (cancelled) return;
 
-        const supabaseTracks = ((supabaseRows as unknown as TrackLike[]) ?? [])
+        const unifiedTracks = ((unifiedRows as unknown as TrackLike[]) ?? [])
           .map((row) => normalizeTrack(row))
           .filter(Boolean) as TrackLike[];
 
-        const uploaded = ((getUploadedTracks() as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
-
-        const seed = ((TRACKS_SEED as unknown as TrackLike[]) ?? [])
-          .map((row) => normalizeTrack(row))
-          .filter(Boolean) as TrackLike[];
+        console.log(
+          "[Unified Track Engine]",
+          unifiedTracks.length,
+          "tracks loaded"
+        );
 
         setTracks((prev) => {
           const prevById = new Map(prev.map((t) => [t.id, t]));
-          const merged = mergeTrackLists(supabaseTracks, uploaded, seed);
 
-          return merged.map((t) => {
+          return unifiedTracks.map((t) => {
             const p = prevById.get(t.id);
-            if (!p) return t;
+
+            if (!p) {
+              return t;
+            }
+
             return {
               ...t,
               tags: p.tags ?? t.tags,
@@ -134,6 +137,10 @@ export function useLibraryTracks({ router }: Args) {
         setSupabaseLoaded(true);
       } catch (err: any) {
         if (cancelled) return;
+
+        /*
+        ============================================================
+        LEGACY LOADER (TEMPORARILY KEPT AS FALLBACK)
 
         const uploaded = ((getUploadedTracks() as unknown as TrackLike[]) ?? [])
           .map((row) => normalizeTrack(row))
@@ -156,9 +163,11 @@ export function useLibraryTracks({ router }: Args) {
             };
           });
         });
+        ============================================================
+        */
 
         setSupabaseLoaded(false);
-        setSupabaseErr(err?.message ?? "Failed to load Daddy Library tracks.");
+        setSupabaseErr(err?.message ?? "Failed to load Unified Track Library.");
       }
     }
 
@@ -169,12 +178,14 @@ export function useLibraryTracks({ router }: Args) {
     };
   }, [checkingSession]);
 
+
   useEffect(() => {
     const uploaded = ((getUploadedTracks() as unknown as TrackLike[]) ?? [])
       .map((row) => normalizeTrack(row))
       .filter(Boolean) as TrackLike[];
 
     if (!uploaded.length) return;
+
     setTracks((prev) => mergeTrackLists(uploaded, prev));
   }, []);
 
@@ -247,13 +258,14 @@ export function useLibraryTracks({ router }: Args) {
     localStorage.setItem(LS_KEY, JSON.stringify(map));
   }, [tracks]);
 
-  function clearSavedTags() {
+    function clearSavedTags() {
     const ok = window.confirm(
       "Clear ALL saved per-track tags from this browser?\n(This does not change TRACKS_SEED — only local saved edits.)"
     );
     if (!ok) return;
 
     localStorage.removeItem(LS_KEY);
+
     setTracks((prev) =>
       prev.map((t) => ({
         ...t,
@@ -266,8 +278,13 @@ export function useLibraryTracks({ router }: Args) {
     setTracks((prev) =>
       prev.map((t) => {
         if (String(t.id) !== trackId) return t;
+
         const next = ensureUnique([...getTagIds(t.tags), tagId]);
-        return { ...t, tags: next };
+
+        return {
+          ...t,
+          tags: next,
+        };
       })
     );
   }
@@ -276,14 +293,23 @@ export function useLibraryTracks({ router }: Args) {
     setTracks((prev) =>
       prev.map((t) => {
         if (String(t.id) !== trackId) return t;
+
         const next = getTagIds(t.tags).filter((x) => x !== tagId);
-        return { ...t, tags: next };
+
+        return {
+          ...t,
+          tags: next,
+        };
       })
     );
   }
 
-  async function addSelectedTracksToProject(projectId: string, trackIds: string[]) {
+  async function addSelectedTracksToProject(
+    projectId: string,
+    trackIds: string[]
+  ) {
     const cleanProjectId = String(projectId ?? "").trim();
+
     const cleanTrackIds = Array.from(
       new Set(trackIds.map((trackId) => String(trackId ?? "").trim()))
     ).filter(Boolean);
