@@ -7,6 +7,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import { getUnifiedTrackLibrary } from "../../../lib/tracks/unifiedTrackLibrary";
 import { getSupabaseProjects, type ProjectRow } from "../../../lib/getSupabaseProjects";
 import { addTracksToSupabaseProject } from "../../../lib/addTracksToSupabaseProject";
+import { listLinkedProjectTrackIds } from "../../../lib/projectTracksApi";
 
 type TrackLike = { id?: unknown; title?: unknown; path?: unknown };
 
@@ -74,6 +75,8 @@ export default function ProjectLiaisonPage() {
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [tracks, setTracks] = useState<TrackLike[]>([]);
   const [projectId, setProjectId] = useState("");
+  const [linkedIds, setLinkedIds] = useState<Set<string>>(() => new Set());
+  const [hideAlreadyLinked, setHideAlreadyLinked] = useState(true);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [sentGroupIds, setSentGroupIds] = useState<Set<string>>(() => new Set());
   const [saving, setSaving] = useState(false);
@@ -82,11 +85,23 @@ export default function ProjectLiaisonPage() {
 
   const allGroups = useMemo(() => buildGroups(tracks), [tracks]);
   const visibleGroups = useMemo(
-    () => allGroups.filter((group) => !sentGroupIds.has(group.id)),
-    [allGroups, sentGroupIds]
+    () =>
+      allGroups.filter((group) => {
+        if (sentGroupIds.has(group.id)) return false;
+
+        if (!hideAlreadyLinked || !projectId) return true;
+
+        const ids = group.tracks.map((track) => clean(track.id)).filter(Boolean);
+        return !ids.length || !ids.every((id) => linkedIds.has(id));
+      }),
+    [allGroups, hideAlreadyLinked, linkedIds, projectId, sentGroupIds]
   );
 
-  const sentCount = allGroups.length - visibleGroups.length;
+  const sentCount = sentGroupIds.size;
+  const alreadyLinkedCount = allGroups.filter((group) => {
+    const ids = group.tracks.map((track) => clean(track.id)).filter(Boolean);
+    return ids.length > 0 && ids.every((id) => linkedIds.has(id));
+  }).length;
 
   useEffect(() => {
     let mounted = true;
@@ -126,6 +141,37 @@ export default function ProjectLiaisonPage() {
     };
   }, [router]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadProjectLinks() {
+      setLinkedIds((current) => new Set([...Array.from(current), ...ids]));
+      setCheckedIds(new Set());
+      setMessage("");
+      setErr("");
+
+      if (!projectId) {
+        setLinkedIds(new Set());
+        return;
+      }
+
+      try {
+        const ids = await listLinkedProjectTrackIds(projectId);
+        if (mounted) setLinkedIds(new Set(Array.from(ids)));
+      } catch (error: any) {
+        if (mounted) {
+          setLinkedIds(new Set());
+          setErr(error?.message ?? "Failed to load already linked tracks.");
+        }
+      }
+    }
+
+    loadProjectLinks();
+
+    return () => {
+      mounted = false;
+    };
+  }, [projectId]);
   function toggleGroup(group: TrackGroup) {
     const ids = group.tracks.map((track) => clean(track.id)).filter(Boolean);
 
@@ -171,6 +217,7 @@ export default function ProjectLiaisonPage() {
         return next;
       });
 
+      setLinkedIds((current) => new Set([...Array.from(current), ...ids]));
       setCheckedIds(new Set());
 
       const projectTitle =
@@ -204,7 +251,7 @@ export default function ProjectLiaisonPage() {
               </p>
               <h1 className="text-2xl font-black">Project Liaison</h1>
               <p className="mt-1 text-sm text-white/65">
-                Remaining: {visibleGroups.length} titles / Sent: {sentCount} titles / Copies: {tracks.length}
+                Remaining: {visibleGroups.length} titles / Sent this session: {sentCount} / Already linked: {alreadyLinkedCount} / Copies: {tracks.length}
               </p>
             </div>
 
@@ -213,7 +260,8 @@ export default function ProjectLiaisonPage() {
                 value={projectId}
                 onChange={(event) => {
                   setProjectId(event.target.value);
-                  setCheckedIds(new Set());
+                  setLinkedIds((current) => new Set([...Array.from(current), ...ids]));
+      setCheckedIds(new Set());
                   setMessage("");
                   setErr("");
                 }}
@@ -235,6 +283,16 @@ export default function ProjectLiaisonPage() {
               >
                 {saving ? "Sending..." : "Send Checked"}
               </button>
+
+              <label className="flex min-h-10 items-center gap-2 rounded border border-white/25 bg-black px-3 py-2 text-sm font-bold text-white">
+                <input
+                  type="checkbox"
+                  checked={hideAlreadyLinked}
+                  onChange={(event) => setHideAlreadyLinked(event.target.checked)}
+                  className="h-4 w-4 accent-white"
+                />
+                Hide Already Linked
+              </label>
 
               <button
                 type="button"
