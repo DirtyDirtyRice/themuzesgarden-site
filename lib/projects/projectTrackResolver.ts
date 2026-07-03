@@ -1,6 +1,4 @@
-import { getSupabaseTracks } from "../getSupabaseTracks";
-import { getUploadedTracks } from "../uploadedTracks";
-import { mergeTrackLists } from "../../app/library/libraryUtils";
+﻿import { getUnifiedTrackLibrary } from "../tracks/unifiedTrackLibrary";
 
 export type ProjectTrackResolverStats = {
   requested: number;
@@ -18,19 +16,12 @@ export type ProjectTrackResolverResult = {
 };
 
 async function buildUnifiedLibrary(): Promise<any[]> {
-  const supabaseTracks = await getSupabaseTracks();
-  const uploadedTracks = getUploadedTracks();
+  const tracks = await getUnifiedTrackLibrary();
 
-  return mergeTrackLists(
-    (Array.isArray(supabaseTracks) ? supabaseTracks : []).map((track: any) => ({
-      ...track,
-      artist: track.artist ?? "",
-    })),
-    (Array.isArray(uploadedTracks) ? uploadedTracks : []).map((track: any) => ({
-      ...track,
-      artist: track.artist ?? "",
-    }))
-  );
+  return (Array.isArray(tracks) ? tracks : []).map((track: any) => ({
+    ...track,
+    artist: track.artist ?? "",
+  }));
 }
 
 export async function buildProjectTrackLookup(): Promise<Map<string, any>> {
