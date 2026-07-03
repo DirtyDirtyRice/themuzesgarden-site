@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -265,7 +265,7 @@ function TitleBarDropdown({
         className={getPrimaryLinkClass(active)}
         title={`${label} menu`}
       >
-        {label} ▼
+        {label} â–¼
       </Link>
 
       {menuOpen ? (
@@ -335,7 +335,7 @@ function HelpDropdown({
         className={getPrimaryLinkClass(active)}
         title="Open Help menu"
       >
-        Help ▼
+        Help â–¼
       </button>
 
       {menuOpen ? (
