@@ -107,5 +107,6 @@ export function useProjectOverview({ projectId, supabase }: Args) {
     overviewLoading,
     overviewErr,
     loadProject,
+    saveProjectDescription,
   };
 }
