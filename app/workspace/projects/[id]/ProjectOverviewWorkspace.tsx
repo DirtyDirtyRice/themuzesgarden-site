@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import type { RefObject } from "react";
@@ -30,6 +30,7 @@ type Props = {
   metadataTargetId: string | null;
   playerErr: string | null;
   onRefreshOverview: () => void;
+  onSaveProjectDescription: (description: string) => Promise<boolean>;
   onPlayProject: () => void;
   onPlayTrackById: (tid: string) => void;
   onPreviewTrack: (tid: string) => void;
@@ -107,6 +108,7 @@ export default function ProjectOverviewWorkspace(props: Props) {
     metadataTargetId,
     playerErr,
     onRefreshOverview,
+    onSaveProjectDescription,
     onPlayProject,
     onPlayTrackById,
     onPreviewTrack,
@@ -153,6 +155,7 @@ export default function ProjectOverviewWorkspace(props: Props) {
         orderedLinkedTracks={orderedLinkedTracks}
         metadataContext={metadataContext}
         onRefreshOverview={onRefreshOverview}
+        onSaveProjectDescription={onSaveProjectDescription}
         onPlayProject={onPlayProject}
         onStopPlayer={onStopPlayer}
         nowPlayingId={nowPlayingId}

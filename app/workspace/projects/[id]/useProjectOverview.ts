@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useState } from "react";
 import type { Project } from "./projectDetailsTypes";
@@ -40,6 +40,41 @@ export function useProjectOverview({ projectId, supabase }: Args) {
   const [project, setProject] = useState<Project | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewErr, setOverviewErr] = useState<string | null>(null);
+
+  const saveProjectDescription = useCallback(async (description: string) => {
+    setOverviewErr(null);
+
+    try {
+      if (!supabase) throw new Error("Supabase client not found.");
+      if (!looksLikeUuid(projectId)) throw new Error("Invalid project id");
+
+      const cleanDescription = String(description ?? "").trim();
+
+      const { error } = await supabase
+        .from("projects")
+        .update({ description: cleanDescription || null })
+        .eq("id", projectId);
+
+      if (error) throw new Error(error.message);
+
+      setProject((current) =>
+        current
+          ? {
+              ...current,
+              description: cleanDescription || null,
+              updated_at: new Date().toISOString(),
+            }
+          : current
+      );
+
+      return true;
+    } catch (e: any) {
+      const message = e?.message ?? "Failed to save project contents";
+      setOverviewErr(message);
+      console.error("[Project contents save failed]", e);
+      return false;
+    }
+  }, [projectId, supabase]);
 
   const loadProject = useCallback(async () => {
     setOverviewErr(null);

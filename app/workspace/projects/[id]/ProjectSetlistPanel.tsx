@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import PlaybackHelper from "../../../components/PlaybackHelper";
@@ -100,6 +100,7 @@ export default function ProjectSetlistPanel({
               metadataTargetId={controller.metadataTargetId}
               playerErr={controller.playerErr}
               onRefreshOverview={controller.handleRefreshOverview}
+              onSaveProjectDescription={controller.handleSaveProjectDescription}
               onPlayProject={controller.playbackHandlers.handlePlayProject}
               onPlayTrackById={controller.playbackHandlers.handlePlayTrackById}
               onPreviewTrack={controller.setPreviewTrackId}

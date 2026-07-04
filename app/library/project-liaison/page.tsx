@@ -78,6 +78,7 @@ export default function ProjectLiaisonPage() {
   const [linkedIds, setLinkedIds] = useState<Set<string>>(() => new Set());
   const [hideAlreadyLinked, setHideAlreadyLinked] = useState(true);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
+  const [lastCheckedGroupId, setLastCheckedGroupId] = useState("");
   const [sentGroupIds, setSentGroupIds] = useState<Set<string>>(() => new Set());
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -145,8 +146,8 @@ export default function ProjectLiaisonPage() {
     let mounted = true;
 
     async function loadProjectLinks() {
-      setLinkedIds((current) => new Set([...Array.from(current), ...ids]));
       setCheckedIds(new Set());
+      setLastCheckedGroupId("");
       setMessage("");
       setErr("");
 
@@ -172,20 +173,38 @@ export default function ProjectLiaisonPage() {
       mounted = false;
     };
   }, [projectId]);
-  function toggleGroup(group: TrackGroup) {
-    const ids = group.tracks.map((track) => clean(track.id)).filter(Boolean);
-
+  function toggleGroup(group: TrackGroup, shiftKey: boolean) {
     setCheckedIds((current) => {
       const next = new Set(current);
-      const allChecked = ids.every((id) => next.has(id));
+      const groupIds = group.tracks.map((track) => clean(track.id)).filter(Boolean);
+      const shouldCheck = !groupIds.every((id) => next.has(id));
 
-      for (const id of ids) {
-        if (allChecked) next.delete(id);
-        else next.add(id);
+      let groupsToToggle = [group];
+
+      if (shiftKey && lastCheckedGroupId) {
+        const currentIndex = visibleGroups.findIndex((item) => item.id === group.id);
+        const lastIndex = visibleGroups.findIndex((item) => item.id === lastCheckedGroupId);
+
+        if (currentIndex >= 0 && lastIndex >= 0) {
+          const start = Math.min(currentIndex, lastIndex);
+          const end = Math.max(currentIndex, lastIndex);
+          groupsToToggle = visibleGroups.slice(start, end + 1);
+        }
+      }
+
+      for (const item of groupsToToggle) {
+        const ids = item.tracks.map((track) => clean(track.id)).filter(Boolean);
+
+        for (const id of ids) {
+          if (shouldCheck) next.add(id);
+          else next.delete(id);
+        }
       }
 
       return next;
     });
+
+    setLastCheckedGroupId(group.id);
   }
 
   async function sendChecked() {
@@ -217,7 +236,6 @@ export default function ProjectLiaisonPage() {
         return next;
       });
 
-      setLinkedIds((current) => new Set([...Array.from(current), ...ids]));
       setCheckedIds(new Set());
 
       const projectTitle =
@@ -260,8 +278,8 @@ export default function ProjectLiaisonPage() {
                 value={projectId}
                 onChange={(event) => {
                   setProjectId(event.target.value);
-                  setLinkedIds((current) => new Set([...Array.from(current), ...ids]));
-      setCheckedIds(new Set());
+                  setCheckedIds(new Set());
+                  setLastCheckedGroupId("");
                   setMessage("");
                   setErr("");
                 }}
@@ -337,7 +355,14 @@ export default function ProjectLiaisonPage() {
                   <input
                     type="checkbox"
                     checked={checked}
-                    onChange={() => toggleGroup(group)}
+                    onChange={(event) =>
+                      toggleGroup(
+                        group,
+                        event.nativeEvent instanceof MouseEvent
+                          ? event.nativeEvent.shiftKey
+                          : false
+                      )
+                    }
                     className="h-4 w-4 accent-white"
                   />
 

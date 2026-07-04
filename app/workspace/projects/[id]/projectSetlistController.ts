@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
@@ -227,6 +227,7 @@ export function useProjectSetlistController({
     nowPlayingCardRef,
     miniVisible,
     audioRef,
+    handleSaveProjectDescription: projectOverview.saveProjectDescription,
     handleRefreshOverview: () => {
       void projectLibrary.loadOverviewDock();
       void projectOverview.loadProject();

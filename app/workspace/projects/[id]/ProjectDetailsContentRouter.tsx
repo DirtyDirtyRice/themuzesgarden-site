@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 import ProjectActivityPanel from "./ProjectActivityPanel";
@@ -22,6 +22,7 @@ export default function ProjectDetailsContentRouter(props: {
   metadataTargetId: string | null;
   playerErr: string | null;
   onRefreshOverview: () => void;
+  onSaveProjectDescription: (description: string) => Promise<boolean>;
   onPlayProject: () => void;
   onPlayTrackById: (tid: string) => void;
   onPreviewTrack: (tid: string | null) => void;
@@ -85,6 +86,7 @@ export default function ProjectDetailsContentRouter(props: {
     metadataTargetId,
     playerErr,
     onRefreshOverview,
+    onSaveProjectDescription,
     onPlayProject,
     onPlayTrackById,
     onPreviewTrack,
@@ -154,6 +156,7 @@ export default function ProjectDetailsContentRouter(props: {
         metadataTargetId={metadataTargetId}
         playerErr={playerErr}
         onRefreshOverview={onRefreshOverview}
+        onSaveProjectDescription={onSaveProjectDescription}
         onPlayProject={onPlayProject}
         onPlayTrackById={onPlayTrackById}
         onPreviewTrack={onPreviewTrack}

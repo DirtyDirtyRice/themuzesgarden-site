@@ -73,6 +73,11 @@ const LIBRARY_CHILD_LINKS: TitleBarLink[] = [
     detail: "Open the main music library",
   },
   {
+    label: "Project Liaison",
+    href: "/library/project-liaison",
+    detail: "Send library tracks into project folders",
+  },
+  {
     label: "Lyrics",
     href: "/library/lyrics",
     detail: "Write, search, and download lyric text files",
@@ -265,7 +270,7 @@ function TitleBarDropdown({
         className={getPrimaryLinkClass(active)}
         title={`${label} menu`}
       >
-        {label} â–¼
+        {label} v
       </Link>
 
       {menuOpen ? (
@@ -335,7 +340,7 @@ function HelpDropdown({
         className={getPrimaryLinkClass(active)}
         title="Open Help menu"
       >
-        Help â–¼
+        Help v
       </button>
 
       {menuOpen ? (

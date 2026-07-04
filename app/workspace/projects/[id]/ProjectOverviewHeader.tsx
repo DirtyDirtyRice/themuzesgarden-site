@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 import type { Project } from "./projectDetailsTypes";
 
@@ -29,6 +29,7 @@ type Props = {
   orderedLinkedTracks: TrackLike[];
   metadataContext: MetadataContext;
   onRefreshOverview: () => void;
+  onSaveProjectDescription: (description: string) => Promise<boolean>;
   onPlayProject: () => void;
   onStopPlayer: () => void;
   nowPlayingId: string | null;
@@ -138,7 +139,7 @@ function RouteCard({
               {step}
             </span>
             {index < route.length - 1 ? (
-              <span className="text-xs font-bold text-white/70">↓</span>
+              <span className="text-xs font-bold text-white/70">â†“</span>
             ) : null}
           </span>
         ))}
@@ -200,6 +201,7 @@ export default function ProjectOverviewHeader({
   orderedLinkedTracks,
   metadataContext,
   onRefreshOverview,
+  onSaveProjectDescription,
   onPlayProject,
   onStopPlayer,
   nowPlayingId,
@@ -207,6 +209,26 @@ export default function ProjectOverviewHeader({
   const [downloadFormat, setDownloadFormat] =
     useState<ProjectDownloadFormat>("wav");
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const [contentsDraft, setContentsDraft] = useState(project?.description ?? "");
+  const [contentsSaving, setContentsSaving] = useState(false);
+  const [contentsMessage, setContentsMessage] = useState("");
+
+  useEffect(() => {
+    setContentsDraft(project?.description ?? "");
+  }, [project?.description]);
+
+  async function saveProjectContents() {
+    setContentsSaving(true);
+    setContentsMessage("");
+
+    const ok =
+      typeof onSaveProjectDescription === "function"
+        ? await onSaveProjectDescription(contentsDraft)
+        : false;
+
+    setContentsSaving(false);
+    setContentsMessage(ok ? "Saved." : "Save failed.");
+  }
 
   const hasLinkedTracks = linkedTracks.length > 0;
   const hasOrderedTracks = orderedLinkedTracks.length > 0;
@@ -229,7 +251,7 @@ export default function ProjectOverviewHeader({
               className={actionButtonClass}
               onClick={() => setDownloadOpen((value) => !value)}
             >
-              {getDownloadFormatLabel(downloadFormat)} ▾
+              {getDownloadFormatLabel(downloadFormat)} â–¾
             </button>
 
             {downloadOpen ? (
@@ -273,7 +295,7 @@ export default function ProjectOverviewHeader({
             onClick={onRefreshOverview}
             disabled={overviewLoading}
           >
-            {overviewLoading ? "Refreshing…" : "Refresh"}
+            {overviewLoading ? "Refreshingâ€¦" : "Refresh"}
           </button>
 
           <button
@@ -344,6 +366,42 @@ export default function ProjectOverviewHeader({
               : "Use Metadata or Inspect on a track to choose a metadata target."}
           </div>
         </div>
+      </div>
+
+      <div className={insetPanelClass}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className={eyebrowClass}>Project contents</div>
+            <div className={tinyTextClass}>
+              Short reminder of what this project contains.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className={actionButtonClass}
+            onClick={saveProjectContents}
+            disabled={contentsSaving}
+          >
+            {contentsSaving ? "Saving..." : "Save"}
+          </button>
+        </div>
+
+        <textarea
+          value={contentsDraft}
+          onChange={(event) => {
+            setContentsDraft(event.target.value);
+            setContentsMessage("");
+          }}
+          className="mt-3 min-h-28 w-full rounded-xl border border-white/25 bg-black px-3 py-2 text-sm text-white outline-none placeholder:text-white/45 focus:border-white"
+          placeholder="Example: Main versions for 14 Days, slow ride ideas, alternate hooks, and final candidates."
+        />
+
+        {contentsMessage ? (
+          <div className="mt-2 text-xs font-bold text-white/70">
+            {contentsMessage}
+          </div>
+        ) : null}
       </div>
 
       <ProjectMetadataContextCard context={metadataContext} />

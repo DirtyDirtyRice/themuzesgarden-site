@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../components/AuthProvider";
@@ -290,6 +290,40 @@ export default function WorkspaceProjectsPage() {
     setSelectedIds([selectedDropdownProject.id]);
   }, [selectedDropdownProject]);
 
+  async function renameProject(project: Project, nextTitle: string) {
+    const title = nextTitle.trim();
+
+    if (!project.id || !title || title === project.title) return;
+
+    const updatedAt = new Date().toISOString();
+
+    setErrorMsg(null);
+    setUploadMessage(`Renaming ${project.title}...`);
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ title, updated_at: updatedAt })
+        .eq("id", project.id);
+
+      if (error) throw new Error(error.message);
+
+      setProjects((current) =>
+        current.map((item) =>
+          item.id === project.id
+            ? { ...item, title, updated_at: updatedAt }
+            : item
+        )
+      );
+
+      setUploadMessage(`Renamed project to "${title}".`);
+    } catch (error: unknown) {
+      setErrorMsg(
+        error instanceof Error ? error.message : "Failed to rename project."
+      );
+      setUploadMessage(null);
+    }
+  }
   async function onCreate(formData: FormData) {
     const title = clampTitle(String(formData.get("title") ?? ""));
     const description = String(formData.get("description") ?? "");
@@ -342,7 +376,7 @@ export default function WorkspaceProjectsPage() {
               </h1>
               <p className="mt-2 text-sm leading-6 text-white/70">
                 {searchedProjects.length} matching of {projects.length} projects
-                · {selectedProjects.length} selected
+                Â· {selectedProjects.length} selected
               </p>
 
               {uploadMessage ? (
@@ -405,6 +439,7 @@ export default function WorkspaceProjectsPage() {
             }}
             onSelectedProjectChange={setSelectedProjectId}
             onOpenSelectedProject={openSelectedDropdownProject}
+            onRenameProject={renameProject}
             onUploadFilesToProject={uploadFilesToProject}
             onDownloadProjectFiles={downloadProjectAudioFiles}
             onDownloadProjectFolder={downloadProjectAudioFolder}

@@ -1,4 +1,4 @@
-import SharedDownloadButtons from "../../shared/downloads/SharedDownloadButtons";
+﻿import SharedDownloadButtons from "../../shared/downloads/SharedDownloadButtons";
 import SharedUploadButtons from "../../shared/uploads/SharedUploadButtons";
 import type { Project, ProjectSearchMode } from "./projectPageTypes";
 import {
@@ -24,6 +24,7 @@ export function ProjectSearchPanel({
   onSearchValueChange,
   onSelectedProjectChange,
   onOpenSelectedProject,
+  onRenameProject,
   onUploadFilesToProject,
   onDownloadProjectFiles,
   onDownloadProjectFolder,
@@ -39,6 +40,7 @@ export function ProjectSearchPanel({
   onSearchValueChange: (value: string) => void;
   onSelectedProjectChange: (id: string) => void;
   onOpenSelectedProject: () => void;
+  onRenameProject: (project: Project, title: string) => void;
   onUploadFilesToProject: (projectId: string, files: File[]) => void;
   onDownloadProjectFiles: (project: Project) => void;
   onDownloadProjectFolder: (project: Project) => void;
@@ -255,8 +257,8 @@ export function ProjectSearchPanel({
                         )}
 
                         <div className="mt-3 rounded-xl border border-white/15 bg-black p-3 text-xs text-white/70">
-                          Computer → Project Card → Upload File / Upload Folder
-                          → Library → Project. Download buttons pull linked audio
+                          Computer â†’ Project Card â†’ Upload File / Upload Folder
+                          â†’ Library â†’ Project. Download buttons pull linked audio
                           back from the project.
                         </div>
                       </div>
@@ -277,6 +279,22 @@ export function ProjectSearchPanel({
                             onClick={() => onSelectedProjectChange(project.id)}
                           >
                             Select
+                          </button>
+                          <button
+                            type="button"
+                            className={buttonClass}
+                            onClick={() => {
+                              const nextTitle = window.prompt(
+                                "New project name",
+                                project.title
+                              );
+
+                              if (nextTitle !== null) {
+                                onRenameProject(project, nextTitle);
+                              }
+                            }}
+                          >
+                            Rename
                           </button>
                         </div>
 
