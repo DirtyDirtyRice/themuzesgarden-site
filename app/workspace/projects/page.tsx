@@ -93,6 +93,7 @@ export default function WorkspaceProjectsPage() {
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showProjectDetails, setShowProjectDetails] = useState(false);
+  const [showProjectsHowTo, setShowProjectsHowTo] = useState(false);
   const [searchMode, setSearchMode] = useState<ProjectSearchMode>("title");
   const [searchValue, setSearchValue] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -416,6 +417,20 @@ export default function WorkspaceProjectsPage() {
           </div>
         </header>
 
+        {showProjectsHowTo ? (
+          <section className={panelClass}>
+            <p className={eyebrowClass}>Projects Page Help</p>
+            <h2 className="mt-2 text-2xl font-black text-white">How to use Projects</h2>
+            <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6 text-white/75">
+              <li><span className="font-black text-white">Choose a project</span> from the dropdown, then click <span className="font-black text-white">Open Selected</span>.</li>
+              <li><span className="font-black text-white">Show All Projects</span> opens every project card, even when the search box has text.</li>
+              <li><span className="font-black text-white">Rename</span> changes the project name from the project card.</li>
+              <li><span className="font-black text-white">Upload File</span> or <span className="font-black text-white">Upload Folder</span> adds new audio into that project.</li>
+              <li><span className="font-black text-white">Project Liaison</span> sends existing Library songs into projects.</li>
+              <li>After opening a project, click <span className="font-black text-white">Library</span> to see the songs/files inside it.</li>
+            </ol>
+          </section>
+        ) : null}
         <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
           <ProjectCreatePanel creating={creating} onCreate={onCreate} />
 
