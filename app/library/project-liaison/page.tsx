@@ -76,6 +76,10 @@ export default function ProjectLiaisonPage() {
   const [tracks, setTracks] = useState<TrackLike[]>([]);
   const [projectId, setProjectId] = useState("");
   const [linkedIds, setLinkedIds] = useState<Set<string>>(() => new Set());
+  const [allLinkedIds, setAllLinkedIds] = useState<Set<string>>(() => new Set());
+  const [trackProjectNames, setTrackProjectNames] = useState<Map<string, string[]>>(
+    () => new Map()
+  );
   const [hideAlreadyLinked, setHideAlreadyLinked] = useState(true);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [lastCheckedGroupId, setLastCheckedGroupId] = useState("");
@@ -90,18 +94,18 @@ export default function ProjectLiaisonPage() {
       allGroups.filter((group) => {
         if (sentGroupIds.has(group.id)) return false;
 
-        if (!hideAlreadyLinked || !projectId) return true;
+        if (!hideAlreadyLinked) return true;
 
         const ids = group.tracks.map((track) => clean(track.id)).filter(Boolean);
-        return !ids.length || !ids.every((id) => linkedIds.has(id));
+        return !ids.length || !ids.every((id) => allLinkedIds.has(id));
       }),
-    [allGroups, hideAlreadyLinked, linkedIds, projectId, sentGroupIds]
+    [allGroups, allLinkedIds, hideAlreadyLinked, sentGroupIds]
   );
 
   const sentCount = sentGroupIds.size;
   const alreadyLinkedCount = allGroups.filter((group) => {
     const ids = group.tracks.map((track) => clean(track.id)).filter(Boolean);
-    return ids.length > 0 && ids.every((id) => linkedIds.has(id));
+    return ids.length > 0 && ids.every((id) => allLinkedIds.has(id));
   }).length;
 
   useEffect(() => {
@@ -119,15 +123,44 @@ export default function ProjectLiaisonPage() {
           return;
         }
 
-        const [projectRows, trackRows] = await Promise.all([
+        const [projectRows, trackRows, linkResult] = await Promise.all([
           getSupabaseProjects(),
           getUnifiedTrackLibrary(true),
+          supabase.from("project_tracks").select("project_id, track_id"),
         ]);
+
+        if (linkResult.error) throw new Error(linkResult.error.message);
 
         if (!mounted) return;
 
+        const projectTitleById = new Map(
+          projectRows.map((project) => [
+            String(project.id),
+            project.title || "Untitled project",
+          ])
+        );
+        const nextAllLinkedIds = new Set<string>();
+        const nextTrackProjectNames = new Map<string, string[]>();
+
+        for (const row of linkResult.data ?? []) {
+          const trackId = clean((row as any).track_id);
+          const linkedProjectId = clean((row as any).project_id);
+          const projectTitle =
+            projectTitleById.get(linkedProjectId) ?? "Project";
+
+          if (!trackId) continue;
+
+          nextAllLinkedIds.add(trackId);
+
+          const names = nextTrackProjectNames.get(trackId) ?? [];
+          if (!names.includes(projectTitle)) names.push(projectTitle);
+          nextTrackProjectNames.set(trackId, names);
+        }
+
         setProjects(projectRows);
         setTracks(Array.isArray(trackRows) ? trackRows : []);
+        setAllLinkedIds(nextAllLinkedIds);
+        setTrackProjectNames(nextTrackProjectNames);
       } catch (error: any) {
         if (mounted) setErr(error?.message ?? "Failed to load liaison page.");
       } finally {
@@ -241,6 +274,19 @@ export default function ProjectLiaisonPage() {
       const projectTitle =
         projects.find((project) => project.id === projectId)?.title ?? "project";
 
+      setAllLinkedIds((current) => new Set([...Array.from(current), ...ids]));
+      setTrackProjectNames((current) => {
+        const next = new Map(current);
+
+        for (const id of ids) {
+          const names = next.get(id) ?? [];
+          if (!names.includes(projectTitle)) names.push(projectTitle);
+          next.set(id, names);
+        }
+
+        return next;
+      });
+
       setMessage(`Sent ${sentGroups.length} titles to ${projectTitle}. They were removed from this list.`);
     } catch (error: any) {
       setErr(error?.message ?? "Failed to send checked songs.");
@@ -254,6 +300,20 @@ export default function ProjectLiaisonPage() {
     setCheckedIds(new Set());
     setMessage("List reset for this session.");
     setErr("");
+  }
+
+  function getGroupProjectLabel(group: TrackGroup) {
+    const names = Array.from(
+      new Set(
+        group.tracks
+          .flatMap((track) => trackProjectNames.get(clean(track.id)) ?? [])
+          .filter(Boolean)
+      )
+    );
+
+    if (names.length === 0) return `(${group.tracks.length})`;
+    if (names.length <= 2) return names.join(", ");
+    return `${names[0]} +${names.length - 1}`;
   }
 
   return (
@@ -350,7 +410,7 @@ export default function ProjectLiaisonPage() {
               return (
                 <label
                   key={group.id}
-                  className="grid cursor-pointer grid-cols-[2rem_minmax(0,1fr)_5rem] items-center gap-2 px-3 py-1.5 text-sm hover:bg-white/[0.06]"
+                  className="grid cursor-pointer grid-cols-[2rem_minmax(0,1fr)_9rem] items-center gap-2 px-3 py-1.5 text-sm hover:bg-white/[0.06]"
                 >
                   <input
                     type="checkbox"
@@ -370,8 +430,8 @@ export default function ProjectLiaisonPage() {
                     {group.title}
                   </span>
 
-                  <span className="text-right text-xs font-bold text-white/60">
-                    ({group.tracks.length})
+                  <span className="truncate text-right text-xs font-bold text-white/60">
+                    {getGroupProjectLabel(group)}
                   </span>
                 </label>
               );
