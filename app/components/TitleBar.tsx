@@ -117,6 +117,15 @@ const METADATA_CHILD_LINKS: TitleBarLink[] = [
   },
 ];
 
+
+const TOOLS_CHILD_LINKS: TitleBarLink[] = [
+  {
+    label: "Code Map",
+    href: "/tools/code-map",
+    detail: "Open the coding app code map",
+  },
+];
+
 const TRACK_MATCHER_CHILD_LINKS: TitleBarLink[] = [
   {
     label: "Finder",
@@ -395,10 +404,12 @@ export default function TitleBar() {
   const detailsRoute = useMemo(() => getDetailsRoute(pathname), [pathname]);
   const libraryActive = isActivePath(pathname, "/library");
   const metadataActive = isActivePath(pathname, "/metadata");
+  const toolsActive = isActivePath(pathname, "/tools/code-map");
   const trackMatcherActive = isActivePath(pathname, "/tools/track-matcher");
 
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [metadataMenuOpen, setMetadataMenuOpen] = useState(false);
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
   const [trackMatcherMenuOpen, setTrackMatcherMenuOpen] = useState(false);
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
 
@@ -456,13 +467,22 @@ export default function TitleBar() {
             );
           })}
 
-          <TitleBarDropdown
+                   <TitleBarDropdown
             active={libraryActive}
             label="Library"
             links={LIBRARY_CHILD_LINKS}
             menuOpen={libraryMenuOpen}
             onClose={() => setLibraryMenuOpen(false)}
             onOpen={() => setLibraryMenuOpen(true)}
+          />
+
+          <TitleBarDropdown
+            active={toolsActive}
+            label="Tools"
+            links={TOOLS_CHILD_LINKS}
+            menuOpen={toolsMenuOpen}
+            onClose={() => setToolsMenuOpen(false)}
+            onOpen={() => setToolsMenuOpen(true)}
           />
 
           <TitleBarDropdown
