@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ProjectLibraryPanel from "./ProjectLibraryPanel";
@@ -172,8 +172,8 @@ export default function ProjectLibraryWorkspace(props: Props) {
         "track",
         metadataTargetId,
         selectedMetadataTrack?.title
-          ? `Track — ${selectedMetadataTrack.title}`
-          : `Track — ${metadataTargetId}`
+          ? `Track â€” ${selectedMetadataTrack.title}`
+          : `Track â€” ${metadataTargetId}`
       );
       return;
     }
@@ -206,7 +206,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
       openMetadataInspect({
         targetType: "track",
         targetId: tid,
-        targetLabel: track?.title ? `Track — ${track.title}` : `Track — ${tid}`,
+        targetLabel: track?.title ? `Track â€” ${track.title}` : `Track â€” ${tid}`,
         focus: true,
       });
 
@@ -243,13 +243,13 @@ export default function ProjectLibraryWorkspace(props: Props) {
     <div className="relative text-white">
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="font-medium text-white">Project Library</div>
+          <div className="font-medium text-white">Project Library - FRANKIE</div>
           <button
             className="rounded border border-white bg-black px-3 py-2 text-sm text-white transition active:scale-[0.98] disabled:opacity-60"
             onClick={onRefresh}
             disabled={loadingLibrary}
           >
-            {loadingLibrary ? "Refreshing…" : "Refresh"}
+            {loadingLibrary ? "Refreshingâ€¦" : "Refresh"}
           </button>
         </div>
 
@@ -273,7 +273,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
                   onClick={() => removeMetadataFilter(filter.id)}
                   title={filter.query}
                 >
-                  {filter.label} ×
+                  {filter.label} Ã—
                 </button>
               ))}
             </div>
@@ -319,16 +319,16 @@ export default function ProjectLibraryWorkspace(props: Props) {
                   return (
                     <div
                       key={tid}
-                      className={`flex cursor-pointer items-center justify-between gap-3 rounded border p-3 ${
+                      className={`flex min-h-[32px] cursor-pointer items-center gap-2 rounded border px-2 py-1 ${
                         isPreview
                           ? "border-white bg-black"
                           : "border-white bg-black"
                       }`}
                       onClick={() => onPreviewTrack(tid)}
                     >
-                      <div className="min-w-0 text-white">
-                        <div className="truncate text-sm font-medium text-white">
-                          {isNow ? "▶ " : ""}
+                      <div className="min-w-0 flex-1 text-white">
+                        <div className="resize-x overflow-auto whitespace-nowrap text-sm font-medium text-white">
+                          {isNow ? "â–¶ " : ""}
                           {isNow ? (
                             <span className="mr-2 rounded border border-white bg-black px-2 py-0.5 text-[10px] text-white">
                               NOW
@@ -338,42 +338,42 @@ export default function ProjectLibraryWorkspace(props: Props) {
                         </div>
 
                         {track.artist ? (
-                          <div className="truncate text-xs text-white">
+                          <div className="hidden">
                             {track.artist}
                           </div>
                         ) : null}
 
-                        <div className="mt-1 text-[10px] text-white">
-                          Source: {sourceLabel} • Visibility: {visibilityLabel}
+                        <div className="hidden">
+                          Source: {sourceLabel} â€¢ Visibility: {visibilityLabel}
                         </div>
 
                         {isMetadataSelected ? (
-                          <div className="mt-1 text-[11px] text-white">
+                          <div className="hidden">
                             Selected for metadata
                           </div>
                         ) : null}
                       </div>
 
                       <div
-                        className="flex items-center gap-2"
+                        className="flex shrink-0 items-center gap-1"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <button
-                          className="rounded border border-white bg-black px-3 py-2 text-xs text-white transition active:scale-[0.98]"
+                          className="rounded border border-white bg-black px-2 py-1 text-[11px] text-white transition active:scale-[0.98]"
                           onClick={() => onPlayTrackById(tid)}
                         >
                           Play
                         </button>
 
                         <button
-                          className="rounded border border-white bg-black px-3 py-2 text-xs text-white transition active:scale-[0.98]"
+                          className="rounded border border-white bg-black px-2 py-1 text-[11px] text-white transition active:scale-[0.98]"
                           onClick={() => handleInspectTrack(tid)}
                         >
                           Inspect
                         </button>
 
                         <button
-                          className="rounded border border-white bg-black px-3 py-2 text-xs text-white transition active:scale-[0.98] disabled:opacity-60"
+                          className="rounded border border-white bg-black px-2 py-1 text-[11px] text-white transition active:scale-[0.98] disabled:opacity-60"
                           onClick={() => onUnlinkTrack(tid)}
                           disabled={linkBusyId === tid}
                         >

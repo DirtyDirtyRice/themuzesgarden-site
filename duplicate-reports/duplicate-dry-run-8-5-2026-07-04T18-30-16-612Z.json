@@ -1,0 +1,813 @@
+{
+  "searchText": "8.5",
+  "bucket": "audio",
+  "dryRun": true,
+  "deletesNothing": true,
+  "beforeCount": 100,
+  "afterExactHashKeepCount": 100,
+  "duplicateExtraCount": 0,
+  "duplicateGroupCount": 0,
+  "duplicateGroups": [],
+  "allChecked": [
+    {
+      "name": "8.5 chord songs 8.5 bossa bop chords 5 23 21-12de1c63-ec0a-4140-8a90-c230813bcf4e.mp3",
+      "path": "uploads/8.5 chord songs 8.5 bossa bop chords 5 23 21-12de1c63-ec0a-4140-8a90-c230813bcf4e.mp3",
+      "updatedAt": "2026-06-15T01:34:00.439Z",
+      "bytes": 3680547,
+      "sizeMb": 3.51,
+      "sha256": "6d56823159c93bb6297137654b175e93e1d8b5eca458c105f2f4777af0d19c0a"
+    },
+    {
+      "name": "8.5 chord songs 8.5 chords fullsong67-f63a9b17-0ae8-4cc2-8eba-24fb21a52d92.mp3",
+      "path": "uploads/8.5 chord songs 8.5 chords fullsong67-f63a9b17-0ae8-4cc2-8eba-24fb21a52d92.mp3",
+      "updatedAt": "2026-06-15T01:34:07.217Z",
+      "bytes": 5165974,
+      "sizeMb": 4.93,
+      "sha256": "8d21fbb79a93d683d91fe78be3ad6902a80e637f7ab3c0f76286b9555b94cf4a"
+    },
+    {
+      "name": "8.5 chord songs 8.5 chords riffs 8.5 chords full song w voice-959cbdc3-bf50-4f67-bc92-b707a33ba1e5.mp3",
+      "path": "uploads/8.5 chord songs 8.5 chords riffs 8.5 chords full song w voice-959cbdc3-bf50-4f67-bc92-b707a33ba1e5.mp3",
+      "updatedAt": "2026-06-15T01:42:58.595Z",
+      "bytes": 5635760,
+      "sizeMb": 5.37,
+      "sha256": "6e0be7a43c6b07c3d0ef91162e03482d005957186a6156e77f52fdbc9e35a65f"
+    },
+    {
+      "name": "8.5 chord songs 8.5 chords riffs 8.5 CHORDS RIFF 2023_01_23_15_28_40-888d5d65-e588-46ee-8a27-ef43d5940ea0.mp3",
+      "path": "uploads/8.5 chord songs 8.5 chords riffs 8.5 CHORDS RIFF 2023_01_23_15_28_40-888d5d65-e588-46ee-8a27-ef43d5940ea0.mp3",
+      "updatedAt": "2026-06-15T01:43:03.138Z",
+      "bytes": 4639763,
+      "sizeMb": 4.42,
+      "sha256": "9efd3b980dbd8cfe96477c07f927f71939927be54108481496ceb02962963bb4"
+    },
+    {
+      "name": "8.5 chord songs 8.5 chords riffs 8chords 1 2 23-363daa7a-2f64-47d7-9069-47a33b99586b.mp3",
+      "path": "uploads/8.5 chord songs 8.5 chords riffs 8chords 1 2 23-363daa7a-2f64-47d7-9069-47a33b99586b.mp3",
+      "updatedAt": "2026-06-15T01:43:06.555Z",
+      "bytes": 3909589,
+      "sizeMb": 3.73,
+      "sha256": "bd123e77ab8754397903714fb8d0a9675a80818f452c7f2e0ebc9f7d33a80776"
+    },
+    {
+      "name": "8.5 chord songs 8.5 chords wordsfull son just because its true 8 22 21-b22e59ab-020f-460f-a44d-ad63b4585f73.mp3",
+      "path": "uploads/8.5 chord songs 8.5 chords wordsfull son just because its true 8 22 21-b22e59ab-020f-460f-a44d-ad63b4585f73.mp3",
+      "updatedAt": "2026-06-15T01:34:14.975Z",
+      "bytes": 4374777,
+      "sizeMb": 4.17,
+      "sha256": "a4564a915e636350289946f00ef72c0310cbbb8983684252a52d1aef295e4d98"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dont poke the bear chords-4dc32a04-b849-407e-84df-2aa514b043eb.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dont poke the bear chords-4dc32a04-b849-407e-84df-2aa514b043eb.mp3",
+      "updatedAt": "2026-06-15T01:34:36.731Z",
+      "bytes": 7164237,
+      "sizeMb": 6.83,
+      "sha256": "c52222cc6a1ed24ddf2c4fc10cdc432e6e6199c275c0a49223e032dbc23f5be5"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dont want my heart to bleed chords lyrics-2f010f13-2499-4e78-b964-030263af7714.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dont want my heart to bleed chords lyrics-2f010f13-2499-4e78-b964-030263af7714.mp3",
+      "updatedAt": "2026-06-15T01:34:38.934Z",
+      "bytes": 1697749,
+      "sizeMb": 1.62,
+      "sha256": "daa0e89e9bd66431813cd726478c33d534aa1b82dced2ce49b9fa529b9e2d5ee"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dont want my heart to bleed chords-6f939de0-69b7-4e08-9034-9051bf86041e.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dont want my heart to bleed chords-6f939de0-69b7-4e08-9034-9051bf86041e.mp3",
+      "updatedAt": "2026-06-15T01:34:41.794Z",
+      "bytes": 3324446,
+      "sizeMb": 3.17,
+      "sha256": "fdf5929dbb8f6b90c2f12294e73ac906b1281d0cc65a8bb99c370243ce967d45"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dont you know 6 6 21-f4a1b363-152a-42de-9e6a-2acd670baf6c.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dont you know 6 6 21-f4a1b363-152a-42de-9e6a-2acd670baf6c.mp3",
+      "updatedAt": "2026-06-15T01:34:18.006Z",
+      "bytes": 929540,
+      "sizeMb": 0.89,
+      "sha256": "223f84623f7ac17115c84b6f16e1194e44570d5f769a49b50d026f10b1298695"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dont you know chords-5d09b114-1e33-41f0-ac5e-84e7561b8c83.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dont you know chords-5d09b114-1e33-41f0-ac5e-84e7561b8c83.mp3",
+      "updatedAt": "2026-06-15T01:34:21.388Z",
+      "bytes": 2187597,
+      "sizeMb": 2.09,
+      "sha256": "d58a0d48722f840ab7558e0317c69cda97162e4ddb46eae89cf124ebf5f63f83"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dont you know-3da46950-7110-4b29-93b0-eb55ddaf42bc.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dont you know-3da46950-7110-4b29-93b0-eb55ddaf42bc.mp3",
+      "updatedAt": "2026-06-15T01:34:26.767Z",
+      "bytes": 3631646,
+      "sizeMb": 3.46,
+      "sha256": "ecd83652d9f64f6b45eb2ad1e9380d57e01c56611f0d6a23fe40e1f70f4a0db9"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dont you know2-4a85864a-a34d-4190-a9bb-ad4e6d0c652b.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dont you know2-4a85864a-a34d-4190-a9bb-ad4e6d0c652b.mp3",
+      "updatedAt": "2026-06-15T01:34:30.668Z",
+      "bytes": 3483270,
+      "sizeMb": 3.32,
+      "sha256": "6982a7bcb63049fccb70ded9c1ff0b6f7a2710cd0318a88545a4450a6261869e"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dreamsong chords ill be there 8 4 21-148fad8c-1902-41db-88db-e292676f415b.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dreamsong chords ill be there 8 4 21-148fad8c-1902-41db-88db-e292676f415b.mp3",
+      "updatedAt": "2026-06-15T01:34:44.075Z",
+      "bytes": 2440462,
+      "sizeMb": 2.33,
+      "sha256": "dce4128d1af8d485e0fe8f2cc495605b9c827c7414106a07554ba40ba48f7396"
+    },
+    {
+      "name": "8.5 chord songs 8.5 dreamsong ill be there 8 4 21-0bb461f6-3735-49ab-a57d-1c4faaf28a11.mp3",
+      "path": "uploads/8.5 chord songs 8.5 dreamsong ill be there 8 4 21-0bb461f6-3735-49ab-a57d-1c4faaf28a11.mp3",
+      "updatedAt": "2026-06-15T01:34:48.718Z",
+      "bytes": 5530434,
+      "sizeMb": 5.27,
+      "sha256": "3308ed5640c1f7501f0f4925f969d69a96dd7b0c7be3a98eed381bb21432abf2"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR BEFORE YOU GO-aebb8665-9623-4299-a752-e3ef664e6932.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR BEFORE YOU GO-aebb8665-9623-4299-a752-e3ef664e6932.mp3",
+      "updatedAt": "2026-06-15T01:34:54.198Z",
+      "bytes": 6493123,
+      "sizeMb": 6.19,
+      "sha256": "ce496a184c69ac79404dc3654afa1511fdd9b2095a773b3a1f4626d3e26a06ee"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR bout you-042fae77-fe20-474d-ab89-d5de3c1bad7a.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR bout you-042fae77-fe20-474d-ab89-d5de3c1bad7a.mp3",
+      "updatedAt": "2026-06-15T01:35:00.779Z",
+      "bytes": 7608552,
+      "sizeMb": 7.26,
+      "sha256": "3847e773858ae02542fc1078845c551b3d385ba61664c8e0b7df11fc3d6a647b"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 big deal 4 10 24-72376f0e-265d-4240-b085-fc0cd0087bb8.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 big deal 4 10 24-72376f0e-265d-4240-b085-fc0cd0087bb8.mp3",
+      "updatedAt": "2026-06-15T01:37:02.974Z",
+      "bytes": 5935515,
+      "sizeMb": 5.66,
+      "sha256": "15fc40ac76b7286beada5ec0d6622b45b243e33d2f5b12814750a6b6565ca704"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 big deal riff 4 10 24-e713af88-e15b-4767-b080-f5aa64ef3f73.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 big deal riff 4 10 24-e713af88-e15b-4767-b080-f5aa64ef3f73.mp3",
+      "updatedAt": "2026-06-15T01:37:07.396Z",
+      "bytes": 4529830,
+      "sizeMb": 4.32,
+      "sha256": "2d7de9d416c14023a22321eda463a533fea405113a55b7bd304ec4ed57358d38"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords 12 17 23-7151c496-89fc-4408-8b01-2e594e08477e.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords 12 17 23-7151c496-89fc-4408-8b01-2e594e08477e.mp3",
+      "updatedAt": "2026-06-15T01:37:10.515Z",
+      "bytes": 2924463,
+      "sizeMb": 2.79,
+      "sha256": "dc11982464eb5eb74a0698546afa7476cbc99fe077bbc179a18163905fc4c717"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords 12 25 23-d4c7bcb3-1be5-4147-8404-b3490d858758.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords 12 25 23-d4c7bcb3-1be5-4147-8404-b3490d858758.mp3",
+      "updatedAt": "2026-06-15T01:37:15.485Z",
+      "bytes": 5329213,
+      "sizeMb": 5.08,
+      "sha256": "1bece0047ad074fd8df47c711f5006290be892e8cc867e7fba667c4de1e07ed9"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords 3 11 24-a4f9ebb3-e2c3-4296-9adc-2c9b3c4039b4.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords 3 11 24-a4f9ebb3-e2c3-4296-9adc-2c9b3c4039b4.mp3",
+      "updatedAt": "2026-06-15T01:37:19.025Z",
+      "bytes": 3690176,
+      "sizeMb": 3.52,
+      "sha256": "4edeaf1be6441ccdc914c6f987995dcd82bfb393ba9b5f195ad96c3a13c08892"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords for riff2 5 7 24-a3ece5ba-8114-4792-86fc-c6977be735ed.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords for riff2 5 7 24-a3ece5ba-8114-4792-86fc-c6977be735ed.mp3",
+      "updatedAt": "2026-06-15T01:37:21.357Z",
+      "bytes": 1629018,
+      "sizeMb": 1.55,
+      "sha256": "b794ee74816a6bdd4939e20dcd563804b187f87eeb839ba8ae380e1e2e09ffb7"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords riff 12 19 23-05237b7f-e8bb-4f09-8839-ea529a898a62.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords riff 12 19 23-05237b7f-e8bb-4f09-8839-ea529a898a62.mp3",
+      "updatedAt": "2026-06-15T01:37:27.520Z",
+      "bytes": 6578657,
+      "sizeMb": 6.27,
+      "sha256": "c106c7540411f33a0f791a76ff242581d0a8faa13423c6ad0c355b2fd119037c"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords riff 12 25 23-11844282-3264-4eaa-8ce5-e1055fc3cc39.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords riff 12 25 23-11844282-3264-4eaa-8ce5-e1055fc3cc39.mp3",
+      "updatedAt": "2026-06-15T01:37:32.197Z",
+      "bytes": 3276186,
+      "sizeMb": 3.12,
+      "sha256": "f8e68be09451a5aee2b90688c2894a854422fc5eae36a9a864f552a4bd04f23c"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords2 5 7 24-a3ede07a-3611-4466-91cf-4c2726377fbd.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords2 5 7 24-a3ede07a-3611-4466-91cf-4c2726377fbd.mp3",
+      "updatedAt": "2026-06-15T01:37:40.170Z",
+      "bytes": 7997676,
+      "sizeMb": 7.63,
+      "sha256": "b39c4493e835e88b73de984f7a06bb890c322e6d0802193ee55cd99fd41ef952"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords2. 1 4 24-14ce8ef8-ab9f-462d-9cfb-879158554973.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 chords2. 1 4 24-14ce8ef8-ab9f-462d-9cfb-879158554973.mp3",
+      "updatedAt": "2026-06-15T01:37:43.265Z",
+      "bytes": 2657195,
+      "sizeMb": 2.53,
+      "sha256": "1f971fd8a0e097069afadb6197869b5724319211861ee986d9c412291d7b4942"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 giitar riff cuz of you 12 13 23-ca4e4638-23b4-48b2-9279-e4df81242ad9.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 giitar riff cuz of you 12 13 23-ca4e4638-23b4-48b2-9279-e4df81242ad9.mp3",
+      "updatedAt": "2026-06-15T01:37:45.545Z",
+      "bytes": 2139861,
+      "sizeMb": 2.04,
+      "sha256": "f1b5d81a4fa28406be385612fcc385b8d3d701f484be35f64cba0e8e667c80cf"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 guitar bout you addlib-c3926f2f-d0d4-41ce-9e79-6e6216c15e78.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 guitar bout you addlib-c3926f2f-d0d4-41ce-9e79-6e6216c15e78.mp3",
+      "updatedAt": "2026-06-15T01:37:51.418Z",
+      "bytes": 6842734,
+      "sizeMb": 6.53,
+      "sha256": "44bae231a86488de13ecf5107460be88fe70f8b47861a6617fe4d3370d0a8c11"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 guitar chords n riff 2 16 24-00feb92a-7c98-41a4-8f9b-fd8564536ed1.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 guitar chords n riff 2 16 24-00feb92a-7c98-41a4-8f9b-fd8564536ed1.mp3",
+      "updatedAt": "2026-06-15T01:37:55.155Z",
+      "bytes": 3696419,
+      "sizeMb": 3.53,
+      "sha256": "90bba89d4af49e53e06b4378af34223ee6cafb62eb1e1e44fa77d61755bee2fa"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 GUITAR PIECES-d85ca659-b197-43f5-8105-8a3216fe24ec.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 GUITAR PIECES-d85ca659-b197-43f5-8105-8a3216fe24ec.mp3",
+      "updatedAt": "2026-06-15T01:37:57.819Z",
+      "bytes": 2517809,
+      "sizeMb": 2.4,
+      "sha256": "23b695097103975e79cc4d0e9b81637c03728931e549e3557066e49052062a93"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 guitar voice cuz of you 12 13 23-69360bd1-9529-4502-9c51-9d50521f2f91.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 guitar voice cuz of you 12 13 23-69360bd1-9529-4502-9c51-9d50521f2f91.mp3",
+      "updatedAt": "2026-06-15T01:38:03.028Z",
+      "bytes": 5243852,
+      "sizeMb": 5,
+      "sha256": "3a22c907ead192172b325e84daa66844ac099e27797da131d05fd83aa62c394b"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 I could have been 5 6 24-0211335d-d103-43a2-ac07-e1f589e3ea41.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 I could have been 5 6 24-0211335d-d103-43a2-ac07-e1f589e3ea41.mp3",
+      "updatedAt": "2026-06-15T01:38:09.216Z",
+      "bytes": 6709368,
+      "sizeMb": 6.4,
+      "sha256": "055c3fdf531186c0da674a038a6036ea51b0c0bea6896676f7d1346594e2863f"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 I could have been chords 5 7 24-3514153e-977d-42b9-aa6d-fe8d9d1a0df9.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 I could have been chords 5 7 24-3514153e-977d-42b9-aa6d-fe8d9d1a0df9.mp3",
+      "updatedAt": "2026-06-15T01:38:11.102Z",
+      "bytes": 1536688,
+      "sizeMb": 1.47,
+      "sha256": "3f9090d335b1579d21f06369fc288d10d27ad7ab9b3002461f6ec2c5e71aa1b5"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 I could have been riff 5 7 24-e8db0224-9ce4-415b-b5cc-6072f232969d.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 I could have been riff 5 7 24-e8db0224-9ce4-415b-b5cc-6072f232969d.mp3",
+      "updatedAt": "2026-06-15T01:38:14.357Z",
+      "bytes": 3420837,
+      "sizeMb": 3.26,
+      "sha256": "17b717beb682390ba0f5ef335844e8f6d01a264c71a70a1aa6264ee9a84d9d8a"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 let it go 2 17 24-9b506faa-c968-4aec-b82f-3c024195ee86.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 let it go 2 17 24-9b506faa-c968-4aec-b82f-3c024195ee86.mp3",
+      "updatedAt": "2026-06-15T01:38:18.766Z",
+      "bytes": 4366833,
+      "sizeMb": 4.16,
+      "sha256": "03fcfe6cd8520ae9a00bf5bf628e0dcc07a4bd37e233fce5bf267682c920bccb"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 let it go chords n riff 2 17 24-b7a59e10-e93a-4b89-b4ad-3ae7d5c98cdc.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 let it go chords n riff 2 17 24-b7a59e10-e93a-4b89-b4ad-3ae7d5c98cdc.mp3",
+      "updatedAt": "2026-06-15T01:38:21.755Z",
+      "bytes": 2745611,
+      "sizeMb": 2.62,
+      "sha256": "1ad256c2243cba64f6c5f160c9ab09d72a2ccdfcf2ebf50dd21ac6a7359d6215"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 let it go riff 2 17 24-c219baa2-80cd-4697-a707-f3b1d025a658.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 let it go riff 2 17 24-c219baa2-80cd-4697-a707-f3b1d025a658.mp3",
+      "updatedAt": "2026-06-15T01:38:23.847Z",
+      "bytes": 1444702,
+      "sizeMb": 1.38,
+      "sha256": "4fe3bc2a73a792326cfb9127de731d05cf78fed5afc818ddab5d1965dc01961b"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again -89bbcf79-a821-4178-8be2-8d741b5da961.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again -89bbcf79-a821-4178-8be2-8d741b5da961.mp3",
+      "updatedAt": "2026-06-15T01:38:27.731Z",
+      "bytes": 4019056,
+      "sizeMb": 3.83,
+      "sha256": "4de5d2849bc1676da43322a190a2792088d9f7a105d427783342e0e3c6d0be23"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again 2 22 24-2df7487b-b896-4cca-ab7c-b8726f034d56.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again 2 22 24-2df7487b-b896-4cca-ab7c-b8726f034d56.mp3",
+      "updatedAt": "2026-06-15T01:38:33.236Z",
+      "bytes": 6229409,
+      "sizeMb": 5.94,
+      "sha256": "cd78cba0930a8b9544eb256806dbae008b8054145ec89594f7340c6aa0c3b3e9"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again riff n chords 2 22 24-09a208fa-efed-4637-bdce-2d18759c3371.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again riff n chords 2 22 24-09a208fa-efed-4637-bdce-2d18759c3371.mp3",
+      "updatedAt": "2026-06-15T01:38:38.209Z",
+      "bytes": 5167336,
+      "sizeMb": 4.93,
+      "sha256": "ac222c01b195cf28a54bf72ceb1f3f6999ff4eb8aba366a98b1fc236bda221a0"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again2-3f722b4d-66fc-4cbb-8277-af724e496e98.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 once again2-3f722b4d-66fc-4cbb-8277-af724e496e98.mp3",
+      "updatedAt": "2026-06-15T01:38:40.955Z",
+      "bytes": 2544198,
+      "sizeMb": 2.43,
+      "sha256": "f910d1b4708b2da1393f9a6bfcf4fa75a569144f450b4cc05e888b33b7e1c8fe"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff 12 6 23-f448684d-98a1-4a66-98cc-5d1520a09cbc.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff 12 6 23-f448684d-98a1-4a66-98cc-5d1520a09cbc.mp3",
+      "updatedAt": "2026-06-15T01:38:43.370Z",
+      "bytes": 1900033,
+      "sizeMb": 1.81,
+      "sha256": "9d4200af17f3041e697dfebd8ae14c0ab94c4258254fc737027bdb80d2c81aa1"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff 2021_06_03_13_50_09-eaa01171-e3da-462b-a4eb-a0b9d05e2dcb.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff 2021_06_03_13_50_09-eaa01171-e3da-462b-a4eb-a0b9d05e2dcb.mp3",
+      "updatedAt": "2026-06-15T01:38:46.718Z",
+      "bytes": 3282232,
+      "sizeMb": 3.13,
+      "sha256": "8409609a2f2a0cd3aa77866d22722a41729172eb705d4c18b95c4ec94e2392c1"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff 3 21 24-d2ce6f4f-8243-4c1d-bed8-e04a1584e40e.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff 3 21 24-d2ce6f4f-8243-4c1d-bed8-e04a1584e40e.mp3",
+      "updatedAt": "2026-06-15T01:38:49.198Z",
+      "bytes": 2216430,
+      "sizeMb": 2.11,
+      "sha256": "26d20d148574bb757cb886f7aed88e2658d7003cb2f5a93f30024f87f3ac183d"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff n chords 5 21 24-78bcdf77-ab8c-4efa-8498-1cff5cc489fb.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff n chords 5 21 24-78bcdf77-ab8c-4efa-8498-1cff5cc489fb.mp3",
+      "updatedAt": "2026-06-15T01:38:56.070Z",
+      "bytes": 7638464,
+      "sizeMb": 7.28,
+      "sha256": "2455a9e3023dc3d801c6cdb9671580a7f2fe255d48c93692ab32013e25030059"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff n chords hhhg-f89be4d4-d772-499d-bc2e-41f65df698f6.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff n chords hhhg-f89be4d4-d772-499d-bc2e-41f65df698f6.mp3",
+      "updatedAt": "2026-06-15T01:39:00.103Z",
+      "bytes": 4046950,
+      "sizeMb": 3.86,
+      "sha256": "4f6201f2d98a2a8435db7c447f2e667353a484c836a5c76bbceb060a385403bd"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff2 5 7 24-c0ef9768-18de-4fb1-942f-1fc12aa110b8.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff2 5 7 24-c0ef9768-18de-4fb1-942f-1fc12aa110b8.mp3",
+      "updatedAt": "2026-06-15T01:39:05.617Z",
+      "bytes": 6621228,
+      "sizeMb": 6.31,
+      "sha256": "2bf709e09429b90258bfd98ac441d6b9832a84735255ee3a1b7d76c6cf024fae"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff3 5 7 24-1b5c4d93-97f5-4301-997b-238ebf9d0fa2.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 riff3 5 7 24-1b5c4d93-97f5-4301-997b-238ebf9d0fa2.mp3",
+      "updatedAt": "2026-06-15T01:39:09.230Z",
+      "bytes": 3657826,
+      "sizeMb": 3.49,
+      "sha256": "5686e71be8584da1e7b5b1a73b3849e9b59ae18d4a1f1135521106d43ed3786a"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 sleep tonight 4 10 24-e0659cf4-e611-4a07-afc8-f1704cfbe7fe.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 sleep tonight 4 10 24-e0659cf4-e611-4a07-afc8-f1704cfbe7fe.mp3",
+      "updatedAt": "2026-06-15T01:39:14.984Z",
+      "bytes": 6751520,
+      "sizeMb": 6.44,
+      "sha256": "17ce9bbf9e6eaffd57406e936a54155d4ec03c6a7e7e2ddb626c1a07da9faef7"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 sleep tonight chords nriff 4 10 24-d178611f-f424-46fe-b666-6fcb3ba1d9d9.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 sleep tonight chords nriff 4 10 24-d178611f-f424-46fe-b666-6fcb3ba1d9d9.mp3",
+      "updatedAt": "2026-06-15T01:39:20.081Z",
+      "bytes": 5612200,
+      "sizeMb": 5.35,
+      "sha256": "71837890b208ab7c41a444f387d0f92c24e86e35a50656dddc1b1978c972951b"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 smtch riff addlib 5 21 24-b8d60733-e17a-456a-93f8-1a21ba2c1aba.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 smtch riff addlib 5 21 24-b8d60733-e17a-456a-93f8-1a21ba2c1aba.mp3",
+      "updatedAt": "2026-06-15T01:39:23.389Z",
+      "bytes": 3152256,
+      "sizeMb": 3.01,
+      "sha256": "bb0ba91abaf654ad1f7e6aa4d44c3ff62e1a4df6eafbf2a20b47d38bd3d72231"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch kitten 5 21 24-0bdef6de-d199-41bc-9f4d-9f95986e5579.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch kitten 5 21 24-0bdef6de-d199-41bc-9f4d-9f95986e5579.mp3",
+      "updatedAt": "2026-06-15T01:39:29.618Z",
+      "bytes": 6702026,
+      "sizeMb": 6.39,
+      "sha256": "6aad25f72cf574f6db7db7ecd9a869d0484dc765827d74a2667d918ca8942f55"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch kitten chords 5 32 24-ba2deff5-73c3-43dd-b1ad-dba3cf27e78b.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch kitten chords 5 32 24-ba2deff5-73c3-43dd-b1ad-dba3cf27e78b.mp3",
+      "updatedAt": "2026-06-15T01:39:32.951Z",
+      "bytes": 2410383,
+      "sizeMb": 2.3,
+      "sha256": "b0380194ac280e84a47d3500179ce1758277268216832b74fddb70446a252f3c"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch kitten chords2 5 21 24-cbdc08ea-71fb-4d88-ae4e-15fb75a1ab6f.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch kitten chords2 5 21 24-cbdc08ea-71fb-4d88-ae4e-15fb75a1ab6f.mp3",
+      "updatedAt": "2026-06-15T01:39:35.888Z",
+      "bytes": 3051100,
+      "sizeMb": 2.91,
+      "sha256": "24e96c955f276ad0805f774bee939548dca59332ecd30e5cee78b73dfeb91e09"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch riff2 5 21 24-04de78f5-12e0-48c0-b534-429f792cbf9a.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 snitch riff2 5 21 24-04de78f5-12e0-48c0-b534-429f792cbf9a.mp3",
+      "updatedAt": "2026-06-15T01:39:38.451Z",
+      "bytes": 2286007,
+      "sizeMb": 2.18,
+      "sha256": "4e55514f3c14861c5a95fc1a1a7709724832549805d1a2a5cceda59d734b83eb"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 swords chords 4 14 24-3a9b0b96-750a-4808-97ac-b902086bbf59.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 swords chords 4 14 24-3a9b0b96-750a-4808-97ac-b902086bbf59.mp3",
+      "updatedAt": "2026-06-15T01:39:41.360Z",
+      "bytes": 3193152,
+      "sizeMb": 3.05,
+      "sha256": "37c2286904e7347fe9be0e05dd658e15d9a091c2b0b3f5b1c74e394a5abf995a"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 swords chords addlib1 4 14 24-7f40eece-f47c-439c-9bfa-4d677cd2e8dd.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 swords chords addlib1 4 14 24-7f40eece-f47c-439c-9bfa-4d677cd2e8dd.mp3",
+      "updatedAt": "2026-06-15T01:39:50.695Z",
+      "bytes": 10500639,
+      "sizeMb": 10.01,
+      "sha256": "be2c54e9ef56a802d6babdbf2bc114da5ed0ab50b8515d6120a614732fe47ed6"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 tap addib 1 1 24-6c3a6b97-02cc-4cd2-b005-a8dcbd4a9031.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 tap addib 1 1 24-6c3a6b97-02cc-4cd2-b005-a8dcbd4a9031.mp3",
+      "updatedAt": "2026-06-15T01:39:54.142Z",
+      "bytes": 3716920,
+      "sizeMb": 3.54,
+      "sha256": "64ff1d66a7ec20110af184f642f1a9f54791ff2837f6c59c9762cd1dc381da6b"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 tap riff for addlib 1 1 24-bacdbfc1-8c64-4e5b-b3a3-0c8d3fdb7533.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 tap riff for addlib 1 1 24-bacdbfc1-8c64-4e5b-b3a3-0c8d3fdb7533.mp3",
+      "updatedAt": "2026-06-15T01:39:57.120Z",
+      "bytes": 3137028,
+      "sizeMb": 2.99,
+      "sha256": "7e628ce04b057b24a2f044bedb6bc56233b31da5095cec8bf4669341fa7d83e2"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 too far 2 14 24-dfaacdf6-2fb9-45c5-92a3-37811365ee7a.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 too far 2 14 24-dfaacdf6-2fb9-45c5-92a3-37811365ee7a.mp3",
+      "updatedAt": "2026-06-15T01:40:01.563Z",
+      "bytes": 2450891,
+      "sizeMb": 2.34,
+      "sha256": "42044a654e4ba88928cb8bce11eb7dca630c7458956b8a170604a47c4c9ce682"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 too far chords riff 2 14 24-c077ba50-8fcf-4b9d-982f-ce512dcdd5b4.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 too far chords riff 2 14 24-c077ba50-8fcf-4b9d-982f-ce512dcdd5b4.mp3",
+      "updatedAt": "2026-06-15T01:40:12.094Z",
+      "bytes": 9746786,
+      "sizeMb": 9.3,
+      "sha256": "7d16f22844dd95b138a56bc81e1a9814695475736d1d2171bb902ef9803b5291"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 turn 5 20 24-578ffd4b-cccc-489e-81c4-e5f317c81cfc.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 turn 5 20 24-578ffd4b-cccc-489e-81c4-e5f317c81cfc.mp3",
+      "updatedAt": "2026-06-15T01:40:15.445Z",
+      "bytes": 3011587,
+      "sizeMb": 2.87,
+      "sha256": "b05c880446e87416de8baac009009c27271f10f4df557f151d7a342754d17078"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 turn chords 5 20 24-b9c3527e-f7a9-4e88-ac24-680122f1f760.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 turn chords 5 20 24-b9c3527e-f7a9-4e88-ac24-680122f1f760.mp3",
+      "updatedAt": "2026-06-15T01:40:20.295Z",
+      "bytes": 5124371,
+      "sizeMb": 4.89,
+      "sha256": "e8dac909a2c803111795da5b0c0f68b799514ee2a69e19a1be5ee60486966230"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 turn riff 5 20 24-0f8c766b-d3de-45f1-a75c-6751dd62a056.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 turn riff 5 20 24-0f8c766b-d3de-45f1-a75c-6751dd62a056.mp3",
+      "updatedAt": "2026-06-15T01:40:23.122Z",
+      "bytes": 3279694,
+      "sizeMb": 3.13,
+      "sha256": "2174d69be75e2f6359079172239caa82036b3b3e37d7434215289d5bc2291f13"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 Winters edge 2 22 24-852364f6-36e8-42bd-be99-498f24be3927.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 Winters edge 2 22 24-852364f6-36e8-42bd-be99-498f24be3927.mp3",
+      "updatedAt": "2026-06-15T01:40:27.685Z",
+      "bytes": 4783163,
+      "sizeMb": 4.56,
+      "sha256": "c3ee571865c5e67e4ead1844471673ccd9b9ad7fbfe9a0854c1b1ffcb9e106f7"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 winters edge riff n chords 2 22 24-8aa44073-4b0f-4f0b-88ec-1b752edc33ea.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 winters edge riff n chords 2 22 24-8aa44073-4b0f-4f0b-88ec-1b752edc33ea.mp3",
+      "updatedAt": "2026-06-15T01:40:34.127Z",
+      "bytes": 7335567,
+      "sizeMb": 7,
+      "sha256": "ba2c7732cd5440147c23c3399c754a5a99bf28d25598df542d85a164ddf36a4c"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 Winters edge riffff-37ed4ff5-713f-4f70-a730-491fc58f7945.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 Winters edge riffff-37ed4ff5-713f-4f70-a730-491fc58f7945.mp3",
+      "updatedAt": "2026-06-15T01:40:37.754Z",
+      "bytes": 3626091,
+      "sizeMb": 3.46,
+      "sha256": "37c8b5dd93e61fbb62601e0d115596eeccfafadde1b5463ad18725a94f7bb1ce"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 work 4 4 24-5b3e1cce-64aa-4c91-8b02-6703d962b206.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 work 4 4 24-5b3e1cce-64aa-4c91-8b02-6703d962b206.mp3",
+      "updatedAt": "2026-06-15T01:40:42.278Z",
+      "bytes": 3506672,
+      "sizeMb": 3.34,
+      "sha256": "e97c26d9bb6574feb3990ac8a5900533b383a8d66db3823890a9dd557a5f798e"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.5 work chords n riffs 4 4 25-50c69228-984a-487e-bda3-db146fa7d803.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.5 work chords n riffs 4 4 25-50c69228-984a-487e-bda3-db146fa7d803.mp3",
+      "updatedAt": "2026-06-15T01:40:49.312Z",
+      "bytes": 7426039,
+      "sizeMb": 7.08,
+      "sha256": "4417d7670ea2a1165b1a8445ccd7170dd31470bc3aa4e3f7f6da621d8784e569"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 8.6 riff addib riff 5 21 24-eb882409-9923-4a8e-b15e-93961be47867.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 8.6 riff addib riff 5 21 24-eb882409-9923-4a8e-b15e-93961be47867.mp3",
+      "updatedAt": "2026-06-15T01:40:55.776Z",
+      "bytes": 7468522,
+      "sizeMb": 7.12,
+      "sha256": "6826b63646bd602b8aa8d49acf9214054e0e6b707af76236e178e4c8b72b8e57"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS 9 guitar riff times are hard 2 16 24-ed9b85f1-3177-4c33-96b9-96131daa8dca.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS 9 guitar riff times are hard 2 16 24-ed9b85f1-3177-4c33-96b9-96131daa8dca.mp3",
+      "updatedAt": "2026-06-15T01:40:58.779Z",
+      "bytes": 2801654,
+      "sizeMb": 2.67,
+      "sha256": "cba5a08f4f280818350dcc6ce9e1ce3a2779e1fb9d0ceab5b4279f70ac252639"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar tape 11 side a blue case country 8.5 track 1 guitar addlib 8.5-7fabe8c5-0b15-4166-baaa-f68c70fbff2a.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar tape 11 side a blue case country 8.5 track 1 guitar addlib 8.5-7fabe8c5-0b15-4166-baaa-f68c70fbff2a.mp3",
+      "updatedAt": "2026-06-15T01:41:49.096Z",
+      "bytes": 2867840,
+      "sizeMb": 2.73,
+      "sha256": "074bdb57b301e747246eb62b0da8422ef2a9ce26acbebd8d2ecfafda4f6a6389"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE A BLUE CASE TRACK 1 SWALLOW GUITAR 8.5-3164f8a8-e705-4800-8a90-40d160ddc5f4.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE A BLUE CASE TRACK 1 SWALLOW GUITAR 8.5-3164f8a8-e705-4800-8a90-40d160ddc5f4.mp3",
+      "updatedAt": "2026-06-15T01:41:51.455Z",
+      "bytes": 1788144,
+      "sizeMb": 1.71,
+      "sha256": "f36678be3e938debc6d808091d8ca186fde73f8f5bfb79d4714dc0c1fd8c4191"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE A BLUE CASE TRACK 5 IM COMING HOME GUITAR 8.5-9fe417e2-18b5-4c6e-9d21-17c60e2f28b1.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE A BLUE CASE TRACK 5 IM COMING HOME GUITAR 8.5-9fe417e2-18b5-4c6e-9d21-17c60e2f28b1.mp3",
+      "updatedAt": "2026-06-15T01:41:59.481Z",
+      "bytes": 8813853,
+      "sizeMb": 8.41,
+      "sha256": "dd0894d66eb9ff28a2e8789f1b476bf9fa6cb8d2546f9a46e6e13353ac9c1859"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE A BLUE CASE TRACK 6 ANOTHER DAY GUITAR 8.5-61b70445-b27d-485a-938e-43f0fd0c4670.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE A BLUE CASE TRACK 6 ANOTHER DAY GUITAR 8.5-61b70445-b27d-485a-938e-43f0fd0c4670.mp3",
+      "updatedAt": "2026-06-15T01:42:03.292Z",
+      "bytes": 3783229,
+      "sizeMb": 3.61,
+      "sha256": "db97540e80ac81588d91e291bdf978e78c182ee0735f5e5c698d88c4ad1b07ab"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE B BLUE CASE TRACK 16 NOBODY TOLD ME GUITAR 8.5-bbad1329-fe3c-430d-bf2e-ce1f414bc198.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE B BLUE CASE TRACK 16 NOBODY TOLD ME GUITAR 8.5-bbad1329-fe3c-430d-bf2e-ce1f414bc198.mp3",
+      "updatedAt": "2026-06-15T01:42:06.381Z",
+      "bytes": 1755911,
+      "sizeMb": 1.67,
+      "sha256": "ab8aa2d6d45f162b8a4a830353edca0539eaf150157f0c3fe56f57bff3837dc7"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE B BLUE CASE TRACK 17 FOREVER GUITAR 8.5-406a70bc-a216-4f73-8b1e-5928ef3ac1b4.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 12 SIDE B BLUE CASE TRACK 17 FOREVER GUITAR 8.5-406a70bc-a216-4f73-8b1e-5928ef3ac1b4.mp3",
+      "updatedAt": "2026-06-15T01:42:08.591Z",
+      "bytes": 1684258,
+      "sizeMb": 1.61,
+      "sha256": "4c60ce7df3f4bb6fd6b8526966dd893f15dce6667457d0221063849091ba2787"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 13 LONELY GIUTAR 8.5-a48e43cf-c68b-47aa-a56c-cb8c4c9a4cf5.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 13 LONELY GIUTAR 8.5-a48e43cf-c68b-47aa-a56c-cb8c4c9a4cf5.mp3",
+      "updatedAt": "2026-06-15T01:42:11.030Z",
+      "bytes": 2323557,
+      "sizeMb": 2.22,
+      "sha256": "5f0e9dba319fa5158b593c6a74cc311c8f9cf20920c3600848b1d7f9c49a603c"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 14 FEELING GIUTAR 8.5-82907865-3e96-48c8-a641-a0b2d36a8eaa.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 14 FEELING GIUTAR 8.5-82907865-3e96-48c8-a641-a0b2d36a8eaa.mp3",
+      "updatedAt": "2026-06-15T01:42:13.338Z",
+      "bytes": 1744850,
+      "sizeMb": 1.66,
+      "sha256": "92c7e91d245bb536aecd477e8a8e4ec6868b4b389a29e81338f81f80c833ccb9"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 15 NO BODY TOLD ME GIUTAR 8.5-ad12d793-a9e2-4ed2-9627-a83937105eac.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 15 NO BODY TOLD ME GIUTAR 8.5-ad12d793-a9e2-4ed2-9627-a83937105eac.mp3",
+      "updatedAt": "2026-06-15T01:42:15.431Z",
+      "bytes": 1532954,
+      "sizeMb": 1.46,
+      "sha256": "0b0b4d01facb12bc4dff27ba95ec0e186d33a69deaf879133eec0f1e3e3bcf58"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 16 DREAMING OF YOU GIUTAR 8.5-382ac7c6-ea88-42eb-a6a9-8c388852874a.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 16 DREAMING OF YOU GIUTAR 8.5-382ac7c6-ea88-42eb-a6a9-8c388852874a.mp3",
+      "updatedAt": "2026-06-15T01:42:19.588Z",
+      "bytes": 4138425,
+      "sizeMb": 3.95,
+      "sha256": "81606b9310fed57c60a476565cd7e9f372e5059721ab8679251a1066f0daf595"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 20 CONVERATION GUITAR 8.5-9e39dcad-333e-4e90-b856-30676d975ee9.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 20 CONVERATION GUITAR 8.5-9e39dcad-333e-4e90-b856-30676d975ee9.mp3",
+      "updatedAt": "2026-06-15T01:42:21.858Z",
+      "bytes": 1591220,
+      "sizeMb": 1.52,
+      "sha256": "dfd25311ae061a9b2b5a373601d47cd7c64d7516c9313d22badbdf8b63486fd1"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 5 SHORT RIFF 8.5-d7427855-85a1-4914-99e7-b99027c2fd5a.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 13 SIDE B BLUE CASE TRACK 5 SHORT RIFF 8.5-d7427855-85a1-4914-99e7-b99027c2fd5a.mp3",
+      "updatedAt": "2026-06-15T01:42:22.432Z",
+      "bytes": 208795,
+      "sizeMb": 0.2,
+      "sha256": "2f702af6754457714fa9ffbf044c7906f02ae7206eb7ff6b916451466f1010a5"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 14 2 SIDE ABLUE BOX TRACK 2 HONKIE TONK GIRLGUITAR 8.5 -c576e128-c767-4d71-96e8-41c6a86f9f77.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 14 2 SIDE ABLUE BOX TRACK 2 HONKIE TONK GIRLGUITAR 8.5 -c576e128-c767-4d71-96e8-41c6a86f9f77.mp3",
+      "updatedAt": "2026-06-15T01:42:24.442Z",
+      "bytes": 1706093,
+      "sizeMb": 1.63,
+      "sha256": "a359e57e99bcc32e70a12fd04f7d765d1d1609d6d15649de526a07fe280fd23a"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 2 SIDE B BLUE CASE TRACK 7 GUITAR CARRY ON 8.5-3852267d-8bdd-4afc-a9c8-41a78eef731f.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 2 SIDE B BLUE CASE TRACK 7 GUITAR CARRY ON 8.5-3852267d-8bdd-4afc-a9c8-41a78eef731f.mp3",
+      "updatedAt": "2026-06-15T01:42:27.087Z",
+      "bytes": 1917327,
+      "sizeMb": 1.83,
+      "sha256": "25c89b2a76b4601e927e8dee4328cb8c0e8785af326fa6d3c8329bdc54db960b"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 6 SIDE A BLUE CASE TRACK 3 FINE LIFE GUITAR  ADDLIB 8.5-f9301ce0-fc30-4138-818a-bd5c19862c9e.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 6 SIDE A BLUE CASE TRACK 3 FINE LIFE GUITAR  ADDLIB 8.5-f9301ce0-fc30-4138-818a-bd5c19862c9e.mp3",
+      "updatedAt": "2026-06-15T01:42:52.939Z",
+      "bytes": 3853688,
+      "sizeMb": 3.68,
+      "sha256": "fe4d966cbdb0505082d65fed4e3b8995def89e773b705758b3316cc6a502d836"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 6 SIDE B BLUE CASE TRACK 4  TIME GUITAR 8.5-340b67dd-8045-4236-ba13-b6dfdfe41759.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 6 SIDE B BLUE CASE TRACK 4  TIME GUITAR 8.5-340b67dd-8045-4236-ba13-b6dfdfe41759.mp3",
+      "updatedAt": "2026-06-15T01:42:48.756Z",
+      "bytes": 2116441,
+      "sizeMb": 2.02,
+      "sha256": "8f8e5af1f817c070d7cf88c7b72b37c2be72a02f72899a5f41409cf2e9aae14f"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 7 SIDE A BLUE CASE TRACK 6 SHORT RIFF 8.5-a114757f-501f-4487-9811-613a51954457.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS audacity 8.5 guitar TAPE 7 SIDE A BLUE CASE TRACK 6 SHORT RIFF 8.5-a114757f-501f-4487-9811-613a51954457.mp3",
+      "updatedAt": "2026-06-15T01:42:53.788Z",
+      "bytes": 195028,
+      "sizeMb": 0.19,
+      "sha256": "9b8d67e2d9dadc52929eff4d4b060ec2a179338676836c129c0e8a803c4e2a65"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS hands 6 10 24-c2ac7872-2981-4162-8fe2-f145d6381386.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS hands 6 10 24-c2ac7872-2981-4162-8fe2-f145d6381386.mp3",
+      "updatedAt": "2026-06-15T01:41:01.807Z",
+      "bytes": 3031586,
+      "sizeMb": 2.89,
+      "sha256": "d0932d40b7c3d294dbbc26199d411aacce8d11948f5055b40e4057b3e10c54be"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS hands chords 6 10 24-e21a6548-8a98-4acc-b579-9f4c29fa6300.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS hands chords 6 10 24-e21a6548-8a98-4acc-b579-9f4c29fa6300.mp3",
+      "updatedAt": "2026-06-15T01:41:06.045Z",
+      "bytes": 4742276,
+      "sizeMb": 4.52,
+      "sha256": "859848dae9cfdd473a9a554dcfe1cf6dfbe1726291e32c268857ba77b1c89f70"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS howling at you 6 18 24-f5577958-d8d3-4e48-bd92-991e06e66c34.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS howling at you 6 18 24-f5577958-d8d3-4e48-bd92-991e06e66c34.mp3",
+      "updatedAt": "2026-06-15T01:41:11.481Z",
+      "bytes": 5175216,
+      "sizeMb": 4.94,
+      "sha256": "40e51a2a7dffd25d0eb8b7e01c2aa8d4aaa20cc7d3028c900a070d101da43ea1"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS howling at you riff n chords 6 18 24-2df8d341-c3d9-42e4-9ea2-d6a8e6f16644.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS howling at you riff n chords 6 18 24-2df8d341-c3d9-42e4-9ea2-d6a8e6f16644.mp3",
+      "updatedAt": "2026-06-15T01:41:17.081Z",
+      "bytes": 6079395,
+      "sizeMb": 5.8,
+      "sha256": "06285ac61252ccf6a5542ed27b9a6918e9c912d63d15c74a67be5dc550da6e32"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS mess chords n riff 6 19 24-ce4f13b2-f54b-4924-9ea8-15bfbd529b67.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS mess chords n riff 6 19 24-ce4f13b2-f54b-4924-9ea8-15bfbd529b67.mp3",
+      "updatedAt": "2026-06-15T01:41:21.873Z",
+      "bytes": 4723967,
+      "sizeMb": 4.51,
+      "sha256": "f104a834506cf2f00825b349ea345549aa8b5ac5f5fdcf10da14c6c6880361db"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS riff n chords 6 18 24-8f51b57e-84b8-4a0f-b1b1-e7a56cfe0c05.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS riff n chords 6 18 24-8f51b57e-84b8-4a0f-b1b1-e7a56cfe0c05.mp3",
+      "updatedAt": "2026-06-15T01:41:26.876Z",
+      "bytes": 5462583,
+      "sizeMb": 5.21,
+      "sha256": "9c9e0dbd487a531278f8ca44fa6f3eb3c5f9fa018e5f00abdf670c21b3a7cdf9"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS til were through 6 19 24-cd6ffe67-9674-47c1-a16e-dc089c720b3c.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS til were through 6 19 24-cd6ffe67-9674-47c1-a16e-dc089c720b3c.mp3",
+      "updatedAt": "2026-06-15T01:41:32.412Z",
+      "bytes": 5532907,
+      "sizeMb": 5.28,
+      "sha256": "fa2778e6a0422ea94d7d282f95892ce0e83ae5a7ff87c9ba30d5a147aafdbd35"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS til were through chords 6 19 24-cebad067-eb6a-4f06-b54a-9023e49bb80b.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS til were through chords 6 19 24-cebad067-eb6a-4f06-b54a-9023e49bb80b.mp3",
+      "updatedAt": "2026-06-15T01:41:38.591Z",
+      "bytes": 789798,
+      "sizeMb": 0.75,
+      "sha256": "91546c747f4aa6298b122cbb1ecbfdad5ad593602d62cb96d2e6d1b12a9b6f59"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS til were through riff 6 19 24-92fad47c-b789-4690-ae09-f2023ac860c1.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS til were through riff 6 19 24-92fad47c-b789-4690-ae09-f2023ac860c1.mp3",
+      "updatedAt": "2026-06-15T01:41:37.323Z",
+      "bytes": 5474276,
+      "sizeMb": 5.22,
+      "sha256": "db4e5af06f122e5d7941d2dde893e68aca39b8e2fcb58ff64aec21dc0e5637e7"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS yyy chorus-1de25f2a-4864-45c2-8997-d5b2167ceb6a.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS yyy chorus-1de25f2a-4864-45c2-8997-d5b2167ceb6a.mp3",
+      "updatedAt": "2026-06-15T01:41:39.871Z",
+      "bytes": 884142,
+      "sizeMb": 0.84,
+      "sha256": "66ff72f40e74d929f0271d4bf1c196b3164ca9ca766a0583f1ff5ea4a2e838ae"
+    },
+    {
+      "name": "8.5 chord songs 8.5 GUITAR N RIFFS yyy riff yyy-4efb762b-254d-4553-aa5a-cfe2f92eb6c9.mp3",
+      "path": "uploads/8.5 chord songs 8.5 GUITAR N RIFFS yyy riff yyy-4efb762b-254d-4553-aa5a-cfe2f92eb6c9.mp3",
+      "updatedAt": "2026-06-15T01:41:42.573Z",
+      "bytes": 2317461,
+      "sizeMb": 2.21,
+      "sha256": "faa0f33cf770bf2c166f36c1bfc2c922cff4895f8115dc5dfd670ccb1e6a86f7"
+    }
+  ]
+}
