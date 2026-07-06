@@ -27,6 +27,8 @@ type CodeMapTab = "search" | "save" | "risk";
 
 type Props = {
   snapshot: CodeMapSnapshot;
+  riskReport: Record<string, unknown> | null;
+  symbolWatch: Record<string, unknown> | null;
 };
 
 const tabs: { id: CodeMapTab; label: string }[] = [
@@ -65,8 +67,92 @@ function PanelCard({
   );
 }
 
-export default function CodeMapDashboard({ snapshot }: Props) {
+function readRiskList(report: Record<string, unknown> | null, key: string): unknown[] {
+  const value = report?.[key];
+  return Array.isArray(value) ? value : [];
+}
+
+function RiskCountCard({
+  label,
+  count,
+  severity,
+}: {
+  label: string;
+  count: number;
+  severity: "High" | "Medium" | "Low";
+}) {
+  const color =
+    severity === "High"
+      ? "border-red-400/60 bg-red-400/10"
+      : severity === "Medium"
+        ? "border-yellow-300/50 bg-yellow-300/10"
+        : "border-white/15";
+
+  return (
+    <div className={["rounded border p-3", color].join(" ")}>
+      <div className="text-xs font-black uppercase tracking-[0.25em] text-white/60">
+        {severity}
+      </div>
+      <div className="mt-1 text-3xl font-black">{count}</div>
+      <div className="text-sm text-white/70">{label}</div>
+    </div>
+  );
+}
+
+function RiskList({
+  title,
+  items,
+  severity,
+}: {
+  title: string;
+  items: unknown[];
+  severity: "High" | "Medium" | "Low";
+}) {
+  return (
+    <div
+      className={[
+        "rounded border p-3",
+        severity === "High"
+          ? "border-red-400/60"
+          : severity === "Medium"
+            ? "border-yellow-300/50"
+            : "border-white/15",
+      ].join(" ")}
+    >
+      <h3 className="font-black">{title}</h3>
+      <div className="mt-2 text-sm text-white/65">{items.length} item(s)</div>
+      <div className="mt-2 max-h-[220px] space-y-2 overflow-y-auto pr-2 text-xs">
+        {items.slice(0, 40).map((item, index) => (
+          <pre
+            key={index}
+            className="whitespace-pre-wrap break-all rounded border border-white/10 bg-black p-2 text-white/75"
+          >
+            {JSON.stringify(item, null, 2)}
+          </pre>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function CodeMapDashboard({ snapshot, riskReport, symbolWatch }: Props) {
   const [activeTab, setActiveTab] = useState<CodeMapTab>("search");
+  const missingRenderWatch = readRiskList(riskReport, "missingRenderWatch");
+  const unusedTypeWatch = readRiskList(riskReport, "unusedTypeWatch");
+  const routeOrphans = readRiskList(riskReport, "routeOrphans");
+  const exportedButNoFollowers = readRiskList(riskReport, "exportedButNoFollowers");
+  const symbolFindings = Array.isArray(symbolWatch?.findings)
+    ? symbolWatch.findings
+    : [];
+  const knownBadCaught = symbolFindings.some(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "path" in item &&
+      "symbol" in item &&
+      String(item.path).includes("missing-tools-dropdown-example.tsx") &&
+      String(item.symbol) === "TOOLS_CHILD_LINKS"
+  );
 
   return (
     <>
@@ -172,6 +258,29 @@ git status`}</CommandBox>
           </p>
 
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            <div className="grid gap-3 lg:col-span-2 lg:grid-cols-3">
+              <RiskCountCard
+                label="Missing render warnings"
+                count={missingRenderWatch.length}
+                severity="High"
+              />
+              <RiskCountCard
+                label="Unused type warnings"
+                count={unusedTypeWatch.length}
+                severity="Medium"
+              />
+              <RiskCountCard
+                label="Route/no-follower warnings"
+                count={routeOrphans.length + exportedButNoFollowers.length}
+                severity="Low"
+              />
+            </div>
+
+            <RiskList title="Missing Render Watch" items={missingRenderWatch} severity="High" />
+            <RiskList title="Unused Type Watch" items={unusedTypeWatch} severity="Medium" />
+            <RiskList title="Route Orphans" items={routeOrphans} severity="Low" />
+            <RiskList title="Exported But No Followers" items={exportedButNoFollowers} severity="Low" />
+
             <PanelCard title="1. Refresh Code Map">
               Rebuild the code snapshot before checking risk.
               <CommandBox>node scripts/code-map-snapshot.mjs</CommandBox>
@@ -180,6 +289,16 @@ git status`}</CommandBox>
             <PanelCard title="2. Run Risk Report">
               Creates a JSON report of likely wiring problems.
               <CommandBox>node scripts/code-risk-report.mjs</CommandBox>
+            </PanelCard>
+
+            <PanelCard title="3. Known Bad Test">
+              <div className="text-2xl font-black">
+                {knownBadCaught ? "CAUGHT" : "MISSED"}
+              </div>
+              <p className="mt-2 text-sm text-white/70">
+                The fake missing Tools dropdown bug must be caught before we trust the scanner.
+              </p>
+              <CommandBox>node scripts/code-symbol-watch.mjs</CommandBox>
             </PanelCard>
 
             <PanelCard title="3. Finder First">

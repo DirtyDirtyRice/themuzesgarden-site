@@ -22,23 +22,31 @@ type CodeMapSnapshot = {
   files: CodeMapFile[];
 };
 
-async function loadSnapshot(): Promise<CodeMapSnapshot | null> {
+async function loadJson<T>(folder: string, filename: string): Promise<T | null> {
   try {
-    const snapshotPath = path.join(
-      process.cwd(),
-      "code-map-reports",
-      "code-map-snapshot.json"
-    );
-
-    const raw = await fs.readFile(snapshotPath, "utf8");
-    return JSON.parse(raw) as CodeMapSnapshot;
+    const filePath = path.join(process.cwd(), folder, filename);
+    const raw = await fs.readFile(filePath, "utf8");
+    return JSON.parse(raw) as T;
   } catch {
     return null;
   }
 }
 
 export default async function CodeMapPage() {
-  const snapshot = await loadSnapshot();
+  const snapshot = await loadJson<CodeMapSnapshot>(
+    "code-map-reports",
+    "code-map-snapshot.json"
+  );
+
+  const riskReport = await loadJson<Record<string, unknown>>(
+    "code-map-reports",
+    "code-risk-report.json"
+  );
+
+  const symbolWatch = await loadJson<Record<string, unknown>>(
+    "code-map-reports",
+    "code-symbol-watch.json"
+  );
 
   if (!snapshot) {
     return (
@@ -55,7 +63,7 @@ export default async function CodeMapPage() {
 
   return (
     <main className="min-h-screen bg-black p-4 text-white">
-      <CodeMapDashboard snapshot={snapshot} />
+      <CodeMapDashboard snapshot={snapshot} riskReport={riskReport} symbolWatch={symbolWatch} />
     </main>
   );
 }
