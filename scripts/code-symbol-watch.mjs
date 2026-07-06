@@ -69,6 +69,48 @@ function lineNumberForIndex(text, index) {
   return text.slice(0, index).split("\n").length;
 }
 
+
+function findMissingRequiredProps(relPath, text) {
+  const findings = [];
+  const cleanText = stripComments(text);
+
+  for (const typeMatch of cleanText.matchAll(/type\s+([A-Za-z0-9_]+)Props\s*=\s*\{([\s\S]*?)\};/g)) {
+    const componentName = typeMatch[1];
+    const body = typeMatch[2];
+    const requiredProps = [];
+
+    for (const propMatch of body.matchAll(/^\s*([A-Za-z0-9_]+)\s*:/gm)) {
+      requiredProps.push(propMatch[1]);
+    }
+
+    if (!requiredProps.length) continue;
+
+    const componentTagRegex = new RegExp("<" + componentName + "(\\s[^>]*)?/?>", "g");
+
+    for (const tagMatch of cleanText.matchAll(componentTagRegex)) {
+      const fullTag = tagMatch[0];
+      const line = lineNumberForIndex(text, tagMatch.index ?? 0);
+
+      for (const propName of requiredProps) {
+        if (!new RegExp("\\b" + propName + "\\s*=").test(fullTag)) {
+          findings.push({
+            severity: "high",
+            path: relPath,
+            line,
+            symbol: propName,
+            kind: "missing-required-prop",
+            uses: 0,
+            message: componentName + " is rendered without required prop " + propName + ".",
+          });
+        }
+      }
+    }
+  }
+
+
+  return findings;
+}
+
 function analyzeFile(absPath, text) {
   const relPath = normalizeSlash(path.relative(root, absPath));
 
@@ -117,6 +159,8 @@ function analyzeFile(absPath, text) {
       });
     }
   }
+
+  findings.push(...findMissingRequiredProps(relPath, text));
 
   return findings;
 }

@@ -154,6 +154,18 @@ export default function CodeMapDashboard({ snapshot, riskReport, symbolWatch }: 
       String(item.symbol) === "TOOLS_CHILD_LINKS"
   );
 
+  const missingSaveHandlerCaught = symbolFindings.some(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "path" in item &&
+      "symbol" in item &&
+      "kind" in item &&
+      String(item.path).includes("missing-save-handler-example.tsx") &&
+      String(item.symbol) === "onSaveProjectDescription" &&
+      String(item.kind) === "missing-required-prop"
+  );
+
   return (
     <>
       <section className="rounded-lg border border-white/20 p-4">
@@ -291,12 +303,13 @@ git status`}</CommandBox>
               <CommandBox>node scripts/code-risk-report.mjs</CommandBox>
             </PanelCard>
 
-            <PanelCard title="3. Known Bad Test">
-              <div className="text-2xl font-black">
-                {knownBadCaught ? "CAUGHT" : "MISSED"}
+            <PanelCard title="3. Known Bad Tests">
+              <div className="space-y-2 text-lg font-black">
+                <div>Tools dropdown: {knownBadCaught ? "CAUGHT" : "MISSED"}</div>
+                <div>Save handler: {missingSaveHandlerCaught ? "CAUGHT" : "MISSED"}</div>
               </div>
               <p className="mt-2 text-sm text-white/70">
-                The fake missing Tools dropdown bug must be caught before we trust the scanner.
+                Known broken examples must be caught before we trust the scanner.
               </p>
               <CommandBox>node scripts/code-symbol-watch.mjs</CommandBox>
             </PanelCard>
