@@ -1,0 +1,2905 @@
+{
+  "generatedAt": "2026-07-06T19:46:50.238Z",
+  "fileCount": 1212,
+  "findingCount": 322,
+  "findings": [
+    {
+      "severity": "high",
+      "path": "app/components/find-it/findItPanelUtils.ts",
+      "line": 12,
+      "symbol": "FIND_IT_CATEGORY_HELP_TEXT",
+      "kind": "constant",
+      "uses": 1,
+      "message": "FIND_IT_CATEGORY_HELP_TEXT is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/components/find-it/findItResultsPersistence.ts",
+      "line": 9,
+      "symbol": "STORAGE_WRITE_DELAY_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STORAGE_WRITE_DELAY_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/components/find-it/FindItSearchControllerConstants.ts",
+      "line": 1,
+      "symbol": "MAX_FIND_IT_RESULTS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MAX_FIND_IT_RESULTS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/components/find-it/FindItSearchControllerConstants.ts",
+      "line": 2,
+      "symbol": "NAVIGATION_RESULT_LIMIT",
+      "kind": "constant",
+      "uses": 1,
+      "message": "NAVIGATION_RESULT_LIMIT is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/components/find-it/FindItSearchControllerConstants.ts",
+      "line": 3,
+      "symbol": "SEARCH_DEBOUNCE_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "SEARCH_DEBOUNCE_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/components/find-it/FindItSearchControllerConstants.ts",
+      "line": 4,
+      "symbol": "PAGE_JUMP_SIZE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "PAGE_JUMP_SIZE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/libraryData.ts",
+      "line": 6,
+      "symbol": "LS_KEY",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LS_KEY is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/libraryData.ts",
+      "line": 8,
+      "symbol": "CATEGORY_ORDER",
+      "kind": "constant",
+      "uses": 1,
+      "message": "CATEGORY_ORDER is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/libraryData.ts",
+      "line": 19,
+      "symbol": "CATEGORY_LABEL",
+      "kind": "constant",
+      "uses": 1,
+      "message": "CATEGORY_LABEL is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/lyricsImportTypes.ts",
+      "line": 16,
+      "symbol": "EMPTY_IMPORT_REPORT",
+      "kind": "constant",
+      "uses": 1,
+      "message": "EMPTY_IMPORT_REPORT is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsLibraryClient.tsx",
+      "line": 69,
+      "symbol": "saveStatus",
+      "kind": "react-state-value",
+      "uses": 1,
+      "message": "saveStatus is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/lyricsSeed.ts",
+      "line": 3,
+      "symbol": "STARTER_LYRICS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STARTER_LYRICS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/lyricsStorage.ts",
+      "line": 4,
+      "symbol": "LYRICS_STORAGE_KEY",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_STORAGE_KEY is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsTrackLinkSeed.ts",
+      "line": 3,
+      "symbol": "STARTER_TRACK_LINKS",
+      "kind": "wiring-constant",
+      "uses": 1,
+      "message": "STARTER_TRACK_LINKS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 7,
+      "symbol": "LYRICS_VERSION_STARTER_VERSION",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_STARTER_VERSION is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 46,
+      "symbol": "LYRICS_VERSION_PANEL_SECTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_PANEL_SECTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 77,
+      "symbol": "LYRICS_VERSION_ACTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_ACTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 122,
+      "symbol": "LYRICS_VERSION_EMPTY_STATE_LINES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_EMPTY_STATE_LINES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 128,
+      "symbol": "LYRICS_VERSION_KIND_LABELS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_KIND_LABELS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 141,
+      "symbol": "LYRICS_VERSION_STATUS_LABELS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_STATUS_LABELS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 150,
+      "symbol": "LYRICS_VERSION_PRIORITY_LABELS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_PRIORITY_LABELS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 157,
+      "symbol": "LYRICS_VERSION_FOCUS_LABELS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_FOCUS_LABELS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 169,
+      "symbol": "LYRICS_VERSION_READINESS_LABELS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_READINESS_LABELS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "line": 178,
+      "symbol": "LYRICS_VERSION_VERDICT_LABELS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "LYRICS_VERSION_VERDICT_LABELS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/miscellaneous/miscellaneousSeed.ts",
+      "line": 3,
+      "symbol": "STARTER_MISCELLANEOUS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STARTER_MISCELLANEOUS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/multi-stems/multiStemsSeed.ts",
+      "line": 3,
+      "symbol": "STARTER_MULTI_STEMS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STARTER_MULTI_STEMS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/project-liaison/page.tsx",
+      "line": 78,
+      "symbol": "linkedIds",
+      "kind": "react-state-value",
+      "uses": 1,
+      "message": "linkedIds is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/library/stories/storiesSeed.ts",
+      "line": 3,
+      "symbol": "STARTER_STORIES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STARTER_STORIES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/create/CreateBridgeReadiness.tsx",
+      "line": 22,
+      "symbol": "directSaveBlockedReason",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "SaveReadinessMessage is rendered without required prop directSaveBlockedReason."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/create/createFormStepSystem.ts",
+      "line": 16,
+      "symbol": "STEP_LABELS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STEP_LABELS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/create/createFormStepSystem.ts",
+      "line": 24,
+      "symbol": "STEP_HELP",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STEP_HELP is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/create/createFormStepSystem.ts",
+      "line": 35,
+      "symbol": "STEP_REQUIREMENT_COPY",
+      "kind": "constant",
+      "uses": 1,
+      "message": "STEP_REQUIREMENT_COPY is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/create/metadataCreateConfig.ts",
+      "line": 1,
+      "symbol": "VISIBILITY_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "VISIBILITY_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/create/metadataCreateConfig.ts",
+      "line": 7,
+      "symbol": "RECORD_TYPE_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RECORD_TYPE_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/create/metadataCreateConfig.ts",
+      "line": 17,
+      "symbol": "RELATIONSHIP_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 202,
+      "symbol": "children",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "CardButton is rendered without required prop children."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 226,
+      "symbol": "children",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "CardButton is rendered without required prop children."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 211,
+      "symbol": "children",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "CardLink is rendered without required prop children."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 220,
+      "symbol": "children",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "CardLink is rendered without required prop children."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 236,
+      "symbol": "children",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "CardLink is rendered without required prop children."
+    },
+    {
+      "severity": "high",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 240,
+      "symbol": "children",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "CardLink is rendered without required prop children."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 11,
+      "symbol": "TRACK_MATCHER_KEYS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_KEYS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 26,
+      "symbol": "DEFAULT_TRACK_A",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_TRACK_A is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 34,
+      "symbol": "DEFAULT_TRACK_B",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_TRACK_B is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 42,
+      "symbol": "DEFAULT_SYNC_SNAPSHOT",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_SYNC_SNAPSHOT is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 50,
+      "symbol": "DEFAULT_TRACK_MATCHER_LANES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_TRACK_MATCHER_LANES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 52,
+      "symbol": "DEFAULT_TRACK_MATCHER_LANE_RELATIONSHIPS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_TRACK_MATCHER_LANE_RELATIONSHIPS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 55,
+      "symbol": "SYNC_INTERVAL_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "SYNC_INTERVAL_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 56,
+      "symbol": "PHASE_BEATS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "PHASE_BEATS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 57,
+      "symbol": "SOFT_DRIFT_SECONDS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "SOFT_DRIFT_SECONDS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 58,
+      "symbol": "HARD_DRIFT_SECONDS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "HARD_DRIFT_SECONDS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 59,
+      "symbol": "HARD_PHASE_SECONDS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "HARD_PHASE_SECONDS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 60,
+      "symbol": "MAX_RATE_CORRECTION",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MAX_RATE_CORRECTION is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 61,
+      "symbol": "BPM_SMOOTHING",
+      "kind": "constant",
+      "uses": 1,
+      "message": "BPM_SMOOTHING is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherControllerConstants.ts",
+      "line": 63,
+      "symbol": "PRO_PITCH_AUTO_FALLBACK_STATUSES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "PRO_PITCH_AUTO_FALLBACK_STATUSES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderDestinationSeed.ts",
+      "line": 3,
+      "symbol": "TRACK_MATCHER_FINDER_ROUTES",
+      "kind": "wiring-constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_ROUTES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderDestinationSeed.ts",
+      "line": 174,
+      "symbol": "TRACK_MATCHER_FINDER_ROUTE_GROUPS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_ROUTE_GROUPS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderMockData.ts",
+      "line": 3,
+      "symbol": "TRACK_MATCHER_FINDER_MOCK_TRACKS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_MOCK_TRACKS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderQueryPresets.ts",
+      "line": 3,
+      "symbol": "TRACK_MATCHER_FINDER_PRESETS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_PRESETS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderSavedSearchSeed.ts",
+      "line": 419,
+      "symbol": "TRACK_MATCHER_FINDER_SAVED_SEARCH_GROUPS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_SAVED_SEARCH_GROUPS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderSeed.ts",
+      "line": 6,
+      "symbol": "TRACK_MATCHER_FINDER_DESTINATIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_DESTINATIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderSeed.ts",
+      "line": 22,
+      "symbol": "TRACK_MATCHER_FINDER_SOURCES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_SOURCES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderSeed.ts",
+      "line": 34,
+      "symbol": "TRACK_MATCHER_FINDER_QUICK_SEARCHES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_FINDER_QUICK_SEARCHES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderTypes.ts",
+      "line": 106,
+      "symbol": "DEFAULT_TRACK_MATCHER_FINDER_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_TRACK_MATCHER_FINDER_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryTypes.ts",
+      "line": 97,
+      "symbol": "TRACK_MATCHER_PANEL_ZONE_ORDER",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACK_MATCHER_PANEL_ZONE_ORDER is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/components/insight-v2/MultiTrackInsightV2Seed.ts",
+      "line": 3,
+      "symbol": "MULTI_TRACK_INSIGHT_V2_EMPTY_STATE_CARD",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_INSIGHT_V2_EMPTY_STATE_CARD is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/components/insight-v2/MultiTrackInsightV2Seed.ts",
+      "line": 13,
+      "symbol": "MULTI_TRACK_INSIGHT_V2_SAFE_FOUNDATION_CARD",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_INSIGHT_V2_SAFE_FOUNDATION_CARD is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/components/source-workspace/MultiTrackSourceSeed.ts",
+      "line": 3,
+      "symbol": "MULTI_TRACK_SOURCE_WORKSPACE_ITEMS",
+      "kind": "wiring-constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_SOURCE_WORKSPACE_ITEMS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/controller/multiTrackControllerConstants.ts",
+      "line": 8,
+      "symbol": "MULTI_TRACK_CONTROLLER_VIEWS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_CONTROLLER_VIEWS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/controller/multiTrackControllerConstants.ts",
+      "line": 87,
+      "symbol": "DEFAULT_MULTI_TRACK_CONTROLLER_SNAPSHOT",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_CONTROLLER_SNAPSHOT is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/controller/multiTrackWorkspaceRegistrySeed.ts",
+      "line": 5,
+      "symbol": "MULTI_TRACK_WORKSPACE_REGISTRY",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_WORKSPACE_REGISTRY is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineRelationshipSeed.ts",
+      "line": 3,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_RELATIONSHIP_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_RELATIONSHIP_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts",
+      "line": 286,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSyncSeed.ts",
+      "line": 3,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_SYNC_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_SYNC_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/session/multiTrackAnalysisNoteSeed.ts",
+      "line": 5,
+      "symbol": "DEFAULT_MULTI_TRACK_ANALYSIS_NOTES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_ANALYSIS_NOTES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/session/multiTrackDecisionSeed.ts",
+      "line": 6,
+      "symbol": "DEFAULT_MULTI_TRACK_DECISION_RECORD",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_DECISION_RECORD is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/session/multiTrackDecisionSeed.ts",
+      "line": 15,
+      "symbol": "MULTI_TRACK_DECISION_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_DECISION_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/session/multiTrackSaveSeed.ts",
+      "line": 3,
+      "symbol": "MULTI_TRACK_SAVE_ROUTE_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_SAVE_ROUTE_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/session/multiTrackSelectionHistory.ts",
+      "line": 20,
+      "symbol": "DEFAULT_MULTI_TRACK_SELECTION_HISTORY",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_SELECTION_HISTORY is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/session/multiTrackSessionSeed.ts",
+      "line": 3,
+      "symbol": "DEFAULT_MULTI_TRACK_SESSION_NOTES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_SESSION_NOTES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackClipLaneSeed.ts",
+      "line": 266,
+      "symbol": "DEFAULT_MULTI_TRACK_CLIP_LANE_WORKSPACE_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_CLIP_LANE_WORKSPACE_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeSeed.ts",
+      "line": 3,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_BRIDGE_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_BRIDGE_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackExperimentSeed.ts",
+      "line": 281,
+      "symbol": "DEFAULT_MULTI_TRACK_EXPERIMENT_WORKSPACE_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_EXPERIMENT_WORKSPACE_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts",
+      "line": 11,
+      "symbol": "MULTI_TRACK_RIFF_GROUP_SOURCE_TRACKS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MULTI_TRACK_RIFF_GROUP_SOURCE_TRACKS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts",
+      "line": 373,
+      "symbol": "DEFAULT_MULTI_TRACK_RIFF_GROUP_WORKSPACE_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_RIFF_GROUP_WORKSPACE_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackSimilaritySeed.ts",
+      "line": 271,
+      "symbol": "DEFAULT_MULTI_TRACK_SIMILARITY_WORKSPACE_STATE",
+      "kind": "constant",
+      "uses": 1,
+      "message": "DEFAULT_MULTI_TRACK_SIMILARITY_WORKSPACE_STATE is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/runtime/trackMatcherRuntimeUtils.ts",
+      "line": 3,
+      "symbol": "PITCH_RATIO_EPSILON",
+      "kind": "constant",
+      "uses": 1,
+      "message": "PITCH_RATIO_EPSILON is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/tools/track-matcher/runtime/trackMatcherRuntimeUtils.ts",
+      "line": 4,
+      "symbol": "TEMPO_RATIO_EPSILON",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TEMPO_RATIO_EPSILON is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/workspace/projects/[id]/command_control/panelInstanceTypes.ts",
+      "line": 182,
+      "symbol": "UNIVERSAL_PANEL_DEFAULT_CONSTRAINTS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "UNIVERSAL_PANEL_DEFAULT_CONSTRAINTS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/workspace/projects/[id]/command_control/panelInstanceTypes.ts",
+      "line": 189,
+      "symbol": "UNIVERSAL_PANEL_DEFAULT_PERMISSIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "UNIVERSAL_PANEL_DEFAULT_PERMISSIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/workspace/projects/[id]/command_control/panelRenderRegistry.ts",
+      "line": 73,
+      "symbol": "UNIVERSAL_PANEL_RENDER_SEEDS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "UNIVERSAL_PANEL_RENDER_SEEDS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/workspace/projects/[id]/command_control/projectWorkspacePanelUtils.ts",
+      "line": 8,
+      "symbol": "PROJECT_WORKSPACE_METADATA_PANEL_INSTANCE_ID",
+      "kind": "constant",
+      "uses": 1,
+      "message": "PROJECT_WORKSPACE_METADATA_PANEL_INSTANCE_ID is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/workspace/projects/[id]/projectTabConfig.ts",
+      "line": 8,
+      "symbol": "PROJECT_TAB_CONFIG",
+      "kind": "constant",
+      "uses": 1,
+      "message": "PROJECT_TAB_CONFIG is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "app/workspace/projects/page.tsx",
+      "line": 96,
+      "symbol": "setShowProjectsHowTo",
+      "kind": "react-state-setter",
+      "uses": 1,
+      "message": "setShowProjectsHowTo is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "code-map-test-fixtures/missing-save-handler-example.tsx",
+      "line": 20,
+      "symbol": "onSaveProjectDescription",
+      "kind": "missing-required-prop",
+      "uses": 0,
+      "message": "ProjectOverviewHeader is rendered without required prop onSaveProjectDescription."
+    },
+    {
+      "severity": "high",
+      "path": "code-map-test-fixtures/missing-tools-dropdown-example.tsx",
+      "line": 10,
+      "symbol": "TOOLS_CHILD_LINKS",
+      "kind": "wiring-constant",
+      "uses": 1,
+      "message": "TOOLS_CHILD_LINKS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "code-map-test-fixtures/missing-viewmode-example.tsx",
+      "line": 9,
+      "symbol": "viewMode",
+      "kind": "likely-undefined-name",
+      "uses": 0,
+      "message": "viewMode is used but not declared in this file."
+    },
+    {
+      "severity": "high",
+      "path": "code-map-test-fixtures/unused-state-setter-example.tsx",
+      "line": 4,
+      "symbol": "setPanelOpen",
+      "kind": "react-state-setter",
+      "uses": 1,
+      "message": "setPanelOpen is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataLinks.ts",
+      "line": 5,
+      "symbol": "METADATA_LINKS",
+      "kind": "wiring-constant",
+      "uses": 1,
+      "message": "METADATA_LINKS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataQueryPanelOptions.ts",
+      "line": 4,
+      "symbol": "TARGET_TYPE_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TARGET_TYPE_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataQueryPanelOptions.ts",
+      "line": 18,
+      "symbol": "KIND_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "KIND_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataQueryPanelOptions.ts",
+      "line": 31,
+      "symbol": "MODE_OPTIONS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "MODE_OPTIONS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRegistry.ts",
+      "line": 3,
+      "symbol": "METADATA_REGISTRY",
+      "kind": "constant",
+      "uses": 1,
+      "message": "METADATA_REGISTRY is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 1,
+      "symbol": "RELATIONSHIP_SERVICE_FRESH_TTL_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_FRESH_TTL_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 2,
+      "symbol": "RELATIONSHIP_SERVICE_STALE_TTL_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_STALE_TTL_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 3,
+      "symbol": "RELATIONSHIP_SERVICE_HARD_TTL_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_HARD_TTL_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 5,
+      "symbol": "RELATIONSHIP_SERVICE_ERROR_FRESH_TTL_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_ERROR_FRESH_TTL_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 6,
+      "symbol": "RELATIONSHIP_SERVICE_ERROR_STALE_TTL_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_ERROR_STALE_TTL_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 7,
+      "symbol": "RELATIONSHIP_SERVICE_ERROR_HARD_TTL_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_ERROR_HARD_TTL_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 9,
+      "symbol": "RELATIONSHIP_SERVICE_REFRESH_COOLDOWN_MS",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_REFRESH_COOLDOWN_MS is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 10,
+      "symbol": "RELATIONSHIP_SERVICE_MAX_CACHE_ENTRIES",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_MAX_CACHE_ENTRIES is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 11,
+      "symbol": "RELATIONSHIP_SERVICE_GLOBAL_CACHE_SLUG",
+      "kind": "constant",
+      "uses": 1,
+      "message": "RELATIONSHIP_SERVICE_GLOBAL_CACHE_SLUG is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "lib/tracksSeed.ts",
+      "line": 3,
+      "symbol": "TRACKS_SEED",
+      "kind": "constant",
+      "uses": 1,
+      "message": "TRACKS_SEED is declared but does not appear to be used."
+    },
+    {
+      "severity": "high",
+      "path": "scripts/code-symbol-watch.mjs",
+      "line": 118,
+      "symbol": "viewMode",
+      "kind": "likely-undefined-name",
+      "uses": 0,
+      "message": "viewMode is used but not declared in this file."
+    },
+    {
+      "severity": "medium",
+      "path": "app/about/page.tsx",
+      "line": 12,
+      "symbol": "CORE_SYSTEMS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CORE_SYSTEMS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/about/page.tsx",
+      "line": 51,
+      "symbol": "FUTURE_SYSTEMS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FUTURE_SYSTEMS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/about/site-tree/page.tsx",
+      "line": 6,
+      "symbol": "TREE",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TREE is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/about/site-tree/page.tsx",
+      "line": 47,
+      "symbol": "SYSTEM_FLOW",
+      "kind": "constant",
+      "uses": 2,
+      "message": "SYSTEM_FLOW is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/about/track-matcher/page.tsx",
+      "line": 3,
+      "symbol": "TRACK_MATCHER_POINTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_POINTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/about/track-matcher/page.tsx",
+      "line": 12,
+      "symbol": "FUTURE_PHASES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FUTURE_PHASES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/FindItMatchingHighlight.tsx",
+      "line": 3,
+      "symbol": "MAX_SEARCH_TOKENS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_SEARCH_TOKENS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItMetadataAdapter.ts",
+      "line": 4,
+      "symbol": "MAX_FIND_IT_METADATA_RESULTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_FIND_IT_METADATA_RESULTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItPathUtils.ts",
+      "line": 8,
+      "symbol": "MAX_RESULTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_RESULTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItPathUtils.ts",
+      "line": 9,
+      "symbol": "MAX_SUGGESTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_SUGGESTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItResultsMemory.ts",
+      "line": 26,
+      "symbol": "MAX_MEMORY_ENTRIES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_MEMORY_ENTRIES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItResultsMemory.ts",
+      "line": 27,
+      "symbol": "MAX_RECENT_SELECTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_RECENT_SELECTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItResultsPersistence.ts",
+      "line": 5,
+      "symbol": "MAX_PERSISTED_MEMORY_ENTRIES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_PERSISTED_MEMORY_ENTRIES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItResultsPersistence.ts",
+      "line": 6,
+      "symbol": "MAX_PERSISTED_INTENT_EVENTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_PERSISTED_INTENT_EVENTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItResultsPersistence.ts",
+      "line": 7,
+      "symbol": "MAX_REINFORCEMENT_TARGETS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_REINFORCEMENT_TARGETS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/FindItSearchBox.tsx",
+      "line": 6,
+      "symbol": "EXAMPLE_SEARCHES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "EXAMPLE_SEARCHES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItTargets.ts",
+      "line": 82,
+      "symbol": "FIND_IT_TARGET_BLUEPRINTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FIND_IT_TARGET_BLUEPRINTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/findItTargets.ts",
+      "line": 451,
+      "symbol": "FIND_IT_TARGETS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FIND_IT_TARGETS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/page.tsx",
+      "line": 5,
+      "symbol": "START_HERE",
+      "kind": "constant",
+      "uses": 2,
+      "message": "START_HERE is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/page.tsx",
+      "line": 20,
+      "symbol": "FIND_IT_LAYERS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FIND_IT_LAYERS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/page.tsx",
+      "line": 39,
+      "symbol": "WHY_IT_MATTERS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "WHY_IT_MATTERS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/find-it/useFindItDebouncedValue.ts",
+      "line": 4,
+      "symbol": "debouncedValue",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "debouncedValue is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/MetadataRelationshipsToggle.tsx",
+      "line": 10,
+      "symbol": "open",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "open is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/QuickLinkHelper.tsx",
+      "line": 63,
+      "symbol": "loading",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "loading is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/TitleBar.tsx",
+      "line": 410,
+      "symbol": "libraryMenuOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "libraryMenuOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/TitleBar.tsx",
+      "line": 411,
+      "symbol": "metadataMenuOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "metadataMenuOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/TitleBar.tsx",
+      "line": 412,
+      "symbol": "toolsMenuOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "toolsMenuOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/TitleBar.tsx",
+      "line": 413,
+      "symbol": "trackMatcherMenuOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "trackMatcherMenuOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/TitleBar.tsx",
+      "line": 414,
+      "symbol": "helpMenuOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "helpMenuOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/components/TitleBar.tsx",
+      "line": 417,
+      "symbol": "findItSearchValue",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "findItSearchValue is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/help/helpFoundationFindItData.ts",
+      "line": 27,
+      "symbol": "FIND_IT_CATEGORIES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FIND_IT_CATEGORIES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/LibraryTrackList.tsx",
+      "line": 243,
+      "symbol": "expandedGroupIds",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "expandedGroupIds is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "line": 13,
+      "symbol": "TOKEN_SPLIT_PATTERN",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TOKEN_SPLIT_PATTERN is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "line": 15,
+      "symbol": "CAMEL_CASE_PATTERN",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CAMEL_CASE_PATTERN is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "line": 17,
+      "symbol": "UUID_PATTERN",
+      "kind": "constant",
+      "uses": 2,
+      "message": "UUID_PATTERN is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "line": 20,
+      "symbol": "COMMON_STEM_WORDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "COMMON_STEM_WORDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "line": 37,
+      "symbol": "COMMON_STATUS_WORDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "COMMON_STATUS_WORDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "line": 48,
+      "symbol": "COMMON_SOURCE_WORDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "COMMON_SOURCE_WORDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "line": 3,
+      "symbol": "READABLE_EXTENSIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "READABLE_EXTENSIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "line": 14,
+      "symbol": "FUTURE_EXTENSIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FUTURE_EXTENSIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/lyrics/LyricsLibraryClient.tsx",
+      "line": 71,
+      "symbol": "selectedViewerEntryId",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "selectedViewerEntryId is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/lyrics/LyricsLibrarySearchPanel.tsx",
+      "line": 33,
+      "symbol": "LETTER_FILTERS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "LETTER_FILTERS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/lyrics/lyricsStorage.ts",
+      "line": 5,
+      "symbol": "LYRICS_INDEXED_DB_NAME",
+      "kind": "constant",
+      "uses": 2,
+      "message": "LYRICS_INDEXED_DB_NAME is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/lyrics/lyricsStorage.ts",
+      "line": 7,
+      "symbol": "LYRICS_INDEXED_DB_VERSION",
+      "kind": "constant",
+      "uses": 2,
+      "message": "LYRICS_INDEXED_DB_VERSION is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/page.tsx",
+      "line": 22,
+      "symbol": "flashFilterArea",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "flashFilterArea is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/project-liaison/page.tsx",
+      "line": 74,
+      "symbol": "loading",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "loading is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/project-liaison/page.tsx",
+      "line": 80,
+      "symbol": "trackProjectNames",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "trackProjectNames is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/useLibraryTracks.ts",
+      "line": 35,
+      "symbol": "supabaseLoaded",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "supabaseLoaded is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/useLibraryTracks.ts",
+      "line": 36,
+      "symbol": "supabaseErr",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "supabaseErr is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/useLibraryTracks.ts",
+      "line": 43,
+      "symbol": "loadingProjects",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "loadingProjects is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/useLibraryTracks.ts",
+      "line": 44,
+      "symbol": "sendingToProject",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "sendingToProject is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/library/useLibraryTracks.ts",
+      "line": 45,
+      "symbol": "projectLinkMessage",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "projectLinkMessage is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/listen/page.tsx",
+      "line": 238,
+      "symbol": "checkingSession",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "checkingSession is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/listen/page.tsx",
+      "line": 251,
+      "symbol": "editingTrackId",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "editingTrackId is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/listen/page.tsx",
+      "line": 27,
+      "symbol": "CATEGORY_ORDER",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CATEGORY_ORDER is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/[slug]/edit/MetadataRecordEditFormPanel.tsx",
+      "line": 73,
+      "symbol": "INNER_PANELS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "INNER_PANELS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/[slug]/edit/MetadataRelationshipPreviewPanel.tsx",
+      "line": 18,
+      "symbol": "PREVIEW_PANELS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "PREVIEW_PANELS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/MetadataCreateCreateBridgePanel.tsx",
+      "line": 36,
+      "symbol": "savedRecordSlug",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "savedRecordSlug is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/MetadataCreateForm.tsx",
+      "line": 91,
+      "symbol": "attemptedNext",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "attemptedNext is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/page.tsx",
+      "line": 272,
+      "symbol": "hasStarted",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "hasStarted is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/useMetadataCreatePageState.ts",
+      "line": 151,
+      "symbol": "activePanel",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "activePanel is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/useMetadataCreatePageState.ts",
+      "line": 175,
+      "symbol": "submitMessage",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "submitMessage is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/useMetadataCreatePageState.ts",
+      "line": 176,
+      "symbol": "submitError",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "submitError is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/useMetadataCreatePageState.ts",
+      "line": 177,
+      "symbol": "createdSlug",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "createdSlug is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/create/useMetadataCreatePageState.ts",
+      "line": 52,
+      "symbol": "CREATE_PANELS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CREATE_PANELS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 38,
+      "symbol": "CARD_SURFACE_CLASS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CARD_SURFACE_CLASS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 41,
+      "symbol": "CARD_ACTIVE_CLASS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CARD_ACTIVE_CLASS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "line": 44,
+      "symbol": "BUTTON_BASE_CLASS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "BUTTON_BASE_CLASS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/MetadataLibraryRelationshipTypesPanel.tsx",
+      "line": 53,
+      "symbol": "fadeKey",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "fadeKey is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/relationshipExplorerQuickFilters.ts",
+      "line": 11,
+      "symbol": "FILTER_OPTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FILTER_OPTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/RelationshipExplorerQuickRecords.tsx",
+      "line": 38,
+      "symbol": "expandedRecordId",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "expandedRecordId is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/relationshipExplorerRecordTextEngine.ts",
+      "line": 3,
+      "symbol": "COMMON_WORDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "COMMON_WORDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/relationshipExplorerTextEngine.ts",
+      "line": 3,
+      "symbol": "COMMON_WORDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "COMMON_WORDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/library/relationshipExplorerTextUtils.ts",
+      "line": 3,
+      "symbol": "COMMON_WORDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "COMMON_WORDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/results/page.tsx",
+      "line": 19,
+      "symbol": "TARGET_TYPE_OPTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TARGET_TYPE_OPTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/results/page.tsx",
+      "line": 33,
+      "symbol": "KIND_OPTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "KIND_OPTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/metadata/results/page.tsx",
+      "line": 46,
+      "symbol": "MODE_OPTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MODE_OPTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/page.tsx",
+      "line": 14,
+      "symbol": "CURRENT_SYSTEMS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CURRENT_SYSTEMS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/page.tsx",
+      "line": 57,
+      "symbol": "PLANNED_SYSTEMS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "PLANNED_SYSTEMS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/page.tsx",
+      "line": 80,
+      "symbol": "HOME_PROMISES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "HOME_PROMISES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/shared/uploads/projectUploadHelpers.ts",
+      "line": 21,
+      "symbol": "FOLDER",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FOLDER is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/code-map/CodeMapSearchPanel.tsx",
+      "line": 83,
+      "symbol": "mounted",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "mounted is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/code-map/CodeMapSearchPanel.tsx",
+      "line": 86,
+      "symbol": "selectedPath",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "selectedPath is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/islands/IslandVisionWorkspacePanel.tsx",
+      "line": 58,
+      "symbol": "islandTitle",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "islandTitle is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/advanced/analize/page.tsx",
+      "line": 3,
+      "symbol": "TIMELINE_EVENTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TIMELINE_EVENTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/advanced/analize/page.tsx",
+      "line": 34,
+      "symbol": "FUTURE_LAYERS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FUTURE_LAYERS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/advanced/page.tsx",
+      "line": 3,
+      "symbol": "ADVANCED_STEPS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "ADVANCED_STEPS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/analyze/page.tsx",
+      "line": 9,
+      "symbol": "FEATURE_CARDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "FEATURE_CARDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherDynamicLaneSeed.ts",
+      "line": 5,
+      "symbol": "TRACK_MATCHER_DYNAMIC_LANES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_DYNAMIC_LANES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderTypes.ts",
+      "line": 85,
+      "symbol": "DEFAULT_TRACK_MATCHER_FINDER_QUERY",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_TRACK_MATCHER_FINDER_QUERY is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderTypes.ts",
+      "line": 97,
+      "symbol": "DEFAULT_TRACK_MATCHER_FINDER_STATISTICS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_TRACK_MATCHER_FINDER_STATISTICS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneGraphSeed.ts",
+      "line": 8,
+      "symbol": "TRACK_MATCHER_LANE_GRAPH_NODES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_LANE_GRAPH_NODES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneGraphSeed.ts",
+      "line": 51,
+      "symbol": "TRACK_MATCHER_LANE_GRAPH_EDGES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_LANE_GRAPH_EDGES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneHelpers.ts",
+      "line": 11,
+      "symbol": "TRACK_MATCHER_LANE_ROLE_LABELS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_LANE_ROLE_LABELS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneHelpers.ts",
+      "line": 29,
+      "symbol": "TRACK_MATCHER_LANE_SOURCE_LABELS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_LANE_SOURCE_LABELS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneHelpers.ts",
+      "line": 41,
+      "symbol": "TRACK_MATCHER_LANE_RELATIONSHIP_LABELS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_LANE_RELATIONSHIP_LABELS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/TrackMatcherLaneOverviewPanel.tsx",
+      "line": 314,
+      "symbol": "isLibraryOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "isLibraryOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneSectionConfigs.ts",
+      "line": 16,
+      "symbol": "TRACK_MATCHER_LANE_SECTION_CONFIGS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_LANE_SECTION_CONFIGS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneSeed.ts",
+      "line": 117,
+      "symbol": "TRACK_MATCHER_DEFAULT_LANE_RELATIONSHIPS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_DEFAULT_LANE_RELATIONSHIPS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryHistoryHelpers.ts",
+      "line": 38,
+      "symbol": "TRACK_MATCHER_PANEL_REGISTRY_HISTORY_DEFAULT_RETENTION_POLICY",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_PANEL_REGISTRY_HISTORY_DEFAULT_RETENTION_POLICY is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryHistoryHelpers.ts",
+      "line": 47,
+      "symbol": "TRACK_MATCHER_PANEL_REGISTRY_HISTORY_DEFAULT_IMPORT_OPTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_PANEL_REGISTRY_HISTORY_DEFAULT_IMPORT_OPTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryPersistenceHelpers.ts",
+      "line": 27,
+      "symbol": "DEFAULT_STORAGE_KIND",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_STORAGE_KIND is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryPersistenceHelpers.ts",
+      "line": 29,
+      "symbol": "TRACK_MATCHER_PANEL_REGISTRY_PERSISTENCE_DEFAULT_PRUNE_POLICY",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_PANEL_REGISTRY_PERSISTENCE_DEFAULT_PRUNE_POLICY is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistrySnapshotTypes.ts",
+      "line": 3,
+      "symbol": "TRACK_MATCHER_PANEL_REGISTRY_SNAPSHOT_FIELDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_PANEL_REGISTRY_SNAPSHOT_FIELDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelVisibilityHelpers.ts",
+      "line": 29,
+      "symbol": "TRACK_MATCHER_PANEL_VISIBILITY_ORDER",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_PANEL_VISIBILITY_ORDER is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitch/granularPitchConfig.ts",
+      "line": 4,
+      "symbol": "DEFAULT_CONFIG",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_CONFIG is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 17,
+      "symbol": "MIN_GRAIN_SIZE_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MIN_GRAIN_SIZE_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 18,
+      "symbol": "MAX_GRAIN_SIZE_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_GRAIN_SIZE_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 20,
+      "symbol": "MIN_OVERLAP_RATIO",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MIN_OVERLAP_RATIO is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 21,
+      "symbol": "MAX_OVERLAP_RATIO",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_OVERLAP_RATIO is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 23,
+      "symbol": "MIN_SMOOTHING_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MIN_SMOOTHING_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 24,
+      "symbol": "MAX_SMOOTHING_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_SMOOTHING_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 26,
+      "symbol": "DEFAULT_GRAIN_SIZE_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_GRAIN_SIZE_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 27,
+      "symbol": "DEFAULT_OVERLAP_RATIO",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_OVERLAP_RATIO is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 28,
+      "symbol": "DEFAULT_SMOOTHING_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_SMOOTHING_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchConfig.ts",
+      "line": 29,
+      "symbol": "DEFAULT_LATENCY_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_LATENCY_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchDiagnostics.ts",
+      "line": 24,
+      "symbol": "LARGE_PITCH_SHIFT_SEMITONES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "LARGE_PITCH_SHIFT_SEMITONES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchDiagnostics.ts",
+      "line": 25,
+      "symbol": "MEDIUM_PITCH_SHIFT_SEMITONES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MEDIUM_PITCH_SHIFT_SEMITONES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchDiagnostics.ts",
+      "line": 26,
+      "symbol": "LARGE_TEMPO_SHIFT_RATIO",
+      "kind": "constant",
+      "uses": 2,
+      "message": "LARGE_TEMPO_SHIFT_RATIO is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchDiagnostics.ts",
+      "line": 27,
+      "symbol": "MEDIUM_TEMPO_SHIFT_RATIO",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MEDIUM_TEMPO_SHIFT_RATIO is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchDiagnostics.ts",
+      "line": 30,
+      "symbol": "HIGH_LATENCY_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "HIGH_LATENCY_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchDiagnostics.ts",
+      "line": 31,
+      "symbol": "LOW_LATENCY_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "LOW_LATENCY_MS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchEnvelope.ts",
+      "line": 10,
+      "symbol": "MIN_CURVE_RESOLUTION",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MIN_CURVE_RESOLUTION is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchEnvelope.ts",
+      "line": 11,
+      "symbol": "MAX_CURVE_RESOLUTION",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_CURVE_RESOLUTION is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchEnvelope.ts",
+      "line": 12,
+      "symbol": "CURVE_FLOOR",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CURVE_FLOOR is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchEnvelope.ts",
+      "line": 13,
+      "symbol": "CURVE_CEILING",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CURVE_CEILING is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchEnvelope.ts",
+      "line": 14,
+      "symbol": "CURVE_EDGE_ZERO_SAMPLES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CURVE_EDGE_ZERO_SAMPLES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchScheduler.ts",
+      "line": 8,
+      "symbol": "BUFFER_EDGE_PADDING_SECONDS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "BUFFER_EDGE_PADDING_SECONDS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchScheduler.ts",
+      "line": 10,
+      "symbol": "MIN_PLAYBACK_RATE",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MIN_PLAYBACK_RATE is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/granularPitchScheduler.ts",
+      "line": 11,
+      "symbol": "MAX_PLAYBACK_RATE",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_PLAYBACK_RATE is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/key/page.tsx",
+      "line": 6,
+      "symbol": "ROOT_NOTES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "ROOT_NOTES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/key/page.tsx",
+      "line": 8,
+      "symbol": "MODE_TYPES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MODE_TYPES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/adapters/multiTrackAdapterDemoSeed.ts",
+      "line": 22,
+      "symbol": "MULTI_TRACK_ADAPTER_DEMO_CANDIDATE_GROUPS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_ADAPTER_DEMO_CANDIDATE_GROUPS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/controller/multiTrackControllerConstants.ts",
+      "line": 18,
+      "symbol": "DEFAULT_MULTI_TRACK_CONTROLLER_TRACK_SLOTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_CONTROLLER_TRACK_SLOTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/controller/multiTrackControllerConstants.ts",
+      "line": 35,
+      "symbol": "DEFAULT_MULTI_TRACK_CONTROLLER_PANEL_SUMMARIES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_CONTROLLER_PANEL_SUMMARIES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts",
+      "line": 11,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_TRACK_A",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_TRACK_A is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts",
+      "line": 48,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_TRACK_B",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_TRACK_B is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts",
+      "line": 85,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_COMPARISON",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_COMPARISON is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts",
+      "line": 133,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_TIMELINE",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_TIMELINE is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts",
+      "line": 177,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_ANALYSIS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_ANALYSIS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts",
+      "line": 276,
+      "symbol": "DEFAULT_MULTI_TRACK_ENGINE_DECISION",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_MULTI_TRACK_ENGINE_DECISION is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSnapshotHelpers.ts",
+      "line": 6,
+      "symbol": "MAX_MULTI_TRACK_ENGINE_SNAPSHOTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_MULTI_TRACK_ENGINE_SNAPSHOTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackClipLaneSeed.ts",
+      "line": 185,
+      "symbol": "MULTI_TRACK_CLIP_LANES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_CLIP_LANES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackClipLaneSeed.ts",
+      "line": 191,
+      "symbol": "MULTI_TRACK_CLIP_LANE_SELECTIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_CLIP_LANE_SELECTIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackClipLaneSeed.ts",
+      "line": 224,
+      "symbol": "MULTI_TRACK_CLIP_LANE_DUPLICATE_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_CLIP_LANE_DUPLICATE_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackClipLaneSeed.ts",
+      "line": 239,
+      "symbol": "MULTI_TRACK_CLIP_LANE_RENDER_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_CLIP_LANE_RENDER_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackExperimentSeed.ts",
+      "line": 192,
+      "symbol": "MULTI_TRACK_EXPERIMENT_BANKS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_EXPERIMENT_BANKS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackExperimentSeed.ts",
+      "line": 223,
+      "symbol": "MULTI_TRACK_EXPERIMENT_COMPARE_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_EXPERIMENT_COMPARE_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackExperimentSeed.ts",
+      "line": 256,
+      "symbol": "MULTI_TRACK_EXPERIMENT_RENDER_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_EXPERIMENT_RENDER_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts",
+      "line": 171,
+      "symbol": "MULTI_TRACK_RIFF_GROUPS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_RIFF_GROUPS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts",
+      "line": 295,
+      "symbol": "MULTI_TRACK_RIFF_EXTRACT_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_RIFF_EXTRACT_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts",
+      "line": 322,
+      "symbol": "MULTI_TRACK_RIFF_EDIT_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_RIFF_EDIT_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts",
+      "line": 351,
+      "symbol": "MULTI_TRACK_RIFF_EXPERIMENT_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_RIFF_EXPERIMENT_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackSimilaritySeed.ts",
+      "line": 138,
+      "symbol": "MULTI_TRACK_SIMILARITY_SCAN_PLANS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_SIMILARITY_SCAN_PLANS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackSimilaritySeed.ts",
+      "line": 183,
+      "symbol": "MULTI_TRACK_SIMILARITY_CANDIDATES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MULTI_TRACK_SIMILARITY_CANDIDATES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/trackMatcherAudioEngine.ts",
+      "line": 41,
+      "symbol": "TRACK_MATCHER_BASE_BPM",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_BASE_BPM is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/trackMatcherAudioEngine.ts",
+      "line": 42,
+      "symbol": "TRACK_MATCHER_MIN_BPM",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_MIN_BPM is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/trackMatcherAudioEngine.ts",
+      "line": 43,
+      "symbol": "TRACK_MATCHER_MAX_BPM",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_MAX_BPM is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/trackMatcherAudioEngine.ts",
+      "line": 44,
+      "symbol": "TRACK_MATCHER_MIN_KEY_SHIFT",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_MIN_KEY_SHIFT is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/tools/track-matcher/trackMatcherAudioEngine.ts",
+      "line": 45,
+      "symbol": "TRACK_MATCHER_MAX_KEY_SHIFT",
+      "kind": "constant",
+      "uses": 2,
+      "message": "TRACK_MATCHER_MAX_KEY_SHIFT is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/upload/page.tsx",
+      "line": 31,
+      "symbol": "checkingSession",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "checkingSession is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/upload/page.tsx",
+      "line": 38,
+      "symbol": "userId",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "userId is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/command_control/panelInteractionGuards.ts",
+      "line": 3,
+      "symbol": "INTERACTIVE_TAG_NAMES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "INTERACTIVE_TAG_NAMES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/command_control/panelRenderTypes.ts",
+      "line": 53,
+      "symbol": "UNIVERSAL_PANEL_RENDER_FLAG_DEFAULTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "UNIVERSAL_PANEL_RENDER_FLAG_DEFAULTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/command_control/projectWorkspaceProtectedZones.ts",
+      "line": 22,
+      "symbol": "PROJECT_WORKSPACE_PROTECTED_ZONE_DEFAULTS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "PROJECT_WORKSPACE_PROTECTED_ZONE_DEFAULTS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/command_control/UniversalPanelResizeHandles.tsx",
+      "line": 21,
+      "symbol": "HANDLE_DEFINITIONS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "HANDLE_DEFINITIONS is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/command_control/useMetadataInspectController.ts",
+      "line": 8,
+      "symbol": "panel",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "panel is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/ProjectHeader.tsx",
+      "line": 80,
+      "symbol": "downloadOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "downloadOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/ProjectOverviewHeader.tsx",
+      "line": 211,
+      "symbol": "downloadOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "downloadOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/projectPlaybackHelpers.ts",
+      "line": 4,
+      "symbol": "SUPABASE_BUCKET",
+      "kind": "constant",
+      "uses": 2,
+      "message": "SUPABASE_BUCKET is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectLibraryLinking.ts",
+      "line": 42,
+      "symbol": "loadingLibrary",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "loadingLibrary is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectLibraryLinking.ts",
+      "line": 43,
+      "symbol": "libraryErr",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "libraryErr is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectLibraryLinking.ts",
+      "line": 44,
+      "symbol": "overviewLoading",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "overviewLoading is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectLibraryLinking.ts",
+      "line": 45,
+      "symbol": "overviewErr",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "overviewErr is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectLibraryLinking.ts",
+      "line": 46,
+      "symbol": "linkBusyId",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "linkBusyId is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectNotes.ts",
+      "line": 17,
+      "symbol": "loadingNotes",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "loadingNotes is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectNotes.ts",
+      "line": 18,
+      "symbol": "notesErr",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "notesErr is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectNotes.ts",
+      "line": 27,
+      "symbol": "creatingNote",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "creatingNote is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectNotes.ts",
+      "line": 28,
+      "symbol": "savingNote",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "savingNote is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectNotes.ts",
+      "line": 29,
+      "symbol": "deletingNote",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "deletingNote is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectNotes.ts",
+      "line": 34,
+      "symbol": "renamingId",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "renamingId is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectNotes.ts",
+      "line": 36,
+      "symbol": "renamingBusy",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "renamingBusy is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectOverview.ts",
+      "line": 41,
+      "symbol": "overviewLoading",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "overviewLoading is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectOverview.ts",
+      "line": 42,
+      "symbol": "overviewErr",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "overviewErr is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectPlayback.ts",
+      "line": 33,
+      "symbol": "playerErr",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "playerErr is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectPlayback.ts",
+      "line": 35,
+      "symbol": "elapsedSec",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "elapsedSec is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectPlayback.ts",
+      "line": 36,
+      "symbol": "durationSec",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "durationSec is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectPlayback.ts",
+      "line": 38,
+      "symbol": "miniPlayerPinned",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "miniPlayerPinned is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectPlayback.ts",
+      "line": 39,
+      "symbol": "miniAutoVisible",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "miniAutoVisible is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/[id]/useProjectPlayback.ts",
+      "line": 41,
+      "symbol": "isPaused",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "isPaused is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "app/workspace/projects/page.tsx",
+      "line": 96,
+      "symbol": "showProjectsHowTo",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "showProjectsHowTo is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "code-map-test-fixtures/missing-tools-dropdown-example.tsx",
+      "line": 19,
+      "symbol": "toolsMenuOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "toolsMenuOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "code-map-test-fixtures/unused-state-setter-example.tsx",
+      "line": 4,
+      "symbol": "panelOpen",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "panelOpen is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/getSupabaseTracks.ts",
+      "line": 120,
+      "symbol": "MAX_DEPTH",
+      "kind": "constant",
+      "uses": 2,
+      "message": "MAX_DEPTH is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/metadataFetch.ts",
+      "line": 33,
+      "symbol": "METADATA_RECORD_FULL_SELECT",
+      "kind": "constant",
+      "uses": 2,
+      "message": "METADATA_RECORD_FULL_SELECT is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/metadataRelationshipServiceCacheConfig.ts",
+      "line": 14,
+      "symbol": "RELATIONSHIP_SERVICE_CACHE_DEBUG",
+      "kind": "constant",
+      "uses": 2,
+      "message": "RELATIONSHIP_SERVICE_CACHE_DEBUG is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/metadataRelationshipServicePrefetch.ts",
+      "line": 33,
+      "symbol": "DEFAULT_PREFETCH_LIMIT",
+      "kind": "constant",
+      "uses": 2,
+      "message": "DEFAULT_PREFETCH_LIMIT is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/metadataRelationshipTypes.ts",
+      "line": 1,
+      "symbol": "METADATA_RELATIONSHIP_TYPES",
+      "kind": "constant",
+      "uses": 2,
+      "message": "METADATA_RELATIONSHIP_TYPES is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/useMetadataQueryPanelState.ts",
+      "line": 46,
+      "symbol": "runCount",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "runCount is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/useMetadataQueryPanelState.ts",
+      "line": 47,
+      "symbol": "statusText",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "statusText is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/useMetadataQueryPanelState.ts",
+      "line": 50,
+      "symbol": "isPinned",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "isPinned is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/useMetadataQueryPanelState.ts",
+      "line": 51,
+      "symbol": "isDockCollapsed",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "isDockCollapsed is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/metadata/useMetadataQueryPanelState.ts",
+      "line": 52,
+      "symbol": "isRunningQuery",
+      "kind": "react-state-value",
+      "uses": 2,
+      "message": "isRunningQuery is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/performanceState.ts",
+      "line": 28,
+      "symbol": "VERSION",
+      "kind": "constant",
+      "uses": 2,
+      "message": "VERSION is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/projectActivity.ts",
+      "line": 13,
+      "symbol": "APP_EVENT_ACTIVITY_UPDATED",
+      "kind": "constant",
+      "uses": 2,
+      "message": "APP_EVENT_ACTIVITY_UPDATED is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/projectActivity.ts",
+      "line": 14,
+      "symbol": "APP_EVENT_ACTIVITY_TRACK_JUMP",
+      "kind": "constant",
+      "uses": 2,
+      "message": "APP_EVENT_ACTIVITY_TRACK_JUMP is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/projects/projectTrackIndex.ts",
+      "line": 15,
+      "symbol": "CACHE_TIME",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CACHE_TIME is barely used. Verify it is actually rendered or wired."
+    },
+    {
+      "severity": "medium",
+      "path": "lib/tracks/unifiedTrackLibrary.ts",
+      "line": 8,
+      "symbol": "CACHE_LIFETIME_MS",
+      "kind": "constant",
+      "uses": 2,
+      "message": "CACHE_LIFETIME_MS is barely used. Verify it is actually rendered or wired."
+    }
+  ]
+}

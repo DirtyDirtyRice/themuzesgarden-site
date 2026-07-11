@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { PlayerTab } from "../../player/playerTypes";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { AnyTrack, PlayerTab } from "../../player/playerTypes";
 import { readPersisted, writePersisted } from "../../player/playerStorage";
 import { useAllTracks } from "../../player/useAllTracks";
+import { listPrivateProjectTrackIds } from "../../lib/projectTracksApi";
 import { useProjectContext } from "../../player/useProjectContext";
 import { useProjectSetlist } from "../../player/useProjectSetlist";
 import { useAudioEngine } from "../../player/useAudioEngine";
@@ -52,6 +53,21 @@ function readProjectPlayerBridge(): ProjectPlayerBridgeState | null {
   }
 }
 
+function getTrackPrivacyKeys(track: AnyTrack): string[] {
+  const keys = new Set<string>();
+  const id = String(track?.id ?? "").trim();
+  const path = String(track?.path ?? "").trim();
+  const bucket = String(track?.bucket ?? "audio").trim() || "audio";
+
+  if (id) keys.add(id);
+  if (path) {
+    keys.add(path);
+    keys.add(`sb:${bucket}:${path}`);
+    keys.add(`sb:audio:${path}`);
+  }
+
+  return [...keys];
+}
 export default function GlobalPlayer() {
   const { onProjectPage, projectId } = useProjectContext();
 
@@ -66,6 +82,12 @@ export default function GlobalPlayer() {
   const previousOnProjectPageRef = useRef(onProjectPage);
 
   const { allTracks } = useAllTracks();
+
+  const [privateProjectTrackIds, setPrivateProjectTrackIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => { let cancelled = false; async function loadPrivateProjectTracks() { try { const ids = await listPrivateProjectTrackIds(); if (!cancelled) setPrivateProjectTrackIds(ids); } catch { if (!cancelled) setPrivateProjectTrackIds(new Set()); } } void loadPrivateProjectTracks(); window.addEventListener("muzes:projectTracksChanged", loadPrivateProjectTracks); return () => { cancelled = true; window.removeEventListener("muzes:projectTracksChanged", loadPrivateProjectTracks); }; }, []);
+
+
 
   const {
     projectTracks,
@@ -84,6 +106,16 @@ export default function GlobalPlayer() {
     allTracks,
   });
 
+  const projectTrackIds = useMemo(() => new Set(projectTracks.map((track) => String(track.id))), [projectTracks]);
+
+  const playerTracks = useMemo(() => allTracks.filter((track) => { const trackId = String(track?.id ?? ""); const trackVisibility = String(track?.visibility ?? "shared").toLowerCase(); if (onProjectPage && projectTrackIds.has(trackId)) return true; return trackVisibility !== "private" && !privateProjectTrackIds.has(trackId); }), [allTracks, onProjectPage, privateProjectTrackIds, projectTrackIds]);
+
+  const isPlaybackBlocked = useCallback((track: AnyTrack) => {
+    const trackId = String(track?.id ?? "");
+    if (onProjectPage && projectTrackIds.has(trackId)) return false;
+    return getTrackPrivacyKeys(track).some((key) => privateProjectTrackIds.has(key));
+  }, [onProjectPage, privateProjectTrackIds, projectTrackIds]);
+
   const setTab = useCallback((nextValue: PlayerTab) => {
     GLOBAL_PLAYER_TAB_MEMORY = nextValue;
     setTabState((prev) => (prev === nextValue ? prev : nextValue));
@@ -94,9 +126,12 @@ export default function GlobalPlayer() {
     setTab,
     onProjectPage,
     projectId,
-    allTracks,
+    allTracks: playerTracks,
     projectTracks,
+    isPlaybackBlocked,
   });
+
+  useEffect(() => { if (onProjectPage) return; if (!engine.nowId) return; if (!privateProjectTrackIds.has(String(engine.nowId))) return; engine.clearNow(); }, [engine, onProjectPage, privateProjectTrackIds]);
 
   const setQ = useCallback((nextValue: string) => {
     const clean = String(nextValue ?? "");
@@ -317,7 +352,7 @@ export default function GlobalPlayer() {
       onPlayFromHere={engine.playFromHere}
       q={q}
       setQ={setQ}
-      allTracks={allTracks}
+      allTracks={playerTracks}
       onPlayTrack={engine.playTrack}
     />
   );

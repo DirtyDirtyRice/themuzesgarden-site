@@ -111,6 +111,38 @@ function findMissingRequiredProps(relPath, text) {
   return findings;
 }
 
+function findLikelyUndefinedNames(relPath, text) {
+  const findings = [];
+  const cleanText = stripComments(text);
+
+  const namesToWatch = ["viewMode"];
+
+  for (const name of namesToWatch) {
+    const used = new RegExp("\\b" + name + "\\b").test(cleanText);
+    if (!used) continue;
+
+    const declared =
+      new RegExp("\\bconst\\s+" + name + "\\b").test(cleanText) ||
+      new RegExp("\\blet\\s+" + name + "\\b").test(cleanText) ||
+      new RegExp("\\bvar\\s+" + name + "\\b").test(cleanText) ||
+      new RegExp("\\bfunction\\s+" + name + "\\b").test(cleanText) ||
+      new RegExp("\\b" + name + "\\s*:", "m").test(cleanText);
+
+    if (!declared) {
+      findings.push({
+        severity: "high",
+        path: relPath,
+        line: lineNumberForIndex(text, cleanText.indexOf(name)),
+        symbol: name,
+        kind: "likely-undefined-name",
+        uses: 0,
+        message: name + " is used but not declared in this file.",
+      });
+    }
+  }
+
+  return findings;
+}
 function analyzeFile(absPath, text) {
   const relPath = normalizeSlash(path.relative(root, absPath));
 
@@ -119,6 +151,8 @@ function analyzeFile(absPath, text) {
     ...collectMatches(/const\s+\[\s*[A-Za-z0-9_]+\s*,\s*(set[A-Za-z0-9_]+)\s*\]\s*=\s*useState/g, text, "react-state-setter"),
     ...collectMatches(/const\s+([A-Za-z0-9_]*(?:LINKS|ITEMS|ROUTES|MENU)[A-Za-z0-9_]*)\s*[:=]/g, text, "wiring-constant"),
     ...collectMatches(/const\s+([A-Z][A-Z0-9_]{2,})\s*[:=]/g, text, "constant"),
+    ...collectMatches(/import\s+([A-Z][A-Za-z0-9_]*)\s+from\s+["'][^"']+["']/g, text, "imported-component"),
+    ...collectMatches(/function\s+(handle[A-Z][A-Za-z0-9_]*)\s*\(/g, text, "local-handler"),
   ];
 
   const findings = [];
@@ -160,6 +194,7 @@ function analyzeFile(absPath, text) {
     }
   }
 
+  findings.push(...findLikelyUndefinedNames(relPath, text));
   findings.push(...findMissingRequiredProps(relPath, text));
 
   return findings;

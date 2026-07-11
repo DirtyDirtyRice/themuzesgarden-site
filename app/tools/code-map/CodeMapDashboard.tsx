@@ -166,6 +166,18 @@ export default function CodeMapDashboard({ snapshot, riskReport, symbolWatch }: 
       String(item.kind) === "missing-required-prop"
   );
 
+  const missingViewModeCaught = symbolFindings.some(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "path" in item &&
+      "symbol" in item &&
+      "kind" in item &&
+      String(item.path).includes("missing-viewmode-example.tsx") &&
+      String(item.symbol) === "viewMode" &&
+      String(item.kind) === "likely-undefined-name"
+  );
+
   return (
     <>
       <section className="rounded-lg border border-white/20 p-4">
@@ -307,6 +319,7 @@ git status`}</CommandBox>
               <div className="space-y-2 text-lg font-black">
                 <div>Tools dropdown: {knownBadCaught ? "CAUGHT" : "MISSED"}</div>
                 <div>Save handler: {missingSaveHandlerCaught ? "CAUGHT" : "MISSED"}</div>
+                <div>Undefined viewMode: {missingViewModeCaught ? "CAUGHT" : "MISSED"}</div>
               </div>
               <p className="mt-2 text-sm text-white/70">
                 Known broken examples must be caught before we trust the scanner.

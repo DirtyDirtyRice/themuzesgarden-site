@@ -1,0 +1,107 @@
+# Code Symbol Watch
+
+Generated: 2026-07-06T19:46:50.239Z
+Files scanned: 1212
+Findings: 322
+Known bad test: CAUGHT
+
+- HIGH app/components/find-it/findItPanelUtils.ts:12 FIND_IT_CATEGORY_HELP_TEXT (constant, uses: 1) - FIND_IT_CATEGORY_HELP_TEXT is declared but does not appear to be used.
+- HIGH app/components/find-it/findItResultsPersistence.ts:9 STORAGE_WRITE_DELAY_MS (constant, uses: 1) - STORAGE_WRITE_DELAY_MS is declared but does not appear to be used.
+- HIGH app/components/find-it/FindItSearchControllerConstants.ts:1 MAX_FIND_IT_RESULTS (constant, uses: 1) - MAX_FIND_IT_RESULTS is declared but does not appear to be used.
+- HIGH app/components/find-it/FindItSearchControllerConstants.ts:2 NAVIGATION_RESULT_LIMIT (constant, uses: 1) - NAVIGATION_RESULT_LIMIT is declared but does not appear to be used.
+- HIGH app/components/find-it/FindItSearchControllerConstants.ts:3 SEARCH_DEBOUNCE_MS (constant, uses: 1) - SEARCH_DEBOUNCE_MS is declared but does not appear to be used.
+- HIGH app/components/find-it/FindItSearchControllerConstants.ts:4 PAGE_JUMP_SIZE (constant, uses: 1) - PAGE_JUMP_SIZE is declared but does not appear to be used.
+- HIGH app/library/libraryData.ts:6 LS_KEY (constant, uses: 1) - LS_KEY is declared but does not appear to be used.
+- HIGH app/library/libraryData.ts:8 CATEGORY_ORDER (constant, uses: 1) - CATEGORY_ORDER is declared but does not appear to be used.
+- HIGH app/library/libraryData.ts:19 CATEGORY_LABEL (constant, uses: 1) - CATEGORY_LABEL is declared but does not appear to be used.
+- HIGH app/library/lyrics/lyricsImportTypes.ts:16 EMPTY_IMPORT_REPORT (constant, uses: 1) - EMPTY_IMPORT_REPORT is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsLibraryClient.tsx:69 saveStatus (react-state-value, uses: 1) - saveStatus is declared but does not appear to be used.
+- HIGH app/library/lyrics/lyricsSeed.ts:3 STARTER_LYRICS (constant, uses: 1) - STARTER_LYRICS is declared but does not appear to be used.
+- HIGH app/library/lyrics/lyricsStorage.ts:4 LYRICS_STORAGE_KEY (constant, uses: 1) - LYRICS_STORAGE_KEY is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsTrackLinkSeed.ts:3 STARTER_TRACK_LINKS (wiring-constant, uses: 1) - STARTER_TRACK_LINKS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:7 LYRICS_VERSION_STARTER_VERSION (constant, uses: 1) - LYRICS_VERSION_STARTER_VERSION is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:46 LYRICS_VERSION_PANEL_SECTIONS (constant, uses: 1) - LYRICS_VERSION_PANEL_SECTIONS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:77 LYRICS_VERSION_ACTIONS (constant, uses: 1) - LYRICS_VERSION_ACTIONS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:122 LYRICS_VERSION_EMPTY_STATE_LINES (constant, uses: 1) - LYRICS_VERSION_EMPTY_STATE_LINES is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:128 LYRICS_VERSION_KIND_LABELS (constant, uses: 1) - LYRICS_VERSION_KIND_LABELS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:141 LYRICS_VERSION_STATUS_LABELS (constant, uses: 1) - LYRICS_VERSION_STATUS_LABELS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:150 LYRICS_VERSION_PRIORITY_LABELS (constant, uses: 1) - LYRICS_VERSION_PRIORITY_LABELS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:157 LYRICS_VERSION_FOCUS_LABELS (constant, uses: 1) - LYRICS_VERSION_FOCUS_LABELS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:169 LYRICS_VERSION_READINESS_LABELS (constant, uses: 1) - LYRICS_VERSION_READINESS_LABELS is declared but does not appear to be used.
+- HIGH app/library/lyrics/LyricsVersionSeed.ts:178 LYRICS_VERSION_VERDICT_LABELS (constant, uses: 1) - LYRICS_VERSION_VERDICT_LABELS is declared but does not appear to be used.
+- HIGH app/library/miscellaneous/miscellaneousSeed.ts:3 STARTER_MISCELLANEOUS (constant, uses: 1) - STARTER_MISCELLANEOUS is declared but does not appear to be used.
+- HIGH app/library/multi-stems/multiStemsSeed.ts:3 STARTER_MULTI_STEMS (constant, uses: 1) - STARTER_MULTI_STEMS is declared but does not appear to be used.
+- HIGH app/library/project-liaison/page.tsx:78 linkedIds (react-state-value, uses: 1) - linkedIds is declared but does not appear to be used.
+- HIGH app/library/stories/storiesSeed.ts:3 STARTER_STORIES (constant, uses: 1) - STARTER_STORIES is declared but does not appear to be used.
+- HIGH app/metadata/create/CreateBridgeReadiness.tsx:22 directSaveBlockedReason (missing-required-prop, uses: 0) - SaveReadinessMessage is rendered without required prop directSaveBlockedReason.
+- HIGH app/metadata/create/createFormStepSystem.ts:16 STEP_LABELS (constant, uses: 1) - STEP_LABELS is declared but does not appear to be used.
+- HIGH app/metadata/create/createFormStepSystem.ts:24 STEP_HELP (constant, uses: 1) - STEP_HELP is declared but does not appear to be used.
+- HIGH app/metadata/create/createFormStepSystem.ts:35 STEP_REQUIREMENT_COPY (constant, uses: 1) - STEP_REQUIREMENT_COPY is declared but does not appear to be used.
+- HIGH app/metadata/create/metadataCreateConfig.ts:1 VISIBILITY_OPTIONS (constant, uses: 1) - VISIBILITY_OPTIONS is declared but does not appear to be used.
+- HIGH app/metadata/create/metadataCreateConfig.ts:7 RECORD_TYPE_OPTIONS (constant, uses: 1) - RECORD_TYPE_OPTIONS is declared but does not appear to be used.
+- HIGH app/metadata/create/metadataCreateConfig.ts:17 RELATIONSHIP_OPTIONS (constant, uses: 1) - RELATIONSHIP_OPTIONS is declared but does not appear to be used.
+- HIGH app/metadata/library/MetadataLibraryRecordCard.tsx:202 children (missing-required-prop, uses: 0) - CardButton is rendered without required prop children.
+- HIGH app/metadata/library/MetadataLibraryRecordCard.tsx:226 children (missing-required-prop, uses: 0) - CardButton is rendered without required prop children.
+- HIGH app/metadata/library/MetadataLibraryRecordCard.tsx:211 children (missing-required-prop, uses: 0) - CardLink is rendered without required prop children.
+- HIGH app/metadata/library/MetadataLibraryRecordCard.tsx:220 children (missing-required-prop, uses: 0) - CardLink is rendered without required prop children.
+- HIGH app/metadata/library/MetadataLibraryRecordCard.tsx:236 children (missing-required-prop, uses: 0) - CardLink is rendered without required prop children.
+- HIGH app/metadata/library/MetadataLibraryRecordCard.tsx:240 children (missing-required-prop, uses: 0) - CardLink is rendered without required prop children.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:11 TRACK_MATCHER_KEYS (constant, uses: 1) - TRACK_MATCHER_KEYS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:26 DEFAULT_TRACK_A (constant, uses: 1) - DEFAULT_TRACK_A is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:34 DEFAULT_TRACK_B (constant, uses: 1) - DEFAULT_TRACK_B is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:42 DEFAULT_SYNC_SNAPSHOT (constant, uses: 1) - DEFAULT_SYNC_SNAPSHOT is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:50 DEFAULT_TRACK_MATCHER_LANES (constant, uses: 1) - DEFAULT_TRACK_MATCHER_LANES is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:52 DEFAULT_TRACK_MATCHER_LANE_RELATIONSHIPS (constant, uses: 1) - DEFAULT_TRACK_MATCHER_LANE_RELATIONSHIPS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:55 SYNC_INTERVAL_MS (constant, uses: 1) - SYNC_INTERVAL_MS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:56 PHASE_BEATS (constant, uses: 1) - PHASE_BEATS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:57 SOFT_DRIFT_SECONDS (constant, uses: 1) - SOFT_DRIFT_SECONDS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:58 HARD_DRIFT_SECONDS (constant, uses: 1) - HARD_DRIFT_SECONDS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:59 HARD_PHASE_SECONDS (constant, uses: 1) - HARD_PHASE_SECONDS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:60 MAX_RATE_CORRECTION (constant, uses: 1) - MAX_RATE_CORRECTION is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:61 BPM_SMOOTHING (constant, uses: 1) - BPM_SMOOTHING is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherControllerConstants.ts:63 PRO_PITCH_AUTO_FALLBACK_STATUSES (constant, uses: 1) - PRO_PITCH_AUTO_FALLBACK_STATUSES is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderDestinationSeed.ts:3 TRACK_MATCHER_FINDER_ROUTES (wiring-constant, uses: 1) - TRACK_MATCHER_FINDER_ROUTES is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderDestinationSeed.ts:174 TRACK_MATCHER_FINDER_ROUTE_GROUPS (constant, uses: 1) - TRACK_MATCHER_FINDER_ROUTE_GROUPS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderMockData.ts:3 TRACK_MATCHER_FINDER_MOCK_TRACKS (constant, uses: 1) - TRACK_MATCHER_FINDER_MOCK_TRACKS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderQueryPresets.ts:3 TRACK_MATCHER_FINDER_PRESETS (constant, uses: 1) - TRACK_MATCHER_FINDER_PRESETS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderSavedSearchSeed.ts:419 TRACK_MATCHER_FINDER_SAVED_SEARCH_GROUPS (constant, uses: 1) - TRACK_MATCHER_FINDER_SAVED_SEARCH_GROUPS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderSeed.ts:6 TRACK_MATCHER_FINDER_DESTINATIONS (constant, uses: 1) - TRACK_MATCHER_FINDER_DESTINATIONS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderSeed.ts:22 TRACK_MATCHER_FINDER_SOURCES (constant, uses: 1) - TRACK_MATCHER_FINDER_SOURCES is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderSeed.ts:34 TRACK_MATCHER_FINDER_QUICK_SEARCHES (constant, uses: 1) - TRACK_MATCHER_FINDER_QUICK_SEARCHES is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherFinderTypes.ts:106 DEFAULT_TRACK_MATCHER_FINDER_STATE (constant, uses: 1) - DEFAULT_TRACK_MATCHER_FINDER_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/controller/trackMatcherPanelRegistryTypes.ts:97 TRACK_MATCHER_PANEL_ZONE_ORDER (constant, uses: 1) - TRACK_MATCHER_PANEL_ZONE_ORDER is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/components/insight-v2/MultiTrackInsightV2Seed.ts:3 MULTI_TRACK_INSIGHT_V2_EMPTY_STATE_CARD (constant, uses: 1) - MULTI_TRACK_INSIGHT_V2_EMPTY_STATE_CARD is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/components/insight-v2/MultiTrackInsightV2Seed.ts:13 MULTI_TRACK_INSIGHT_V2_SAFE_FOUNDATION_CARD (constant, uses: 1) - MULTI_TRACK_INSIGHT_V2_SAFE_FOUNDATION_CARD is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/components/source-workspace/MultiTrackSourceSeed.ts:3 MULTI_TRACK_SOURCE_WORKSPACE_ITEMS (wiring-constant, uses: 1) - MULTI_TRACK_SOURCE_WORKSPACE_ITEMS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/controller/multiTrackControllerConstants.ts:8 MULTI_TRACK_CONTROLLER_VIEWS (constant, uses: 1) - MULTI_TRACK_CONTROLLER_VIEWS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/controller/multiTrackControllerConstants.ts:87 DEFAULT_MULTI_TRACK_CONTROLLER_SNAPSHOT (constant, uses: 1) - DEFAULT_MULTI_TRACK_CONTROLLER_SNAPSHOT is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/controller/multiTrackWorkspaceRegistrySeed.ts:5 MULTI_TRACK_WORKSPACE_REGISTRY (constant, uses: 1) - MULTI_TRACK_WORKSPACE_REGISTRY is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/engine/multiTrackEngineRelationshipSeed.ts:3 DEFAULT_MULTI_TRACK_ENGINE_RELATIONSHIP_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_ENGINE_RELATIONSHIP_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/engine/multiTrackEngineSeed.ts:286 DEFAULT_MULTI_TRACK_ENGINE_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_ENGINE_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/engine/multiTrackEngineSyncSeed.ts:3 DEFAULT_MULTI_TRACK_ENGINE_SYNC_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_ENGINE_SYNC_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/session/multiTrackAnalysisNoteSeed.ts:5 DEFAULT_MULTI_TRACK_ANALYSIS_NOTES (constant, uses: 1) - DEFAULT_MULTI_TRACK_ANALYSIS_NOTES is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/session/multiTrackDecisionSeed.ts:6 DEFAULT_MULTI_TRACK_DECISION_RECORD (constant, uses: 1) - DEFAULT_MULTI_TRACK_DECISION_RECORD is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/session/multiTrackDecisionSeed.ts:15 MULTI_TRACK_DECISION_OPTIONS (constant, uses: 1) - MULTI_TRACK_DECISION_OPTIONS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/session/multiTrackSaveSeed.ts:3 MULTI_TRACK_SAVE_ROUTE_OPTIONS (constant, uses: 1) - MULTI_TRACK_SAVE_ROUTE_OPTIONS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/session/multiTrackSelectionHistory.ts:20 DEFAULT_MULTI_TRACK_SELECTION_HISTORY (constant, uses: 1) - DEFAULT_MULTI_TRACK_SELECTION_HISTORY is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/session/multiTrackSessionSeed.ts:3 DEFAULT_MULTI_TRACK_SESSION_NOTES (constant, uses: 1) - DEFAULT_MULTI_TRACK_SESSION_NOTES is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/wave-form/MultiTrackClipLaneSeed.ts:266 DEFAULT_MULTI_TRACK_CLIP_LANE_WORKSPACE_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_CLIP_LANE_WORKSPACE_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeSeed.ts:3 DEFAULT_MULTI_TRACK_ENGINE_BRIDGE_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_ENGINE_BRIDGE_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/wave-form/MultiTrackExperimentSeed.ts:281 DEFAULT_MULTI_TRACK_EXPERIMENT_WORKSPACE_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_EXPERIMENT_WORKSPACE_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts:11 MULTI_TRACK_RIFF_GROUP_SOURCE_TRACKS (constant, uses: 1) - MULTI_TRACK_RIFF_GROUP_SOURCE_TRACKS is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/wave-form/MultiTrackRiffGroupSeed.ts:373 DEFAULT_MULTI_TRACK_RIFF_GROUP_WORKSPACE_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_RIFF_GROUP_WORKSPACE_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/multi-track/wave-form/MultiTrackSimilaritySeed.ts:271 DEFAULT_MULTI_TRACK_SIMILARITY_WORKSPACE_STATE (constant, uses: 1) - DEFAULT_MULTI_TRACK_SIMILARITY_WORKSPACE_STATE is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/runtime/trackMatcherRuntimeUtils.ts:3 PITCH_RATIO_EPSILON (constant, uses: 1) - PITCH_RATIO_EPSILON is declared but does not appear to be used.
+- HIGH app/tools/track-matcher/runtime/trackMatcherRuntimeUtils.ts:4 TEMPO_RATIO_EPSILON (constant, uses: 1) - TEMPO_RATIO_EPSILON is declared but does not appear to be used.
+- HIGH app/workspace/projects/[id]/command_control/panelInstanceTypes.ts:182 UNIVERSAL_PANEL_DEFAULT_CONSTRAINTS (constant, uses: 1) - UNIVERSAL_PANEL_DEFAULT_CONSTRAINTS is declared but does not appear to be used.
+- HIGH app/workspace/projects/[id]/command_control/panelInstanceTypes.ts:189 UNIVERSAL_PANEL_DEFAULT_PERMISSIONS (constant, uses: 1) - UNIVERSAL_PANEL_DEFAULT_PERMISSIONS is declared but does not appear to be used.
+- HIGH app/workspace/projects/[id]/command_control/panelRenderRegistry.ts:73 UNIVERSAL_PANEL_RENDER_SEEDS (constant, uses: 1) - UNIVERSAL_PANEL_RENDER_SEEDS is declared but does not appear to be used.
+- HIGH app/workspace/projects/[id]/command_control/projectWorkspacePanelUtils.ts:8 PROJECT_WORKSPACE_METADATA_PANEL_INSTANCE_ID (constant, uses: 1) - PROJECT_WORKSPACE_METADATA_PANEL_INSTANCE_ID is declared but does not appear to be used.
+- HIGH app/workspace/projects/[id]/projectTabConfig.ts:8 PROJECT_TAB_CONFIG (constant, uses: 1) - PROJECT_TAB_CONFIG is declared but does not appear to be used.
+- HIGH app/workspace/projects/page.tsx:96 setShowProjectsHowTo (react-state-setter, uses: 1) - setShowProjectsHowTo is declared but does not appear to be used.
+- HIGH code-map-test-fixtures/missing-save-handler-example.tsx:20 onSaveProjectDescription (missing-required-prop, uses: 0) - ProjectOverviewHeader is rendered without required prop onSaveProjectDescription.
+- HIGH code-map-test-fixtures/missing-tools-dropdown-example.tsx:10 TOOLS_CHILD_LINKS (wiring-constant, uses: 1) - TOOLS_CHILD_LINKS is declared but does not appear to be used.
+- HIGH code-map-test-fixtures/missing-viewmode-example.tsx:9 viewMode (likely-undefined-name, uses: 0) - viewMode is used but not declared in this file.
+- HIGH code-map-test-fixtures/unused-state-setter-example.tsx:4 setPanelOpen (react-state-setter, uses: 1) - setPanelOpen is declared but does not appear to be used.
+- HIGH lib/metadata/metadataLinks.ts:5 METADATA_LINKS (wiring-constant, uses: 1) - METADATA_LINKS is declared but does not appear to be used.
+- HIGH lib/metadata/metadataQueryPanelOptions.ts:4 TARGET_TYPE_OPTIONS (constant, uses: 1) - TARGET_TYPE_OPTIONS is declared but does not appear to be used.

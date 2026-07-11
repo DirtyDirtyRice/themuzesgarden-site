@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack } from "./playerTypes";
@@ -38,7 +38,7 @@ export function useProjectSetlist(args: {
   projectId: string;
   allTracks: AnyTrack[];
 }) {
-  const { projectId, allTracks } = args;
+  const { onProjectPage, projectId, allTracks } = args;
 
   const [projectTrackIds, setProjectTrackIds] = useState<string[]>([]);
   const [loadingProject, setLoadingProject] = useState(false);
@@ -54,7 +54,7 @@ export function useProjectSetlist(args: {
       allTracks.map((t) => [String(t?.id ?? "").trim(), t] as const)
     );
 
-    // 🔥 NEW: fallback if no linked IDs
+    // ðŸ”¥ NEW: fallback if no linked IDs
     if (!projectTrackIds.length) {
       return allTracks;
     }

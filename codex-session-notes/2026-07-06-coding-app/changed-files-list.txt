@@ -1,0 +1,12 @@
+M app/components/GlobalPlayer.tsx
+M app/tools/code-map/CodeMapDashboard.tsx
+M player/useProjectSetlist.ts
+M scripts/code-symbol-watch.mjs
+?? app/components/TitleBar.tsx.before-tools-backup
+?? code-map-reports/
+?? code-map-test-fixtures/function-never-called-example.tsx
+?? code-map-test-fixtures/imported-component-not-rendered-example.tsx
+?? code-map-test-fixtures/missing-viewmode-example.tsx
+?? code-map-test-fixtures/unused-state-setter-example.tsx
+?? codex-session-notes/
+?? scripts/add-missing-prop-watch.mjs

@@ -1,0 +1,172 @@
+diff --git a/app/components/GlobalPlayer.tsx b/app/components/GlobalPlayer.tsx
+index a654d9f..8a76572 100644
+--- a/app/components/GlobalPlayer.tsx
++++ b/app/components/GlobalPlayer.tsx
+@@ -1,6 +1,6 @@
+-"use client";
++﻿"use client";
+ 
+-import { useCallback, useEffect, useRef, useState } from "react";
++import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+ import type { PlayerTab } from "../../player/playerTypes";
+ import { readPersisted, writePersisted } from "../../player/playerStorage";
+ import { useAllTracks } from "../../player/useAllTracks";
+@@ -67,6 +67,10 @@ export default function GlobalPlayer() {
+ 
+   const { allTracks } = useAllTracks();
+ 
++  const globalTracks = useMemo(() => allTracks.filter((track) => String(track?.visibility ?? "shared").toLowerCase() !== "private"), [allTracks]);
++
++
++
+   const {
+     projectTracks,
+     loadingProject,
+@@ -84,6 +88,10 @@ export default function GlobalPlayer() {
+     allTracks,
+   });
+ 
++  const projectTrackIds = useMemo(() => new Set(projectTracks.map((track) => String(track.id))), [projectTracks]);
++
++  const playerTracks = useMemo(() => allTracks.filter((track) => String(track?.visibility ?? "shared").toLowerCase() !== "private" || (onProjectPage && projectTrackIds.has(String(track.id)))), [allTracks, onProjectPage, projectTrackIds]);
++
+   const setTab = useCallback((nextValue: PlayerTab) => {
+     GLOBAL_PLAYER_TAB_MEMORY = nextValue;
+     setTabState((prev) => (prev === nextValue ? prev : nextValue));
+@@ -94,7 +102,7 @@ export default function GlobalPlayer() {
+     setTab,
+     onProjectPage,
+     projectId,
+-    allTracks,
++    allTracks: playerTracks,
+     projectTracks,
+   });
+ 
+@@ -317,7 +325,7 @@ export default function GlobalPlayer() {
+       onPlayFromHere={engine.playFromHere}
+       q={q}
+       setQ={setQ}
+-      allTracks={allTracks}
++      allTracks={playerTracks}
+       onPlayTrack={engine.playTrack}
+     />
+   );
+diff --git a/app/tools/code-map/CodeMapDashboard.tsx b/app/tools/code-map/CodeMapDashboard.tsx
+index 5dbd56f..968b5a0 100644
+--- a/app/tools/code-map/CodeMapDashboard.tsx
++++ b/app/tools/code-map/CodeMapDashboard.tsx
+@@ -166,6 +166,18 @@ export default function CodeMapDashboard({ snapshot, riskReport, symbolWatch }:
+       String(item.kind) === "missing-required-prop"
+   );
+ 
++  const missingViewModeCaught = symbolFindings.some(
++    (item) =>
++      typeof item === "object" &&
++      item !== null &&
++      "path" in item &&
++      "symbol" in item &&
++      "kind" in item &&
++      String(item.path).includes("missing-viewmode-example.tsx") &&
++      String(item.symbol) === "viewMode" &&
++      String(item.kind) === "likely-undefined-name"
++  );
++
+   return (
+     <>
+       <section className="rounded-lg border border-white/20 p-4">
+@@ -307,6 +319,7 @@ git status`}</CommandBox>
+               <div className="space-y-2 text-lg font-black">
+                 <div>Tools dropdown: {knownBadCaught ? "CAUGHT" : "MISSED"}</div>
+                 <div>Save handler: {missingSaveHandlerCaught ? "CAUGHT" : "MISSED"}</div>
++                <div>Undefined viewMode: {missingViewModeCaught ? "CAUGHT" : "MISSED"}</div>
+               </div>
+               <p className="mt-2 text-sm text-white/70">
+                 Known broken examples must be caught before we trust the scanner.
+diff --git a/player/useProjectSetlist.ts b/player/useProjectSetlist.ts
+index 564076d..de1d716 100644
+--- a/player/useProjectSetlist.ts
++++ b/player/useProjectSetlist.ts
+@@ -1,4 +1,4 @@
+-"use client";
++﻿"use client";
+ 
+ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+ import type { AnyTrack } from "./playerTypes";
+@@ -38,7 +38,7 @@ export function useProjectSetlist(args: {
+   projectId: string;
+   allTracks: AnyTrack[];
+ }) {
+-  const { projectId, allTracks } = args;
++  const { onProjectPage, projectId, allTracks } = args;
+ 
+   const [projectTrackIds, setProjectTrackIds] = useState<string[]>([]);
+   const [loadingProject, setLoadingProject] = useState(false);
+@@ -54,7 +54,7 @@ export function useProjectSetlist(args: {
+       allTracks.map((t) => [String(t?.id ?? "").trim(), t] as const)
+     );
+ 
+-    // 🔥 NEW: fallback if no linked IDs
++    // ðŸ”¥ NEW: fallback if no linked IDs
+     if (!projectTrackIds.length) {
+       return allTracks;
+     }
+diff --git a/scripts/code-symbol-watch.mjs b/scripts/code-symbol-watch.mjs
+index 8b74fe0..ca3eb56 100644
+--- a/scripts/code-symbol-watch.mjs
++++ b/scripts/code-symbol-watch.mjs
+@@ -111,6 +111,38 @@ function findMissingRequiredProps(relPath, text) {
+   return findings;
+ }
+ 
++function findLikelyUndefinedNames(relPath, text) {
++  const findings = [];
++  const cleanText = stripComments(text);
++
++  const namesToWatch = ["viewMode"];
++
++  for (const name of namesToWatch) {
++    const used = new RegExp("\\b" + name + "\\b").test(cleanText);
++    if (!used) continue;
++
++    const declared =
++      new RegExp("\\bconst\\s+" + name + "\\b").test(cleanText) ||
++      new RegExp("\\blet\\s+" + name + "\\b").test(cleanText) ||
++      new RegExp("\\bvar\\s+" + name + "\\b").test(cleanText) ||
++      new RegExp("\\bfunction\\s+" + name + "\\b").test(cleanText) ||
++      new RegExp("\\b" + name + "\\s*:", "m").test(cleanText);
++
++    if (!declared) {
++      findings.push({
++        severity: "high",
++        path: relPath,
++        line: lineNumberForIndex(text, cleanText.indexOf(name)),
++        symbol: name,
++        kind: "likely-undefined-name",
++        uses: 0,
++        message: name + " is used but not declared in this file.",
++      });
++    }
++  }
++
++  return findings;
++}
+ function analyzeFile(absPath, text) {
+   const relPath = normalizeSlash(path.relative(root, absPath));
+ 
+@@ -119,6 +151,8 @@ function analyzeFile(absPath, text) {
+     ...collectMatches(/const\s+\[\s*[A-Za-z0-9_]+\s*,\s*(set[A-Za-z0-9_]+)\s*\]\s*=\s*useState/g, text, "react-state-setter"),
+     ...collectMatches(/const\s+([A-Za-z0-9_]*(?:LINKS|ITEMS|ROUTES|MENU)[A-Za-z0-9_]*)\s*[:=]/g, text, "wiring-constant"),
+     ...collectMatches(/const\s+([A-Z][A-Z0-9_]{2,})\s*[:=]/g, text, "constant"),
++    ...collectMatches(/import\s+([A-Z][A-Za-z0-9_]*)\s+from\s+["'][^"']+["']/g, text, "imported-component"),
++    ...collectMatches(/function\s+(handle[A-Z][A-Za-z0-9_]*)\s*\(/g, text, "local-handler"),
+   ];
+ 
+   const findings = [];
+@@ -160,6 +194,7 @@ function analyzeFile(absPath, text) {
+     }
+   }
+ 
++  findings.push(...findLikelyUndefinedNames(relPath, text));
+   findings.push(...findMissingRequiredProps(relPath, text));
+ 
+   return findings;

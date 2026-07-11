@@ -1,0 +1,5449 @@
+{
+  "generatedAt": "2026-07-06T15:20:00.359Z",
+  "summary": {
+    "filesScanned": 1200,
+    "exportedButNoFollowers": 200,
+    "routeOrphans": 0,
+    "unusedTypeWatch": 200,
+    "missingRenderWatch": 200
+  },
+  "exportedButNoFollowers": [
+    {
+      "path": "app/about/ai-music-generator/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/audio-problem-notes/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/custom-workspace-cards/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/find-it-paths/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/manual-word-links/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/member-workstations/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/metadata-records/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/metadata-relationships/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/music-knowledge-graph/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/project-containers/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/prompt-memory/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/pronunciation-pipeline/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/right-click-actions/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/saved-find-it-paths/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/search-sources/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/song-versions/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/stems/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/timeline-markers/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/track-details/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/concepts/user-notes/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/find-it/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/global-player/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/metadata/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/projects/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/site-tree/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/about/track-matcher/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/components/MetadataDaddyPage.tsx",
+      "key": "MetadataDaddyPage",
+      "followers": []
+    },
+    {
+      "path": "app/components/MetadataRelationshipsToggle.tsx",
+      "key": "MetadataRelationshipsToggle",
+      "followers": []
+    },
+    {
+      "path": "app/components/MusicSection.tsx",
+      "key": "MusicSection",
+      "followers": []
+    },
+    {
+      "path": "app/components/TextBlock.tsx",
+      "key": "TextBlock",
+      "followers": []
+    },
+    {
+      "path": "app/components/find-it/FindItExactStepsList.tsx",
+      "key": "FindItExactStepsList",
+      "followers": []
+    },
+    {
+      "path": "app/components/find-it/FindItMatchingOptionsPanel.tsx",
+      "key": "FindItMatchingOptionsPanel",
+      "followers": []
+    },
+    {
+      "path": "app/components/find-it/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/components/player/MomentInspectorHostControlStack.tsx",
+      "key": "MomentInspectorHostControlStack",
+      "followers": []
+    },
+    {
+      "path": "app/components/player/momentInspectorHostControlStack.types.ts",
+      "key": "momentInspectorHostControlStack.types",
+      "followers": []
+    },
+    {
+      "path": "app/components/player/momentInspectorPinnedFamilies.ts",
+      "key": "momentInspectorPinnedFamilies",
+      "followers": []
+    },
+    {
+      "path": "app/help/helpFoundationHeroPanel.tsx",
+      "key": "helpFoundationHeroPanel",
+      "followers": []
+    },
+    {
+      "path": "app/help/helpFoundationLibraryData.ts",
+      "key": "helpFoundationLibraryData",
+      "followers": []
+    },
+    {
+      "path": "app/help/helpFoundationMetadataData.ts",
+      "key": "helpFoundationMetadataData",
+      "followers": []
+    },
+    {
+      "path": "app/help/helpFoundationProjectData.ts",
+      "key": "helpFoundationProjectData",
+      "followers": []
+    },
+    {
+      "path": "app/help/helpFoundationRouteData.ts",
+      "key": "helpFoundationRouteData",
+      "followers": []
+    },
+    {
+      "path": "app/help/helpFoundationTrackMatcherData.ts",
+      "key": "helpFoundationTrackMatcherData",
+      "followers": []
+    },
+    {
+      "path": "app/help/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/layout.tsx",
+      "key": "layout",
+      "followers": []
+    },
+    {
+      "path": "app/library/libraryTrackFilters.ts",
+      "key": "libraryTrackFilters",
+      "followers": []
+    },
+    {
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "key": "libraryTrackSearchIndex",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyric-view/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryEntryCard.tsx",
+      "key": "LyricsLibraryEntryCard",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryHero.tsx",
+      "key": "LyricsLibraryHero",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryViewerClient.tsx",
+      "key": "LyricsLibraryViewerClient",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/LyricsTrackLiinkTypes.ts",
+      "key": "LyricsTrackLiinkTypes",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/LyricsTrackLinkSeed.ts",
+      "key": "LyricsTrackLinkSeed",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/LyricsVersionWorkspacePanel.tsx",
+      "key": "LyricsVersionWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/lyricsViewerController.ts",
+      "key": "lyricsViewerController",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/matches/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/library/lyrics/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/library/miscellaneous/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/library/multi-stems/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/library/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/library/project-liaison/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/library/stories/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/listen/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/live/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/members/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateActionBar.tsx",
+      "key": "MetadataCreateActionBar",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateHero.tsx",
+      "key": "MetadataCreateHero",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateSavePanel.tsx",
+      "key": "MetadataCreateSavePanel",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/create/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/library/MetadataRecordRelationshipSystem.tsx",
+      "key": "MetadataRecordRelationshipSystem",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/library/relationshipExplorerClusters.ts",
+      "key": "relationshipExplorerClusters",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/library/relationshipExplorerCoreController.ts",
+      "key": "relationshipExplorerCoreController",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/library/relationshipExplorerExplanationEngine.ts",
+      "key": "relationshipExplorerExplanationEngine",
+      "followers": []
+    },
+    {
+      "path": "app/metadata/library/relationshipExplorerRecords.ts",
+      "key": "relationshipExplorerRecords",
+      "followers": []
+    },
+    {
+      "path": "app/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/shared/downloads/downloadFolderHelpers.ts",
+      "key": "downloadFolderHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandBlueprintWorkspacePanel.tsx",
+      "key": "IslandBlueprintWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandCommunityWorkspacePanel.tsx",
+      "key": "IslandCommunityWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandCreateWorkspacePanel.tsx",
+      "key": "IslandCreateWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandDiscoveryWorkspacePanel.tsx",
+      "key": "IslandDiscoveryWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandExperienceWorkspacePanel.tsx",
+      "key": "IslandExperienceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandHomeWorkspacePanel.tsx",
+      "key": "IslandHomeWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandLearningWorkspacePanel.tsx",
+      "key": "IslandLearningWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandMemberIslandWorkspacePanel.tsx",
+      "key": "IslandMemberIslandWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandNavigationWorkspacePanel.tsx",
+      "key": "IslandNavigationWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandPermissionsWorkspacePanel.tsx",
+      "key": "IslandPermissionsWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandQuestionWorkspacePanel.tsx",
+      "key": "IslandQuestionWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandResearchWorkspacePanel.tsx",
+      "key": "IslandResearchWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandStoryWorkspacePanel.tsx",
+      "key": "IslandStoryWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandTemplateWorkspacePanel.tsx",
+      "key": "IslandTemplateWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandToolCenterWorkspacePanel.tsx",
+      "key": "IslandToolCenterWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandVisionHelpers.ts",
+      "key": "IslandVisionHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/islands/IslandVisionWorkspacePanel.tsx",
+      "key": "IslandVisionWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/TrackMatcherControls.tsx",
+      "key": "TrackMatcherControls",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/TrackMatcherSyncPanel.tsx",
+      "key": "TrackMatcherSyncPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/TrackMatcherUploadPanel.tsx",
+      "key": "TrackMatcherUploadPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/advanced/analize/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/advanced/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/analyze/AnalyzeActiveSectionPanel.tsx",
+      "key": "AnalyzeActiveSectionPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/analyze/AnalyzeController.tsx",
+      "key": "AnalyzeController",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/analyze/AnalyzeControllerCard.tsx",
+      "key": "AnalyzeControllerCard",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/analyze/AnalyzeControllerHeader.tsx",
+      "key": "AnalyzeControllerHeader",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/analyze/AnalyzeViewTabs.tsx",
+      "key": "AnalyzeViewTabs",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/analyze/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderIndexHelpers.ts",
+      "key": "trackMatcherFinderIndexHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderLibrarySearch.ts",
+      "key": "trackMatcherFinderLibrarySearch",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderMockData.ts",
+      "key": "trackMatcherFinderMockData",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderPresetHelpers.ts",
+      "key": "trackMatcherFinderPresetHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherFinderSavedSearchHelpers.ts",
+      "key": "trackMatcherFinderSavedSearchHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneAdapters.ts",
+      "key": "trackMatcherLaneAdapters",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneOrderingConfig.ts",
+      "key": "trackMatcherLaneOrderingConfig",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneRelationshipGroups.ts",
+      "key": "trackMatcherLaneRelationshipGroups",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherLaneVisibilityConfig.ts",
+      "key": "trackMatcherLaneVisibilityConfig",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelCapabilityHelpers.ts",
+      "key": "trackMatcherPanelCapabilityHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelCollapseHelpers.ts",
+      "key": "trackMatcherPanelCollapseHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelPluginRegistrationDiagnostics.ts",
+      "key": "trackMatcherPanelPluginRegistrationDiagnostics",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryDiffDiagnostics.ts",
+      "key": "trackMatcherPanelRegistryDiffDiagnostics",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryHistoryDiagnostics.ts",
+      "key": "trackMatcherPanelRegistryHistoryDiagnostics",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistryPersistenceDiagnostics.ts",
+      "key": "trackMatcherPanelRegistryPersistenceDiagnostics",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRegistrySnapshotHelpers.ts",
+      "key": "trackMatcherPanelRegistrySnapshotHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRouteGroupingHelpers.ts",
+      "key": "trackMatcherPanelRouteGroupingHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelRouteHelpers.ts",
+      "key": "trackMatcherPanelRouteHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelSearchHelpers.ts",
+      "key": "trackMatcherPanelSearchHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelTabHelpers.ts",
+      "key": "trackMatcherPanelTabHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/controller/trackMatcherPanelVisibilityPersistenceDiagnostics.ts",
+      "key": "trackMatcherPanelVisibilityPersistenceDiagnostics",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/details/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/finder/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/key/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/adapters/multiTrackAdapterDemoHelpers.ts",
+      "key": "multiTrackAdapterDemoHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/components/dashboard/MultiTrackRecommendationsPanel.tsx",
+      "key": "MultiTrackRecommendationsPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/components/dashboard/MultiTrackRelationshipFocusPanel.tsx",
+      "key": "MultiTrackRelationshipFocusPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/components/dashboard/MultiTrackRelationshipSummaryPanel.tsx",
+      "key": "MultiTrackRelationshipSummaryPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/components/dashboard/MultiTrackSyncTimelinePanel.tsx",
+      "key": "MultiTrackSyncTimelinePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/components/dashboard/MultiTrackTrackDeckPanel.tsx",
+      "key": "MultiTrackTrackDeckPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/components/dashboard/MultiTrackTransitionPanel.tsx",
+      "key": "MultiTrackTransitionPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/components/sync/MultiTrackSyncPanel.tsx",
+      "key": "MultiTrackSyncPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/controller/useMultiTrackTrackSelection.ts",
+      "key": "useMultiTrackTrackSelection",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/engine/multiTrackEngineSyncHelpers.ts",
+      "key": "multiTrackEngineSyncHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/page.tsx",
+      "key": "page",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackAiPromptIntelligenceHelpers.ts",
+      "key": "MultiTrackAiPromptIntelligenceHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackAiPromptIntelligenceTypes.ts",
+      "key": "MultiTrackAiPromptIntelligenceTypes",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackAiPromptIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackAiPromptIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackArrangementEngineWorkspacePanel.tsx",
+      "key": "MultiTrackArrangementEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackArrangementIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackArrangementIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackBridgeSeed.ts",
+      "key": "MultiTrackBridgeSeed",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackBridgeWorkspacePanel.tsx",
+      "key": "MultiTrackBridgeWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackBuildDecisionEngineWorkspacePanel.tsx",
+      "key": "MultiTrackBuildDecisionEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackCandidateComparisonEngineWorkspacePanel.tsx",
+      "key": "MultiTrackCandidateComparisonEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackCandidateEngineWorkspacePanel.tsx",
+      "key": "MultiTrackCandidateEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackCandidateRankingEngineWorkspacePanel.tsx",
+      "key": "MultiTrackCandidateRankingEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackClipLaneWorkspacePanel.tsx",
+      "key": "MultiTrackClipLaneWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackComparisonIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackComparisonIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackCompatibilityIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackCompatibilityIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackConfidenceIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackConfidenceIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackCrossVersionVotingEngineWorkspacePanel.tsx",
+      "key": "MultiTrackCrossVersionVotingEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackCueWorkspacePanel.tsx",
+      "key": "MultiTrackCueWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackDetectionWorkspacePanel.tsx",
+      "key": "MultiTrackDetectionWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackDspOwnershipWorkspacePanel.tsx",
+      "key": "MultiTrackDspOwnershipWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackDuplicationEngineWorkspacePanel.tsx",
+      "key": "MultiTrackDuplicationEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEditDecisionWorkspacePanel.tsx",
+      "key": "MultiTrackEditDecisionWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeActionPanel.tsx",
+      "key": "MultiTrackEngineBridgeActionPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeAdapterPanel.tsx",
+      "key": "MultiTrackEngineBridgeAdapterPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeContractPanel.tsx",
+      "key": "MultiTrackEngineBridgeContractPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeDiagnosticsPanel.tsx",
+      "key": "MultiTrackEngineBridgeDiagnosticsPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeExportPanel.tsx",
+      "key": "MultiTrackEngineBridgeExportPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeGuardrailPanel.tsx",
+      "key": "MultiTrackEngineBridgeGuardrailPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeMapPanel.tsx",
+      "key": "MultiTrackEngineBridgeMapPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeNextStepPanel.tsx",
+      "key": "MultiTrackEngineBridgeNextStepPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeNotesPanel.tsx",
+      "key": "MultiTrackEngineBridgeNotesPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeOwnershipPanel.tsx",
+      "key": "MultiTrackEngineBridgeOwnershipPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeReadinessPanel.tsx",
+      "key": "MultiTrackEngineBridgeReadinessPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeRecoveryPanel.tsx",
+      "key": "MultiTrackEngineBridgeRecoveryPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeRoutePanel.tsx",
+      "key": "MultiTrackEngineBridgeRoutePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeSignalTable.tsx",
+      "key": "MultiTrackEngineBridgeSignalTable",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeTimelinePanel.tsx",
+      "key": "MultiTrackEngineBridgeTimelinePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeValidationPanel.tsx",
+      "key": "MultiTrackEngineBridgeValidationPanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackEngineBridgeWorkspacePanel.tsx",
+      "key": "MultiTrackEngineBridgeWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackExperimentWorkspacePanel.tsx",
+      "key": "MultiTrackExperimentWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackExtractionEngineWorkspacePanel.tsx",
+      "key": "MultiTrackExtractionEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackExtractionPlanWorkspacePanel.tsx",
+      "key": "MultiTrackExtractionPlanWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackFutureHybridBuilderWorkspacePanel.tsx",
+      "key": "MultiTrackFutureHybridBuilderWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackHybridIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackHybridIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackIdeaClusterEngineWorkspacePanel.tsx",
+      "key": "MultiTrackIdeaClusterEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackIdeaLineageWorkspacePanel.tsx",
+      "key": "MultiTrackIdeaLineageWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackKeeperBankEngineWorkspacePanel.tsx",
+      "key": "MultiTrackKeeperBankEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackKeeperComparisonWorkspacePanel.tsx",
+      "key": "MultiTrackKeeperComparisonWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackKeeperEngineWorkspacePanel.tsx",
+      "key": "MultiTrackKeeperEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackKeeperExtractionWorkspacePanel.tsx",
+      "key": "MultiTrackKeeperExtractionWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackKeeperPromotionWorkspacePanel.tsx",
+      "key": "MultiTrackKeeperPromotionWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackLineageIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackLineageIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackMarkerWorkspacePanel.tsx",
+      "key": "MultiTrackMarkerWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackMutationEngineHelpers.ts",
+      "key": "MultiTrackMutationEngineHelpers",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackMutationEngineWorkspacePanel.tsx",
+      "key": "MultiTrackMutationEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackMutationMapWorkspacePanel.tsx",
+      "key": "MultiTrackMutationMapWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackPatternGenomeWorkspacePanel.tsx",
+      "key": "MultiTrackPatternGenomeWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackPhraseMatchingEngineWorkspacePanel.tsx",
+      "key": "MultiTrackPhraseMatchingEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackPromptExportIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackPromptExportIntelligenceWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRecurringRiffEngineWorkspacePanel.tsx",
+      "key": "MultiTrackRecurringRiffEngineWorkspacePanel",
+      "followers": []
+    },
+    {
+      "path": "app/tools/track-matcher/multi-track/wave-form/MultiTrackRenderPrepIntelligenceWorkspacePanel.tsx",
+      "key": "MultiTrackRenderPrepIntelligenceWorkspacePanel",
+      "followers": []
+    }
+  ],
+  "routeOrphans": [],
+  "unusedTypeWatch": [
+    {
+      "name": "ManualShellProps",
+      "path": "app/about/components/ManualShell.tsx",
+      "count": 1
+    },
+    {
+      "name": "ConceptGroup",
+      "path": "app/about/concepts/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "AuthContextType",
+      "path": "app/components/AuthProvider.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataDaddyPageProps",
+      "path": "app/components/MetadataDaddyPage.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataDaddyChildLink",
+      "path": "app/components/MetadataDaddyPage.tsx",
+      "count": 1
+    },
+    {
+      "name": "LogEntry",
+      "path": "app/components/PlaybackHelper.tsx",
+      "count": 1
+    },
+    {
+      "name": "HelpMenuItem",
+      "path": "app/components/TitleBar.tsx",
+      "count": 1
+    },
+    {
+      "name": "TitleBarLink",
+      "path": "app/components/TitleBar.tsx",
+      "count": 1
+    },
+    {
+      "name": "SyncMode",
+      "path": "app/components/WorkspaceSyncListener.tsx",
+      "count": 1
+    },
+    {
+      "name": "FindItCommandCenterModel",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItLayerShellProps",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItLayerTone",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelLayoutModel",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelModelInput",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelPhase",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelSectionName",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelSectionState",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItSyncCard",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItSystemStatus",
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItControllerInput",
+      "path": "app/components/find-it/FindItSearchControllerTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItMatchGroups",
+      "path": "app/components/find-it/FindItSearchControllerTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItResultSourceSummary",
+      "path": "app/components/find-it/FindItSearchControllerTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItSelectionReason",
+      "path": "app/components/find-it/FindItSearchControllerTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItSelectionTarget",
+      "path": "app/components/find-it/FindItSearchControllerTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelLayerBadgeTone",
+      "path": "app/components/find-it/findItPanelCrossPanelSync.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelSyncLayerId",
+      "path": "app/components/find-it/findItPanelCrossPanelSync.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelSyncStatus",
+      "path": "app/components/find-it/findItPanelCrossPanelSync.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPanelIntelligenceEventKind",
+      "path": "app/components/find-it/findItPanelIntelligenceEvents.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItGroupedMatches",
+      "path": "app/components/find-it/findItPanelUtils.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItRelationshipSummary",
+      "path": "app/components/find-it/findItRelationshipAdapter.ts",
+      "count": 1
+    },
+    {
+      "name": "PersistentReinforcementEntry",
+      "path": "app/components/find-it/findItResultsPersistence.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPredictionCandidate",
+      "path": "app/components/find-it/findItResultsPrediction.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItPredictionSignal",
+      "path": "app/components/find-it/findItResultsPrediction.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItTargetBlueprint",
+      "path": "app/components/find-it/findItTargets.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItTargetCategory",
+      "path": "app/components/find-it/findItTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "FindItTargetId",
+      "path": "app/components/find-it/findItTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "TargetHeaderStatus",
+      "path": "app/components/find-it/target-path/FindItTargetHeader.tsx",
+      "count": 1
+    },
+    {
+      "name": "TargetPathStep",
+      "path": "app/components/find-it/target-path/FindItTargetSteps.tsx",
+      "count": 1
+    },
+    {
+      "name": "PathStepDirection",
+      "path": "app/components/find-it/target-path/targetPathController.ts",
+      "count": 1
+    },
+    {
+      "name": "PathStepViewModel",
+      "path": "app/components/find-it/target-path/targetPathController.ts",
+      "count": 1
+    },
+    {
+      "name": "TargetActionState",
+      "path": "app/components/find-it/target-path/targetPathController.ts",
+      "count": 1
+    },
+    {
+      "name": "TargetPathControllerResult",
+      "path": "app/components/find-it/target-path/targetPathController.ts",
+      "count": 1
+    },
+    {
+      "name": "TargetPathRouteInfo",
+      "path": "app/components/find-it/target-path/targetPathController.ts",
+      "count": 1
+    },
+    {
+      "name": "TargetPathSummary",
+      "path": "app/components/find-it/target-path/targetPathController.ts",
+      "count": 1
+    },
+    {
+      "name": "PinnedFamily",
+      "path": "app/components/player/momentInspectorPinnedFamilies.ts",
+      "count": 1
+    },
+    {
+      "name": "ButtonVariant",
+      "path": "app/components/ui/Button.tsx",
+      "count": 1
+    },
+    {
+      "name": "HelpControlCard",
+      "path": "app/help/helpFoundationController.tsx",
+      "count": 1
+    },
+    {
+      "name": "HelpMetricCard",
+      "path": "app/help/helpFoundationController.tsx",
+      "count": 1
+    },
+    {
+      "name": "HelpQuickLinkCard",
+      "path": "app/help/helpFoundationController.tsx",
+      "count": 1
+    },
+    {
+      "name": "FindItCategoryFilter",
+      "path": "app/help/helpFoundationFindItPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "FindItCategorySummary",
+      "path": "app/help/helpFoundationFindItPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "HelpFoundationFindItPanelProps",
+      "path": "app/help/helpFoundationFindItPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "HelpCardStatus",
+      "path": "app/help/helpFoundationTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "HelpGlossaryItem",
+      "path": "app/help/helpFoundationTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "HelpQuickAnswer",
+      "path": "app/help/helpFoundationTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "HelpRouteMap",
+      "path": "app/help/helpFoundationTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "HelpSectionContent",
+      "path": "app/help/helpFoundationTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "HelpUpdateCard",
+      "path": "app/help/helpFoundationTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LibraryDownloadFormat",
+      "path": "app/library/LibraryPageHeader.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataItemPreview",
+      "path": "app/library/LibraryTrackCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "LastSentProject",
+      "path": "app/library/LibraryTrackList.tsx",
+      "count": 1
+    },
+    {
+      "name": "ProjectOptionLike",
+      "path": "app/library/LibraryTrackList.tsx",
+      "count": 1
+    },
+    {
+      "name": "LibraryVisibilityFilter",
+      "path": "app/library/libraryTrackFilters.ts",
+      "count": 1
+    },
+    {
+      "name": "LibrarySearchableTrack",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "count": 1
+    },
+    {
+      "name": "LibraryTrackSearchOptions",
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "count": 1
+    },
+    {
+      "name": "FolderInputProps",
+      "path": "app/library/lyrics/LyricsLibraryEditor.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryEditorProps",
+      "path": "app/library/lyrics/LyricsLibraryEditor.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryEntryCardProps",
+      "path": "app/library/lyrics/LyricsLibraryEntryCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryHeroProps",
+      "path": "app/library/lyrics/LyricsLibraryHero.tsx",
+      "count": 1
+    },
+    {
+      "name": "ImportStatCardProps",
+      "path": "app/library/lyrics/LyricsLibraryImportStatusPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryImportStatusPanelProps",
+      "path": "app/library/lyrics/LyricsLibraryImportStatusPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryInsightsPanelProps",
+      "path": "app/library/lyrics/LyricsLibraryInsightsPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibrarySearchPanelProps",
+      "path": "app/library/lyrics/LyricsLibrarySearchPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsSearchMode",
+      "path": "app/library/lyrics/LyricsLibrarySearchPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryStatsPanelProps",
+      "path": "app/library/lyrics/LyricsLibraryStatsPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryViewerClientProps",
+      "path": "app/library/lyrics/LyricsLibraryViewerClient.tsx",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionAction",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionChangeType",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionComparisonVerdict",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionCreateInput",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionEntry",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionFilter",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionSectionFocus",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionSectionScore",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionSortMode",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionSource",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionUpdateInput",
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsVersionWorkspacePanelProps",
+      "path": "app/library/lyrics/LyricsVersionWorkspacePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "DeleteLyricEntryActions",
+      "path": "app/library/lyrics/lyricsCrudHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "DuplicateLyricEntryActions",
+      "path": "app/library/lyrics/lyricsCrudHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "EditLyricEntryActions",
+      "path": "app/library/lyrics/lyricsCrudHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsFormResetActions",
+      "path": "app/library/lyrics/lyricsCrudHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "SaveLyricEntryActions",
+      "path": "app/library/lyrics/lyricsCrudHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "PdfDocument",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "count": 1
+    },
+    {
+      "name": "PdfJsModule",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "count": 1
+    },
+    {
+      "name": "PdfLoadTask",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "count": 1
+    },
+    {
+      "name": "PdfPage",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "count": 1
+    },
+    {
+      "name": "PdfTextContent",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "count": 1
+    },
+    {
+      "name": "PdfTextItem",
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "count": 1
+    },
+    {
+      "name": "SetImportReport",
+      "path": "app/library/lyrics/lyricsImportController.ts",
+      "count": 1
+    },
+    {
+      "name": "ImportLyricsFromInputActions",
+      "path": "app/library/lyrics/lyricsImportController.ts",
+      "count": 1
+    },
+    {
+      "name": "SaveShownLyricsToFolderActions",
+      "path": "app/library/lyrics/lyricsImportController.ts",
+      "count": 1
+    },
+    {
+      "name": "ImportLyricFilesOptions",
+      "path": "app/library/lyrics/lyricsImportHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "ImportLyricFilesResult",
+      "path": "app/library/lyrics/lyricsImportHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricImportReport",
+      "path": "app/library/lyrics/lyricsImportTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryInsightItem",
+      "path": "app/library/lyrics/lyricsLibraryInsightsHelpers.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricEntrySource",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricEntryStatus",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryActionStatus",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibrarySearchMode",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibrarySortMode",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryValidationResult",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryViewMode",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "LyricsLibraryWorkspaceState",
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "CloseLyricViewerActions",
+      "path": "app/library/lyrics/lyricsViewerController.ts",
+      "count": 1
+    },
+    {
+      "name": "ViewLyricEntryActions",
+      "path": "app/library/lyrics/lyricsViewerController.ts",
+      "count": 1
+    },
+    {
+      "name": "MiscellaneousLibraryEditorProps",
+      "path": "app/library/miscellaneous/MiscellaneousLibraryEditor.tsx",
+      "count": 1
+    },
+    {
+      "name": "MiscellaneousLibraryEntryCardProps",
+      "path": "app/library/miscellaneous/MiscellaneousLibraryEntryCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "MiscellaneousLibraryHeroProps",
+      "path": "app/library/miscellaneous/MiscellaneousLibraryHero.tsx",
+      "count": 1
+    },
+    {
+      "name": "MiscellaneousLibrarySearchPanelProps",
+      "path": "app/library/miscellaneous/MiscellaneousLibrarySearchPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "MultiStemsLibraryEditorProps",
+      "path": "app/library/multi-stems/MultiStemsLibraryEditor.tsx",
+      "count": 1
+    },
+    {
+      "name": "MultiStemsLibraryEntryCardProps",
+      "path": "app/library/multi-stems/MultiStemsLibraryEntryCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "MultiStemsLibraryHeroProps",
+      "path": "app/library/multi-stems/MultiStemsLibraryHero.tsx",
+      "count": 1
+    },
+    {
+      "name": "MultiStemsLibrarySearchPanelProps",
+      "path": "app/library/multi-stems/MultiStemsLibrarySearchPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "IncomingTagMode",
+      "path": "app/library/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "TrackGroup",
+      "path": "app/library/project-liaison/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "StoriesLibraryEditorProps",
+      "path": "app/library/stories/StoriesLibraryEditor.tsx",
+      "count": 1
+    },
+    {
+      "name": "StoriesLibraryEntryCardProps",
+      "path": "app/library/stories/StoriesLibraryEntryCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "StoriesLibraryHeroProps",
+      "path": "app/library/stories/StoriesLibraryHero.tsx",
+      "count": 1
+    },
+    {
+      "name": "StoriesLibrarySearchPanelProps",
+      "path": "app/library/stories/StoriesLibrarySearchPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "ComboState",
+      "path": "app/live/LiveGameModePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LiveGameModePanelProps",
+      "path": "app/live/LiveGameModePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "LiveStatusPillProps",
+      "path": "app/live/LiveStatusPill.tsx",
+      "count": 1
+    },
+    {
+      "name": "LiveToastBannerProps",
+      "path": "app/live/LiveToastBanner.tsx",
+      "count": 1
+    },
+    {
+      "name": "LiveTransportPanelProps",
+      "path": "app/live/LiveTransportPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "TransitionMemoryRecord",
+      "path": "app/live/LiveTransportPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "GameTaskKind",
+      "path": "app/live/livePageTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordActionsSectionProps",
+      "path": "app/metadata/[slug]/MetadataRecordActionsSection.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordDeleteButtonProps",
+      "path": "app/metadata/[slug]/MetadataRecordDeleteButton.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataFieldLike",
+      "path": "app/metadata/[slug]/MetadataRecordFieldsSection.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordFieldsSectionProps",
+      "path": "app/metadata/[slug]/MetadataRecordFieldsSection.tsx",
+      "count": 1
+    },
+    {
+      "name": "NormalizedField",
+      "path": "app/metadata/[slug]/MetadataRecordFieldsSection.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordNotFoundProps",
+      "path": "app/metadata/[slug]/MetadataRecordNotFound.tsx",
+      "count": 1
+    },
+    {
+      "name": "HeaderRecordLike",
+      "path": "app/metadata/[slug]/MetadataRecordPageHeader.tsx",
+      "count": 1
+    },
+    {
+      "name": "DashboardProps",
+      "path": "app/metadata/[slug]/MetadataRecordRelationshipDashboard.tsx",
+      "count": 1
+    },
+    {
+      "name": "RelationshipGroupsProps",
+      "path": "app/metadata/[slug]/MetadataRecordRelationshipGroups.tsx",
+      "count": 1
+    },
+    {
+      "name": "FilterPulseState",
+      "path": "app/metadata/[slug]/MetadataRecordRelationshipInteractivePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "RelationshipInteractivePanelProps",
+      "path": "app/metadata/[slug]/MetadataRecordRelationshipInteractivePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordRelationshipsProps",
+      "path": "app/metadata/[slug]/MetadataRecordRelationships.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRelationshipListProps",
+      "path": "app/metadata/[slug]/MetadataRelationshipList.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataOption",
+      "path": "app/metadata/[slug]/TrackMetadataEmptyState.tsx",
+      "count": 1
+    },
+    {
+      "name": "InnerPanelKey",
+      "path": "app/metadata/[slug]/edit/MetadataRecordEditFormPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "PreviewPanelKey",
+      "path": "app/metadata/[slug]/edit/MetadataRelationshipPreviewPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "BuildRelationshipOptionsArgs",
+      "path": "app/metadata/[slug]/edit/metadataEditRelationshipOptions.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataUpdateSubmitInput",
+      "path": "app/metadata/[slug]/edit/metadataUpdateSubmitAction.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataUpdateSubmitResult",
+      "path": "app/metadata/[slug]/edit/metadataUpdateSubmitAction.ts",
+      "count": 1
+    },
+    {
+      "name": "EditRecordSource",
+      "path": "app/metadata/[slug]/edit/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordEditPageProps",
+      "path": "app/metadata/[slug]/edit/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRelationshipLike",
+      "path": "app/metadata/[slug]/metadataRecordRelationshipTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "RelationshipTypeSummary",
+      "path": "app/metadata/[slug]/metadataRecordRelationshipTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "RemoveRelationshipAction",
+      "path": "app/metadata/[slug]/metadataRecordRelationshipTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordMorePageProps",
+      "path": "app/metadata/[slug]/more/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataRecordPageProps",
+      "path": "app/metadata/[slug]/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "PageRecord",
+      "path": "app/metadata/[slug]/page.tsx",
+      "count": 1
+    },
+    {
+      "name": "SaveReadinessMessageProps",
+      "path": "app/metadata/create/CreateBridgeReadiness.tsx",
+      "count": 1
+    },
+    {
+      "name": "SaveActionLinksProps",
+      "path": "app/metadata/create/CreateBridgeSaveAction.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateActionBarProps",
+      "path": "app/metadata/create/MetadataCreateActionBar.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateFormProps",
+      "path": "app/metadata/create/MetadataCreateForm.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateOutputPanelProps",
+      "path": "app/metadata/create/MetadataCreateOutputPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "SavePanelPayload",
+      "path": "app/metadata/create/MetadataCreateSavePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "SavePanelRecord",
+      "path": "app/metadata/create/MetadataCreateSavePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "SavePanelRelationship",
+      "path": "app/metadata/create/MetadataCreateSavePanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "DirectPayloadRecord",
+      "path": "app/metadata/create/createBridgeTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateCreateBridgePanelProps",
+      "path": "app/metadata/create/createBridgeTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "ParsedRecordState",
+      "path": "app/metadata/create/createBridgeTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "SaveActionCopy",
+      "path": "app/metadata/create/createBridgeTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "SaveActionState",
+      "path": "app/metadata/create/createBridgeTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "CreateFormValidationInput",
+      "path": "app/metadata/create/createFormValidation.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateRecordBuilderInput",
+      "path": "app/metadata/create/metadataCreateRecordBuilder.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateRecordBuilderResult",
+      "path": "app/metadata/create/metadataCreateRecordBuilder.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateSaveBridgeInput",
+      "path": "app/metadata/create/metadataCreateSaveBridge.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateSaveBridgeResult",
+      "path": "app/metadata/create/metadataCreateSaveBridge.ts",
+      "count": 1
+    },
+    {
+      "name": "ExistingRecordCheck",
+      "path": "app/metadata/create/metadataCreateSubmitAction.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataSupabaseError",
+      "path": "app/metadata/create/metadataCreateSubmitAction.ts",
+      "count": 1
+    },
+    {
+      "name": "RelationshipExtraShape",
+      "path": "app/metadata/create/metadataCreateSubmitAction.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateSubmitResult",
+      "path": "app/metadata/create/metadataCreateSubmitAction.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateValidationInput",
+      "path": "app/metadata/create/metadataCreateValidation.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataCreateValidationResult",
+      "path": "app/metadata/create/metadataCreateValidation.ts",
+      "count": 1
+    },
+    {
+      "name": "DuplicateSlugStatus",
+      "path": "app/metadata/create/useMetadataCreatePageState.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibraryHeroProps",
+      "path": "app/metadata/library/MetadataLibraryHero.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibraryOpenRecordPanelProps",
+      "path": "app/metadata/library/MetadataLibraryOpenRecordPanel.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibraryRecordSummary",
+      "path": "app/metadata/library/MetadataLibraryPageTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibrarySection",
+      "path": "app/metadata/library/MetadataLibraryPageTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibraryShape",
+      "path": "app/metadata/library/MetadataLibraryPageTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibraryShelf",
+      "path": "app/metadata/library/MetadataLibraryPageTypes.ts",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibraryQuickPreviewProps",
+      "path": "app/metadata/library/MetadataLibraryQuickPreview.tsx",
+      "count": 1
+    },
+    {
+      "name": "ButtonTone",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "CardButtonProps",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "CardLinkProps",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "count": 1
+    },
+    {
+      "name": "MetadataLibraryRecordCardProps",
+      "path": "app/metadata/library/MetadataLibraryRecordCard.tsx",
+      "count": 1
+    }
+  ],
+  "missingRenderWatch": [
+    {
+      "path": "app/about/components/ManualCards.tsx",
+      "warnings": [
+        {
+          "name": "ManualInfoSection",
+          "count": 1
+        },
+        {
+          "name": "ManualInlineLink",
+          "count": 1
+        },
+        {
+          "name": "ManualRelatedLinks",
+          "count": 1
+        },
+        {
+          "name": "ManualStatusBanner",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/components/ManualShell.tsx",
+      "warnings": [
+        {
+          "name": "ManualShellProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/audio-problem-notes/page.tsx",
+      "warnings": [
+        {
+          "name": "AudioProblemNotesConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/custom-workspace-cards/page.tsx",
+      "warnings": [
+        {
+          "name": "CustomWorkspaceCardsConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/manual-word-links/page.tsx",
+      "warnings": [
+        {
+          "name": "ManualWordLinksConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/member-workstations/page.tsx",
+      "warnings": [
+        {
+          "name": "MemberWorkstationsConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/metadata-records/page.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordsConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/metadata-relationships/page.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRelationshipsPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/music-knowledge-graph/page.tsx",
+      "warnings": [
+        {
+          "name": "MusicKnowledgeGraphConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/page.tsx",
+      "warnings": [
+        {
+          "name": "ConceptsPage",
+          "count": 1
+        },
+        {
+          "name": "ConceptGroup",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/project-containers/page.tsx",
+      "warnings": [
+        {
+          "name": "ProjectContainersPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/prompt-memory/page.tsx",
+      "warnings": [
+        {
+          "name": "PromptMemoryConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/pronunciation-pipeline/page.tsx",
+      "warnings": [
+        {
+          "name": "PronunciationPipelineConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/right-click-actions/page.tsx",
+      "warnings": [
+        {
+          "name": "RightClickActionsConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/saved-find-it-paths/page.tsx",
+      "warnings": [
+        {
+          "name": "SavedFindItPathsConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/search-sources/page.tsx",
+      "warnings": [
+        {
+          "name": "SearchSourcesPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/song-versions/page.tsx",
+      "warnings": [
+        {
+          "name": "SongVersionsPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/stems/page.tsx",
+      "warnings": [
+        {
+          "name": "StemsConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/timeline-markers/page.tsx",
+      "warnings": [
+        {
+          "name": "TimelineMarkersConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/track-details/page.tsx",
+      "warnings": [
+        {
+          "name": "TrackDetailsConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/concepts/user-notes/page.tsx",
+      "warnings": [
+        {
+          "name": "UserNotesConceptPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/page.tsx",
+      "warnings": [
+        {
+          "name": "AboutHomePage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/site-tree/page.tsx",
+      "warnings": [
+        {
+          "name": "SiteTreePage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/about/track-matcher/page.tsx",
+      "warnings": [
+        {
+          "name": "TrackMatcherInfoPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/AuthProvider.tsx",
+      "warnings": [
+        {
+          "name": "AuthContextType",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/MetadataDaddyPage.tsx",
+      "warnings": [
+        {
+          "name": "MetadataDaddyPageProps",
+          "count": 1
+        },
+        {
+          "name": "MetadataDaddyChildLink",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/PlaybackHelper.tsx",
+      "warnings": [
+        {
+          "name": "LogEntry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/TitleBar.tsx",
+      "warnings": [
+        {
+          "name": "HelpMenuItem",
+          "count": 1
+        },
+        {
+          "name": "TitleBarLink",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/WorkspaceSyncListener.tsx",
+      "warnings": [
+        {
+          "name": "SyncMode",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/FindItMatchingHighlight.tsx",
+      "warnings": [
+        {
+          "name": "HighlightedResultLabel",
+          "count": 1
+        },
+        {
+          "name": "getCategoryMatchScore",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultSourceLabel",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultSourceTone",
+          "count": 1
+        },
+        {
+          "name": "getMatchedTokenCount",
+          "count": 1
+        },
+        {
+          "name": "getResultMatchScore",
+          "count": 1
+        },
+        {
+          "name": "getSearchTokens",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/FindItMatchingPanels.tsx",
+      "warnings": [
+        {
+          "name": "DidYouMeanPanel",
+          "count": 1
+        },
+        {
+          "name": "SearchPrecisionSummary",
+          "count": 1
+        },
+        {
+          "name": "TopResultPreview",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/FindItMoreInfoPreview.tsx",
+      "warnings": [
+        {
+          "name": "FindItMoreInfoPreview",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/FindItPanelStatusController.ts",
+      "warnings": [
+        {
+          "name": "buildFindItPanelModel",
+          "count": 1
+        },
+        {
+          "name": "getCleanSearchValue",
+          "count": 1
+        },
+        {
+          "name": "getCommandCenterModel",
+          "count": 1
+        },
+        {
+          "name": "getCommandStripCopy",
+          "count": 1
+        },
+        {
+          "name": "getPanelPhase",
+          "count": 1
+        },
+        {
+          "name": "getPanelSectionStates",
+          "count": 1
+        },
+        {
+          "name": "getPrimaryLayoutModel",
+          "count": 1
+        },
+        {
+          "name": "getSearchDepthLabel",
+          "count": 1
+        },
+        {
+          "name": "getSelectedResult",
+          "count": 2
+        },
+        {
+          "name": "getSyncCards",
+          "count": 1
+        },
+        {
+          "name": "getSystemStatus",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/FindItPanelTypes.ts",
+      "warnings": [
+        {
+          "name": "isNavigationSearchResult",
+          "count": 1
+        },
+        {
+          "name": "FindItCommandCenterModel",
+          "count": 1
+        },
+        {
+          "name": "FindItLayerShellProps",
+          "count": 1
+        },
+        {
+          "name": "FindItLayerTone",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelLayoutModel",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelModel",
+          "count": 3
+        },
+        {
+          "name": "FindItPanelModelInput",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelPhase",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelSectionName",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelSectionState",
+          "count": 1
+        },
+        {
+          "name": "FindItSyncCard",
+          "count": 1
+        },
+        {
+          "name": "FindItSystemStatus",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/FindItSearchControllerConstants.ts",
+      "warnings": [
+        {
+          "name": "FIND_IT_SEARCH_MODE_LABELS",
+          "count": 1
+        },
+        {
+          "name": "MAX_FIND_IT_RESULTS",
+          "count": 1
+        },
+        {
+          "name": "NAVIGATION_RESULT_LIMIT",
+          "count": 1
+        },
+        {
+          "name": "PAGE_JUMP_SIZE",
+          "count": 1
+        },
+        {
+          "name": "SEARCH_DEBOUNCE_MS",
+          "count": 1
+        },
+        {
+          "name": "getFindItSearchModeLabel",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/FindItSearchControllerTypes.ts",
+      "warnings": [
+        {
+          "name": "isFindItResult",
+          "count": 1
+        },
+        {
+          "name": "FindItControllerInput",
+          "count": 1
+        },
+        {
+          "name": "FindItMatchGroups",
+          "count": 1
+        },
+        {
+          "name": "FindItResultSourceSummary",
+          "count": 1
+        },
+        {
+          "name": "FindItSearchMode",
+          "count": 4
+        },
+        {
+          "name": "FindItSelectionReason",
+          "count": 1
+        },
+        {
+          "name": "FindItSelectionTarget",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItControllerStatus.ts",
+      "warnings": [
+        {
+          "name": "getFindItControllerStatus",
+          "count": 1
+        },
+        {
+          "name": "getFindItSearchMode",
+          "count": 3
+        },
+        {
+          "name": "getFindItSearchModeDetail",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItKeyboardModel.ts",
+      "warnings": [
+        {
+          "name": "getFindItKeyboardCommand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItMetadataAdapter.ts",
+      "warnings": [
+        {
+          "name": "getFindItMetadataResults",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItPanelBehaviorLearning.ts",
+      "warnings": [
+        {
+          "name": "createBehaviorSnapshot",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItPanelCrossPanelSync.ts",
+      "warnings": [
+        {
+          "name": "createFindItLayerBadges",
+          "count": 1
+        },
+        {
+          "name": "createFindItPanelSyncSnapshot",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelLayerBadgeTone",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelSyncLayerId",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelSyncStatus",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItPanelDecisionEngine.ts",
+      "warnings": [
+        {
+          "name": "createDecisionSnapshot",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItPanelFocusModel.ts",
+      "warnings": [
+        {
+          "name": "createFocusSnapshot",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItPanelIntelligenceEvents.ts",
+      "warnings": [
+        {
+          "name": "appendFindItEvent",
+          "count": 1
+        },
+        {
+          "name": "createFindItEvent",
+          "count": 1
+        },
+        {
+          "name": "FindItPanelIntelligenceEventKind",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItPanelUtils.ts",
+      "warnings": [
+        {
+          "name": "FIND_IT_CATEGORY_HELP_TEXT",
+          "count": 1
+        },
+        {
+          "name": "FIND_IT_CATEGORY_ORDER",
+          "count": 1
+        },
+        {
+          "name": "clampFindItSelectedIndex",
+          "count": 1
+        },
+        {
+          "name": "getSafeFindItRoute",
+          "count": 1
+        },
+        {
+          "name": "groupFindItMatchesByCategory",
+          "count": 1
+        },
+        {
+          "name": "FindItGroupedMatches",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItPathUtils.ts",
+      "warnings": [
+        {
+          "name": "findItMatches",
+          "count": 1
+        },
+        {
+          "name": "getCurrentLocationLabel",
+          "count": 1
+        },
+        {
+          "name": "getCurrentLocationSummary",
+          "count": 1
+        },
+        {
+          "name": "getCurrentTreeSteps",
+          "count": 1
+        },
+        {
+          "name": "getDefaultFindItMatches",
+          "count": 1
+        },
+        {
+          "name": "getFindItEmptyMessage",
+          "count": 1
+        },
+        {
+          "name": "getSearchWords",
+          "count": 1
+        },
+        {
+          "name": "isActivePath",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItRelationshipAdapter.ts",
+      "warnings": [
+        {
+          "name": "getFindItRelationshipSummariesForRecordSlug",
+          "count": 1
+        },
+        {
+          "name": "getFindItRelationshipSummariesForSearch",
+          "count": 1
+        },
+        {
+          "name": "FindItRelationshipSummary",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItResultMerge.ts",
+      "warnings": [
+        {
+          "name": "mergeFindItResultGroups",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItResultRanking.ts",
+      "warnings": [
+        {
+          "name": "getComparableFindItResultScore",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultId",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultPriority",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultSourceWeight",
+          "count": 1
+        },
+        {
+          "name": "shouldReplaceFindItMergedResult",
+          "count": 1
+        },
+        {
+          "name": "sortFindItResults",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItResultsIntent.ts",
+      "warnings": [
+        {
+          "name": "createFindItIntentState",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItResultsMemory.ts",
+      "warnings": [
+        {
+          "name": "createEmptyFindItSelectionMemorySnapshot",
+          "count": 1
+        },
+        {
+          "name": "describeFindItMemoryStrength",
+          "count": 1
+        },
+        {
+          "name": "getFindItSelectionMemorySnapshot",
+          "count": 1
+        },
+        {
+          "name": "rememberFindItSelection",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItResultsPersistence.ts",
+      "warnings": [
+        {
+          "name": "STORAGE_WRITE_DELAY_MS",
+          "count": 1
+        },
+        {
+          "name": "createEmptyPersistentResultsBrainState",
+          "count": 1
+        },
+        {
+          "name": "createLearningSummary",
+          "count": 1
+        },
+        {
+          "name": "createPersistentIntentEvent",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultConfidenceLabel",
+          "count": 1
+        },
+        {
+          "name": "normalizeFindItSearchValue",
+          "count": 1
+        },
+        {
+          "name": "readPersistentResultsBrainState",
+          "count": 1
+        },
+        {
+          "name": "reinforceResultSelection",
+          "count": 1
+        },
+        {
+          "name": "trimPersistentMemoryEntries",
+          "count": 1
+        },
+        {
+          "name": "writePersistentResultsBrainState",
+          "count": 1
+        },
+        {
+          "name": "PersistentReinforcementEntry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItResultsPrediction.ts",
+      "warnings": [
+        {
+          "name": "createFindItPredictionModel",
+          "count": 1
+        },
+        {
+          "name": "FindItPredictionCandidate",
+          "count": 1
+        },
+        {
+          "name": "FindItPredictionModel",
+          "count": 2
+        },
+        {
+          "name": "FindItPredictionSignal",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItSelectionModel.ts",
+      "warnings": [
+        {
+          "name": "getFindItFinalIndex",
+          "count": 1
+        },
+        {
+          "name": "getFindItPreferredSelectedIndex",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultIndexByNodeId",
+          "count": 1
+        },
+        {
+          "name": "getFindItResultIndexByResult",
+          "count": 1
+        },
+        {
+          "name": "getFindItSafeSelectionTarget",
+          "count": 1
+        },
+        {
+          "name": "getFindItSelectionSnapshot",
+          "count": 1
+        },
+        {
+          "name": "getNextFindItSelectedIndex",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItSourceSummary.ts",
+      "warnings": [
+        {
+          "name": "getFindItDominantSource",
+          "count": 1
+        },
+        {
+          "name": "getFindItSourceSummary",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItTargets.ts",
+      "warnings": [
+        {
+          "name": "FIND_IT_TARGETS",
+          "count": 1
+        },
+        {
+          "name": "getFindItTargetById",
+          "count": 1
+        },
+        {
+          "name": "FindItTargetBlueprint",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/findItTypes.ts",
+      "warnings": [
+        {
+          "name": "FindItTargetCategory",
+          "count": 1
+        },
+        {
+          "name": "FindItTargetId",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/target-path/FindItTargetHeader.tsx",
+      "warnings": [
+        {
+          "name": "TargetHeaderStatus",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/target-path/FindItTargetSteps.tsx",
+      "warnings": [
+        {
+          "name": "TargetPathStep",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/target-path/targetPathController.ts",
+      "warnings": [
+        {
+          "name": "PathStepDirection",
+          "count": 1
+        },
+        {
+          "name": "PathStepViewModel",
+          "count": 1
+        },
+        {
+          "name": "TargetActionState",
+          "count": 1
+        },
+        {
+          "name": "TargetPathControllerResult",
+          "count": 1
+        },
+        {
+          "name": "TargetPathRouteInfo",
+          "count": 1
+        },
+        {
+          "name": "TargetPathSummary",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/find-it/useFindItDebouncedValue.ts",
+      "warnings": [
+        {
+          "name": "getCleanFindItSearchValue",
+          "count": 1
+        },
+        {
+          "name": "hasUsableFindItSearchText",
+          "count": 1
+        },
+        {
+          "name": "isFindItWaitingForDebounce",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/player/momentInspectorPinnedFamilies.ts",
+      "warnings": [
+        {
+          "name": "getPinnedFamilies",
+          "count": 1
+        },
+        {
+          "name": "pinFamily",
+          "count": 1
+        },
+        {
+          "name": "PinnedFamily",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/components/ui/Button.tsx",
+      "warnings": [
+        {
+          "name": "ButtonVariant",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationController.tsx",
+      "warnings": [
+        {
+          "name": "HelpFoundationController",
+          "count": 1
+        },
+        {
+          "name": "HelpControlCard",
+          "count": 1
+        },
+        {
+          "name": "HelpMetricCard",
+          "count": 1
+        },
+        {
+          "name": "HelpQuickLinkCard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationDataAreas.ts",
+      "warnings": [
+        {
+          "name": "helpCards",
+          "count": 1
+        },
+        {
+          "name": "helpFoundationAreaCardGroups",
+          "count": 1
+        },
+        {
+          "name": "libraryCards",
+          "count": 1
+        },
+        {
+          "name": "metadataCards",
+          "count": 1
+        },
+        {
+          "name": "playerCards",
+          "count": 1
+        },
+        {
+          "name": "projectCards",
+          "count": 1
+        },
+        {
+          "name": "setlistCards",
+          "count": 1
+        },
+        {
+          "name": "tipCards",
+          "count": 1
+        },
+        {
+          "name": "trackMatcherCards",
+          "count": 1
+        },
+        {
+          "name": "whatIsThisCards",
+          "count": 1
+        },
+        {
+          "name": "getAllHelpFoundationAreaCards",
+          "count": 1
+        },
+        {
+          "name": "getHelpFoundationAreaCardGroups",
+          "count": 1
+        },
+        {
+          "name": "searchHelpFoundationAreaCards",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationDataCore.ts",
+      "warnings": [
+        {
+          "name": "featuredHelpTopics",
+          "count": 1
+        },
+        {
+          "name": "glossaryItems",
+          "count": 1
+        },
+        {
+          "name": "helpCoreSectionSummaries",
+          "count": 1
+        },
+        {
+          "name": "helpJumpLinks",
+          "count": 1
+        },
+        {
+          "name": "quickAnswers",
+          "count": 1
+        },
+        {
+          "name": "getFeaturedHelpTopics",
+          "count": 1
+        },
+        {
+          "name": "getGlossaryItems",
+          "count": 1
+        },
+        {
+          "name": "getHelpCoreSectionSummaries",
+          "count": 1
+        },
+        {
+          "name": "getHelpJumpLinks",
+          "count": 1
+        },
+        {
+          "name": "getQuickAnswers",
+          "count": 1
+        },
+        {
+          "name": "searchGlossaryItems",
+          "count": 1
+        },
+        {
+          "name": "searchHelpCore",
+          "count": 1
+        },
+        {
+          "name": "searchQuickAnswers",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationDataUpdates.ts",
+      "warnings": [
+        {
+          "name": "whatsNewCards",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationDataWorkflows.ts",
+      "warnings": [
+        {
+          "name": "foundationHowDoICards",
+          "count": 1
+        },
+        {
+          "name": "foundationRouteCards",
+          "count": 1
+        },
+        {
+          "name": "foundationRouteMaps",
+          "count": 1
+        },
+        {
+          "name": "howDoICards",
+          "count": 1
+        },
+        {
+          "name": "routeCards",
+          "count": 1
+        },
+        {
+          "name": "routeMaps",
+          "count": 1
+        },
+        {
+          "name": "verifiedHowDoICards",
+          "count": 1
+        },
+        {
+          "name": "verifiedRouteCards",
+          "count": 1
+        },
+        {
+          "name": "verifiedRouteMaps",
+          "count": 1
+        },
+        {
+          "name": "getHowDoICards",
+          "count": 1
+        },
+        {
+          "name": "getRouteCards",
+          "count": 1
+        },
+        {
+          "name": "getRouteMaps",
+          "count": 1
+        },
+        {
+          "name": "searchHowDoICards",
+          "count": 1
+        },
+        {
+          "name": "searchRouteCards",
+          "count": 1
+        },
+        {
+          "name": "searchWorkflowRouteMaps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationFindItData.ts",
+      "warnings": [
+        {
+          "name": "FIND_IT_CATEGORIES",
+          "count": 1
+        },
+        {
+          "name": "FIND_IT_ENTRIES",
+          "count": 1
+        },
+        {
+          "name": "getFindItCategories",
+          "count": 1
+        },
+        {
+          "name": "getFindItEntries",
+          "count": 1
+        },
+        {
+          "name": "getFindItEntryById",
+          "count": 1
+        },
+        {
+          "name": "searchFindItEntries",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationFindItPanel.tsx",
+      "warnings": [
+        {
+          "name": "FindItCategoryFilter",
+          "count": 1
+        },
+        {
+          "name": "FindItCategorySummary",
+          "count": 1
+        },
+        {
+          "name": "HelpFoundationFindItPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationHeroPanel.tsx",
+      "warnings": [
+        {
+          "name": "HelpHeroPanel",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationLibraryData.ts",
+      "warnings": [
+        {
+          "name": "helpFoundationLibrarySections",
+          "count": 1
+        },
+        {
+          "name": "libraryHelpCards",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationMetadataData.ts",
+      "warnings": [
+        {
+          "name": "helpFoundationMetadataSections",
+          "count": 1
+        },
+        {
+          "name": "metadataHelpCards",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationProjectData.ts",
+      "warnings": [
+        {
+          "name": "helpFoundationProjectSections",
+          "count": 1
+        },
+        {
+          "name": "projectHelpCards",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationRouteData.ts",
+      "warnings": [
+        {
+          "name": "foundationHelpFoundationRoutes",
+          "count": 1
+        },
+        {
+          "name": "helpFoundationRouteMaps",
+          "count": 1
+        },
+        {
+          "name": "verifiedHelpFoundationRoutes",
+          "count": 1
+        },
+        {
+          "name": "getFoundationHelpFoundationRoutes",
+          "count": 1
+        },
+        {
+          "name": "getHelpFoundationRouteMaps",
+          "count": 1
+        },
+        {
+          "name": "getVerifiedHelpFoundationRoutes",
+          "count": 1
+        },
+        {
+          "name": "searchHelpFoundationRouteMaps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationSectionPanels.tsx",
+      "warnings": [
+        {
+          "name": "FindItSectionPanel",
+          "count": 1
+        },
+        {
+          "name": "GlossaryPanel",
+          "count": 1
+        },
+        {
+          "name": "HelpCardView",
+          "count": 1
+        },
+        {
+          "name": "JumpToPanel",
+          "count": 1
+        },
+        {
+          "name": "QuickAnswersPanel",
+          "count": 1
+        },
+        {
+          "name": "RouteMapPanel",
+          "count": 1
+        },
+        {
+          "name": "WhatsNewPanel",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationStyles.ts",
+      "warnings": [
+        {
+          "name": "jumpButtonClass",
+          "count": 1
+        },
+        {
+          "name": "pageShellClass",
+          "count": 1
+        },
+        {
+          "name": "routeRailClass",
+          "count": 1
+        },
+        {
+          "name": "softButtonClass",
+          "count": 1
+        },
+        {
+          "name": "tinyTextClass",
+          "count": 1
+        },
+        {
+          "name": "titleClass",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationTrackMatcherData.ts",
+      "warnings": [
+        {
+          "name": "helpFoundationTrackMatcherSections",
+          "count": 1
+        },
+        {
+          "name": "trackMatcherHelpCards",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationTypes.ts",
+      "warnings": [
+        {
+          "name": "HelpCardStatus",
+          "count": 1
+        },
+        {
+          "name": "HelpGlossaryItem",
+          "count": 1
+        },
+        {
+          "name": "HelpQuickAnswer",
+          "count": 1
+        },
+        {
+          "name": "HelpRouteMap",
+          "count": 1
+        },
+        {
+          "name": "HelpSectionContent",
+          "count": 1
+        },
+        {
+          "name": "HelpUpdateCard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/helpFoundationUiAtoms.tsx",
+      "warnings": [
+        {
+          "name": "CardStatusPill",
+          "count": 1
+        },
+        {
+          "name": "HelpCardShell",
+          "count": 1
+        },
+        {
+          "name": "HelpEmptyState",
+          "count": 1
+        },
+        {
+          "name": "HelpMiniLabel",
+          "count": 1
+        },
+        {
+          "name": "HelpNote",
+          "count": 1
+        },
+        {
+          "name": "RouteChip",
+          "count": 1
+        },
+        {
+          "name": "RouteRail",
+          "count": 1
+        },
+        {
+          "name": "TinyText",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/help/page.tsx",
+      "warnings": [
+        {
+          "name": "HelpPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/layout.tsx",
+      "warnings": [
+        {
+          "name": "RootLayout",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/LibraryPageHeader.tsx",
+      "warnings": [
+        {
+          "name": "LibraryDownloadFormat",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/LibraryTrackCard.tsx",
+      "warnings": [
+        {
+          "name": "MetadataItemPreview",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/LibraryTrackList.tsx",
+      "warnings": [
+        {
+          "name": "LastSentProject",
+          "count": 1
+        },
+        {
+          "name": "ProjectOptionLike",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryData.ts",
+      "warnings": [
+        {
+          "name": "CATEGORY_LABEL",
+          "count": 1
+        },
+        {
+          "name": "LS_KEY",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryTrackAccess.ts",
+      "warnings": [
+        {
+          "name": "buildLibraryTrackAccess",
+          "count": 1
+        },
+        {
+          "name": "isLibraryTrackPrivate",
+          "count": 1
+        },
+        {
+          "name": "isLibraryTrackPublic",
+          "count": 1
+        },
+        {
+          "name": "normalizeLibraryTrackVisibility",
+          "count": 1
+        },
+        {
+          "name": "normalizeSharedWithMemberIds",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryTrackDecorators.ts",
+      "warnings": [
+        {
+          "name": "decorateLibraryTracks",
+          "count": 1
+        },
+        {
+          "name": "getLibraryVisibilityLabel",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryTrackFilters.ts",
+      "warnings": [
+        {
+          "name": "filterTracksBySource",
+          "count": 1
+        },
+        {
+          "name": "filterTracksByVisibility",
+          "count": 1
+        },
+        {
+          "name": "splitTracksByVisibility",
+          "count": 1
+        },
+        {
+          "name": "LibraryVisibilityFilter",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryTrackGroundwork.ts",
+      "warnings": [
+        {
+          "name": "buildGroupedLibraryGroundworkTracks",
+          "count": 1
+        },
+        {
+          "name": "buildLibraryGroundworkTracks",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryTrackSearchIndex.ts",
+      "warnings": [
+        {
+          "name": "buildLibraryTrackSearchIndexEntry",
+          "count": 1
+        },
+        {
+          "name": "getLibraryTrackSearchTokens",
+          "count": 1
+        },
+        {
+          "name": "searchLibraryTracks",
+          "count": 1
+        },
+        {
+          "name": "LibrarySearchableTrack",
+          "count": 1
+        },
+        {
+          "name": "LibraryTrackSearchOptions",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryTrackSource.ts",
+      "warnings": [
+        {
+          "name": "getLibraryTrackSourceLabel",
+          "count": 1
+        },
+        {
+          "name": "normalizeLibraryTrackSource",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/libraryUtils.ts",
+      "warnings": [
+        {
+          "name": "mergeTrackLists",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyric-view/LyricViewPageClient.tsx",
+      "warnings": [
+        {
+          "name": "LyricViewPageClient",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyric-view/page.tsx",
+      "warnings": [
+        {
+          "name": "LyricViewPage",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryEditor.tsx",
+      "warnings": [
+        {
+          "name": "FolderInputProps",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibraryEditorProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryEntryCard.tsx",
+      "warnings": [
+        {
+          "name": "LyricsLibraryEntryCardProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryHero.tsx",
+      "warnings": [
+        {
+          "name": "LyricsLibraryHeroProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryImportStatusPanel.tsx",
+      "warnings": [
+        {
+          "name": "ImportStatCardProps",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibraryImportStatusPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryInsightsPanel.tsx",
+      "warnings": [
+        {
+          "name": "LyricsLibraryInsightsPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibrarySearchPanel.tsx",
+      "warnings": [
+        {
+          "name": "LyricsLibrarySearchPanelProps",
+          "count": 1
+        },
+        {
+          "name": "LyricsSearchMode",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryStatsPanel.tsx",
+      "warnings": [
+        {
+          "name": "LyricsLibraryStatsPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsLibraryViewerClient.tsx",
+      "warnings": [
+        {
+          "name": "LyricsLibraryViewerClient",
+          "count": 3
+        },
+        {
+          "name": "LyricsLibraryViewerClientProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsTrackLinkSeed.ts",
+      "warnings": [
+        {
+          "name": "STARTER_TRACK_LINKS",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsVersionHelpers.ts",
+      "warnings": [
+        {
+          "name": "buildLyricsVersionCandidates",
+          "count": 1
+        },
+        {
+          "name": "buildLyricsVersionLineChanges",
+          "count": 1
+        },
+        {
+          "name": "buildLyricsVersionPanelSections",
+          "count": 1
+        },
+        {
+          "name": "buildLyricsVersionStats",
+          "count": 1
+        },
+        {
+          "name": "buildLyricsVersionWorkspaceModel",
+          "count": 1
+        },
+        {
+          "name": "buildStarterVersionsForLyrics",
+          "count": 1
+        },
+        {
+          "name": "compareLyricsVersions",
+          "count": 1
+        },
+        {
+          "name": "createLyricsVersionFromLyric",
+          "count": 1
+        },
+        {
+          "name": "filterLyricsVersions",
+          "count": 1
+        },
+        {
+          "name": "getLyricsVersionKindLabel",
+          "count": 1
+        },
+        {
+          "name": "getLyricsVersionPriorityScore",
+          "count": 1
+        },
+        {
+          "name": "getLyricsVersionReadiness",
+          "count": 1
+        },
+        {
+          "name": "getLyricsVersionStatusLabel",
+          "count": 1
+        },
+        {
+          "name": "scoreLyricsVersionSections",
+          "count": 1
+        },
+        {
+          "name": "sortLyricsVersions",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsVersionSeed.ts",
+      "warnings": [
+        {
+          "name": "LYRICS_VERSION_ACTIONS",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_EMPTY_STATE_LINES",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_FOCUS_LABELS",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_KIND_LABELS",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_PANEL_SECTIONS",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_PRIORITY_LABELS",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_READINESS_LABELS",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_STARTER_VERSION",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_STATUS_LABELS",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_VERSION_VERDICT_LABELS",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsVersionTypes.ts",
+      "warnings": [
+        {
+          "name": "LyricsVersionAction",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionChangeType",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionComparisonVerdict",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionCreateInput",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionEntry",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionFilter",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionSectionFocus",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionSectionScore",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionSortMode",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionSource",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionUpdateInput",
+          "count": 1
+        },
+        {
+          "name": "LyricsVersionWorkspaceModel",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/LyricsVersionWorkspacePanel.tsx",
+      "warnings": [
+        {
+          "name": "LyricsVersionWorkspacePanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsCrudHelpers.ts",
+      "warnings": [
+        {
+          "name": "deleteLyricEntry",
+          "count": 1
+        },
+        {
+          "name": "duplicateLyricEntry",
+          "count": 1
+        },
+        {
+          "name": "editLyricEntry",
+          "count": 1
+        },
+        {
+          "name": "resetLyricsForm",
+          "count": 1
+        },
+        {
+          "name": "saveLyricEntry",
+          "count": 1
+        },
+        {
+          "name": "DeleteLyricEntryActions",
+          "count": 1
+        },
+        {
+          "name": "DuplicateLyricEntryActions",
+          "count": 1
+        },
+        {
+          "name": "EditLyricEntryActions",
+          "count": 1
+        },
+        {
+          "name": "LyricsFormResetActions",
+          "count": 1
+        },
+        {
+          "name": "SaveLyricEntryActions",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsFileActions.ts",
+      "warnings": [
+        {
+          "name": "buildLyricTextFile",
+          "count": 1
+        },
+        {
+          "name": "downloadLyricTextFile",
+          "count": 1
+        },
+        {
+          "name": "downloadTextFile",
+          "count": 1
+        },
+        {
+          "name": "getFileExtension",
+          "count": 1
+        },
+        {
+          "name": "getTitleFromImportedFileName",
+          "count": 1
+        },
+        {
+          "name": "isBlockedLyricFile",
+          "count": 1
+        },
+        {
+          "name": "isFutureLyricFile",
+          "count": 1
+        },
+        {
+          "name": "isReadableLyricFile",
+          "count": 1
+        },
+        {
+          "name": "makeLyricFileName",
+          "count": 1
+        },
+        {
+          "name": "makeSafeSlug",
+          "count": 1
+        },
+        {
+          "name": "readTextFile",
+          "count": 1
+        },
+        {
+          "name": "PdfDocument",
+          "count": 1
+        },
+        {
+          "name": "PdfJsModule",
+          "count": 1
+        },
+        {
+          "name": "PdfLoadTask",
+          "count": 1
+        },
+        {
+          "name": "PdfPage",
+          "count": 1
+        },
+        {
+          "name": "PdfTextContent",
+          "count": 1
+        },
+        {
+          "name": "PdfTextItem",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsImportController.ts",
+      "warnings": [
+        {
+          "name": "SetImportReport",
+          "count": 1
+        },
+        {
+          "name": "ImportLyricsFromInputActions",
+          "count": 1
+        },
+        {
+          "name": "SaveShownLyricsToFolderActions",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsImportHelpers.ts",
+      "warnings": [
+        {
+          "name": "buildBaseImportReport",
+          "count": 1
+        },
+        {
+          "name": "summarizeLyricExtensions",
+          "count": 1
+        },
+        {
+          "name": "ImportLyricFilesOptions",
+          "count": 1
+        },
+        {
+          "name": "ImportLyricFilesResult",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsImportTypes.ts",
+      "warnings": [
+        {
+          "name": "EMPTY_IMPORT_REPORT",
+          "count": 1
+        },
+        {
+          "name": "LyricImportReport",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsLibraryInsightsHelpers.ts",
+      "warnings": [
+        {
+          "name": "buildLyricsLibraryInsights",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibraryInsightItem",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsLibraryStatsHelpers.ts",
+      "warnings": [
+        {
+          "name": "buildLyricsLibraryStats",
+          "count": 1
+        },
+        {
+          "name": "getKeeperLyricEntries",
+          "count": 1
+        },
+        {
+          "name": "getLyricEntryReadiness",
+          "count": 1
+        },
+        {
+          "name": "getLyricReadinessLabel",
+          "count": 1
+        },
+        {
+          "name": "getLyricStatusLabel",
+          "count": 1
+        },
+        {
+          "name": "getLyricsLibraryStatsLabel",
+          "count": 1
+        },
+        {
+          "name": "getMostRecentLyricEntry",
+          "count": 1
+        },
+        {
+          "name": "getNeedsReviewLyricEntries",
+          "count": 1
+        },
+        {
+          "name": "validateLyricEntry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsSeed.ts",
+      "warnings": [
+        {
+          "name": "STARTER_LYRICS",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsStorage.ts",
+      "warnings": [
+        {
+          "name": "LYRICS_INDEXED_DB_NAME",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_INDEXED_DB_STORE",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_INDEXED_DB_VERSION",
+          "count": 1
+        },
+        {
+          "name": "LYRICS_STORAGE_KEY",
+          "count": 1
+        },
+        {
+          "name": "normalizeEntry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsTrackMatchHelpers.ts",
+      "warnings": [
+        {
+          "name": "findExactLyricTitleMatch",
+          "count": 1
+        },
+        {
+          "name": "findPossibleLyricTitleMatches",
+          "count": 1
+        },
+        {
+          "name": "getLyricTitleMatchScore",
+          "count": 1
+        },
+        {
+          "name": "normalizeLyricMatchTitle",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsTypes.ts",
+      "warnings": [
+        {
+          "name": "LyricEntrySource",
+          "count": 1
+        },
+        {
+          "name": "LyricEntryStatus",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibraryActionStatus",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibrarySearchMode",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibrarySortMode",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibraryValidationResult",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibraryViewMode",
+          "count": 1
+        },
+        {
+          "name": "LyricsLibraryWorkspaceState",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsViewerController.ts",
+      "warnings": [
+        {
+          "name": "closeLyricViewer",
+          "count": 1
+        },
+        {
+          "name": "getSelectedLyricViewerEntry",
+          "count": 1
+        },
+        {
+          "name": "viewLyricEntry",
+          "count": 1
+        },
+        {
+          "name": "CloseLyricViewerActions",
+          "count": 1
+        },
+        {
+          "name": "ViewLyricEntryActions",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/lyricsViewerHelpers.ts",
+      "warnings": [
+        {
+          "name": "findLyricEntryById",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/matches/page.tsx",
+      "warnings": [
+        {
+          "name": "LyricsMatchSelectionPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/lyrics/page.tsx",
+      "warnings": [
+        {
+          "name": "LyricsLibraryPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/MiscellaneousLibraryEditor.tsx",
+      "warnings": [
+        {
+          "name": "MiscellaneousLibraryEditorProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/MiscellaneousLibraryEntryCard.tsx",
+      "warnings": [
+        {
+          "name": "MiscellaneousLibraryEntryCardProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/MiscellaneousLibraryHero.tsx",
+      "warnings": [
+        {
+          "name": "MiscellaneousLibraryHeroProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/MiscellaneousLibrarySearchPanel.tsx",
+      "warnings": [
+        {
+          "name": "MiscellaneousLibrarySearchPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/miscellaneousFileActions.ts",
+      "warnings": [
+        {
+          "name": "buildMiscellaneousTextFile",
+          "count": 1
+        },
+        {
+          "name": "downloadMiscellaneousTextFile",
+          "count": 1
+        },
+        {
+          "name": "getMiscellaneousTitleFromImportedFileName",
+          "count": 1
+        },
+        {
+          "name": "makeMiscellaneousFileName",
+          "count": 1
+        },
+        {
+          "name": "makeMiscellaneousSafeSlug",
+          "count": 1
+        },
+        {
+          "name": "readMiscellaneousTextFile",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/miscellaneousSeed.ts",
+      "warnings": [
+        {
+          "name": "STARTER_MISCELLANEOUS",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/miscellaneousStorage.ts",
+      "warnings": [
+        {
+          "name": "MISCELLANEOUS_STORAGE_KEY",
+          "count": 1
+        },
+        {
+          "name": "getStartingMiscellaneous",
+          "count": 1
+        },
+        {
+          "name": "normalizeMiscellaneousEntry",
+          "count": 1
+        },
+        {
+          "name": "saveMiscellaneousToBrowser",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/miscellaneous/page.tsx",
+      "warnings": [
+        {
+          "name": "MiscellaneousLibraryPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/MultiStemsLibraryEditor.tsx",
+      "warnings": [
+        {
+          "name": "MultiStemsLibraryEditorProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/MultiStemsLibraryEntryCard.tsx",
+      "warnings": [
+        {
+          "name": "MultiStemsLibraryEntryCardProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/MultiStemsLibraryHero.tsx",
+      "warnings": [
+        {
+          "name": "MultiStemsLibraryHeroProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/MultiStemsLibrarySearchPanel.tsx",
+      "warnings": [
+        {
+          "name": "MultiStemsLibrarySearchPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/multiStemsFileActions.ts",
+      "warnings": [
+        {
+          "name": "buildMultiStemTextFile",
+          "count": 1
+        },
+        {
+          "name": "downloadMultiStemTextFile",
+          "count": 1
+        },
+        {
+          "name": "getMultiStemTitleFromImportedFileName",
+          "count": 1
+        },
+        {
+          "name": "makeMultiStemFileName",
+          "count": 1
+        },
+        {
+          "name": "makeMultiStemSafeSlug",
+          "count": 1
+        },
+        {
+          "name": "readMultiStemTextFile",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/multiStemsSeed.ts",
+      "warnings": [
+        {
+          "name": "STARTER_MULTI_STEMS",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/multiStemsStorage.ts",
+      "warnings": [
+        {
+          "name": "MULTI_STEMS_STORAGE_KEY",
+          "count": 1
+        },
+        {
+          "name": "getStartingMultiStems",
+          "count": 1
+        },
+        {
+          "name": "normalizeMultiStemEntry",
+          "count": 1
+        },
+        {
+          "name": "saveMultiStemsToBrowser",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/multi-stems/page.tsx",
+      "warnings": [
+        {
+          "name": "MultiStemsLibraryPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/page.tsx",
+      "warnings": [
+        {
+          "name": "IncomingTagMode",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/project-liaison/page.tsx",
+      "warnings": [
+        {
+          "name": "ProjectLiaisonPage",
+          "count": 1
+        },
+        {
+          "name": "TrackGroup",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/StoriesLibraryEditor.tsx",
+      "warnings": [
+        {
+          "name": "StoriesLibraryEditorProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/StoriesLibraryEntryCard.tsx",
+      "warnings": [
+        {
+          "name": "StoriesLibraryEntryCardProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/StoriesLibraryHero.tsx",
+      "warnings": [
+        {
+          "name": "StoriesLibraryHeroProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/StoriesLibrarySearchPanel.tsx",
+      "warnings": [
+        {
+          "name": "StoriesLibrarySearchPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/page.tsx",
+      "warnings": [
+        {
+          "name": "StoriesLibraryPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/storiesFileActions.ts",
+      "warnings": [
+        {
+          "name": "buildStoryTextFile",
+          "count": 1
+        },
+        {
+          "name": "downloadStoryTextFile",
+          "count": 1
+        },
+        {
+          "name": "getStoryTitleFromImportedFileName",
+          "count": 1
+        },
+        {
+          "name": "makeStoryFileName",
+          "count": 1
+        },
+        {
+          "name": "makeStorySafeSlug",
+          "count": 1
+        },
+        {
+          "name": "readStoryTextFile",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/storiesSeed.ts",
+      "warnings": [
+        {
+          "name": "STARTER_STORIES",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/stories/storiesStorage.ts",
+      "warnings": [
+        {
+          "name": "STORIES_STORAGE_KEY",
+          "count": 1
+        },
+        {
+          "name": "getStartingStories",
+          "count": 1
+        },
+        {
+          "name": "normalizeStoryEntry",
+          "count": 1
+        },
+        {
+          "name": "saveStoriesToBrowser",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/library/titleMatchingHelpers.ts",
+      "warnings": [
+        {
+          "name": "getCleanLibraryTrackTitle",
+          "count": 1
+        },
+        {
+          "name": "hasDifferentFullTitle",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/LiveGameModePanel.tsx",
+      "warnings": [
+        {
+          "name": "LiveGameModePanel",
+          "count": 4
+        },
+        {
+          "name": "ComboState",
+          "count": 1
+        },
+        {
+          "name": "LiveGameModePanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/LiveStatusPill.tsx",
+      "warnings": [
+        {
+          "name": "LiveStatusPillProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/LiveToastBanner.tsx",
+      "warnings": [
+        {
+          "name": "LiveToastBannerProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/LiveTransportPanel.tsx",
+      "warnings": [
+        {
+          "name": "LiveTransportPanelProps",
+          "count": 1
+        },
+        {
+          "name": "TransitionMemoryRecord",
+          "count": 1
+        },
+        {
+          "name": "ViewState",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageFormatting.ts",
+      "warnings": [
+        {
+          "name": "computeAvgDisplayedDurationTicks",
+          "count": 1
+        },
+        {
+          "name": "displayDurationTicks",
+          "count": 1
+        },
+        {
+          "name": "eventTick",
+          "count": 1
+        },
+        {
+          "name": "fmtPos",
+          "count": 1
+        },
+        {
+          "name": "lerp",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageGame.ts",
+      "warnings": [
+        {
+          "name": "pickTask",
+          "count": 1
+        },
+        {
+          "name": "pointsFromSmoothness",
+          "count": 1
+        },
+        {
+          "name": "taskLabel",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageLoopHelpers.ts",
+      "warnings": [
+        {
+          "name": "buildCountdownGameState",
+          "count": 1
+        },
+        {
+          "name": "getExecIdDisplay",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageMemory.ts",
+      "warnings": [
+        {
+          "name": "readMemorySnapshot",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePagePlanActions.ts",
+      "warnings": [
+        {
+          "name": "armSpecificPlan",
+          "count": 1
+        },
+        {
+          "name": "makeTransitionRequest",
+          "count": 1
+        },
+        {
+          "name": "planTransitionRequest",
+          "count": 1
+        },
+        {
+          "name": "replanFromExistingPlan",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePagePlanning.ts",
+      "warnings": [
+        {
+          "name": "computeLaneGainsFromPlan",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageResetActions.ts",
+      "warnings": [
+        {
+          "name": "buildResetGameState",
+          "count": 1
+        },
+        {
+          "name": "buildResetViewState",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageRoundActions.ts",
+      "warnings": [
+        {
+          "name": "nextRoundReadyState",
+          "count": 1
+        },
+        {
+          "name": "setGameEnabledState",
+          "count": 1
+        },
+        {
+          "name": "startGameRoundAction",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageTransportActions.ts",
+      "warnings": [
+        {
+          "name": "applyBpmAction",
+          "count": 1
+        },
+        {
+          "name": "pushEngineEvents",
+          "count": 1
+        },
+        {
+          "name": "stopTransportLoop",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/live/livePageTypes.ts",
+      "warnings": [
+        {
+          "name": "GameTaskKind",
+          "count": 1
+        },
+        {
+          "name": "ViewState",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "app/live/page.tsx",
+      "warnings": [
+        {
+          "name": "LivePage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/members/page.tsx",
+      "warnings": [
+        {
+          "name": "MembersPage",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordActionsSection.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordActionsSectionProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordDeleteButton.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordDeleteButtonProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordFieldsSection.tsx",
+      "warnings": [
+        {
+          "name": "MetadataFieldLike",
+          "count": 1
+        },
+        {
+          "name": "MetadataRecordFieldsSectionProps",
+          "count": 1
+        },
+        {
+          "name": "NormalizedField",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordNotFound.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordNotFoundProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordPageHeader.tsx",
+      "warnings": [
+        {
+          "name": "HeaderRecordLike",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordRelationshipDashboard.tsx",
+      "warnings": [
+        {
+          "name": "DashboardProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordRelationshipGroups.tsx",
+      "warnings": [
+        {
+          "name": "RelationshipGroupHeaderModel",
+          "count": 2
+        },
+        {
+          "name": "RelationshipGroupsProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordRelationshipInteractivePanel.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordRelationshipInteractivePanel",
+          "count": 3
+        },
+        {
+          "name": "FilterPulseState",
+          "count": 1
+        },
+        {
+          "name": "RelationshipInteractivePanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRecordRelationships.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordRelationshipsProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/MetadataRelationshipList.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRelationshipListProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/TrackMetadataEmptyState.tsx",
+      "warnings": [
+        {
+          "name": "MetadataOption",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/edit/MetadataRecordEditFormPanel.tsx",
+      "warnings": [
+        {
+          "name": "InnerPanelKey",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/edit/MetadataRelationshipPreviewPanel.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRelationshipPreviewPanel",
+          "count": 3
+        },
+        {
+          "name": "PreviewPanelKey",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/edit/metadataEditHelpers.ts",
+      "warnings": [
+        {
+          "name": "findBelongsReasonFromRecord",
+          "count": 1
+        },
+        {
+          "name": "findRecordTypeFromRecord",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/edit/metadataEditRelationshipOptions.ts",
+      "warnings": [
+        {
+          "name": "buildRelationshipOptions",
+          "count": 1
+        },
+        {
+          "name": "findSelectedRelatedRecord",
+          "count": 1
+        },
+        {
+          "name": "hasDuplicateRelationshipSelection",
+          "count": 1
+        },
+        {
+          "name": "BuildRelationshipOptionsArgs",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/edit/metadataUpdateSubmitAction.ts",
+      "warnings": [
+        {
+          "name": "MetadataUpdateSubmitInput",
+          "count": 1
+        },
+        {
+          "name": "MetadataUpdateSubmitResult",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/edit/page.tsx",
+      "warnings": [
+        {
+          "name": "EditRecordSource",
+          "count": 1
+        },
+        {
+          "name": "MetadataRecordEditPageProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/metadataRecordRelationshipTypes.ts",
+      "warnings": [
+        {
+          "name": "buildResolvedRelationship",
+          "count": 1
+        },
+        {
+          "name": "cleanRelationshipText",
+          "count": 1
+        },
+        {
+          "name": "ensureValidSlug",
+          "count": 1
+        },
+        {
+          "name": "formatRelationshipLabel",
+          "count": 1
+        },
+        {
+          "name": "getPrimaryRelationship",
+          "count": 1
+        },
+        {
+          "name": "getRelationshipDetail",
+          "count": 1
+        },
+        {
+          "name": "getRelationshipId",
+          "count": 1
+        },
+        {
+          "name": "getRelationshipNote",
+          "count": 1
+        },
+        {
+          "name": "getRelationshipSource",
+          "count": 1
+        },
+        {
+          "name": "getRelationshipTypeSummaries",
+          "count": 1
+        },
+        {
+          "name": "groupRelationshipsByType",
+          "count": 1
+        },
+        {
+          "name": "normalizeRelationshipAnchor",
+          "count": 1
+        },
+        {
+          "name": "MetadataRelationshipLike",
+          "count": 1
+        },
+        {
+          "name": "RelationshipTypeSummary",
+          "count": 1
+        },
+        {
+          "name": "RemoveRelationshipAction",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/more/page.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordMorePageProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/[slug]/page.tsx",
+      "warnings": [
+        {
+          "name": "MetadataRecordPageProps",
+          "count": 1
+        },
+        {
+          "name": "PageRecord",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/CreateBridgeReadiness.tsx",
+      "warnings": [
+        {
+          "name": "SaveReadinessMessageProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/CreateBridgeSaveAction.tsx",
+      "warnings": [
+        {
+          "name": "SaveActionLinksProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateActionBar.tsx",
+      "warnings": [
+        {
+          "name": "MetadataCreateActionBarProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateForm.tsx",
+      "warnings": [
+        {
+          "name": "MetadataCreateFormProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateOutputPanel.tsx",
+      "warnings": [
+        {
+          "name": "MetadataCreateOutputPanelProps",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateReviewSection.tsx",
+      "warnings": [
+        {
+          "name": "MetadataCreateReviewSection",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/MetadataCreateSavePanel.tsx",
+      "warnings": [
+        {
+          "name": "SavePanelPayload",
+          "count": 1
+        },
+        {
+          "name": "SavePanelRecord",
+          "count": 1
+        },
+        {
+          "name": "SavePanelRelationship",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/createBridgeHelpers.ts",
+      "warnings": [
+        {
+          "name": "buildMetadataRecordInsert",
+          "count": 1
+        },
+        {
+          "name": "cleanSaveText",
+          "count": 1
+        },
+        {
+          "name": "getDirectSaveStatusClass",
+          "count": 1
+        },
+        {
+          "name": "getFriendlySaveError",
+          "count": 1
+        },
+        {
+          "name": "getParsedRecord",
+          "count": 1
+        },
+        {
+          "name": "getRecordValidationError",
+          "count": 1
+        },
+        {
+          "name": "getSaveButtonText",
+          "count": 1
+        },
+        {
+          "name": "isDuplicateSaveMessage",
+          "count": 1
+        },
+        {
+          "name": "secondaryButtonClass",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/createBridgeTypes.ts",
+      "warnings": [
+        {
+          "name": "DirectPayloadRecord",
+          "count": 1
+        },
+        {
+          "name": "MetadataCreateCreateBridgePanelProps",
+          "count": 1
+        },
+        {
+          "name": "ParsedRecordState",
+          "count": 1
+        },
+        {
+          "name": "SaveActionCopy",
+          "count": 1
+        },
+        {
+          "name": "SaveActionState",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/createFormStepSystem.ts",
+      "warnings": [
+        {
+          "name": "STEP_HELP",
+          "count": 1
+        },
+        {
+          "name": "STEP_LABELS",
+          "count": 1
+        },
+        {
+          "name": "STEP_ORDER",
+          "count": 1
+        },
+        {
+          "name": "STEP_REQUIREMENT_COPY",
+          "count": 1
+        },
+        {
+          "name": "getForwardButtonText",
+          "count": 1
+        },
+        {
+          "name": "getPrevStep",
+          "count": 1
+        },
+        {
+          "name": "getStepIndex",
+          "count": 1
+        },
+        {
+          "name": "getStepProgressLabel",
+          "count": 1
+        },
+        {
+          "name": "isRequiredStep",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/createFormValidation.ts",
+      "warnings": [
+        {
+          "name": "cleanCreateFormText",
+          "count": 1
+        },
+        {
+          "name": "formatMissingItems",
+          "count": 1
+        },
+        {
+          "name": "getGlobalMissingItems",
+          "count": 1
+        },
+        {
+          "name": "getMissingForStep",
+          "count": 1
+        },
+        {
+          "name": "getStepStatus",
+          "count": 1
+        },
+        {
+          "name": "isStepComplete",
+          "count": 1
+        },
+        {
+          "name": "CreateFormValidationInput",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/metadataCreateConfig.ts",
+      "warnings": [
+        {
+          "name": "RECORD_TYPE_OPTIONS",
+          "count": 1
+        },
+        {
+          "name": "RELATIONSHIP_OPTIONS",
+          "count": 1
+        },
+        {
+          "name": "VISIBILITY_OPTIONS",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/metadataCreateRecordBuilder.ts",
+      "warnings": [
+        {
+          "name": "buildMetadataCreateRecord",
+          "count": 1
+        },
+        {
+          "name": "MetadataCreateRecordBuilderInput",
+          "count": 1
+        },
+        {
+          "name": "MetadataCreateRecordBuilderResult",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "app/metadata/create/metadataCreateSaveBridge.ts",
+      "warnings": [
+        {
+          "name": "buildMetadataCreateSaveBridge",
+          "count": 1
+        },
+        {
+          "name": "MetadataCreateSaveBridgeInput",
+          "count": 1
+        },
+        {
+          "name": "MetadataCreateSaveBridgeResult",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

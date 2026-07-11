@@ -1,4 +1,4 @@
-// lib/projectTracksApi.ts
+﻿// lib/projectTracksApi.ts
 
 import * as supabaseClientModule from "./supabaseClient";
 
@@ -182,4 +182,35 @@ export async function replaceProjectTracks(
   }
 
   emitProjectTracksChanged(cleanProjectId);
+}
+
+export async function listPrivateProjectTrackIds(): Promise<Set<string>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("Supabase client not found.");
+
+  const { data: privateProjects, error: projectErr } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("visibility", "private");
+
+  if (projectErr) throw new Error(projectErr.message);
+
+  const privateProjectIds = (privateProjects ?? [])
+    .map((row: any) => cleanString(row?.id))
+    .filter(Boolean);
+
+  if (privateProjectIds.length === 0) return new Set<string>();
+
+  const { data: links, error: linkErr } = await supabase
+    .from("project_tracks")
+    .select("track_id")
+    .in("project_id", privateProjectIds);
+
+  if (linkErr) throw new Error(linkErr.message);
+
+  const privateTrackIds = (links ?? [])
+    .map((row: any) => cleanString(row?.track_id))
+    .filter(Boolean);
+
+  return new Set(privateTrackIds);
 }

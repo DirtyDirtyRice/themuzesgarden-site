@@ -1,0 +1,5 @@
+?? app/tools/code-map/
+?? code-map-reports/
+?? codex-session-notes/
+?? scripts/code-map-snapshot.mjs
+?? scripts/codex-daily-save.mjs

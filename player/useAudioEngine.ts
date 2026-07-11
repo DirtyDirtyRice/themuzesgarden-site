@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack, PlayerTab } from "./playerTypes";
@@ -36,8 +36,9 @@ export function useAudioEngine(args: {
   projectId: string;
   allTracks: AnyTrack[];
   projectTracks: AnyTrack[];
+  isPlaybackBlocked?: (track: AnyTrack) => boolean;
 }) {
-  const { tab, onProjectPage, projectId, allTracks, projectTracks } = args;
+  const { tab, onProjectPage, projectId, allTracks, projectTracks, isPlaybackBlocked } = args;
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -165,6 +166,25 @@ export function useAudioEngine(args: {
     stopAudio(audioRef);
   }, []);
 
+  const showPrivateProjectBlocked = useCallback(() => {
+    clearResumeMetaHandler();
+    stopAudio(audioRef);
+    errorSkipGuardRef.current = Date.now();
+    currentSectionIdRef.current = null;
+    currentSectionStartRef.current = null;
+    currentSectionEndRef.current = null;
+    setNowId(null);
+    setNowLabel("Private Project - This track belongs to a private project. Open the project to play this track.");
+    setStatusTime("0:00");
+    writePersisted({
+      nowId: null,
+      currentTime: 0,
+      currentSectionId: null,
+      sectionStartTime: null,
+      lastMatchedSectionId: null,
+      lastMatchedSectionStartTime: null,
+    });
+  }, [clearResumeMetaHandler]);
   const clearNow = useCallback(() => {
     clearNowState({
       audioRef,
@@ -181,6 +201,11 @@ export function useAudioEngine(args: {
 
   const playTarget = useCallback(
     (target: PlaybackTarget) => {
+      if (isPlaybackBlocked?.(target.track)) {
+        showPrivateProjectBlocked();
+        return;
+      }
+
       playResolvedTarget({
         target,
         audioRef,
@@ -200,7 +225,7 @@ export function useAudioEngine(args: {
         onLogProjectPlay: logProjectPlay,
       });
     },
-    [clearResumeMetaHandler, logProjectPlay]
+    [clearResumeMetaHandler, isPlaybackBlocked, logProjectPlay, showPrivateProjectBlocked]
   );
 
   const playTrack = useCallback(
