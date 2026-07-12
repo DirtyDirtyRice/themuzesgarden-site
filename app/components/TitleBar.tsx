@@ -65,6 +65,8 @@ const PRIMARY_LINKS: TitleBarLink[] = [
     detail: "Open member tools",
   },
 ];
+  
+
 
 const LIBRARY_CHILD_LINKS: TitleBarLink[] = [
   {
@@ -96,6 +98,44 @@ const LIBRARY_CHILD_LINKS: TitleBarLink[] = [
     label: "Miscellaneous",
     href: "/library/miscellaneous",
     detail: "Future home for extra creative files",
+  },
+];
+
+const AI_CHILD_LINKS: TitleBarLink[] = [
+  {
+    label: "AI Workspace",
+    href: "/ai",
+    detail: "Open the AI workspace dashboard",
+  },
+  {
+    label: "Prompt Library",
+    href: "/ai/prompts",
+    detail: "Create and organize reusable prompts",
+  },
+  {
+    label: "Agents",
+    href: "/ai/agents",
+    detail: "Future AI agent management",
+  },
+  {
+    label: "Memory",
+    href: "/ai/memory",
+    detail: "Future long-term AI memory",
+  },
+  {
+    label: "Automation",
+    href: "/ai/automation",
+    detail: "Future AI automation center",
+  },
+  {
+    label: "History",
+    href: "/ai/history",
+    detail: "Review previous AI activity",
+  },
+  {
+    label: "Settings",
+    href: "/ai/settings",
+    detail: "Configure AI workspace",
   },
 ];
 
@@ -289,7 +329,8 @@ function TitleBarDropdown({
               const childActive = isActivePath(pathname, link.href);
 
               return (
-                <Link
+     
+        <Link
                   key={link.href}
                   href={link.href}
                   aria-current={childActive ? "page" : undefined}
@@ -402,11 +443,13 @@ export default function TitleBar() {
   const pathname = usePathname();
 
   const detailsRoute = useMemo(() => getDetailsRoute(pathname), [pathname]);
+  const aiActive = isActivePath(pathname, "/ai");
   const libraryActive = isActivePath(pathname, "/library");
   const metadataActive = isActivePath(pathname, "/metadata");
   const toolsActive = isActivePath(pathname, "/tools/code-map");
   const trackMatcherActive = isActivePath(pathname, "/tools/track-matcher");
 
+  const [aiMenuOpen, setAiMenuOpen] = useState(false);
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [metadataMenuOpen, setMetadataMenuOpen] = useState(false);
   const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
@@ -467,14 +510,23 @@ export default function TitleBar() {
             );
           })}
 
-                   <TitleBarDropdown
-            active={libraryActive}
-            label="Library"
-            links={LIBRARY_CHILD_LINKS}
-            menuOpen={libraryMenuOpen}
-            onClose={() => setLibraryMenuOpen(false)}
-            onOpen={() => setLibraryMenuOpen(true)}
-          />
+               <TitleBarDropdown
+  active={aiActive}
+  label="AI"
+  links={AI_CHILD_LINKS}
+  menuOpen={aiMenuOpen}
+  onClose={() => setAiMenuOpen(false)}
+  onOpen={() => setAiMenuOpen(true)}
+/>
+
+<TitleBarDropdown
+  active={libraryActive}
+  label="Library"
+  links={LIBRARY_CHILD_LINKS}
+  menuOpen={libraryMenuOpen}
+  onClose={() => setLibraryMenuOpen(false)}
+  onOpen={() => setLibraryMenuOpen(true)}
+/>
 
           <TitleBarDropdown
             active={toolsActive}
