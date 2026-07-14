@@ -48,8 +48,18 @@ export type TimelineSource =
 
 export type TimelineStatus =
   | "draft"
+  | "planned"
+  | "queued"
+  | "pending"
   | "active"
+  | "paused"
+  | "processing"
+  | "recording"
+  | "review"
+  | "approved"
+  | "rejected"
   | "completed"
+  | "cancelled"
   | "archived"
   | "deleted";
 
@@ -62,6 +72,7 @@ export type TimelineEventType =
   | "measure"
   | "beat"
   | "tempo"
+  | "tempo-change"
   | "time-signature"
   | "key-signature"
   | "key-change"
@@ -70,12 +81,15 @@ export type TimelineEventType =
   | "harmony"
   | "instrument"
   | "arrangement"
+  | "transition"
   | "automation"
+  | "quantize"
   | "waveform"
   | "stem"
   | "audio"
   | "video"
   | "image"
+  | "midi"
   | "note"
   | "comment"
   | "idea"
@@ -84,9 +98,22 @@ export type TimelineEventType =
   | "relationship"
   | "reference"
   | "version"
+  | "revision"
+  | "decision"
+  | "score"
   | "mix"
   | "master"
+  | "mastering"
+  | "recording"
+  | "take"
   | "publish"
+  | "publishing"
+  | "release"
+  | "metadata"
+  | "catalog"
+  | "copyright"
+  | "licensing"
+  | "royalties"
   | "custom";
 
 export type TimelineLocation = {
@@ -104,17 +131,24 @@ export type TimelineAudit = {
   updatedBy: TimelineUserId;
 };
 
-export type TimelineTag = {
-  id: TimelineId;
-  label: string;
-  color: string;
-};
+export type TimelineTag =
+  | string
+  | {
+      id: TimelineId;
+      label: string;
+      color: string;
+    };
 
 export type TimelineRelationship = {
-  id: TimelineId;
+  id?: TimelineId;
+
   sourceId: TimelineId;
+
   targetId: TimelineId;
-  relationship: string;
+
+  relationship?: string;
+
+  type?: string;
 };
 
 export type TimelineAttachment = {
@@ -124,10 +158,12 @@ export type TimelineAttachment = {
   path: string;
 };
 
-export type TimelineRating = {
-  score: number;
-  votes: number;
-};
+export type TimelineRating =
+  | number
+  | {
+      score: number;
+      votes: number;
+    };
 
 export type TimelineMetadata = {
   title: string;
@@ -247,10 +283,119 @@ export type TimelineEvent = {
 
   timeSignature?: string;
 
-  customData?: Record<string, unknown>;
+  // ==========================================================================
+  // OPTIONAL EVENT DATA
+  // ==========================================================================
+
+  chord?: string;
+
+  inversion?: string;
+
+  lyric?: string;
+
+  marker?: string;
+
+  analysis?: string;
+
+  automation?: string;
+
+  action?: string;
+
+  idea?: string;
+
+  comment?: string;
+
+  author?: string;
+
+  task?: string;
+
+  assignedTo?: TimelineUserId;
+
+  completedAt?: string;
+
+  instrument?: string;
+
+  preset?: string;
+
+  section?: string;
+
+  order?: number;
+
+  melody?: string;
+
+  harmony?: string;
+
+  voices?: number;
+
+  waveformPath?: string;
+
+  sampleRate?: number;
+
+  channels?: number;
+
+  stemName?: string;
+
+  stemPath?: string;
+
+  audioPath?: string;
+
+  durationSeconds?: number;
+
+  videoPath?: string;
+
+  frameRate?: number;
+
+  imagePath?: string;
+
+  caption?: string;
+
+  relationshipType?: string;
+
+  targetEventId?: TimelineId;
+
+  referenceType?: string;
+
+  referenceId?: TimelineId;
+
+  versionName?: string;
+
+  parentVersionId?: TimelineId;
+
+  destination?: string;
+
+  publishedAt?: string;
+
+ masterName?: string;
+
+loudness?: number;
+
+score?: number;
+
+decision?: string;
+
+note?: string;
+
+releaseDate?: string;
+
+distributors?: string[];
+
+metadataValues?: Record<string, string>;
+
+version?: {
+  number: number;
+  label: string;
+  notes?: string;
+};
+
+customType?: string;
+
+payload?: Record<string, unknown>;
+
+customData?: Record<string, unknown>;
 };
 
 export type TimelinePromptEvent = TimelineEvent & {
+ 
   type: "prompt";
 
   prompt: string;
