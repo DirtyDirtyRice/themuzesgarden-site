@@ -40,7 +40,7 @@ export function useProjectSetlistController({
   loading,
   user,
 }: ProjectSetlistControllerArgs) {
-  const [tab, setTab] = useState<Tab | null>(null);
+  const [tab, setTab] = useState<Tab | null>("library");
   const [setlistOrder, setSetlistOrder] = useState<string[]>([]);
   const [previewTrackId, setPreviewTrackId] = useState<string | null>(null);
   const [metadataTargetType, setMetadataTargetType] =
