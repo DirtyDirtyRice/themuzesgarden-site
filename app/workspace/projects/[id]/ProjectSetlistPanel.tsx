@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import PlaybackHelper from "../../../components/PlaybackHelper";
@@ -82,7 +82,13 @@ export default function ProjectSetlistPanel({
             }
           />
         }
-        tabs={<ProjectTabs tab={controller.tab} setTab={controller.setTab} />}
+        tabs={
+          <ProjectTabs
+            projectId={controller.id}
+            tab={controller.tab}
+            setTab={controller.setTab}
+          />
+        }
         content={
           controller.tab ? (
             <ProjectDetailsContentRouter

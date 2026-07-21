@@ -6,6 +6,7 @@ import { PROJECT_TAB_CONFIG } from "./projectTabConfig";
 import type { Tab } from "./projectDetailsTypes";
 
 type Props = {
+  projectId: string;
   tab: Tab | null;
   setTab: (t: Tab | null) => void;
 };
@@ -17,7 +18,7 @@ const buttonClass = [
   "hover:scale-[1.03] active:scale-[0.98]",
 ].join(" ");
 
-export default function ProjectTabs({ tab, setTab }: Props) {
+export default function ProjectTabs({ projectId, tab, setTab }: Props) {
   const [howToOpen, setHowToOpen] = useState(false);
 
   return (
@@ -39,7 +40,7 @@ export default function ProjectTabs({ tab, setTab }: Props) {
         })}
 
         <Link
-          href="/workspace/projects"
+          href={`/workspace/projects?edit=${encodeURIComponent(projectId)}#project-editor`}
           className={buttonClass}
           title="Edit project name and privacy"
         >

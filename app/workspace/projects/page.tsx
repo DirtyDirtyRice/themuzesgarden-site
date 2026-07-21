@@ -291,6 +291,27 @@ export default function WorkspaceProjectsPage() {
     setSelectedIds([selectedDropdownProject.id]);
   }, [selectedDropdownProject]);
 
+  useEffect(() => {
+    if (loadingProjects || projects.length === 0) return;
+
+    const projectId = new URLSearchParams(window.location.search).get("edit");
+    if (!projectId || !projects.some((project) => project.id === projectId)) {
+      return;
+    }
+
+    setSearchMode("all");
+    setSearchValue("");
+    setSelectedProjectId(projectId);
+    setSelectedIds([projectId]);
+
+    window.requestAnimationFrame(() => {
+      document.getElementById("project-editor")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [loadingProjects, projects]);
+
   async function renameProject(project: Project, nextTitle: string) {
     const title = nextTitle.trim();
 
@@ -484,7 +505,8 @@ export default function WorkspaceProjectsPage() {
         <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
           <ProjectCreatePanel creating={creating} onCreate={onCreate} />
 
-          <ProjectSearchPanel
+          <div id="project-editor" className="scroll-mt-28">
+            <ProjectSearchPanel
             projects={projects}
             filteredProjects={searchedProjects}
             searchMode={searchMode}
@@ -510,6 +532,7 @@ export default function WorkspaceProjectsPage() {
             onDownloadProjectFiles={downloadProjectAudioFiles}
             onDownloadProjectFolder={downloadProjectAudioFolder}
           />
+          </div>
         </section>
 
         {showProjectDetails ? (
