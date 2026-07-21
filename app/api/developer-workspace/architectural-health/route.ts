@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { analyzeArchitecturalHealth } from "@/lib/developer-workspace/architecturalHealth";
+import {
+  compareArchitecturalHealth,
+  readArchitecturalHealthHistory,
+  recordArchitecturalHealth,
+} from "@/lib/developer-workspace/architecturalHealthHistory";
 import { readRecentCodeEvents } from "@/lib/developer-workspace/codeEventLedger";
 import {
   buildProjectIndex,
@@ -80,9 +85,23 @@ export async function GET(request: NextRequest) {
       relationshipIndex,
       events,
     );
+    const recorded = refresh
+      ? await recordArchitecturalHealth(report, context.root)
+      : null;
+    const history = recorded?.history ?? await readArchitecturalHealthHistory(context.root, 30);
+    const comparison = recorded?.comparison ?? (
+      history[0]
+        ? compareArchitecturalHealth(history[0], history[1] ?? null)
+        : null
+    );
 
     return NextResponse.json(
-      { ...report, project: context.project },
+      {
+        ...report,
+        project: context.project,
+        healthHistory: history,
+        healthComparison: comparison,
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

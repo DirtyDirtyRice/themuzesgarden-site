@@ -7,9 +7,17 @@ import type {
   ArchitecturalHealthReport,
   ArchitecturalRisk,
 } from "@/lib/developer-workspace/architecturalHealth";
+import type {
+  ArchitecturalHealthComparison,
+  ArchitecturalHealthSnapshot,
+} from "@/lib/developer-workspace/architecturalHealthHistory";
 
 type ApiError = { error: string };
 type RiskFilter = "all" | ArchitecturalRisk;
+type DashboardReport = ArchitecturalHealthReport & {
+  healthHistory: ArchitecturalHealthSnapshot[];
+  healthComparison: ArchitecturalHealthComparison | null;
+};
 
 function isApiError(value: unknown): value is ApiError {
   return typeof value === "object" && value !== null && "error" in value && typeof value.error === "string";
@@ -33,7 +41,7 @@ function findingLabel(finding: ArchitecturalFinding): string {
 }
 
 export default function ArchitecturalHealthDashboard() {
-  const [report, setReport] = useState<ArchitecturalHealthReport | null>(null);
+  const [report, setReport] = useState<DashboardReport | null>(null);
   const [filter, setFilter] = useState<RiskFilter>("all");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -53,7 +61,7 @@ export default function ArchitecturalHealthDashboard() {
       if (!response.ok || isApiError(body)) {
         throw new Error(isApiError(body) ? body.error : "Architectural health analysis failed.");
       }
-      setReport(body as ArchitecturalHealthReport);
+      setReport(body as DashboardReport);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Architectural health analysis failed.");
     } finally {
@@ -86,6 +94,12 @@ export default function ArchitecturalHealthDashboard() {
     ["Relationships", String(report?.indexedRelationships ?? 0), "text-violet-100"],
     ["History events", String(report?.analyzedEvents ?? 0), "text-sky-100"],
   ];
+  const comparison = report?.healthComparison ?? null;
+  const trendStyle = comparison?.trend === "regressed"
+    ? "border-red-300/35 bg-red-300/10 text-red-100"
+    : comparison?.trend === "improved"
+      ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-100"
+      : "border-white/15 bg-black/20 text-white/70";
 
   return (
     <section className="mt-4 rounded-xl border border-fuchsia-300/25 bg-[#0b1720] p-5">
@@ -119,6 +133,48 @@ export default function ArchitecturalHealthDashboard() {
         ))}
       </div>
 
+      <div className={`mt-4 rounded-lg border p-4 ${trendStyle}`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.24em] opacity-70">Health history and regressions</div>
+            <div className="mt-1 text-xl font-black capitalize">
+              {comparison ? comparison.trend.replaceAll("-", " ") : "No snapshot recorded yet"}
+            </div>
+            <p className="mt-1 text-xs opacity-65">Refresh full analysis records one intentional snapshot for comparison.</p>
+          </div>
+          {comparison && comparison.previousScore !== null ? (
+            <div className="text-right">
+              <div className="text-2xl font-black">{comparison.scoreDelta > 0 ? "+" : ""}{comparison.scoreDelta}</div>
+              <div className="text-[10px] uppercase opacity-60">score change</div>
+            </div>
+          ) : null}
+        </div>
+        {comparison ? (
+          <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+            {[
+              ["New risks", comparison.introduced.length, "text-red-100"],
+              ["Worsened", comparison.worsened.length, "text-orange-100"],
+              ["Resolved", comparison.resolved.length, "text-emerald-100"],
+              ["Improved", comparison.improved.length, "text-cyan-100"],
+            ].map(([label, value, style]) => (
+              <div key={String(label)} className="rounded border border-white/10 bg-black/20 p-2">
+                <div className="text-[10px] uppercase opacity-55">{label}</div>
+                <div className={`mt-1 text-xl font-black ${style}`}>{value}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {report?.healthHistory.length ? (
+          <div className="mt-3 flex max-w-full gap-2 overflow-x-auto pb-1">
+            {report.healthHistory.slice(0, 12).map((snapshot) => (
+              <div key={snapshot.recordedAt} className="min-w-28 rounded border border-white/10 bg-black/20 px-3 py-2">
+                <div className={`text-lg font-black ${scoreStyle(snapshot.healthScore)}`}>{snapshot.healthScore}</div>
+                <div className="text-[10px] opacity-50">{new Date(snapshot.recordedAt).toLocaleString()}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
       <div className="mt-4 grid gap-2 md:grid-cols-[1fr_220px]">
         <input
           value={query}
