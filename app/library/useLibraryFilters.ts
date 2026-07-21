@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { searchLibraryTracks } from "./libraryTrackSearchIndex";
 
 function getTagIds(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -35,7 +36,9 @@ type Args<TTrack> = {
   visibleTracks: TTrack[];
 };
 
-export function useLibraryFilters<TTrack>({ visibleTracks }: Args<TTrack>) {
+export function useLibraryFilters<TTrack extends Record<string, unknown>>({
+  visibleTracks,
+}: Args<TTrack>) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -56,19 +59,12 @@ export function useLibraryFilters<TTrack>({ visibleTracks }: Args<TTrack>) {
   }
 
   const filteredTracks = useMemo(() => {
-    const cleanSearch = searchQuery.trim().toLowerCase();
-
-    return visibleTracks.filter((track) => {
-      const tags = (track as { tags?: unknown }).tags;
-      const ids = getTagIds(tags);
-
-      const matchesTags = activeTags.every((tag) => ids.includes(tag));
-
-      if (!matchesTags) return false;
-      if (!cleanSearch) return true;
-
-      return getSearchText(track).includes(cleanSearch);
+    const tracksMatchingTags = visibleTracks.filter((track) => {
+      const ids = getTagIds(track.tags);
+      return activeTags.every((tag) => ids.includes(tag));
     });
+
+    return searchLibraryTracks(tracksMatchingTags, searchQuery);
   }, [visibleTracks, activeTags, searchQuery]);
 
   return {

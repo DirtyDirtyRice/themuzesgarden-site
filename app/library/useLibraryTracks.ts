@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { TRACKS_SEED } from "../../lib/tracksSeed";
-import { supabase } from "../../lib/supabaseClient";
+import { useAuth } from "../components/AuthProvider";
 import { getUploadedTracks } from "../../lib/uploadedTracks";
 import { getSupabaseTracks } from "../../lib/getSupabaseTracks";
 import { getUnifiedTrackLibrary } from "../../lib/tracks/unifiedTrackLibrary";
@@ -31,7 +31,8 @@ type Args = {
 };
 
 export function useLibraryTracks({ router }: Args) {
-  const [checkingSession, setCheckingSession] = useState(true);
+  void router;
+  const { user, loading: checkingSession, error: sessionError } = useAuth();
   const [supabaseLoaded, setSupabaseLoaded] = useState(false);
   const [supabaseErr, setSupabaseErr] = useState<string | null>(null);
   const [tracks, setTracks] = useState<TrackLike[]>(() => {
@@ -47,11 +48,16 @@ export function useLibraryTracks({ router }: Args) {
   );
 
   const loadProjects = useCallback(async () => {
+    if (!user) {
+      setProjects([]);
+      setProjectLinkMessage(null);
+      return;
+    }
     setLoadingProjects(true);
     setProjectLinkMessage(null);
 
     try {
-      const rows = await getSupabaseProjects();
+      const rows = await getSupabaseProjects(user.id);
       setProjects(rows);
     } catch (err: any) {
       setProjects([]);
@@ -59,40 +65,13 @@ export function useLibraryTracks({ router }: Args) {
     } finally {
       setLoadingProjects(false);
     }
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function check() {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        const session = data.session;
-        if (!session) {
-          router.replace("/members");
-          return;
-        }
-      } catch {
-        router.replace("/members");
-        return;
-      } finally {
-        if (mounted) setCheckingSession(false);
-      }
-    }
-
-    check();
-
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
+  }, [user]);
 
   useEffect(() => {
     if (checkingSession) return;
-    loadProjects();
-  }, [checkingSession, loadProjects]);
+    if (user) void loadProjects();
+    else setProjects([]);
+  }, [checkingSession, loadProjects, user]);
 
   useEffect(() => {
     if (checkingSession) return;
@@ -308,6 +287,11 @@ export function useLibraryTracks({ router }: Args) {
     projectId: string,
     trackIds: string[]
   ) {
+    if (!user) {
+      setProjectLinkMessage("Sign in before sending tracks to a project.");
+      return false;
+    }
+
     const cleanProjectId = String(projectId ?? "").trim();
 
     const cleanTrackIds = Array.from(
@@ -321,6 +305,22 @@ export function useLibraryTracks({ router }: Args) {
 
     if (cleanTrackIds.length === 0) {
       setProjectLinkMessage("Choose at least one track first.");
+      return false;
+    }
+
+    const destinationProject = projects.find(
+      (project) => project.id === cleanProjectId,
+    );
+
+    if (!destinationProject) {
+      setProjectLinkMessage(
+        "That project is not in your owned-project list. Refresh projects and choose again.",
+      );
+      return false;
+    }
+
+    if (destinationProject.owner_id !== user.id) {
+      setProjectLinkMessage("Only the project owner can send songs here.");
       return false;
     }
 
@@ -354,6 +354,9 @@ export function useLibraryTracks({ router }: Args) {
 
   return {
     checkingSession,
+    memberSignedIn: Boolean(user),
+    memberUserId: user?.id ?? null,
+    sessionError,
     supabaseLoaded,
     supabaseErr,
     tracks,

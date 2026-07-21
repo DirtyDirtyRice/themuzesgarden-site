@@ -28,6 +28,9 @@ export default function LibraryPage() {
 
   const {
     checkingSession,
+    memberSignedIn,
+    memberUserId,
+    sessionError,
     supabaseLoaded,
     supabaseErr,
     tracks,
@@ -147,6 +150,10 @@ export default function LibraryPage() {
 
   async function handleLibraryFilesSelected(files: File[]) {
     if (files.length === 0 || uploading) return;
+    if (!memberSignedIn || !memberUserId) {
+      setUploadError("Sign in before uploading music to the Library.");
+      return;
+    }
 
     setUploading(true);
     setUploadError(null);
@@ -158,7 +165,7 @@ export default function LibraryPage() {
       const result = await uploadProjectAudioFiles({
         files,
         visibility: "shared",
-        userId: null,
+        userId: memberUserId,
       });
 
       setUploadedItems((current) => [...result.uploadedItems, ...current]);
@@ -243,7 +250,7 @@ export default function LibraryPage() {
       <div
         ref={libraryTopRef}
         className={[
-          "mx-auto max-w-6xl p-6 transition-all duration-300 lg:pr-[32rem]",
+          "mx-auto max-w-6xl p-6 transition-all duration-300 2xl:pr-[32rem]",
           flashFilterArea
             ? "rounded-2xl border border-white/25 bg-black ring-2 ring-white/25"
             : "",
@@ -253,6 +260,8 @@ export default function LibraryPage() {
           filteredTrackCount={filteredTracks.length}
           supabaseLoaded={supabaseLoaded}
           supabaseErr={supabaseErr}
+          memberSignedIn={memberSignedIn}
+          sessionError={sessionError}
           activeTags={activeTags}
           uploading={uploading}
           uploadMessage={uploadMessage}

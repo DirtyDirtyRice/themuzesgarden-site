@@ -61,6 +61,47 @@ export class TimelineController {
   getFilter(): TimelineFilter {
     return this.state.filter;
   }
+public getViewport(): TimelineWorkspace["viewport"] {
+  return this.state.workspace.viewport;
+}
+
+public resetViewport(): void {
+  this.state.workspace.viewport = {
+    zoom: 1,
+    scrollPosition: 0,
+    visibleStart: 0,
+    visibleEnd: 0,
+    snapToGrid: true,
+    showMilliseconds: false,
+    showBars: true,
+    showBeats: true,
+  };
+}
+
+public zoomIn(): void {
+  this.state.workspace.viewport.zoom *= 1.25;
+}
+
+public zoomOut(): void {
+  this.state.workspace.viewport.zoom /= 1.25;
+}
+
+public fitTimeline(): void {
+  this.state.workspace.viewport.zoom = 1;
+  this.state.workspace.viewport.scrollPosition = 0;
+}
+
+public patchState(configuration: Partial<TimelineEngineState>): void {
+  this.state = {
+    ...this.state,
+    ...configuration,
+    workspace: {
+      ...this.state.workspace,
+      ...(configuration.workspace ?? {}),
+    },
+  };
+}
+
 
   // ==========================================================================
   // LOOKUPS
@@ -641,14 +682,41 @@ return cloned;
     };
   }
 
-  resetWorkspace(
-    workspace: TimelineWorkspace
-  ): void {
-    this.state.workspace = workspace;
+resetWorkspace(
+  workspace: TimelineWorkspace
+): void {
+  this.state.workspace = workspace;
+}
+
+// ==========================================================================
+// HISTORY SUPPORT
+// ==========================================================================
+
+canUndo(): boolean {
+  return this.state.workspace.history.length > 0;
+}
+
+canRedo(): boolean {
+  return false;
+}
+
+undo(): boolean {
+  if (!this.canUndo()) {
+    return false;
   }
+
+  this.state.workspace.history.pop();
+
+  return true;
+}
+
+redo(): boolean {
+  return false;
+}
+
 // ==========================================================================
 // STATISTICS REFRESH
-// ==========================================================================
+//
 
 refreshStatistics(): void {
   const stats = this.state.workspace.statistics;
@@ -1754,4 +1822,3 @@ initialize(): void {
     }
   }
 }
-

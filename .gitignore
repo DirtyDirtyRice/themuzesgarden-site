@@ -41,3 +41,11 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+# local developer-workspace runtime state and diagnostics
+/code-map-reports/code-roots/
+/code-map-reports/event-ledger/
+/code-map-reports/verification/
+/code-map-reports/workspace-projects/
+/project-files.txt
+/project-tree.txt
+*.corrupt-backup-*

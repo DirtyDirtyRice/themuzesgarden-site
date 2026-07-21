@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PROJECT_TAB_CONFIG } from "./projectTabConfig";
 import type { Tab } from "./projectDetailsTypes";
 
@@ -36,6 +37,14 @@ export default function ProjectTabs({ tab, setTab }: Props) {
             </button>
           );
         })}
+
+        <Link
+          href="/workspace/projects"
+          className={buttonClass}
+          title="Edit project name and privacy"
+        >
+          Edit Project
+        </Link>
 
         <button
           type="button"

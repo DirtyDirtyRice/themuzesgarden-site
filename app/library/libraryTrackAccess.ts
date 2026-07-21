@@ -8,9 +8,9 @@ export type LibraryTrackAccess = {
 export function normalizeLibraryTrackVisibility(
   value: unknown
 ): LibraryTrackVisibility {
-  return String(value).trim().toLowerCase() === "private"
-    ? "private"
-    : "public";
+  return String(value).trim().toLowerCase() === "public"
+    ? "public"
+    : "private";
 }
 
 export function normalizeSharedWithMemberIds(value: unknown): string[] {

@@ -29,6 +29,7 @@ describe("engine/core transition planner", () => {
       toStateId: "B",
       quantize: { kind: "beat" },
       strategy: { kind: "cut" },
+      minDelayTicks: 0,
     });
 
     // Next beat boundary from tickAbs=100 is tickAbs=480
@@ -49,6 +50,7 @@ describe("engine/core transition planner", () => {
       toStateId: "B",
       quantize: { kind: "bar" },
       strategy: { kind: "cut" },
+      minDelayTicks: 0,
     });
 
     // Next bar boundary is tickAbs=ticksPerBar (start of bar 2)
@@ -56,25 +58,25 @@ describe("engine/core transition planner", () => {
     expect(plan.startPos).toEqual({ bar: 2, beat: 1, tick: 0 });
   });
 
-  it("custom quantize + crossfade schedules deterministic ramps and endTickAbs", () => {
+  it("beat quantize + crossfade schedules deterministic ramps and endTickAbs", () => {
     const gm = computeGridMath(CFG);
 
     // Start at tickAbs=0
     const s0 = createTransport(CFG);
 
-    // Custom quantum: 240 ticks (eighth note in ppq=480 @ beatUnit=4)
+    // Crossfade begins on the next beat boundary.
     const plan = planTransition(CFG, s0, {
       id: "t3",
       fromStateId: "A",
       toStateId: "B",
-      quantize: { kind: "custom", quantumTicks: 240, mode: "ceil" },
+      quantize: { kind: "beat" },
       strategy: { kind: "crossfade", fadeTicks: 120 },
       minDelayTicks: 1,
     });
 
-    // earliest = now(0) + 1 => 1; next custom grid ceil to 240
-    expect(plan.startTickAbs).toBe(240);
-    expect(plan.endTickAbs).toBe(240 + 120);
+    // earliest = now(0) + 1 => 1; next beat grid boundary is 480
+    expect(plan.startTickAbs).toBe(gm.ticksPerBeat);
+    expect(plan.endTickAbs).toBe(gm.ticksPerBeat + 120);
 
     // Must contain 2 ramps + switch + markers
     const ramps = plan.events.filter((e) => e.type === "GainRamp");
@@ -94,7 +96,7 @@ describe("engine/core transition planner", () => {
 
     // sanity: bar/beat positions are valid-ish
     expect(plan.startPos.bar).toBe(1);
-    expect(plan.endPos.bar).toBe(1); // 360 ticks is still in bar 1 (ticksPerBar=1920)
+    expect(plan.endPos.bar).toBe(1); // 600 ticks is still in bar 1 (ticksPerBar=1920)
     expect(gm.ticksPerBar).toBe(1920);
   });
 });

@@ -69,16 +69,28 @@ function normalizeRow(r: any): ProjectRow {
  * Read-only: relies on RLS to return only the signed-in user's rows.
  * IMPORTANT: Do not pass owner_id from client; insert should use auth.uid() via RLS check.
  */
-export async function getSupabaseProjects(): Promise<ProjectRow[]> {
-  const { data, error } = await supabase
-    .from("projects")
-    .select(
-      "id, owner_id, title, description, kind, visibility, modules_enabled, shared, template_id, created_at, updated_at"
-    )
-    .order("updated_at", { ascending: false });
+export async function getSupabaseProjects(
+  ownerId?: string,
+): Promise<ProjectRow[]> {
+  const cleanOwnerId = String(ownerId ?? "").trim();
+  let query = supabase.from("projects").select(
+    "id, owner_id, title, description, kind, visibility, modules_enabled, shared, template_id, created_at, updated_at",
+  );
+
+  if (cleanOwnerId) {
+    query = query.eq("owner_id", cleanOwnerId);
+  }
+
+  const { data, error } = await query.order("updated_at", {
+    ascending: false,
+  });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(normalizeRow);
+
+  const projects = (data ?? []).map(normalizeRow);
+  return cleanOwnerId
+    ? projects.filter((project: ProjectRow) => project.owner_id === cleanOwnerId)
+    : projects;
 }
 
 // EXTEND ONLY: aliases so any import name works (matches your existing style)

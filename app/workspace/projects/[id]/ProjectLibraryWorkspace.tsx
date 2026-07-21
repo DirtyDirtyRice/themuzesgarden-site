@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ProjectLibraryPanel from "./ProjectLibraryPanel";
@@ -21,6 +21,7 @@ import { useProjectWorkspacePanelSystem } from "./command_control/useProjectWork
 
 type Props = {
   allTracks: any[];
+  projectVisibility?: "private" | "public" | "shared";
   linkedTracks: any[];
   linkedTrackIds: Set<string>;
   loadingLibrary: boolean;
@@ -75,6 +76,7 @@ function isTrackPrivateFromGroundworkTrack(
 export default function ProjectLibraryWorkspace(props: Props) {
   const {
     allTracks,
+    projectVisibility = "private",
     linkedTracks,
     linkedTrackIds,
     loadingLibrary,
@@ -172,8 +174,8 @@ export default function ProjectLibraryWorkspace(props: Props) {
         "track",
         metadataTargetId,
         selectedMetadataTrack?.title
-          ? `Track â€” ${selectedMetadataTrack.title}`
-          : `Track â€” ${metadataTargetId}`
+          ? `Track — ${selectedMetadataTrack.title}`
+          : `Track — ${metadataTargetId}`
       );
       return;
     }
@@ -206,7 +208,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
       openMetadataInspect({
         targetType: "track",
         targetId: tid,
-        targetLabel: track?.title ? `Track â€” ${track.title}` : `Track â€” ${tid}`,
+        targetLabel: track?.title ? `Track — ${track.title}` : `Track — ${tid}`,
         focus: true,
       });
 
@@ -249,7 +251,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
             onClick={onRefresh}
             disabled={loadingLibrary}
           >
-            {loadingLibrary ? "Refreshingâ€¦" : "Refresh"}
+            {loadingLibrary ? "Refreshing…" : "Refresh"}
           </button>
         </div>
 
@@ -273,7 +275,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
                   onClick={() => removeMetadataFilter(filter.id)}
                   title={filter.query}
                 >
-                  {filter.label} Ã—
+                  {filter.label} ×
                 </button>
               ))}
             </div>
@@ -328,7 +330,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
                     >
                       <div className="min-w-0 flex-1 text-white">
                         <div className="resize-x overflow-auto whitespace-nowrap text-sm font-medium text-white">
-                          {isNow ? "â–¶ " : ""}
+                          {isNow ? "▶ " : ""}
                           {isNow ? (
                             <span className="mr-2 rounded border border-white bg-black px-2 py-0.5 text-[10px] text-white">
                               NOW
@@ -344,7 +346,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
                         ) : null}
 
                         <div className="hidden">
-                          Source: {sourceLabel} â€¢ Visibility: {visibilityLabel}
+                          Source: {sourceLabel} • Visibility: {visibilityLabel}
                         </div>
 
                         {isMetadataSelected ? (
@@ -389,6 +391,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
 
           <ProjectLibraryPanel
             allTracks={filteredAllTracks as any[]}
+            projectVisibility={projectVisibility}
             linkedTrackIds={linkedTrackIds}
             loadingLibrary={loadingLibrary}
             linkBusyId={linkBusyId}

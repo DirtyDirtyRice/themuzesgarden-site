@@ -1,5 +1,6 @@
 import { getSupabaseTracks } from "../getSupabaseTracks";
 import { getUploadedTracks } from "../uploadedTracks";
+import { TRACKS_SEED } from "../tracksSeed";
 import { mergeTrackLists } from "../../app/library/libraryUtils";
 
 let cachedTracks: any[] | null = null;
@@ -40,10 +41,12 @@ function deduplicateTracks(tracks: any[]): any[] {
 async function loadLibrary(): Promise<any[]> {
   const supabaseTracks = await getSupabaseTracks();
   const uploadedTracks = getUploadedTracks();
+  const seedTracks = TRACKS_SEED;
 
   const merged = mergeTrackLists(
     normalizeTracks(supabaseTracks),
-    normalizeTracks(uploadedTracks)
+    normalizeTracks(uploadedTracks),
+    normalizeTracks(seedTracks)
   );
 
   return deduplicateTracks(merged);

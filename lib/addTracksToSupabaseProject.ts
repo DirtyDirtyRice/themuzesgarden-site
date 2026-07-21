@@ -46,6 +46,27 @@ export async function addTracksToSupabaseProject({
     throw new Error("Choose at least one track first.");
   }
 
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const userId = cleanId(authData?.user?.id);
+
+  if (authError || !userId) {
+    throw new Error("Sign in before sending songs to a project.");
+  }
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id, owner_id, visibility")
+    .eq("id", cleanProjectId)
+    .single();
+
+  if (projectError || !project) {
+    throw new Error("The destination project could not be verified.");
+  }
+
+  if (cleanId(project.owner_id) !== userId) {
+    throw new Error("Only the project owner can send songs to this project.");
+  }
+
   const rows = cleanTrackIds.map((trackId) => ({
     project_id: cleanProjectId,
     track_id: trackId,
@@ -58,9 +79,33 @@ export async function addTracksToSupabaseProject({
 
   if (error) throw new Error(error.message);
 
+  const { data: verifiedRows, error: verificationError } = await supabase
+    .from("project_tracks")
+    .select("track_id")
+    .eq("project_id", cleanProjectId)
+    .in("track_id", cleanTrackIds);
+
+  if (verificationError) {
+    throw new Error(`Could not verify the project links: ${verificationError.message}`);
+  }
+
+  const verifiedTrackIds = cleanUniqueIds(
+    (verifiedRows ?? []).map((row: { track_id?: unknown }) => row.track_id),
+  );
+  const verifiedSet = new Set(verifiedTrackIds);
+  const missingTrackIds = cleanTrackIds.filter(
+    (trackId) => !verifiedSet.has(trackId),
+  );
+
+  if (missingTrackIds.length > 0) {
+    throw new Error(
+      `Supabase did not confirm ${missingTrackIds.length} of ${cleanTrackIds.length} project links. No success was reported.`,
+    );
+  }
+
   return {
     projectId: cleanProjectId,
-    trackIds: cleanTrackIds,
-    linkedCount: cleanTrackIds.length,
+    trackIds: verifiedTrackIds,
+    linkedCount: verifiedTrackIds.length,
   };
 }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -160,6 +160,16 @@ const METADATA_CHILD_LINKS: TitleBarLink[] = [
 
 const TOOLS_CHILD_LINKS: TitleBarLink[] = [
   {
+    label: "AI Developer Workspace",
+    href: "/tools/developer-workspace",
+    detail: "Open project indexing, build errors, AI investigation, safe patches, and code roots",
+  },
+  {
+    label: "Timeline Engine (Live)",
+    href: "/live",
+    detail: "Open the current live Timeline transport and transition engine",
+  },
+  {
     label: "Code Map",
     href: "/tools/code-map",
     detail: "Open the coding app code map",
@@ -311,8 +321,9 @@ function TitleBarDropdown({
       onMouseEnter={onOpen}
       onMouseLeave={onClose}
     >
-      <Link
-        href={links[0]?.href ?? "/"}
+      <button
+        type="button"
+        onClick={() => (menuOpen ? onClose() : onOpen())}
         aria-current={active ? "page" : undefined}
         aria-expanded={menuOpen}
         aria-haspopup="menu"
@@ -320,10 +331,10 @@ function TitleBarDropdown({
         title={`${label} menu`}
       >
         {label} v
-      </Link>
+      </button>
 
       {menuOpen ? (
-        <div className="absolute right-0 top-full z-[1100] mt-2 min-w-[240px]">
+        <div className="absolute right-0 top-full z-[1100] min-w-[240px] pt-2">
           <div className="rounded-xl border border-white/10 bg-black p-1 shadow-2xl">
             {links.map((link) => {
               const childActive = isActivePath(pathname, link.href);
@@ -394,7 +405,7 @@ function HelpDropdown({
       </button>
 
       {menuOpen ? (
-        <div className="absolute right-0 top-full z-[1100] mt-2 min-w-[260px]">
+        <div className="absolute right-0 top-full z-[1100] min-w-[260px] pt-2">
           <div className="rounded-xl border border-white/10 bg-black p-1 shadow-2xl">
             {items.map((item) => {
               if (item.kind === "button") {
@@ -446,7 +457,7 @@ export default function TitleBar() {
   const aiActive = isActivePath(pathname, "/ai");
   const libraryActive = isActivePath(pathname, "/library");
   const metadataActive = isActivePath(pathname, "/metadata");
-  const toolsActive = isActivePath(pathname, "/tools/code-map");
+  const toolsActive = isActivePath(pathname, "/tools") || pathname === "/live";
   const trackMatcherActive = isActivePath(pathname, "/tools/track-matcher");
 
   const [aiMenuOpen, setAiMenuOpen] = useState(false);

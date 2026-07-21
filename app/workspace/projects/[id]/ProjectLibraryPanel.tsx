@@ -17,6 +17,7 @@ import {
 
 export default function ProjectLibraryPanel(props: {
   allTracks: AnyTrack[];
+  projectVisibility?: "private" | "public" | "shared";
   linkedTrackIds: Set<string>;
   loadingLibrary: boolean;
   linkBusyId: string | null;
@@ -26,6 +27,7 @@ export default function ProjectLibraryPanel(props: {
 }) {
   const {
     allTracks,
+    projectVisibility = "private",
     linkedTrackIds,
     loadingLibrary,
     linkBusyId,
@@ -123,6 +125,7 @@ export default function ProjectLibraryPanel(props: {
       <ProjectLibraryPanelHeader
         linkedCount={linkedCount}
         showingCount={showingCount}
+        projectVisibility={projectVisibility}
         mode={mode}
         setMode={setMode}
         q={q}

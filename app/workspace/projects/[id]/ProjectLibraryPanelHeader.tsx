@@ -5,6 +5,7 @@ import type { FilterMode } from "./projectLibraryPanelTypes";
 type Props = {
   linkedCount: number;
   showingCount: number;
+  projectVisibility?: "private" | "public" | "shared";
   mode: FilterMode;
   setMode: (mode: FilterMode) => void;
   q: string;
@@ -25,6 +26,7 @@ function getChipClass(active: boolean) {
 export default function ProjectLibraryPanelHeader({
   linkedCount,
   showingCount,
+  projectVisibility = "private",
   mode,
   setMode,
   q,
@@ -68,6 +70,22 @@ export default function ProjectLibraryPanelHeader({
           >
             Unlinked
           </button>
+
+          <span
+            className={[
+              "inline-flex min-h-8 items-center justify-center rounded-xl border px-3 py-1 text-xs font-black",
+              projectVisibility === "public"
+                ? "border-emerald-300/60 bg-emerald-950 text-emerald-100"
+                : "border-amber-300/60 bg-amber-950 text-amber-100",
+            ].join(" ")}
+            title={
+              projectVisibility === "public"
+                ? "This project and every linked song are public."
+                : "This project and every linked song are private. Access requires owner permission."
+            }
+          >
+            {projectVisibility === "public" ? "Public" : "Private"}
+          </span>
         </div>
       </div>
 

@@ -43,7 +43,7 @@ function inferTrackSource(track: Record<string, unknown>): unknown {
 }
 
 function inferTrackVisibility(track: Record<string, unknown>): unknown {
-  return track.visibility ?? track.libraryVisibility ?? "public";
+  return track.visibility ?? track.libraryVisibility ?? "private";
 }
 
 function inferSharedWithMemberIds(track: Record<string, unknown>): unknown {

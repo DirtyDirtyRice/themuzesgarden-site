@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 import ProjectActivityPanel from "./ProjectActivityPanel";
@@ -209,6 +209,7 @@ export default function ProjectDetailsContentRouter(props: {
     return (
       <ProjectLibraryWorkspace
         allTracks={allTracks}
+        projectVisibility={project?.visibility ?? "private"}
         linkedTracks={linkedTracks}
         linkedTrackIds={linkedTrackIds}
         loadingLibrary={loadingLibrary}

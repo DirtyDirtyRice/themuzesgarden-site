@@ -5,8 +5,6 @@ import type {
   LocalVisibility,
 } from "./projectLibraryPanelTypes";
 import {
-  getEffectiveVisibility,
-  getEffectiveVisibilityLabel,
   getSourceLabel,
   getTrackTags,
   hasPlayableSource,
@@ -38,21 +36,16 @@ export default function ProjectLibraryPanelTrackRow({
   isLinked,
   isSelected,
   linkBusyId,
-  visibilityOverrides,
   setQ,
   onMouseEnter,
   onPrimaryAction,
   onPlayTrackById,
-  onToggleTrackVisibility,
   onLinkTrack,
   onUnlinkTrack,
 }: Props) {
   const tid = String(track.id);
   const tags = getTrackTags(track);
   const playable = hasPlayableSource(track);
-  const visibilityLabel = getEffectiveVisibilityLabel(track, visibilityOverrides);
-  const isPrivate =
-    getEffectiveVisibility(track, visibilityOverrides) === "private";
 
   return (
     <div
@@ -77,7 +70,7 @@ export default function ProjectLibraryPanelTrackRow({
         ) : null}
 
         <div className="mt-1 text-[10px] text-white/70">
-          Source: {getSourceLabel(track)} • Visibility: {visibilityLabel}
+          Source: {getSourceLabel(track)}
         </div>
 
         {tags.length > 0 ? (
@@ -116,19 +109,6 @@ export default function ProjectLibraryPanelTrackRow({
           Play
         </button>
 
-        <button
-          type="button"
-          className={actionButtonClass}
-          onClick={() => onToggleTrackVisibility(track)}
-          disabled={linkBusyId === tid}
-          title={
-            isPrivate
-              ? "Change this track back to public"
-              : "Mark this track private in the local control layer"
-          }
-        >
-          {isPrivate ? "Make Public" : "Make Private"}
-        </button>
 
         {isLinked ? (
           <button

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import SharedUploadButtons from "../shared/uploads/SharedUploadButtons";
 import NestedTagPicker from "./NestedTagPicker";
 import { displayTagLabel } from "./libraryUtils";
@@ -11,6 +12,8 @@ type Props = {
   filteredTrackCount: number;
   supabaseLoaded: boolean;
   supabaseErr: string | null;
+  memberSignedIn: boolean;
+  sessionError: string | null;
   activeTags: string[];
   uploading: boolean;
   uploadMessage: string | null;
@@ -62,6 +65,8 @@ export function LibraryPageHeader({
   filteredTrackCount,
   supabaseLoaded,
   supabaseErr,
+  memberSignedIn,
+  sessionError,
   activeTags,
   uploading,
   uploadMessage,
@@ -130,6 +135,13 @@ export function LibraryPageHeader({
 
   return (
     <>
+      {!memberSignedIn ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4">
+          <div><div className="font-black text-cyan-100">Browsing the shared Music Library</div><div className="mt-1 text-sm text-cyan-100/65">Sign in to upload music, open personal projects, and send tracks to a project.{sessionError ? ` Session note: ${sessionError}` : ""}</div></div>
+          <Link href="/members" className="rounded-lg bg-cyan-300 px-4 py-2 font-black text-black">Member sign in</Link>
+        </div>
+      ) : null}
+
       <div className="mb-4 rounded-3xl border border-white/25 bg-black p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -144,8 +156,8 @@ export function LibraryPageHeader({
             </div>
 
             <div className="mt-2 max-w-2xl text-sm text-white/70">
-              Search Library first, then choose a project and send grouped
-              titles or individual copies.
+              Public Library only. Private songs are excluded before search.
+              Search below, then choose a project and send selected songs.
             </div>
 
             {supabaseErr ? (
@@ -164,8 +176,20 @@ export function LibraryPageHeader({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-emerald-300/60 bg-emerald-950 px-4 py-2 text-sm font-black text-emerald-100 transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]"
+              onClick={() => {
+                onClearSearch?.();
+                onClearFilters();
+              }}
+              title="Show the complete public song catalog"
+            >
+              All Public Songs
+            </button>
+
             <SharedUploadButtons
-              disabled={uploading}
+              disabled={uploading || !memberSignedIn}
               onFilesSelected={onFilesSelected}
             />
 
@@ -213,7 +237,7 @@ export function LibraryPageHeader({
               Download
             </button>
 
-            <button type="button" className={buttonClass} onClick={closeMenus}>
+            <button type="button" className={buttonClass} onClick={() => { closeMenus(); document.getElementById("library-transfer")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} disabled={!memberSignedIn} title={memberSignedIn ? "Choose a project for selected tracks" : "Sign in to use projects"}>
               Send To
             </button>
 
@@ -279,7 +303,7 @@ export function LibraryPageHeader({
                 value={searchQuery}
                 onChange={(event) => onSearchQueryChange?.(event.target.value)}
                 className={`${searchInputClass} mt-2`}
-                placeholder="Search titles, copies, tags, artists..."
+                placeholder="Search all public songs by title, artist, or tag..."
               />
             </label>
 
@@ -290,11 +314,12 @@ export function LibraryPageHeader({
 
               <input
                 value={projectSearchQuery}
+                disabled={!memberSignedIn}
                 onChange={(event) =>
                   onProjectSearchQueryChange?.(event.target.value)
                 }
                 className={`${searchInputClass} mt-2`}
-                placeholder="Search project title, genre, artist, member..."
+                placeholder={memberSignedIn ? "Search project title, genre, artist, member..." : "Sign in to search your projects"}
               />
             </label>
           </div>

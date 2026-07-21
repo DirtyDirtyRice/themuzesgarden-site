@@ -286,7 +286,7 @@ export function LibraryTrackList({
   }, [selectedTracks]);
 
   const selectedCount = selectedVisibleTrackIds.length;
-  const hasTracks = hasSearchQuery && visibleTrackIds.length > 0;
+  const hasTracks = visibleTrackIds.length > 0;
   const allVisibleSelected =
     hasTracks && selectedCount === visibleTrackIds.length;
   const canSend =
@@ -309,7 +309,7 @@ export function LibraryTrackList({
   }
 
   function isGroupExpanded(groupId: string) {
-    return expandedGroupIds.includes(groupId);
+    return !expandedGroupIds.includes(groupId);
   }
 
   function toggleGroupExpanded(groupId: string) {
@@ -340,7 +340,6 @@ export function LibraryTrackList({
   }
 
   function selectAllVisibleTracks() {
-    if (!hasSearchQuery) return;
     setSelectedTrackIds(visibleTrackIds);
   }
 
@@ -377,18 +376,18 @@ export function LibraryTrackList({
 
   return (
     <div className="space-y-3">
-      <section className="rounded-3xl border border-white/25 bg-black p-4 text-white">
+      <section id="library-transfer" className="sticky top-2 z-30 rounded-3xl border border-white/25 bg-black/95 p-4 text-white shadow-2xl backdrop-blur">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
               Library Actions
             </p>
             <h2 className="mt-1 text-xl font-black text-white">
-              Search title → Select copies → Choose project → Send To
+              Search title â†’ Select copies â†’ Choose project â†’ Send To
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/70">
-              Library starts blank. Search first, then select a grouped title or
-              expand it and choose individual song files.
+              All songs are shown below. Search to narrow the list, then select
+              grouped titles or individual song files.
             </p>
           </div>
 
@@ -426,8 +425,8 @@ export function LibraryTrackList({
 
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
           <div className="rounded-2xl border border-white/25 bg-black px-4 py-3 text-sm font-bold text-white">
-            Grouped titles: {hasSearchQuery ? groupedTracks.length : 0} ·
-            Selected copies: {selectedCount} · Downloadable:{" "}
+            Public song titles: {groupedTracks.length} Â·
+            Selected copies: {selectedCount} Â· Downloadable:{" "}
             {downloadableSelectedTracks.length}
           </div>
 
@@ -548,14 +547,19 @@ export function LibraryTrackList({
         ) : null}
       </section>
 
-      {!hasSearchQuery ? (
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-300/30 bg-emerald-950/40 px-4 py-3 text-emerald-100">
+        <h2 className="text-lg font-black">All Public Songs</h2>
+        <span className="text-sm font-bold">
+          {groupedTracks.length} title{groupedTracks.length === 1 ? "" : "s"} •{" "}
+          {visibleTrackIds.length} song{visibleTrackIds.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      {groupedTracks.length === 0 ? (
         <div className="rounded-2xl border border-white/25 bg-black p-6 text-sm text-white/70">
-          Search Library first. Type a song title, copy name, tag, or artist
-          above to show grouped results.
-        </div>
-      ) : groupedTracks.length === 0 ? (
-        <div className="rounded-2xl border border-white/25 bg-black p-6 text-sm text-white/70">
-          No tracks found for that search.
+          {hasSearchQuery
+            ? "No tracks found for that search."
+            : "No songs are available in the Library yet."}
         </div>
       ) : (
         groupedTracks.map((group) => {

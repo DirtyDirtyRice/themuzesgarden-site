@@ -54,12 +54,25 @@ export function ProjectCreatePanel({
         </label>
 
         <label className="block">
-          <span className="text-sm font-black text-white">Visibility</span>
-          <select className={`${selectClass} mt-2`} name="visibility">
-            <option value="private">Private</option>
-            <option value="shared">Shared</option>
-            <option value="public">Public</option>
+          <span className="text-sm font-black text-white">
+            Privacy <span className="text-rose-300">(required)</span>
+          </span>
+          <select
+            className={`${selectClass} mt-2`}
+            name="visibility"
+            defaultValue=""
+            required
+          >
+            <option value="" disabled>
+              Select Private or Public...
+            </option>
+            <option value="private">Private — only you unless you grant permission</option>
+            <option value="public">Public — every song in the project is public</option>
           </select>
+          <span className="mt-2 block text-xs leading-5 text-white/60">
+            Every song in this project follows the project privacy setting. You
+            can change it later.
+          </span>
         </label>
       </div>
     </form>

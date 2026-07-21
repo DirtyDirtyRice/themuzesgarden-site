@@ -1,4 +1,4 @@
-﻿import SharedDownloadButtons from "../../shared/downloads/SharedDownloadButtons";
+import SharedDownloadButtons from "../../shared/downloads/SharedDownloadButtons";
 import SharedUploadButtons from "../../shared/uploads/SharedUploadButtons";
 import type { Project, ProjectSearchMode } from "./projectPageTypes";
 import {
@@ -25,6 +25,7 @@ export function ProjectSearchPanel({
   onSelectedProjectChange,
   onOpenSelectedProject,
   onRenameProject,
+  onChangeProjectVisibility,
   onUploadFilesToProject,
   onDownloadProjectFiles,
   onDownloadProjectFolder,
@@ -41,6 +42,7 @@ export function ProjectSearchPanel({
   onSelectedProjectChange: (id: string) => void;
   onOpenSelectedProject: () => void;
   onRenameProject: (project: Project, title: string) => void;
+  onChangeProjectVisibility?: (project: Project) => void;
   onUploadFilesToProject: (projectId: string, files: File[]) => void;
   onDownloadProjectFiles: (project: Project) => void;
   onDownloadProjectFolder: (project: Project) => void;
@@ -295,6 +297,16 @@ export function ProjectSearchPanel({
                             }}
                           >
                             Rename
+                          </button>
+
+                          <button
+                            type="button"
+                            className={buttonClass}
+                            onClick={() => onChangeProjectVisibility?.(project)}
+                          >
+                            {project.visibility === "public"
+                              ? "Make Private"
+                              : "Make Public"}
                           </button>
                         </div>
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../components/AuthProvider";
@@ -325,6 +325,56 @@ export default function WorkspaceProjectsPage() {
       setUploadMessage(null);
     }
   }
+  async function changeProjectVisibility(project: Project) {
+    if (!user?.id || !project.id) return;
+
+    const nextVisibility: ProjectVisibility =
+      project.visibility === "public" ? "private" : "public";
+
+    if (nextVisibility === "public") {
+      const confirmed = window.confirm(
+        `Make "${project.title}" public? Every song linked to this project will be available in All Public Songs.`,
+      );
+      if (!confirmed) return;
+    }
+
+    const updatedAt = new Date().toISOString();
+    setErrorMsg(null);
+    setUploadMessage(`Changing ${project.title} to ${nextVisibility}...`);
+
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .update({ visibility: nextVisibility, updated_at: updatedAt })
+        .eq("id", project.id)
+        .eq("owner_id", user.id)
+        .select("id, visibility")
+        .single();
+
+      if (error) throw new Error(error.message);
+      if (data?.visibility !== nextVisibility) {
+        throw new Error("Supabase did not confirm the privacy change.");
+      }
+
+      setProjects((current) =>
+        current.map((item) =>
+          item.id === project.id
+            ? { ...item, visibility: nextVisibility, updated_at: updatedAt }
+            : item,
+        ),
+      );
+      setUploadMessage(
+        `${project.title} is now ${nextVisibility}. Refresh the Library to update public songs.`,
+      );
+    } catch (error: unknown) {
+      setErrorMsg(
+        error instanceof Error
+          ? error.message
+          : "Failed to change project privacy.",
+      );
+      setUploadMessage(null);
+    }
+  }
   async function onCreate(formData: FormData) {
     const title = clampTitle(String(formData.get("title") ?? ""));
     const description = String(formData.get("description") ?? "");
@@ -455,6 +505,7 @@ export default function WorkspaceProjectsPage() {
             onSelectedProjectChange={setSelectedProjectId}
             onOpenSelectedProject={openSelectedDropdownProject}
             onRenameProject={renameProject}
+            onChangeProjectVisibility={changeProjectVisibility}
             onUploadFilesToProject={uploadFilesToProject}
             onDownloadProjectFiles={downloadProjectAudioFiles}
             onDownloadProjectFolder={downloadProjectAudioFolder}
