@@ -34,6 +34,7 @@ export default function LibraryPage() {
     supabaseLoaded,
     supabaseErr,
     tracks,
+    publicProjectTrackIds,
     projects,
     loadingProjects,
     sendingToProject,
@@ -46,10 +47,16 @@ export default function LibraryPage() {
   } = useLibraryTracks({ router });
 
   const groundworkTracks = useMemo(() => {
+    const publicTrackIds = new Set(publicProjectTrackIds);
+
     return buildLibraryGroundworkTracks(
-      (tracks as unknown as Record<string, unknown>[]) ?? []
+      ((tracks as unknown as Record<string, unknown>[]) ?? []).map((track) =>
+        publicTrackIds.has(String(track.id))
+          ? { ...track, visibility: "public" }
+          : track,
+      ),
     );
-  }, [tracks]);
+  }, [publicProjectTrackIds, tracks]);
 
   const visibleTracks = useMemo(() => {
     return groundworkTracks.filter(

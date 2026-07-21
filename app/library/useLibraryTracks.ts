@@ -12,6 +12,7 @@ import {
   type ProjectRow,
 } from "../../lib/getSupabaseProjects";
 import { addTracksToSupabaseProject } from "../../lib/addTracksToSupabaseProject";
+import { getPublicProjectTrackIds } from "../../lib/getPublicProjectTrackIds";
 import { LS_KEY } from "./libraryData";
 import type { TrackLike } from "./libraryTypes";
 import {
@@ -41,6 +42,7 @@ export function useLibraryTracks({ router }: Args) {
       .filter(Boolean) as TrackLike[];
   });
   const [projects, setProjects] = useState<ProjectRow[]>([]);
+  const [publicProjectTrackIds, setPublicProjectTrackIds] = useState<string[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [sendingToProject, setSendingToProject] = useState(false);
   const [projectLinkMessage, setProjectLinkMessage] = useState<string | null>(
@@ -48,20 +50,23 @@ export function useLibraryTracks({ router }: Args) {
   );
 
   const loadProjects = useCallback(async () => {
-    if (!user) {
-      setProjects([]);
-      setProjectLinkMessage(null);
-      return;
-    }
     setLoadingProjects(true);
     setProjectLinkMessage(null);
 
     try {
-      const rows = await getSupabaseProjects(user.id);
-      setProjects(rows);
+      const [publicTrackIds, ownedProjects] = await Promise.all([
+        getPublicProjectTrackIds(),
+        user ? getSupabaseProjects(user.id) : Promise.resolve([]),
+      ]);
+
+      setPublicProjectTrackIds(publicTrackIds);
+      setProjects(ownedProjects);
     } catch (err: any) {
       setProjects([]);
-      setProjectLinkMessage(err?.message ?? "Failed to load projects.");
+      setPublicProjectTrackIds([]);
+      setProjectLinkMessage(
+        err?.message ?? "Failed to load projects and their public songs.",
+      );
     } finally {
       setLoadingProjects(false);
     }
@@ -69,9 +74,8 @@ export function useLibraryTracks({ router }: Args) {
 
   useEffect(() => {
     if (checkingSession) return;
-    if (user) void loadProjects();
-    else setProjects([]);
-  }, [checkingSession, loadProjects, user]);
+    void loadProjects();
+  }, [checkingSession, loadProjects]);
 
   useEffect(() => {
     if (checkingSession) return;
@@ -360,6 +364,7 @@ export function useLibraryTracks({ router }: Args) {
     supabaseLoaded,
     supabaseErr,
     tracks,
+    publicProjectTrackIds,
     projects,
     loadingProjects,
     sendingToProject,
