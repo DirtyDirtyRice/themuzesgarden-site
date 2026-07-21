@@ -84,9 +84,10 @@ export default function ProjectSetlistPanel({
         }
         tabs={
           <ProjectTabs
-            projectId={controller.id}
+            project={controller.project}
             tab={controller.tab}
             setTab={controller.setTab}
+            onSaveProjectSettings={controller.handleSaveProjectSettings}
           />
         }
         content={

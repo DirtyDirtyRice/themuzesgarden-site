@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useState } from "react";
-import type { Project } from "./projectDetailsTypes";
+import type { Project, ProjectVisibility } from "./projectDetailsTypes";
 import { looksLikeUuid } from "./projectDetailsUtils";
 
 type Args = {
@@ -76,6 +76,38 @@ export function useProjectOverview({ projectId, supabase }: Args) {
     }
   }, [projectId, supabase]);
 
+  const saveProjectSettings = useCallback(async ({
+    title,
+    visibility,
+  }: {
+    title: string;
+    visibility: Exclude<ProjectVisibility, "shared">;
+  }) => {
+    setOverviewErr(null);
+
+    try {
+      if (!supabase) throw new Error("Supabase client not found.");
+      if (!looksLikeUuid(projectId)) throw new Error("Invalid project id");
+
+      const cleanTitle = title.trim();
+      if (!cleanTitle) throw new Error("Project title is required.");
+
+      const updatedAt = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("projects")
+        .update({ title: cleanTitle, visibility, updated_at: updatedAt })
+        .eq("id", projectId)
+        .select("*")
+        .single();
+
+      if (error) throw new Error(error.message);
+      setProject(normalizeProject(data));
+      return true;
+    } catch (e: any) {
+      setOverviewErr(e?.message ?? "Failed to save project settings");
+      return false;
+    }
+  }, [projectId, supabase]);
   const loadProject = useCallback(async () => {
     setOverviewErr(null);
     setOverviewLoading(true);
@@ -108,5 +140,6 @@ export function useProjectOverview({ projectId, supabase }: Args) {
     overviewErr,
     loadProject,
     saveProjectDescription,
+    saveProjectSettings,
   };
 }
