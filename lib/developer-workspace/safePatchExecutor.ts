@@ -5,6 +5,14 @@ import { readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { BuildCheckResult } from "./buildDiagnostics";
+import { analyzeArchitecturalHealth } from "./architecturalHealth";
+import {
+  evaluateArchitecturalRegression,
+  type ArchitecturalRegressionGateResult,
+} from "./architecturalRegressionGate";
+import { readRecentCodeEvents } from "./codeEventLedger";
+import { buildProjectIndex } from "./projectIndex";
+import { buildRelationshipIndex } from "./relationshipIndex";
 import { enqueueVerification } from "./verificationCoordinator";
 
 export type SafePatchProposal = {
@@ -28,6 +36,7 @@ export type SafePatchResult = SafePatchPreview & {
   applied: boolean;
   rolledBack: boolean;
   verification: BuildCheckResult;
+  architectureGate: ArchitecturalRegressionGateResult | null;
 };
 
 const BLOCKED_SEGMENTS = new Set([".git", ".next", ".vercel", "node_modules", "code-map-reports"]);
@@ -102,6 +111,7 @@ async function applySafePatchUnlocked(proposal: SafePatchProposal, expectedHash:
   const nextLines = [...resolved.lines.slice(0, proposal.startLine - 1), ...proposal.replacementLines, ...resolved.lines.slice(proposal.endLine)];
   const nextSource = nextLines.join(resolved.lineEnding);
   const temporaryFile = path.join(path.dirname(resolved.file), `.${path.basename(resolved.file)}.${randomUUID()}.safe-patch.tmp`);
+  const architectureBefore = await buildArchitectureReport(resolved.root);
   let applied = false;
   try {
     await writeFile(temporaryFile, nextSource, "utf8");
@@ -112,9 +122,15 @@ async function applySafePatchUnlocked(proposal: SafePatchProposal, expectedHash:
     const verification = verificationJob.result;
     if (verification.status !== "passed") {
       await writeFile(resolved.file, resolved.source, "utf8");
-      return { ...preview, applied: false, rolledBack: true, verification };
+      return { ...preview, applied: false, rolledBack: true, verification, architectureGate: null };
     }
-    return { ...preview, applied: true, rolledBack: false, verification };
+    const architectureAfter = await buildArchitectureReport(resolved.root);
+    const architectureGate = evaluateArchitecturalRegression(architectureBefore, architectureAfter);
+    if (!architectureGate.passed) {
+      await writeFile(resolved.file, resolved.source, "utf8");
+      return { ...preview, applied: false, rolledBack: true, verification, architectureGate };
+    }
+    return { ...preview, applied: true, rolledBack: false, verification, architectureGate };
   } catch (error) {
     if (applied) await writeFile(resolved.file, resolved.source, "utf8");
     throw error;
@@ -123,6 +139,14 @@ async function applySafePatchUnlocked(proposal: SafePatchProposal, expectedHash:
   }
 }
 
+async function buildArchitectureReport(root: string) {
+  const [projectIndex, relationshipIndex, events] = await Promise.all([
+    buildProjectIndex({ root }),
+    buildRelationshipIndex(root),
+    readRecentCodeEvents(1_000, root),
+  ]);
+  return analyzeArchitecturalHealth(projectIndex, relationshipIndex, events);
+}
 export function applySafePatch(
   proposal: SafePatchProposal,
   expectedHash: string,
