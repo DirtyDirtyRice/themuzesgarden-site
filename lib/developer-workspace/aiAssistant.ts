@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { AiCollectedEvidence } from "./aiEvidenceCollector";
 import { planAiEvidence, type AiEvidencePlan } from "./aiEvidencePlanner";
 import type { ProjectContextBundle } from "./projectContext";
 
@@ -51,6 +52,18 @@ function contextText(bundle: ProjectContextBundle): string {
   return `MATCHED SYMBOLS\n${symbols || "None"}\n\nMATCHED FILES\n${files || "None"}\n\nSOURCE EXCERPTS\n${excerpts || "None"}`;
 }
 
+function collectedEvidenceText(evidence: AiCollectedEvidence): string {
+  return JSON.stringify({
+    relationships: evidence.relationships,
+    dependencyImpacts: evidence.impacts,
+    codeHistory: evidence.events,
+    preventedErrors: evidence.preventedErrors,
+    architecturalFindings: evidence.architecturalFindings,
+    verificationHistory: evidence.verifications,
+    warnings: evidence.warnings,
+  }, null, 2);
+}
+
 function extractOutputText(body: ResponsesApiOutput): string {
   if (body.output_text?.trim()) return body.output_text.trim();
   const text = body.output?.flatMap((item) => item.content ?? [])
@@ -62,7 +75,7 @@ function extractOutputText(body: ResponsesApiOutput): string {
   return text;
 }
 
-export async function answerProjectQuestion(question: string, context: ProjectContextBundle): Promise<AiAssistantAnswer> {
+export async function answerProjectQuestion(question: string, context: ProjectContextBundle, collectedEvidence?: AiCollectedEvidence): Promise<AiAssistantAnswer> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured on the server.");
   const model = process.env.OPENAI_DEVELOPER_WORKSPACE_MODEL?.trim() || DEFAULT_MODEL;
@@ -77,7 +90,7 @@ export async function answerProjectQuestion(question: string, context: ProjectCo
       body: JSON.stringify({
         model,
         instructions: "You are the AI coding assistant inside a private Developer Workspace. Answer only from the supplied indexed project evidence. Be concise and actionable. Cite code locations inline as path:line. Clearly say when the evidence is insufficient. Never claim a file was changed or a command was run.",
-        input: `DEVELOPER QUESTION\n${question}\n\nEVIDENCE PLAN\nIntents: ${evidencePlan.intents.join(", ")}\nSelected engines: ${evidencePlan.evidence.join(", ")}\nReasoning: ${evidencePlan.rationale.join(" ")}\nFocus files: ${evidencePlan.focusFiles.join(", ") || "None"}\n\nINDEXED PROJECT EVIDENCE\n${contextText(context)}`,
+        input: `DEVELOPER QUESTION\n${question}\n\nEVIDENCE PLAN\nIntents: ${evidencePlan.intents.join(", ")}\nSelected engines: ${evidencePlan.evidence.join(", ")}\nReasoning: ${evidencePlan.rationale.join(" ")}\nFocus files: ${evidencePlan.focusFiles.join(", ") || "None"}\n\nINDEXED SOURCE EVIDENCE\n${contextText(context)}\n\nWORKSPACE INTELLIGENCE EVIDENCE\n${collectedEvidence ? collectedEvidenceText(collectedEvidence) : "No additional engine evidence was collected."}`,
       }),
       signal: controller.signal,
     });
