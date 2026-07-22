@@ -1,5 +1,6 @@
 import "server-only";
 
+import { planAiEvidence, type AiEvidencePlan } from "./aiEvidencePlanner";
 import type { ProjectContextBundle } from "./projectContext";
 
 export type AiAssistantCitation = {
@@ -15,6 +16,7 @@ export type AiAssistantAnswer = {
   responseId: string | null;
   citations: AiAssistantCitation[];
   contextCharacters: number;
+  evidencePlan: AiEvidencePlan;
 };
 
 type ResponsesApiOutput = {
@@ -64,6 +66,7 @@ export async function answerProjectQuestion(question: string, context: ProjectCo
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured on the server.");
   const model = process.env.OPENAI_DEVELOPER_WORKSPACE_MODEL?.trim() || DEFAULT_MODEL;
+  const evidencePlan = planAiEvidence(question, context);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -74,7 +77,7 @@ export async function answerProjectQuestion(question: string, context: ProjectCo
       body: JSON.stringify({
         model,
         instructions: "You are the AI coding assistant inside a private Developer Workspace. Answer only from the supplied indexed project evidence. Be concise and actionable. Cite code locations inline as path:line. Clearly say when the evidence is insufficient. Never claim a file was changed or a command was run.",
-        input: `DEVELOPER QUESTION\n${question}\n\nINDEXED PROJECT EVIDENCE\n${contextText(context)}`,
+        input: `DEVELOPER QUESTION\n${question}\n\nEVIDENCE PLAN\nIntents: ${evidencePlan.intents.join(", ")}\nSelected engines: ${evidencePlan.evidence.join(", ")}\nReasoning: ${evidencePlan.rationale.join(" ")}\nFocus files: ${evidencePlan.focusFiles.join(", ") || "None"}\n\nINDEXED PROJECT EVIDENCE\n${contextText(context)}`,
       }),
       signal: controller.signal,
     });
@@ -86,6 +89,7 @@ export async function answerProjectQuestion(question: string, context: ProjectCo
       responseId: body.id ?? null,
       citations: context.excerpts.map(({ path, startLine, endLine, reason }) => ({ path, startLine, endLine, reason })),
       contextCharacters: context.characterCount,
+      evidencePlan,
     };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") throw new Error("The AI request timed out after 120 seconds.");
