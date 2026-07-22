@@ -13,6 +13,7 @@ import {
 import { readRecentCodeEvents } from "./codeEventLedger";
 import { buildProjectIndex } from "./projectIndex";
 import { buildRelationshipIndex } from "./relationshipIndex";
+import { recordPreventedAttempt } from "./preventedErrorLedger";
 import { enqueueVerification } from "./verificationCoordinator";
 
 export type SafePatchProposal = {
@@ -37,6 +38,7 @@ export type SafePatchResult = SafePatchPreview & {
   rolledBack: boolean;
   verification: BuildCheckResult;
   architectureGate: ArchitecturalRegressionGateResult | null;
+  preventedErrorEventId: string | null;
 };
 
 const BLOCKED_SEGMENTS = new Set([".git", ".next", ".vercel", "node_modules", "code-map-reports"]);
@@ -122,15 +124,28 @@ async function applySafePatchUnlocked(proposal: SafePatchProposal, expectedHash:
     const verification = verificationJob.result;
     if (verification.status !== "passed") {
       await writeFile(resolved.file, resolved.source, "utf8");
-      return { ...preview, applied: false, rolledBack: true, verification, architectureGate: null };
+      return { ...preview, applied: false, rolledBack: true, verification, architectureGate: null, preventedErrorEventId: null };
     }
     const architectureAfter = await buildArchitectureReport(resolved.root);
     const architectureGate = evaluateArchitecturalRegression(architectureBefore, architectureAfter);
     if (!architectureGate.passed) {
       await writeFile(resolved.file, resolved.source, "utf8");
-      return { ...preview, applied: false, rolledBack: true, verification, architectureGate };
+      const preventedEvent = await recordPreventedAttempt({
+        file: proposal.file,
+        candidateSource: nextSource,
+        architecturalViolations: architectureGate.reasons.map((reason) => ({
+          code: reason.code,
+          message: reason.message,
+          file: reason.path ?? proposal.file,
+        })),
+        impactedFiles: architectureGate.reasons.flatMap((reason) =>
+          [reason.path, reason.relatedPath].filter((value): value is string => Boolean(value)),
+        ),
+        note: `Safe Patch rolled back after architectural health changed from ${architectureGate.previousHealthScore} to ${architectureGate.currentHealthScore}.`,
+      }, resolved.root);
+      return { ...preview, applied: false, rolledBack: true, verification, architectureGate, preventedErrorEventId: preventedEvent.id };
     }
-    return { ...preview, applied: true, rolledBack: false, verification, architectureGate };
+    return { ...preview, applied: true, rolledBack: false, verification, architectureGate, preventedErrorEventId: null };
   } catch (error) {
     if (applied) await writeFile(resolved.file, resolved.source, "utf8");
     throw error;

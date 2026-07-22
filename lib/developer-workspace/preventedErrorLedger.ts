@@ -29,7 +29,7 @@ export type PreventedErrorEvidence = {
   file: string;
   line: number | null;
   column: number | null;
-  source: "compiler" | "import-gate" | "completeness-contract" | "impact-analysis";
+  source: "compiler" | "import-gate" | "completeness-contract" | "impact-analysis" | "architecture-gate";
 };
 
 export type PreventedErrorEvent = {
@@ -65,6 +65,13 @@ export type PredictedRiskInput = {
   column?: number | null;
 };
 
+export type ArchitecturalViolationInput = {
+  code: string;
+  message: string;
+  file?: string;
+  line?: number | null;
+  column?: number | null;
+};
 export type RecordPreventedAttemptInput = {
   attemptId?: string;
   capsuleId?: string | null;
@@ -75,6 +82,7 @@ export type RecordPreventedAttemptInput = {
   contractFailures?: CompilerEvidenceInput[];
   compilerDiagnostics?: CompilerEvidenceInput[];
   predictedRisks?: PredictedRiskInput[];
+  architecturalViolations?: ArchitecturalViolationInput[];
   impactedFiles?: string[];
   impactedSymbols?: string[];
   note?: string;
@@ -224,6 +232,20 @@ function evidenceFromPredictions(risks: PredictedRiskInput[], fallbackFile: stri
   }));
 }
 
+function evidenceFromArchitecturalViolations(
+  violations: ArchitecturalViolationInput[],
+  fallbackFile: string,
+): PreventedErrorEvidence[] {
+  return violations.map((violation) => ({
+    classification: "architectural-violation" as const,
+    code: violation.code,
+    message: violation.message,
+    file: normalizedFile(violation.file || fallbackFile),
+    line: violation.line ?? null,
+    column: violation.column ?? null,
+    source: "architecture-gate" as const,
+  }));
+}
 function deduplicateEvidence(items: PreventedErrorEvidence[]): PreventedErrorEvidence[] {
   const values = new Map<string, PreventedErrorEvidence>();
   for (const item of items) {
@@ -275,6 +297,7 @@ export async function recordPreventedAttempt(
     ...evidenceFromContractFailures(input.contractFailures ?? [], file),
     ...evidenceFromCompiler(input.compilerDiagnostics ?? [], file),
     ...evidenceFromPredictions(input.predictedRisks ?? [], file),
+    ...evidenceFromArchitecturalViolations(input.architecturalViolations ?? [], file),
   ]);
   if (!evidence.length) throw new Error("A prevented attempt must include at least one failed validation or predicted risk.");
   const event: PreventedErrorEvent = {

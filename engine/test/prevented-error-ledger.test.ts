@@ -156,6 +156,34 @@ describe("Prevented Error Ledger", () => {
     expect(summarizePreventedErrors(events).currentlyHeld).toBe(12);
   });
 
+  it("records regression-gate blocks as confirmed architectural violations", async () => {
+    const root = await temporaryRoot();
+    const event = await recordPreventedAttempt(
+      {
+        file: "lib/timeline/TimelineEngine.ts",
+        candidateSource: "import { Loop } from './Loop';",
+        architecturalViolations: [
+          {
+            code: "NEW_DEPENDENCY_CYCLE",
+            message: "Patch introduced bidirectional coupling.",
+            file: "lib/timeline/TimelineEngine.ts",
+          },
+        ],
+        impactedFiles: ["lib/timeline/Loop.ts"],
+        note: "Safe Patch restored the original file.",
+      },
+      root,
+    );
+
+    expect(event.evidence).toHaveLength(1);
+    expect(event.evidence[0]).toMatchObject({
+      classification: "architectural-violation",
+      code: "NEW_DEPENDENCY_CYCLE",
+      source: "architecture-gate",
+    });
+    expect(summarizePreventedErrors([event]).architecturalViolations).toBe(1);
+    expect(summarizePreventedErrors([event]).predictedRisks).toBe(0);
+  });
   it("refuses to create proof without an actual failure or risk", async () => {
     const root = await temporaryRoot();
     await expect(recordPreventedAttempt(
