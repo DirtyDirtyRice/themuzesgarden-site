@@ -1,0 +1,25 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+
+export default function StandaloneDeveloperWorkspaceLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[#050b10] text-white">
+      <header className="sticky top-0 z-50 border-b border-cyan-300/20 bg-[#071016]/95 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg border border-cyan-300/40 bg-cyan-300/10 font-black text-cyan-200">DW</div>
+            <div>
+              <div className="text-sm font-black tracking-wide">Developer Workspace</div>
+              <div className="text-xs text-white/45">AI-assisted code intelligence and prevention</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-100">Local engine</span>
+            <Link href="/tools/developer-workspace" className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 hover:border-cyan-300/40 hover:text-white">Host-site view</Link>
+          </div>
+        </div>
+      </header>
+      {children}
+    </div>
+  );
+}
