@@ -157,6 +157,11 @@ function proposalCandidates(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
+const PAYLOAD_OPTIONAL_PROPOSAL_KINDS = new Set([
+  "archive-event",
+  "restore-event",
+]);
+
 function validateProposalCandidate(candidate: unknown): {
   kind: string;
   targetId: TimelineId | null;
@@ -183,7 +188,12 @@ function validateProposalCandidate(candidate: unknown): {
       ? { ...(object.payload as Record<string, unknown>) }
       : {};
   if (!kind) reasons.push("Proposal kind is required.");
-  if (!Object.keys(payload).length) reasons.push("Proposal payload is required.");
+  if (
+    !Object.keys(payload).length &&
+    !PAYLOAD_OPTIONAL_PROPOSAL_KINDS.has(kind)
+  ) {
+    reasons.push("Proposal payload is required.");
+  }
   return { kind: kind || "invalid", targetId, payload, reasons };
 }
 
