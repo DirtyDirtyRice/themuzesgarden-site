@@ -108,6 +108,19 @@ type DependencyView = {
   createdAt: string;
   createdBy: string;
 };
+type DependencyPlanView = {
+  ready: boolean;
+  requestedDraftIds: string[];
+  includedDraftIds: string[];
+  activationOrder: string[];
+  issues: Array<{
+    code: string;
+    message: string;
+    eventId?: string;
+    requiredEventId?: string;
+  }>;
+  generatedAt: string;
+};
 type HoldingView = {
   generatedAt: string;
   drafts: HeldDraft[];
@@ -166,6 +179,9 @@ export default function TimelineAIWorkspace() {
   const [draftEdits, setDraftEdits] = useState<Record<string, DraftEdit>>({});
   const [dependencyChoices, setDependencyChoices] = useState<
     Record<string, string>
+  >({});
+  const [dependencyPlans, setDependencyPlans] = useState<
+    Record<string, DependencyPlanView>
   >({});
 
   const selectedProject = useMemo(
@@ -413,6 +429,7 @@ export default function TimelineAIWorkspace() {
       requiredEventId,
     });
     setDependencyChoices((current) => ({ ...current, [draft.id]: "" }));
+    setDependencyPlans({});
     setMessage(
       "Requirement saved. Activation now waits for this event and cannot bypass it.",
     );
@@ -420,7 +437,23 @@ export default function TimelineAIWorkspace() {
 
   async function removeEventDependency(dependencyId: string) {
     await eventLifecycleAction("remove-event-dependency", { dependencyId });
+    setDependencyPlans({});
     setMessage("Event requirement removed.");
+  }
+
+  async function previewDependencyPlan(draftId: string) {
+    const response = await eventLifecycleAction("plan-event-dependencies", {
+      draftId,
+    });
+    setDependencyPlans((current) => ({
+      ...current,
+      [draftId]: response.plan,
+    }));
+    setMessage(
+      response.plan.ready
+        ? "Readiness check passed. The complete activation order is shown below."
+        : "Readiness check found blockers. Nothing was activated.",
+    );
   }
   const canStart = Boolean(
     projectId && workspace && instruction.trim() && !busy,
@@ -804,6 +837,7 @@ export default function TimelineAIWorkspace() {
                 trackId: draft.event.trackId,
               };
               const lastAttempt = draft.validationAttempts.at(-1);
+              const readiness = dependencyPlans[draft.id];
               const dependencies = (holding?.dependencies ?? []).filter(
                 (item) => item.dependentEventId === draft.event.id,
               );
@@ -922,6 +956,17 @@ export default function TimelineAIWorkspace() {
                     </button>
                     <button
                       onClick={() =>
+                        void run(`plan-${draft.id}`, () =>
+                          previewDependencyPlan(draft.id),
+                        )
+                      }
+                      disabled={Boolean(busy)}
+                      className="rounded-xl border border-sky-200/40 px-4 py-2 text-sm font-black text-sky-100 disabled:opacity-35"
+                    >
+                      Check Readiness
+                    </button>
+                    <button
+                      onClick={() =>
                         void run(`activate-${draft.id}`, () =>
                           activateEventDraft(draft.id),
                         )
@@ -1006,6 +1051,57 @@ export default function TimelineAIWorkspace() {
                       ) : null}
                     </div>
                   </div>
+                  {readiness ? (
+                    <div
+                      className={`mt-4 rounded-xl border p-4 ${
+                        readiness.ready
+                          ? "border-emerald-300/30 bg-emerald-300/5"
+                          : "border-rose-300/30 bg-rose-300/5"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-black">
+                          {readiness.ready
+                            ? "Ready for Atomic Activation"
+                            : "Activation Blocked"}
+                        </div>
+                        <span className="text-xs text-white/45">
+                          {readiness.includedDraftIds.length} held event(s) in
+                          group
+                        </span>
+                      </div>
+                      {readiness.activationOrder.length ? (
+                        <div className="mt-3">
+                          <div className="text-xs font-black uppercase tracking-wider text-white/45">
+                            Activation order
+                          </div>
+                          <ol className="mt-2 space-y-1 text-sm">
+                            {readiness.activationOrder.map((draftId, index) => {
+                              const planned = holding?.drafts.find(
+                                (item) => item.id === draftId,
+                              );
+                              return (
+                                <li key={draftId}>
+                                  {index + 1}. {planned?.event.title || draftId}
+                                </li>
+                              );
+                            })}
+                          </ol>
+                        </div>
+                      ) : null}
+                      {readiness.issues.map((issue) => (
+                        <div
+                          key={`${issue.code}-${issue.eventId ?? issue.message}`}
+                          className="mt-2 text-sm text-rose-100/80"
+                        >
+                          <span className="font-mono text-xs">
+                            {issue.code}
+                          </span>
+                          : {issue.message}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   {lastAttempt && !lastAttempt.accepted ? (
                     <div className="mt-4 rounded-xl border border-rose-300/25 bg-rose-300/5 p-4">
                       <div className="text-sm font-black text-rose-100">

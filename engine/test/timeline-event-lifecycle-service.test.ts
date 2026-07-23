@@ -159,6 +159,10 @@ describe("TimelineEventLifecycleService", () => {
 
     const restarted = new TimelineEventLifecycleService(filePath);
     const before = await restarted.snapshot(TIMELINE_WORKSPACE.projectId);
+    const plan = await restarted.planDependencies({
+      workspace: TIMELINE_WORKSPACE,
+      draftIds: [dependent.id],
+    });
     const activation = await restarted.activateDraft({
       draftId: dependent.id,
       workspace: TIMELINE_WORKSPACE,
@@ -167,6 +171,8 @@ describe("TimelineEventLifecycleService", () => {
     const after = await restarted.snapshot(TIMELINE_WORKSPACE.projectId);
 
     expect(before.dependencies).toHaveLength(1);
+    expect(plan.ready).toBe(true);
+    expect(plan.activationOrder).toEqual([required.id, dependent.id]);
     expect(activation.accepted).toBe(true);
     expect(
       activation.workspace.events.slice(-2).map((event) => event.id),

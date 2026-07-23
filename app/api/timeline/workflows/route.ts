@@ -95,6 +95,7 @@ type TimelineEventApiAction =
   | "begin-event-edit"
   | "update-event-draft"
   | "validate-event-draft"
+  | "plan-event-dependencies"
   | "activate-event-draft"
   | "add-event-dependency"
   | "remove-event-dependency";
@@ -104,6 +105,7 @@ const EVENT_ACTIONS = new Set<TimelineEventApiAction>([
   "begin-event-edit",
   "update-event-draft",
   "validate-event-draft",
+  "plan-event-dependencies",
   "activate-event-draft",
   "add-event-dependency",
   "remove-event-dependency",
@@ -481,6 +483,17 @@ export async function POST(request: NextRequest) {
         });
         return response({
           result,
+          holding: await lifecycle.snapshot(eventPayload.projectId),
+          workspaceRecord,
+        });
+      }
+      if (eventPayload.action === "plan-event-dependencies") {
+        const plan = await lifecycle.planDependencies({
+          workspace: workspaceRecord.workspace,
+          draftIds: [eventPayload.draftId!],
+        });
+        return response({
+          plan,
           holding: await lifecycle.snapshot(eventPayload.projectId),
           workspaceRecord,
         });
