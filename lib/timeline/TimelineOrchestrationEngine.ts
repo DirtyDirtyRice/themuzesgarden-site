@@ -99,6 +99,11 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
+function actionProposals(
+  proposals: TimelineAIProposal[],
+): TimelineAIProposal[] {
+  return proposals.filter((proposal) => proposal.kind !== "create-event");
+}
 export class TimelineOrchestrationEngine {
   readonly aiEngine: TimelineAIEngine;
   readonly actionEngine: TimelineActionEngine;
@@ -114,12 +119,14 @@ export class TimelineOrchestrationEngine {
       aiEngine?: TimelineAIEngine;
       actionEngine?: TimelineActionEngine;
       now?: () => Date;
-    } = {}
+    } = {},
   ) {
     this.now = options.now ?? (() => new Date());
     this.aiEngine =
-      options.aiEngine ?? new TimelineAIEngine(promptEngine, transport, { now: this.now });
-    this.actionEngine = options.actionEngine ?? new TimelineActionEngine(undefined, this.now);
+      options.aiEngine ??
+      new TimelineAIEngine(promptEngine, transport, { now: this.now });
+    this.actionEngine =
+      options.actionEngine ?? new TimelineActionEngine(undefined, this.now);
   }
 
   private readonly now: () => Date;
@@ -175,7 +182,7 @@ export class TimelineOrchestrationEngine {
       input.createdBy,
       build.valid
         ? `Prompt ${workflow.promptRequestId} queued as ${workflow.executionId}.`
-        : build.errors.join(" ")
+        : build.errors.join(" "),
     );
     return this.publicWorkflow(workflow);
   }
@@ -195,7 +202,12 @@ export class TimelineOrchestrationEngine {
       return this.review(workflow, execution, [], null);
     }
     if (execution.status === "cancelled") {
-      this.transition(workflow, "cancelled", "engine", "AI execution was cancelled.");
+      this.transition(
+        workflow,
+        "cancelled",
+        "engine",
+        "AI execution was cancelled.",
+      );
       workflow.completedAt = this.timestamp();
       return this.review(workflow, execution, [], null);
     }
@@ -210,14 +222,28 @@ export class TimelineOrchestrationEngine {
         workflow,
         "completed",
         "engine",
-        "AI response completed without timeline change proposals."
+        "AI response completed without timeline change proposals.",
+      );
+      workflow.completedAt = this.timestamp();
+      return this.review(workflow, execution, proposals, null);
+    }
+    const actionableProposals = actionProposals(proposals);
+    if (!actionableProposals.length) {
+      workflow.warnings.push(
+        `${proposals.length} AI event creation proposal(s) routed to the event holding lifecycle.`,
+      );
+      this.transition(
+        workflow,
+        "completed",
+        "engine",
+        "AI event creation proposals require independent holding-bin review and activation.",
       );
       workflow.completedAt = this.timestamp();
       return this.review(workflow, execution, proposals, null);
     }
     const plan = this.actionEngine.preview({
       workspace: workflow.baselineWorkspace,
-      proposals,
+      proposals: actionableProposals,
       createdBy: workflow.createdBy,
     });
     workflow.actionPlanId = plan.id;
@@ -227,27 +253,32 @@ export class TimelineOrchestrationEngine {
         workflow,
         "blocked",
         "engine",
-        `Action preview blocked with ${plan.issues.length} issue(s).`
+        `Action preview blocked with ${plan.issues.length} issue(s).`,
       );
     } else {
       this.transition(
         workflow,
         "awaiting-review",
         "engine",
-        `${proposals.length} proposal(s) held for human review.`
+        `${actionableProposals.length} action proposal(s) held for human review; ${proposals.length - actionableProposals.length} event creation proposal(s) routed to holding.`,
       );
     }
     return this.review(workflow, execution, proposals, plan);
   }
 
-  approve(workflowId: TimelineId, reviewedBy: TimelineUserId): TimelineWorkflowReview {
+  approve(
+    workflowId: TimelineId,
+    reviewedBy: TimelineUserId,
+  ): TimelineWorkflowReview {
     const workflow = this.requireWorkflow(workflowId);
     if (workflow.status !== "awaiting-review" || !workflow.executionId) {
       throw new Error("Only a workflow awaiting review can be approved.");
     }
-    const proposals = this.aiEngine
-      .listProposals(workflow.executionId)
-      .map((proposal) => this.aiEngine.validateProposal(proposal.id, reviewedBy));
+    const proposals = actionProposals(
+      this.aiEngine.listProposals(workflow.executionId),
+    ).map((proposal) =>
+      this.aiEngine.validateProposal(proposal.id, reviewedBy),
+    );
     const plan = this.actionEngine.preview({
       workspace: workflow.baselineWorkspace,
       proposals,
@@ -256,27 +287,32 @@ export class TimelineOrchestrationEngine {
     workflow.actionPlanId = plan.id;
     if (plan.status !== "ready") {
       workflow.errors.push(...plan.issues.map((issue) => issue.message));
-      this.transition(workflow, "blocked", reviewedBy, "Approved proposals failed final preview.");
+      this.transition(
+        workflow,
+        "blocked",
+        reviewedBy,
+        "Approved proposals failed final preview.",
+      );
     } else {
       this.transition(
         workflow,
         "ready-to-apply",
         reviewedBy,
-        `${proposals.length} proposal(s) approved and ready to apply.`
+        `${proposals.length} proposal(s) approved and ready to apply.`,
       );
     }
     return this.review(
       workflow,
       this.requireExecution(workflow.executionId),
-      proposals,
-      plan
+      this.aiEngine.listProposals(workflow.executionId),
+      plan,
     );
   }
 
   reject(
     workflowId: TimelineId,
     reviewedBy: TimelineUserId,
-    reason: string
+    reason: string,
   ): TimelineWorkflow {
     const workflow = this.requireWorkflow(workflowId);
     if (workflow.status !== "awaiting-review" || !workflow.executionId) {
@@ -294,7 +330,7 @@ export class TimelineOrchestrationEngine {
   apply(
     workflowId: TimelineId,
     currentWorkspace: TimelineWorkspace,
-    appliedBy: TimelineUserId
+    appliedBy: TimelineUserId,
   ): TimelineWorkflowApplication {
     const workflow = this.requireWorkflow(workflowId);
     if (
@@ -302,23 +338,28 @@ export class TimelineOrchestrationEngine {
       !workflow.executionId ||
       !workflow.actionPlanId
     ) {
-      throw new Error("Only a ready-to-apply workflow can change the timeline.");
+      throw new Error(
+        "Only a ready-to-apply workflow can change the timeline.",
+      );
     }
     this.assertWorkspaceUnchanged(workflow, currentWorkspace);
-    const proposals = this.aiEngine.listProposals(workflow.executionId);
+    const proposals = actionProposals(
+      this.aiEngine.listProposals(workflow.executionId),
+    );
     const receipt = this.actionEngine.apply({
       planId: workflow.actionPlanId,
       workspace: currentWorkspace,
       proposals,
       appliedBy,
     });
-    for (const proposal of proposals) this.aiEngine.markProposalApplied(proposal.id);
+    for (const proposal of proposals)
+      this.aiEngine.markProposalApplied(proposal.id);
     workflow.receiptId = receipt.id;
     this.transition(
       workflow,
       "applied",
       appliedBy,
-      `${receipt.changes.length} recorded change(s) applied atomically.`
+      `${receipt.changes.length} recorded change(s) applied atomically.`,
     );
     workflow.completedAt = this.timestamp();
     return {
@@ -328,7 +369,10 @@ export class TimelineOrchestrationEngine {
     };
   }
 
-  revert(workflowId: TimelineId, revertedBy: TimelineUserId): TimelineWorkflowApplication {
+  revert(
+    workflowId: TimelineId,
+    revertedBy: TimelineUserId,
+  ): TimelineWorkflowApplication {
     const workflow = this.requireWorkflow(workflowId);
     if (workflow.status !== "applied" || !workflow.receiptId) {
       throw new Error("Only an applied workflow can be reverted.");
@@ -338,7 +382,7 @@ export class TimelineOrchestrationEngine {
       workflow,
       "reverted",
       revertedBy,
-      "Timeline restored to its exact pre-application workspace."
+      "Timeline restored to its exact pre-application workspace.",
     );
     workflow.completedAt = this.timestamp();
     return {
@@ -350,7 +394,10 @@ export class TimelineOrchestrationEngine {
 
   cancel(workflowId: TimelineId, actor: TimelineUserId): TimelineWorkflow {
     const workflow = this.requireWorkflow(workflowId);
-    if (!["queued", "running"].includes(workflow.status) || !workflow.executionId) {
+    if (
+      !["queued", "running"].includes(workflow.status) ||
+      !workflow.executionId
+    ) {
       throw new Error("Only queued or running workflows can be cancelled.");
     }
     this.aiEngine.cancel(workflow.executionId);
@@ -372,7 +419,9 @@ export class TimelineOrchestrationEngine {
 
   getTransitions(workflowId?: TimelineId): TimelineWorkflowTransition[] {
     return this.transitions
-      .filter((transition) => !workflowId || transition.workflowId === workflowId)
+      .filter(
+        (transition) => !workflowId || transition.workflowId === workflowId,
+      )
       .map((transition) => ({ ...transition }));
   }
 
@@ -393,13 +442,20 @@ export class TimelineOrchestrationEngine {
     const existing = this.workflows.get(input.workflow.id);
     if (existing) return this.publicWorkflow(existing);
     if (["queued", "running"].includes(input.workflow.status)) {
-      throw new Error("Interrupted queued or running workflows cannot be restored.");
+      throw new Error(
+        "Interrupted queued or running workflows cannot be restored.",
+      );
     }
     if (input.baselineWorkspace.projectId !== input.workflow.projectId) {
       throw new Error("Restored workflow baseline belongs to another project.");
     }
-    if (input.execution && input.execution.projectId !== input.workflow.projectId) {
-      throw new Error("Restored workflow execution belongs to another project.");
+    if (
+      input.execution &&
+      input.execution.projectId !== input.workflow.projectId
+    ) {
+      throw new Error(
+        "Restored workflow execution belongs to another project.",
+      );
     }
     if (input.execution) {
       this.aiEngine.restore(input.execution, input.proposals);
@@ -415,28 +471,31 @@ export class TimelineOrchestrationEngine {
     this.transitions.push(...clone(input.transitions));
     this.workflowSequence = Math.max(
       this.workflowSequence,
-      Number(restored.id.match(/(\d+)$/)?.[1] ?? 0)
+      Number(restored.id.match(/(\d+)$/)?.[1] ?? 0),
     );
     this.transitionSequence = Math.max(
       this.transitionSequence,
       ...input.transitions.map((transition) =>
-        Number(transition.id.match(/(\d+)$/)?.[1] ?? 0)
+        Number(transition.id.match(/(\d+)$/)?.[1] ?? 0),
       ),
-      0
+      0,
     );
     return this.publicWorkflow(restored);
   }
 
   private assertWorkspaceUnchanged(
     workflow: InternalWorkflow,
-    currentWorkspace: TimelineWorkspace
+    currentWorkspace: TimelineWorkspace,
   ): void {
     if (currentWorkspace.projectId !== workflow.projectId) {
       throw new Error("Current workspace belongs to another project.");
     }
-    if (JSON.stringify(currentWorkspace) !== JSON.stringify(workflow.baselineWorkspace)) {
+    if (
+      JSON.stringify(currentWorkspace) !==
+      JSON.stringify(workflow.baselineWorkspace)
+    ) {
       throw new Error(
-        "Timeline changed after AI preview. Start a new preview before applying."
+        "Timeline changed after AI preview. Start a new preview before applying.",
       );
     }
   }
@@ -445,7 +504,7 @@ export class TimelineOrchestrationEngine {
     workflow: InternalWorkflow,
     execution: TimelineAIExecution,
     proposals: TimelineAIProposal[],
-    actionPlan: TimelineActionPlan | null
+    actionPlan: TimelineActionPlan | null,
   ): TimelineWorkflowReview {
     return {
       workflow: this.publicWorkflow(workflow),
@@ -457,13 +516,15 @@ export class TimelineOrchestrationEngine {
 
   private requireExecution(executionId: TimelineId): TimelineAIExecution {
     const execution = this.aiEngine.getExecution(executionId);
-    if (!execution) throw new Error(`AI execution ${executionId} does not exist.`);
+    if (!execution)
+      throw new Error(`AI execution ${executionId} does not exist.`);
     return execution;
   }
 
   private requireWorkflow(workflowId: TimelineId): InternalWorkflow {
     const workflow = this.workflows.get(workflowId);
-    if (!workflow) throw new Error(`Timeline workflow ${workflowId} does not exist.`);
+    if (!workflow)
+      throw new Error(`Timeline workflow ${workflowId} does not exist.`);
     return workflow;
   }
 
@@ -471,7 +532,7 @@ export class TimelineOrchestrationEngine {
     workflow: InternalWorkflow,
     status: TimelineWorkflowStatus,
     actor: TimelineWorkflowTransition["actor"],
-    detail: string
+    detail: string,
   ): void {
     const from = workflow.status;
     workflow.status = status;
@@ -484,7 +545,7 @@ export class TimelineOrchestrationEngine {
     from: TimelineWorkflowTransition["from"],
     to: TimelineWorkflowStatus,
     actor: TimelineWorkflowTransition["actor"],
-    detail: string
+    detail: string,
   ): void {
     this.transitionSequence += 1;
     this.transitions.push({
@@ -509,7 +570,7 @@ export class TimelineOrchestrationEngine {
 }
 
 export function blockedTimelineWorkflow(
-  build: TimelinePromptBuildResult
+  build: TimelinePromptBuildResult,
 ): Pick<TimelineWorkflow, "errors" | "warnings" | "status"> {
   return {
     status: build.valid ? "queued" : "blocked",
@@ -517,4 +578,3 @@ export function blockedTimelineWorkflow(
     warnings: [...build.warnings],
   };
 }
-

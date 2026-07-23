@@ -70,6 +70,9 @@ type HeldDraft = {
     type: string;
     title: string;
     content?: string;
+    source?: string;
+    aiGenerated?: boolean;
+    aiModel?: string;
   };
   validationAttempts: Array<{
     id: string;
@@ -90,7 +93,7 @@ type EvidenceRecord = {
   draftId: string;
   eventId: string;
   originEventId?: string;
-  action: "begin-edit" | "validation" | "activation";
+  action: "begin-edit" | "validation" | "activation" | "ai-intake";
   outcome: "prevented" | "validated" | "activated" | "edit-held";
   lifecycle: string;
   recordedAt: string;
@@ -306,6 +309,15 @@ export default function TimelineAIWorkspace() {
     if (result.workspace) setWorkspace(result.workspace);
     if (response.workspaceRecord?.workspace)
       setWorkspace(response.workspaceRecord.workspace);
+    if (response.holding) setHolding(response.holding);
+    if (response.intakeResults?.length) {
+      const accepted = response.intakeResults.filter(
+        (item: { acceptedForReview: boolean }) => item.acceptedForReview,
+      ).length;
+      setMessage(
+        `${response.intakeResults.length} AI event proposal(s) routed to holding: ${accepted} validated, ${response.intakeResults.length - accepted} incomplete. Nothing was activated.`,
+      );
+    }
     await refreshHistory();
   }
 
@@ -772,7 +784,12 @@ export default function TimelineAIWorkspace() {
                       </div>
                       <div className="mt-2 text-lg font-black">
                         {draft.event.title || "Untitled held event"}
-                      </div>
+                      </div>{" "}
+                      {draft.event.aiGenerated ? (
+                        <div className="mt-2 inline-flex rounded-full border border-violet-300/35 bg-violet-300/10 px-2 py-1 text-[10px] font-black uppercase text-violet-100">
+                          AI held · {draft.event.aiModel || "model recorded"}
+                        </div>
+                      ) : null}
                     </div>
                     <span
                       className={`rounded-full border px-3 py-2 text-xs font-black uppercase ${statusStyle(draft.lifecycle)}`}

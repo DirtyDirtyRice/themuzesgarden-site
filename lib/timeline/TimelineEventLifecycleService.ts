@@ -9,6 +9,11 @@ import {
   type TimelineEventHoldingSnapshot,
   type TimelineEventLifecycleResult,
 } from "./TimelineEventLifecycleEngine";
+import {
+  TimelineAIEventIntakeEngine,
+  type TimelineAIEventIntakeResult,
+} from "./TimelineAIEventIntakeEngine";
+import type { TimelineAIProposal } from "./TimelineAIEngine";
 import type {
   TimelineId,
   TimelineUserId,
@@ -27,7 +32,7 @@ export type TimelineEventEvidenceRecord = {
   draftId: TimelineId;
   eventId: TimelineId;
   originEventId?: TimelineId;
-  action: "begin-edit" | "validation" | "activation";
+  action: "begin-edit" | "validation" | "activation" | "ai-intake";
   outcome: "prevented" | "validated" | "activated" | "edit-held";
   lifecycle: string;
   recordedAt: string;
@@ -96,6 +101,35 @@ export class TimelineEventLifecycleService {
     this.initialized = true;
   }
 
+  async intakeAIProposal(input: {
+    proposal: TimelineAIProposal;
+    workspace: TimelineWorkspace;
+    reviewedBy: TimelineUserId;
+    model?: string;
+    provider?: string;
+  }): Promise<TimelineAIEventIntakeResult> {
+    await this.initialize();
+    const intake = new TimelineAIEventIntakeEngine(this.engine);
+    const result = intake.intake(input);
+    const reportIssues =
+      result.draft?.lastValidationReport?.detailedIssues.map((issue) => ({
+        code: issue.code,
+        message: issue.message,
+        path: issue.path,
+      })) ?? [];
+    this.record({
+      projectId: input.workspace.projectId,
+      draftId: result.draft?.id ?? `refused-ai-${input.proposal.id}`,
+      eventId: result.draft?.event.id ?? "uncreated-ai-event",
+      action: "ai-intake",
+      outcome: result.acceptedForReview ? "validated" : "prevented",
+      lifecycle: result.draft?.lifecycle ?? "incomplete",
+      recordedBy: input.reviewedBy,
+      issues: reportIssues.length ? reportIssues : result.issues,
+    });
+    await this.save();
+    return result;
+  }
   async createDraft(input: {
     workspace: TimelineWorkspace;
     createdBy: TimelineUserId;

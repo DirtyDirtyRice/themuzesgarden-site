@@ -38,7 +38,7 @@ async function createService(): Promise<TimelineRecordedOrchestrationEngine> {
     description: "Analyzes Timeline context and returns held proposals.",
     role: "user",
     content:
-      "Developer request:\n{{instruction}}\n\nTimeline evidence:\n{{timelineContext}}",
+      "Developer request:\n{{instruction}}\n\nTo propose a new held event, use kind create-event, targetId null, and payload fields: type, trackId, title, content, summary, notes, seconds, visibility, priority, tags, description, color. Never invent event types or protected fields. Creation proposals are validated and held; they are never activated automatically.\n\nTimeline evidence:\n{{timelineContext}}",
     requiredVariables: ["instruction", "timelineContext"],
     optionalVariables: [],
     tags: ["timeline", "assistant", "review-required"],

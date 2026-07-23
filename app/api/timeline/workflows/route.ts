@@ -476,8 +476,39 @@ export async function POST(request: NextRequest) {
 
     const { service } = await requireOwnedWorkflow(user, payload.workflowId!);
     switch (payload.action) {
-      case "execute":
-        return response(await service.execute(payload.workflowId!));
+      case "execute": {
+        const executed = await service.execute(payload.workflowId!);
+        const createProposals = executed.result.proposals.filter(
+          (proposal) => proposal.kind === "create-event",
+        );
+        if (!createProposals.length) return response(executed);
+        const workflow = executed.result.workflow;
+        const workspaceRecord = await getTimelineProjectWorkspaceStore().ensure(
+          workflow.projectId,
+          user.id,
+        );
+        const lifecycle = getTimelineEventLifecycleService();
+        const intakeResults = [];
+        for (const proposal of createProposals) {
+          intakeResults.push(
+            await lifecycle.intakeAIProposal({
+              proposal,
+              workspace: workspaceRecord.workspace,
+              reviewedBy: user.id,
+              model:
+                process.env.OPENAI_TIMELINE_MODEL?.trim() ||
+                process.env.OPENAI_DEVELOPER_WORKSPACE_MODEL?.trim() ||
+                "gpt-5.6",
+              provider: "openai",
+            }),
+          );
+        }
+        return response({
+          ...executed,
+          intakeResults,
+          holding: await lifecycle.snapshot(workflow.projectId),
+        });
+      }
       case "approve":
         return response(await service.approve(payload.workflowId!, user.id));
       case "reject":

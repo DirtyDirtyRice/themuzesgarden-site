@@ -62,6 +62,46 @@ describe("TimelineEventLifecycleService", () => {
     expect(stored.evidence).toHaveLength(2);
   });
 
+  it("persists AI workflow intake in holding and permanent evidence", async () => {
+    const filePath = await lifecycleFile();
+    const service = new TimelineEventLifecycleService(filePath);
+    const result = await service.intakeAIProposal({
+      proposal: {
+        id: "ai-create-proposal-1",
+        executionId: "ai-execution-1",
+        projectId: TIMELINE_WORKSPACE.projectId,
+        kind: "create-event",
+        targetId: null,
+        payload: {
+          type: "note",
+          trackId: TIMELINE_WORKSPACE.tracks[0].id,
+          title: "Persistent AI suggestion",
+          content: "Held for a human activation decision.",
+        },
+        status: "held",
+        reasons: [],
+        createdAt: "2026-07-23T00:00:00.000Z",
+      },
+      workspace: TIMELINE_WORKSPACE,
+      reviewedBy: "member-1",
+      model: "test-model",
+      provider: "test-provider",
+    });
+    const restarted = new TimelineEventLifecycleService(filePath);
+    const snapshot = await restarted.snapshot(TIMELINE_WORKSPACE.projectId);
+
+    expect(result.acceptedForReview).toBe(true);
+    expect(snapshot.heldCount).toBe(1);
+    expect(snapshot.drafts[0].event).toMatchObject({
+      source: "ai",
+      aiGenerated: true,
+      aiModel: "test-model",
+    });
+    expect(snapshot.evidence[0]).toMatchObject({
+      action: "ai-intake",
+      outcome: "validated",
+    });
+  });
   it("opens and upgrades the earlier draft-only lifecycle file", async () => {
     const filePath = await lifecycleFile();
     await writeFile(
