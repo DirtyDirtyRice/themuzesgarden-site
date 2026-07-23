@@ -161,8 +161,8 @@ const METADATA_CHILD_LINKS: TitleBarLink[] = [
 const TOOLS_CHILD_LINKS: TitleBarLink[] = [
   {
     label: "AI Developer Workspace",
-    href: "/tools/developer-workspace",
-    detail: "Open project indexing, build errors, AI investigation, safe patches, and code roots",
+    href: "/developer-workspace",
+    detail: "Open the standalone coding workspace for project indexing, prevention, investigation, and safe patches",
   },
   {
     label: "Timeline Engine (Live)",
@@ -457,7 +457,7 @@ export default function TitleBar() {
   const aiActive = isActivePath(pathname, "/ai");
   const libraryActive = isActivePath(pathname, "/library");
   const metadataActive = isActivePath(pathname, "/metadata");
-  const toolsActive = isActivePath(pathname, "/tools") || pathname === "/live";
+  const toolsActive = isActivePath(pathname, "/tools") || isActivePath(pathname, "/developer-workspace") || pathname === "/live";
   const trackMatcherActive = isActivePath(pathname, "/tools/track-matcher");
 
   const [aiMenuOpen, setAiMenuOpen] = useState(false);
