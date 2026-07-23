@@ -85,12 +85,27 @@ type HeldDraft = {
     reason: string;
   }>;
 };
+type EvidenceRecord = {
+  id: string;
+  draftId: string;
+  eventId: string;
+  originEventId?: string;
+  action: "begin-edit" | "validation" | "activation";
+  outcome: "prevented" | "validated" | "activated" | "edit-held";
+  lifecycle: string;
+  recordedAt: string;
+  recordedBy: string;
+  issues: Array<{ code: string; message: string; path?: string }>;
+};
 type HoldingView = {
   generatedAt: string;
   drafts: HeldDraft[];
   heldCount: number;
   validationAttemptCount: number;
   preventedActivationCount: number;
+  evidence: EvidenceRecord[];
+  evidenceCount: number;
+  successfulActivationCount: number;
 };
 type DraftEdit = {
   title: string;
@@ -594,7 +609,7 @@ export default function TimelineAIWorkspace() {
                 and you press Activate.
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
               <div className="rounded-xl border border-white/15 bg-black/40 p-3">
                 <div className="text-xl font-black">
                   {holding?.heldCount ?? 0}
@@ -612,6 +627,12 @@ export default function TimelineAIWorkspace() {
                   {holding?.preventedActivationCount ?? 0}
                 </div>
                 <div className="text-white/45">Prevented</div>
+              </div>{" "}
+              <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/5 p-3">
+                <div className="text-xl font-black">
+                  {holding?.successfulActivationCount ?? 0}
+                </div>
+                <div className="text-white/45">Activated</div>
               </div>
             </div>
           </div>
@@ -888,6 +909,78 @@ export default function TimelineAIWorkspace() {
                 lifecycle.
               </div>
             ) : null}
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-violet-300/20 bg-violet-300/[0.035] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-black">
+                  Permanent Lifecycle Evidence
+                </h3>
+                <p className="mt-1 text-xs text-white/45">
+                  Restart-safe proof of validations, prevented actions, safe
+                  edit starts, and successful activations.
+                </p>
+              </div>
+              <span className="rounded-full border border-white/15 px-3 py-2 text-xs font-black">
+                {holding?.evidenceCount ?? 0} records
+              </span>
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {(holding?.evidence ?? []).slice(0, 30).map((record) => (
+                <details
+                  key={record.id}
+                  className={`rounded-xl border p-4 ${record.outcome === "prevented" ? "border-rose-300/25 bg-rose-300/5" : record.outcome === "activated" ? "border-emerald-300/25 bg-emerald-300/5" : "border-white/10 bg-black/35"}`}
+                >
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-black capitalize">
+                          {record.outcome.replaceAll("-", " ")} ·{" "}
+                          {record.action.replaceAll("-", " ")}
+                        </div>
+                        <div className="mt-1 font-mono text-[11px] text-white/40">
+                          {record.eventId}
+                        </div>
+                      </div>
+                      <div className="text-right text-[11px] text-white/45">
+                        {new Date(record.recordedAt).toLocaleString()}
+                        <br />
+                        {record.issues.length} issue(s)
+                      </div>
+                    </div>
+                  </summary>
+                  <div className="mt-3 border-t border-white/10 pt-3 text-xs text-white/55">
+                    <div>Draft: {record.draftId}</div>
+                    {record.originEventId ? (
+                      <div>Original: {record.originEventId}</div>
+                    ) : null}
+                    <div>
+                      Actor: {record.recordedBy} · Lifecycle: {record.lifecycle}
+                    </div>
+                    {record.issues.map((issue, index) => (
+                      <div
+                        key={`${record.id}-${issue.code}-${index}`}
+                        className="mt-2 rounded-lg bg-black/35 p-2 text-rose-100/80"
+                      >
+                        <span className="font-mono">{issue.code}</span>:{" "}
+                        {issue.message}
+                        {issue.path ? (
+                          <div className="mt-1 font-mono text-[10px] text-white/35">
+                            {issue.path}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              ))}
+              {!holding?.evidence.length ? (
+                <div className="text-sm text-white/40">
+                  Evidence will appear after the first validation or safe edit.
+                </div>
+              ) : null}
+            </div>
           </div>
         </section>
         <section className="mt-6 rounded-3xl border border-white/15 bg-white/[0.035] p-6">
