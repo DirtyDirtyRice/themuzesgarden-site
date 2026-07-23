@@ -50,11 +50,6 @@ const PRIMARY_LINKS: TitleBarLink[] = [
     detail: "Upload music into The Muzes Garden",
   },
   {
-    label: "Live",
-    href: "/live",
-    detail: "Open live tools",
-  },
-  {
     label: "Members",
     href: "/members",
     detail: "Open member tools",

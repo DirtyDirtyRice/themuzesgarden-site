@@ -19,6 +19,7 @@ import LiveToastBanner from "./LiveToastBanner";
 import LiveGameModePanel from "./LiveGameModePanel";
 import LiveTransportPanel from "./LiveTransportPanel";
 import LiveFooterPanel from "./LiveFooterPanel";
+import LiveMusicChallengeGuide from "./LiveMusicChallengeGuide";
 
 import type { ExecStatus, LastScore, ViewState, GameState, ToastKind, ToastState } from "./livePageTypes";
 import { clamp01, computeAvgDisplayedDurationTicks } from "./livePageFormatting";
@@ -449,6 +450,8 @@ export default function LivePage() {
     <div className="min-h-screen bg-black p-6 text-white">
       <div className="mx-auto max-w-5xl space-y-6">
         <h1 className="text-2xl font-bold text-white">Live Engine — Metronome + Transition Planner (Execute)</h1>
+
+        <LiveMusicChallengeGuide />
 
         <LiveToastBanner toast={toast} />
 
