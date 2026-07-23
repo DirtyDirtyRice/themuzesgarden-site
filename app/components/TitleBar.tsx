@@ -98,6 +98,11 @@ const AI_CHILD_LINKS: TitleBarLink[] = [
     detail: "Open the AI workspace dashboard",
   },
   {
+    label: "Timeline AI",
+    href: "/ai/timeline",
+    detail: "Review and apply held Timeline AI proposals",
+  },
+  {
     label: "Prompt Library",
     href: "/ai/prompts",
     detail: "Create and organize reusable prompts",
