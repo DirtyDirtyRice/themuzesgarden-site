@@ -24,6 +24,7 @@ export type TimelineValidationScope =
 
 export type TimelineValidationCode =
   | "required"
+  | "invalid-type"
   | "duplicate-id"
   | "invalid-number"
   | "invalid-range"
@@ -56,11 +57,7 @@ export type TimelineDetailedValidationReport = TimelineValidationReport & {
 };
 
 export type TimelineLifecycleState =
-  | "draft"
-  | "incomplete"
-  | "waiting-validation"
-  | "validated"
-  | "active";
+  "draft" | "incomplete" | "waiting-validation" | "validated" | "active";
 
 export type TimelineActivationDecision = {
   accepted: boolean;
@@ -86,6 +83,59 @@ export type TimelineValidationSnapshot = {
   preventedActivationCount: number;
 };
 
+const VALID_EVENT_TYPES = new Set<TimelineEvent["type"]>([
+  "prompt",
+  "conversation",
+  "response",
+  "lyric",
+  "marker",
+  "measure",
+  "beat",
+  "tempo",
+  "tempo-change",
+  "time-signature",
+  "key-signature",
+  "key-change",
+  "chord",
+  "melody",
+  "harmony",
+  "instrument",
+  "arrangement",
+  "transition",
+  "automation",
+  "quantize",
+  "waveform",
+  "stem",
+  "audio",
+  "video",
+  "image",
+  "midi",
+  "note",
+  "comment",
+  "idea",
+  "task",
+  "analysis",
+  "relationship",
+  "reference",
+  "version",
+  "revision",
+  "decision",
+  "score",
+  "mix",
+  "master",
+  "mastering",
+  "recording",
+  "take",
+  "publish",
+  "publishing",
+  "release",
+  "metadata",
+  "catalog",
+  "copyright",
+  "licensing",
+  "royalties",
+  "custom",
+]);
 const ACTIVE_STATUSES = new Set<TimelineStatus>([
   "active",
   "approved",
@@ -94,7 +144,9 @@ const ACTIVE_STATUSES = new Set<TimelineStatus>([
   "recording",
 ]);
 
-const PAYLOAD_FIELDS: Partial<Record<TimelineEvent["type"], (keyof TimelineEvent)[]>> = {
+const PAYLOAD_FIELDS: Partial<
+  Record<TimelineEvent["type"], (keyof TimelineEvent)[]>
+> = {
   prompt: ["prompt", "content"],
   response: ["response", "content"],
   conversation: ["content", "conversationId"],
@@ -133,7 +185,11 @@ function isValidDate(value: unknown): boolean {
   return hasText(value) && !Number.isNaN(Date.parse(value));
 }
 
-function issueId(scope: TimelineValidationScope, code: TimelineValidationCode, path: string) {
+function issueId(
+  scope: TimelineValidationScope,
+  code: TimelineValidationCode,
+  path: string,
+) {
   return `timeline-validation:${scope}:${code}:${path}`;
 }
 
@@ -146,7 +202,7 @@ function createIssue(
     entityId?: TimelineId;
     severity?: TimelineValidationIssue["severity"];
     blocking?: boolean;
-  } = {}
+  } = {},
 ): TimelineDetailedValidationIssue {
   const severity = options.severity ?? "error";
   return {
@@ -161,16 +217,28 @@ function createIssue(
   };
 }
 
-function buildReport(issues: TimelineDetailedValidationIssue[]): TimelineDetailedValidationReport {
-  const errorCount = issues.filter((issue) => issue.severity === "error").length;
-  const warningCount = issues.filter((issue) => issue.severity === "warning").length;
-  const informationCount = issues.filter((issue) => issue.severity === "info").length;
+function buildReport(
+  issues: TimelineDetailedValidationIssue[],
+): TimelineDetailedValidationReport {
+  const errorCount = issues.filter(
+    (issue) => issue.severity === "error",
+  ).length;
+  const warningCount = issues.filter(
+    (issue) => issue.severity === "warning",
+  ).length;
+  const informationCount = issues.filter(
+    (issue) => issue.severity === "info",
+  ).length;
   const blockingIssueCount = issues.filter((issue) => issue.blocking).length;
 
   return {
     valid: blockingIssueCount === 0,
     issueCount: issues.length,
-    issues: issues.map(({ id, severity, message }) => ({ id, severity, message })),
+    issues: issues.map(({ id, severity, message }) => ({
+      id,
+      severity,
+      message,
+    })),
     generatedAt: new Date().toISOString(),
     errorCount,
     warningCount,
@@ -182,13 +250,19 @@ function buildReport(issues: TimelineDetailedValidationIssue[]): TimelineDetaile
 
 function validateLocation(
   location: TimelineLocation | null | undefined,
-  eventId: TimelineId
+  eventId: TimelineId,
 ): TimelineDetailedValidationIssue[] {
   if (!location) {
     return [
-      createIssue("event", "required", `events.${eventId}.location`, "Event location is required.", {
-        entityId: eventId,
-      }),
+      createIssue(
+        "event",
+        "required",
+        `events.${eventId}.location`,
+        "Event location is required.",
+        {
+          entityId: eventId,
+        },
+      ),
     ];
   }
 
@@ -205,15 +279,27 @@ function validateLocation(
     const path = `events.${eventId}.location.${field}`;
     if (!isFiniteNumber(value)) {
       issues.push(
-        createIssue("event", "invalid-number", path, `${field} must be a finite number.`, {
-          entityId: eventId,
-        })
+        createIssue(
+          "event",
+          "invalid-number",
+          path,
+          `${field} must be a finite number.`,
+          {
+            entityId: eventId,
+          },
+        ),
       );
     } else if (value < minimum) {
       issues.push(
-        createIssue("event", "invalid-range", path, `${field} cannot be less than ${minimum}.`, {
-          entityId: eventId,
-        })
+        createIssue(
+          "event",
+          "invalid-range",
+          path,
+          `${field} cannot be less than ${minimum}.`,
+          {
+            entityId: eventId,
+          },
+        ),
       );
     }
   }
@@ -224,18 +310,42 @@ function validateLocation(
 function validateAttachment(
   attachment: TimelineAttachment,
   eventId: TimelineId,
-  index: number
+  index: number,
 ): TimelineDetailedValidationIssue[] {
   const issues: TimelineDetailedValidationIssue[] = [];
   const base = `events.${eventId}.attachments.${index}`;
   if (!hasText(attachment.id)) {
-    issues.push(createIssue("event", "required", `${base}.id`, "Attachment ID is required.", { entityId: eventId }));
+    issues.push(
+      createIssue(
+        "event",
+        "required",
+        `${base}.id`,
+        "Attachment ID is required.",
+        { entityId: eventId },
+      ),
+    );
   }
   if (!hasText(attachment.name)) {
-    issues.push(createIssue("event", "required", `${base}.name`, "Attachment name is required.", { entityId: eventId }));
+    issues.push(
+      createIssue(
+        "event",
+        "required",
+        `${base}.name`,
+        "Attachment name is required.",
+        { entityId: eventId },
+      ),
+    );
   }
   if (!hasText(attachment.path)) {
-    issues.push(createIssue("event", "required", `${base}.path`, "Attachment path is required.", { entityId: eventId }));
+    issues.push(
+      createIssue(
+        "event",
+        "required",
+        `${base}.path`,
+        "Attachment path is required.",
+        { entityId: eventId },
+      ),
+    );
   }
   return issues;
 }
@@ -244,13 +354,21 @@ function validateRelationship(
   relationship: TimelineRelationship,
   event: TimelineEvent,
   index: number,
-  eventIds?: ReadonlySet<TimelineId>
+  eventIds?: ReadonlySet<TimelineId>,
 ): TimelineDetailedValidationIssue[] {
   const issues: TimelineDetailedValidationIssue[] = [];
   const base = `events.${event.id}.relationships.${index}`;
 
   if (!hasText(relationship.sourceId)) {
-    issues.push(createIssue("relationship", "required", `${base}.sourceId`, "Relationship source ID is required.", { entityId: event.id }));
+    issues.push(
+      createIssue(
+        "relationship",
+        "required",
+        `${base}.sourceId`,
+        "Relationship source ID is required.",
+        { entityId: event.id },
+      ),
+    );
   } else if (relationship.sourceId !== event.id) {
     issues.push(
       createIssue(
@@ -258,13 +376,21 @@ function validateRelationship(
         "relationship-source-mismatch",
         `${base}.sourceId`,
         `Relationship source ${relationship.sourceId} does not match owning event ${event.id}.`,
-        { entityId: event.id }
-      )
+        { entityId: event.id },
+      ),
     );
   }
 
   if (!hasText(relationship.targetId)) {
-    issues.push(createIssue("relationship", "required", `${base}.targetId`, "Relationship target ID is required.", { entityId: event.id }));
+    issues.push(
+      createIssue(
+        "relationship",
+        "required",
+        `${base}.targetId`,
+        "Relationship target ID is required.",
+        { entityId: event.id },
+      ),
+    );
   } else {
     if (relationship.targetId === event.id) {
       issues.push(
@@ -273,8 +399,8 @@ function validateRelationship(
           "relationship-self-reference",
           `${base}.targetId`,
           "An event cannot relate to itself.",
-          { entityId: event.id }
-        )
+          { entityId: event.id },
+        ),
       );
     }
     if (eventIds && !eventIds.has(relationship.targetId)) {
@@ -284,8 +410,8 @@ function validateRelationship(
           "unknown-event",
           `${base}.targetId`,
           `Relationship target ${relationship.targetId} does not exist.`,
-          { entityId: event.id }
-        )
+          { entityId: event.id },
+        ),
       );
     }
   }
@@ -297,8 +423,8 @@ function validateRelationship(
         "required",
         `${base}.type`,
         "Relationship type or relationship label is required.",
-        { entityId: event.id }
-      )
+        { entityId: event.id },
+      ),
     );
   }
 
@@ -318,22 +444,57 @@ export class TimelineValidationEngine {
   private readonly heldEvents = new Map<TimelineId, TimelineHeldEvent>();
   private preventedActivationCount = 0;
 
-  validateTrack(track: TimelineTrack, index = 0): TimelineDetailedValidationReport {
+  validateTrack(
+    track: TimelineTrack,
+    index = 0,
+  ): TimelineDetailedValidationReport {
     const issues: TimelineDetailedValidationIssue[] = [];
     const entityId = track.id || `track-${index}`;
     const base = `tracks.${entityId}`;
 
     if (!hasText(track.id)) {
-      issues.push(createIssue("track", "required", `${base}.id`, "Track ID is required.", { entityId }));
+      issues.push(
+        createIssue(
+          "track",
+          "required",
+          `${base}.id`,
+          "Track ID is required.",
+          { entityId },
+        ),
+      );
     }
     if (!hasText(track.title)) {
-      issues.push(createIssue("track", "required", `${base}.title`, "Track title is required.", { entityId }));
+      issues.push(
+        createIssue(
+          "track",
+          "required",
+          `${base}.title`,
+          "Track title is required.",
+          { entityId },
+        ),
+      );
     }
     if (!hasText(track.color)) {
-      issues.push(createIssue("track", "required", `${base}.color`, "Track color is required.", { entityId }));
+      issues.push(
+        createIssue(
+          "track",
+          "required",
+          `${base}.color`,
+          "Track color is required.",
+          { entityId },
+        ),
+      );
     }
     if (!isFiniteNumber(track.height) || track.height <= 0) {
-      issues.push(createIssue("track", "invalid-range", `${base}.height`, "Track height must be greater than zero.", { entityId }));
+      issues.push(
+        createIssue(
+          "track",
+          "invalid-range",
+          `${base}.height`,
+          "Track height must be greater than zero.",
+          { entityId },
+        ),
+      );
     }
 
     return buildReport(issues);
@@ -345,88 +506,185 @@ export class TimelineValidationEngine {
       trackIds?: ReadonlySet<TimelineId>;
       eventIds?: ReadonlySet<TimelineId>;
       projectId?: TimelineId;
-    } = {}
+    } = {},
   ): TimelineDetailedValidationReport {
     const issues: TimelineDetailedValidationIssue[] = [];
     const eventId = event.id || "missing-id";
     const base = `events.${eventId}`;
 
-    if (!hasText(event.id)) issues.push(createIssue("event", "required", `${base}.id`, "Event ID is required."));
-    if (!hasText(event.trackId)) {
-      issues.push(createIssue("event", "required", `${base}.trackId`, "Event track ID is required.", { entityId: eventId }));
-    } else if (context.trackIds && !context.trackIds.has(event.trackId)) {
+    if (!VALID_EVENT_TYPES.has(event.type)) {
       issues.push(
-        createIssue("event", "unknown-track", `${base}.trackId`, `Track ${event.trackId} does not exist.`, {
-          entityId: eventId,
-        })
+        createIssue(
+          "event",
+          "invalid-type",
+          `${base}.type`,
+          `Event type ${String(event.type) || "(missing)"} is not a recognized Timeline event type.`,
+          { entityId: eventId },
+        ),
       );
     }
-    if (context.projectId && event.projectId && event.projectId !== context.projectId) {
+    if (!hasText(event.id))
+      issues.push(
+        createIssue("event", "required", `${base}.id`, "Event ID is required."),
+      );
+    if (!hasText(event.trackId)) {
+      issues.push(
+        createIssue(
+          "event",
+          "required",
+          `${base}.trackId`,
+          "Event track ID is required.",
+          { entityId: eventId },
+        ),
+      );
+    } else if (context.trackIds && !context.trackIds.has(event.trackId)) {
+      issues.push(
+        createIssue(
+          "event",
+          "unknown-track",
+          `${base}.trackId`,
+          `Track ${event.trackId} does not exist.`,
+          {
+            entityId: eventId,
+          },
+        ),
+      );
+    }
+    if (
+      context.projectId &&
+      event.projectId &&
+      event.projectId !== context.projectId
+    ) {
       issues.push(
         createIssue(
           "event",
           "project-mismatch",
           `${base}.projectId`,
           `Event project ${event.projectId} does not match workspace project ${context.projectId}.`,
-          { entityId: eventId }
-        )
+          { entityId: eventId },
+        ),
       );
     }
     if (!hasText(event.title)) {
-      issues.push(createIssue("event", "required", `${base}.title`, "Event title is required.", { entityId: eventId }));
-    }
-    if (!event.metadata || !hasText(event.metadata.title) || !hasText(event.metadata.category)) {
       issues.push(
-        createIssue("event", "required", `${base}.metadata`, "Event metadata requires a title and category.", {
-          entityId: eventId,
-        })
+        createIssue(
+          "event",
+          "required",
+          `${base}.title`,
+          "Event title is required.",
+          { entityId: eventId },
+        ),
       );
     }
-    if (!event.audit || !isValidDate(event.audit.createdAt) || !isValidDate(event.audit.updatedAt)) {
+    if (
+      !event.metadata ||
+      !hasText(event.metadata.title) ||
+      !hasText(event.metadata.category)
+    ) {
       issues.push(
-        createIssue("event", "invalid-date", `${base}.audit`, "Event audit requires valid created and updated dates.", {
-          entityId: eventId,
-        })
+        createIssue(
+          "event",
+          "required",
+          `${base}.metadata`,
+          "Event metadata requires a title and category.",
+          {
+            entityId: eventId,
+          },
+        ),
       );
-    } else if (!hasText(event.audit.createdBy) || !hasText(event.audit.updatedBy)) {
+    }
+    if (
+      !event.audit ||
+      !isValidDate(event.audit.createdAt) ||
+      !isValidDate(event.audit.updatedAt)
+    ) {
       issues.push(
-        createIssue("event", "required", `${base}.audit.user`, "Event audit requires creator and updater IDs.", {
-          entityId: eventId,
-        })
+        createIssue(
+          "event",
+          "invalid-date",
+          `${base}.audit`,
+          "Event audit requires valid created and updated dates.",
+          {
+            entityId: eventId,
+          },
+        ),
+      );
+    } else if (
+      !hasText(event.audit.createdBy) ||
+      !hasText(event.audit.updatedBy)
+    ) {
+      issues.push(
+        createIssue(
+          "event",
+          "required",
+          `${base}.audit.user`,
+          "Event audit requires creator and updater IDs.",
+          {
+            entityId: eventId,
+          },
+        ),
       );
     }
 
     issues.push(...validateLocation(event.location, eventId));
-    event.attachments.forEach((attachment, index) => issues.push(...validateAttachment(attachment, eventId, index)));
+    event.attachments.forEach((attachment, index) =>
+      issues.push(...validateAttachment(attachment, eventId, index)),
+    );
     event.relationships.forEach((relationship, index) =>
-      issues.push(...validateRelationship(relationship, event, index, context.eventIds))
+      issues.push(
+        ...validateRelationship(relationship, event, index, context.eventIds),
+      ),
     );
 
-    if (ACTIVE_STATUSES.has(event.status) && !hasTypePayload(event)) {
+    if (
+      ACTIVE_STATUSES.has(event.status) &&
+      (VALID_EVENT_TYPES.has(event.type)
+        ? !hasTypePayload(event)
+        : !hasText(event.content))
+    ) {
       issues.push(
         createIssue(
           "activation",
           "missing-payload",
           `${base}.${event.type}`,
           `Active ${event.type} events require usable ${event.type} content.`,
-          { entityId: eventId }
-        )
+          { entityId: eventId },
+        ),
       );
     }
-    if (event.startTime !== undefined && event.endTime !== undefined && event.endTime < event.startTime) {
+    if (
+      event.startTime !== undefined &&
+      event.endTime !== undefined &&
+      event.endTime < event.startTime
+    ) {
       issues.push(
-        createIssue("event", "invalid-range", `${base}.endTime`, "Event end time cannot precede start time.", {
-          entityId: eventId,
-        })
+        createIssue(
+          "event",
+          "invalid-range",
+          `${base}.endTime`,
+          "Event end time cannot precede start time.",
+          {
+            entityId: eventId,
+          },
+        ),
       );
     }
     for (const field of ["confidence", "energy", "valence"] as const) {
       const value = event[field];
-      if (value !== undefined && (!isFiniteNumber(value) || value < 0 || value > 1)) {
+      if (
+        value !== undefined &&
+        (!isFiniteNumber(value) || value < 0 || value > 1)
+      ) {
         issues.push(
-          createIssue("event", "invalid-range", `${base}.${field}`, `${field} must be between 0 and 1.`, {
-            entityId: eventId,
-          })
+          createIssue(
+            "event",
+            "invalid-range",
+            `${base}.${field}`,
+            `${field} must be between 0 and 1.`,
+            {
+              entityId: eventId,
+            },
+          ),
         );
       }
     }
@@ -434,10 +692,19 @@ export class TimelineValidationEngine {
     return buildReport(issues);
   }
 
-  validateWorkspace(workspace: TimelineWorkspace): TimelineDetailedValidationReport {
+  validateWorkspace(
+    workspace: TimelineWorkspace,
+  ): TimelineDetailedValidationReport {
     const issues: TimelineDetailedValidationIssue[] = [];
     if (!hasText(workspace.projectId)) {
-      issues.push(createIssue("workspace", "required", "workspace.projectId", "Workspace project ID is required."));
+      issues.push(
+        createIssue(
+          "workspace",
+          "required",
+          "workspace.projectId",
+          "Workspace project ID is required.",
+        ),
+      );
     }
 
     const trackIds = new Set<TimelineId>();
@@ -446,9 +713,15 @@ export class TimelineValidationEngine {
       issues.push(...report.detailedIssues);
       if (trackIds.has(track.id)) {
         issues.push(
-          createIssue("track", "duplicate-id", `tracks.${track.id}`, `Duplicate track ID ${track.id}.`, {
-            entityId: track.id,
-          })
+          createIssue(
+            "track",
+            "duplicate-id",
+            `tracks.${track.id}`,
+            `Duplicate track ID ${track.id}.`,
+            {
+              entityId: track.id,
+            },
+          ),
         );
       }
       trackIds.add(track.id);
@@ -458,9 +731,15 @@ export class TimelineValidationEngine {
     workspace.events.forEach((event) => {
       if (eventIds.has(event.id)) {
         issues.push(
-          createIssue("event", "duplicate-id", `events.${event.id}`, `Duplicate event ID ${event.id}.`, {
-            entityId: event.id,
-          })
+          createIssue(
+            "event",
+            "duplicate-id",
+            `events.${event.id}`,
+            `Duplicate event ID ${event.id}.`,
+            {
+              entityId: event.id,
+            },
+          ),
         );
       }
       eventIds.add(event.id);
@@ -471,7 +750,7 @@ export class TimelineValidationEngine {
           trackIds,
           eventIds,
           projectId: workspace.projectId,
-        }).detailedIssues
+        }).detailedIssues,
       );
     });
 
@@ -482,8 +761,8 @@ export class TimelineValidationEngine {
             "selection",
             "unknown-event",
             `selection.${selectedId}`,
-            `Selected event ${selectedId} does not exist.`
-          )
+            `Selected event ${selectedId} does not exist.`,
+          ),
         );
       }
     }
@@ -498,8 +777,8 @@ export class TimelineValidationEngine {
           "viewport",
           "invalid-range",
           "workspace.viewport",
-          "Viewport requires positive zoom and an end at or after its start."
-        )
+          "Viewport requires positive zoom and an end at or after its start.",
+        ),
       );
     }
 
@@ -510,8 +789,8 @@ export class TimelineValidationEngine {
           "statistics-mismatch",
           "workspace.statistics.totalEvents",
           `Statistics report ${workspace.statistics.totalEvents} events, but ${workspace.events.length} are loaded.`,
-          { severity: "warning", blocking: false }
-        )
+          { severity: "warning", blocking: false },
+        ),
       );
     }
 
@@ -523,7 +802,10 @@ export class TimelineValidationEngine {
     return buildReport([...workspaceReport.detailedIssues]);
   }
 
-  evaluateActivation(event: TimelineEvent, workspace: TimelineWorkspace): TimelineActivationDecision {
+  evaluateActivation(
+    event: TimelineEvent,
+    workspace: TimelineWorkspace,
+  ): TimelineActivationDecision {
     const trackIds = new Set(workspace.tracks.map((track) => track.id));
     const eventIds = new Set(workspace.events.map((item) => item.id));
     eventIds.add(event.id);

@@ -10,6 +10,7 @@ import type {
   TimelineId,
   TimelinePriority,
   TimelineStatistics,
+  TimelineSource,
   TimelineUserId,
   TimelineVisibility,
   TimelineWorkspace,
@@ -195,6 +196,9 @@ function draftEvent(input: {
   trackId: TimelineId;
   createdBy: TimelineUserId;
   now: string;
+  source?: TimelineSource;
+  aiModel?: string;
+  aiProvider?: string;
   patch?: TimelineEventDraftPatch;
 }): TimelineEvent {
   const type = input.patch?.type ?? "note";
@@ -207,7 +211,7 @@ function draftEvent(input: {
     projectId: input.projectId,
     type,
     status: "draft",
-    source: "user",
+    source: input.source ?? "user",
     visibility: input.patch?.visibility ?? "project",
     priority: input.patch?.priority ?? "normal",
     location: {
@@ -244,7 +248,9 @@ function draftEvent(input: {
     enabled: true,
     hidden: false,
     completed: false,
-    aiGenerated: false,
+    aiGenerated: input.source === "ai",
+    aiModel: input.aiModel,
+    aiProvider: input.aiProvider,
   };
   return applyContent(base, content);
 }
@@ -316,6 +322,9 @@ export class TimelineEventLifecycleEngine {
     workspace: TimelineWorkspace;
     createdBy: TimelineUserId;
     patch?: TimelineEventDraftPatch;
+    source?: TimelineSource;
+    aiModel?: string;
+    aiProvider?: string;
   }): TimelineEventDraft {
     const now = this.now().toISOString();
     const id = `timeline-event-draft-${++this.draftSequence}`;
@@ -326,6 +335,9 @@ export class TimelineEventLifecycleEngine {
       trackId: input.workspace.tracks[0]?.id ?? "",
       createdBy: input.createdBy,
       now,
+      source: input.source,
+      aiModel: input.aiModel,
+      aiProvider: input.aiProvider,
       patch: input.patch,
     });
     const draft: TimelineEventDraft = {
