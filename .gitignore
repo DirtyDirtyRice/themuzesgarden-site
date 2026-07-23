@@ -47,6 +47,7 @@ next-env.d.ts
 /code-map-reports/event-ledger/
 /code-map-reports/verification/
 /code-map-reports/workspace-projects/
+/code-map-reports/timeline-workflows/
 /project-files.txt
 /project-tree.txt
 *.corrupt-backup-*
