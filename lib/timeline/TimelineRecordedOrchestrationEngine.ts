@@ -64,6 +64,7 @@ export class TimelineRecordedOrchestrationEngine {
   async initialize(): Promise<TimelineWorkflowLedgerSnapshot> {
     if (!this.initialization) {
       this.initialization = this.ledger.initialize().then((snapshot) => {
+        this.recoverFromLedger();
         this.initialized = true;
         return snapshot;
       });
@@ -229,6 +230,9 @@ export class TimelineRecordedOrchestrationEngine {
   ): Promise<TimelineWorkflowLedgerRecord> {
     return this.ledger.record({
       workflow: evidence.workflow,
+      baselineWorkspace: this.orchestration.getBaselineWorkspace(
+        evidence.workflow.id
+      ),
       transitions: this.orchestration.getTransitions(evidence.workflow.id),
       execution: evidence.execution,
       proposals: evidence.proposals,
@@ -274,6 +278,26 @@ export class TimelineRecordedOrchestrationEngine {
   private receiptFor(workflow: TimelineWorkflow): TimelineActionReceipt | null {
     if (!workflow.receiptId) return null;
     return this.orchestration.actionEngine.getReceipt(workflow.receiptId);
+  }
+
+  private recoverFromLedger(): void {
+    const latest = new Map<string, TimelineWorkflowLedgerRecord>();
+    for (const record of this.ledger.exportDocument().records) {
+      latest.set(record.workflowId, record);
+    }
+    for (const record of latest.values()) {
+      if (!record.baselineWorkspace) continue;
+      if (["queued", "running"].includes(record.workflow.status)) continue;
+      this.orchestration.restore({
+        workflow: record.workflow,
+        baselineWorkspace: record.baselineWorkspace,
+        transitions: record.transitions,
+        execution: record.execution,
+        proposals: record.proposals,
+        actionPlan: record.actionPlan,
+        receipt: record.receipt,
+      });
+    }
   }
 
   private async ensureInitialized(): Promise<void> {

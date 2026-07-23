@@ -376,6 +376,57 @@ export class TimelineOrchestrationEngine {
       .map((transition) => ({ ...transition }));
   }
 
+  getBaselineWorkspace(workflowId: TimelineId): TimelineWorkspace | null {
+    const workflow = this.workflows.get(workflowId);
+    return workflow ? clone(workflow.baselineWorkspace) : null;
+  }
+
+  restore(input: {
+    workflow: TimelineWorkflow;
+    baselineWorkspace: TimelineWorkspace;
+    transitions: TimelineWorkflowTransition[];
+    execution: TimelineAIExecution | null;
+    proposals: TimelineAIProposal[];
+    actionPlan: TimelineActionPlan | null;
+    receipt: TimelineActionReceipt | null;
+  }): TimelineWorkflow {
+    const existing = this.workflows.get(input.workflow.id);
+    if (existing) return this.publicWorkflow(existing);
+    if (["queued", "running"].includes(input.workflow.status)) {
+      throw new Error("Interrupted queued or running workflows cannot be restored.");
+    }
+    if (input.baselineWorkspace.projectId !== input.workflow.projectId) {
+      throw new Error("Restored workflow baseline belongs to another project.");
+    }
+    if (input.execution && input.execution.projectId !== input.workflow.projectId) {
+      throw new Error("Restored workflow execution belongs to another project.");
+    }
+    if (input.execution) {
+      this.aiEngine.restore(input.execution, input.proposals);
+    } else if (input.proposals.length) {
+      throw new Error("Restored proposals require an AI execution.");
+    }
+    this.actionEngine.restore(input.actionPlan, input.receipt);
+    const restored: InternalWorkflow = {
+      ...clone(input.workflow),
+      baselineWorkspace: clone(input.baselineWorkspace),
+    };
+    this.workflows.set(restored.id, restored);
+    this.transitions.push(...clone(input.transitions));
+    this.workflowSequence = Math.max(
+      this.workflowSequence,
+      Number(restored.id.match(/(\d+)$/)?.[1] ?? 0)
+    );
+    this.transitionSequence = Math.max(
+      this.transitionSequence,
+      ...input.transitions.map((transition) =>
+        Number(transition.id.match(/(\d+)$/)?.[1] ?? 0)
+      ),
+      0
+    );
+    return this.publicWorkflow(restored);
+  }
+
   private assertWorkspaceUnchanged(
     workflow: InternalWorkflow,
     currentWorkspace: TimelineWorkspace

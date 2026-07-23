@@ -9,7 +9,10 @@ import {
 } from "../../lib/timeline/TimelineWorkflowLedger";
 import { TIMELINE_WORKSPACE } from "../../lib/timeline/TimelineSeed";
 
-function setup(proposals: unknown[]) {
+function setup(
+  proposals: unknown[],
+  store = new TimelineWorkflowMemoryStore()
+) {
   const promptEngine = new TimelinePromptEngine();
   promptEngine.saveTemplate({
     id: "recorded-test",
@@ -32,7 +35,7 @@ function setup(proposals: unknown[]) {
     promptEngine,
     transport
   );
-  const ledger = new TimelineWorkflowLedger(new TimelineWorkflowMemoryStore());
+  const ledger = new TimelineWorkflowLedger(store);
   const recorded = new TimelineRecordedOrchestrationEngine(
     orchestration,
     ledger,
@@ -148,5 +151,29 @@ describe("TimelineRecordedOrchestrationEngine", () => {
     const latest = ledger.latestWorkflowRecord(started.result.id);
     expect(latest?.workflow.errors.at(-1)).toContain("changed after AI preview");
     expect(latest?.workflow.status).toBe("ready-to-apply");
+  });
+  it("restores an awaiting-review workflow after a server restart", async () => {
+    const store = new TimelineWorkflowMemoryStore();
+    const proposal = {
+      kind: "update-event",
+      targetId: TIMELINE_WORKSPACE.events[0].id,
+      payload: { title: "Recovered title" },
+    };
+    const first = setup([proposal], store);
+    const started = await start(first.recorded);
+    await first.recorded.execute(started.result.id);
+
+    const restarted = setup([], store);
+    await restarted.recorded.initialize();
+    expect(restarted.recorded.getWorkflow(started.result.id)?.status).toBe(
+      "awaiting-review"
+    );
+    await restarted.recorded.approve(started.result.id, "reviewer");
+    const applied = await restarted.recorded.apply(
+      started.result.id,
+      TIMELINE_WORKSPACE,
+      "reviewer"
+    );
+    expect(applied.result.workspace.events[0].title).toBe("Recovered title");
   });
 });

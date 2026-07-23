@@ -377,6 +377,29 @@ export class TimelineActionEngine {
     return receipt ? clone(receipt) : null;
   }
 
+  restore(
+    plan: TimelineActionPlan | null,
+    receipt: TimelineActionReceipt | null
+  ): void {
+    if (plan && !this.plans.has(plan.id)) {
+      this.plans.set(plan.id, clone(plan));
+      this.planSequence = Math.max(
+        this.planSequence,
+        Number(plan.id.match(/(\d+)$/)?.[1] ?? 0)
+      );
+    }
+    if (receipt && !this.receipts.has(receipt.id)) {
+      if (plan && receipt.planId !== plan.id) {
+        throw new Error("Restored action receipt does not match its plan.");
+      }
+      this.receipts.set(receipt.id, clone(receipt));
+      this.receiptSequence = Math.max(
+        this.receiptSequence,
+        Number(receipt.id.match(/(\d+)$/)?.[1] ?? 0)
+      );
+    }
+  }
+
   private previewProposal(
     workspace: TimelineWorkspace,
     proposal: TimelineAIProposal,

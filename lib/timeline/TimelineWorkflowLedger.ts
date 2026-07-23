@@ -18,6 +18,7 @@ import type {
   TimelineId,
   TimelineProjectId,
   TimelineUserId,
+  TimelineWorkspace,
 } from "./TimelineTypes";
 
 export const TIMELINE_WORKFLOW_LEDGER_SCHEMA_VERSION = 1;
@@ -37,6 +38,7 @@ export type TimelineWorkflowLedgerRecord = {
   projectId: TimelineProjectId;
   workflowId: TimelineId;
   workflow: TimelineWorkflow;
+  baselineWorkspace?: TimelineWorkspace | null;
   transitions: TimelineWorkflowTransition[];
   execution: TimelineAIExecution | null;
   proposals: TimelineAIProposal[];
@@ -83,6 +85,7 @@ export type TimelineWorkflowLedgerStore = {
 
 export type TimelineWorkflowLedgerRecordInput = {
   workflow: TimelineWorkflow;
+  baselineWorkspace?: TimelineWorkspace | null;
   transitions?: TimelineWorkflowTransition[];
   execution?: TimelineAIExecution | null;
   proposals?: TimelineAIProposal[];
@@ -281,6 +284,7 @@ export class TimelineWorkflowLedger {
         projectId: input.workflow.projectId,
         workflowId: input.workflow.id,
         workflow: clone(input.workflow),
+        baselineWorkspace: input.baselineWorkspace ? clone(input.baselineWorkspace) : null,
         transitions: clone(input.transitions ?? []),
         execution: input.execution ? clone(input.execution) : null,
         proposals: clone(input.proposals ?? []),

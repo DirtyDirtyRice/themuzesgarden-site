@@ -389,6 +389,31 @@ export class TimelineAIEngine {
       .map((event) => ({ ...event }));
   }
 
+  restore(
+    execution: TimelineAIExecution,
+    proposals: TimelineAIProposal[] = []
+  ): void {
+    if (this.executions.has(execution.id)) return;
+    this.executions.set(execution.id, cloneExecution(execution));
+    for (const proposal of proposals) {
+      if (proposal.executionId !== execution.id) {
+        throw new Error("Restored AI proposal does not match its execution.");
+      }
+      this.proposals.set(proposal.id, cloneProposal(proposal));
+    }
+    this.executionSequence = Math.max(
+      this.executionSequence,
+      Number(execution.id.match(/(\d+)$/)?.[1] ?? 0)
+    );
+    this.proposalSequence = Math.max(
+      this.proposalSequence,
+      ...proposals.map((proposal) =>
+        Number(proposal.id.match(/(\d+)$/)?.[1] ?? 0)
+      ),
+      0
+    );
+  }
+
   private completeExecution(
     execution: TimelineAIExecution,
     promptRequest: TimelinePromptRequest,
