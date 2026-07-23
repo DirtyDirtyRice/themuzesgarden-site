@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import InstallWorkspaceButton from "./InstallWorkspaceButton";
+import WorkspaceConnectionStatus from "./WorkspaceConnectionStatus";
 
 export const metadata: Metadata = {
   title: "AI Developer Workspace",
@@ -28,7 +29,7 @@ export default function StandaloneDeveloperWorkspaceLayout({ children }: { child
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-100">Local engine</span>
+            <WorkspaceConnectionStatus />
             <InstallWorkspaceButton />
             <Link href="/developer-workspace/guide" className="rounded-lg border border-violet-300/25 px-3 py-2 text-xs font-bold text-violet-100 hover:border-violet-300/50">Tester guide</Link>
             <a href="/api/developer-workspace/support-report" download className="rounded-lg border border-cyan-300/25 px-3 py-2 text-xs font-bold text-cyan-100 hover:border-cyan-300/50">Download support report</a>
