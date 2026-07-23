@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "workspace:start": "node scripts/start-developer-workspace.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
