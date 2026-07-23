@@ -5,6 +5,7 @@ import {
   registerWorkspaceProject,
   selectWorkspaceProject,
 } from "@/lib/developer-workspace/workspaceProjectRegistry";
+import { createWorkspaceTypeScriptProject } from "@/lib/developer-workspace/workspaceProjectScaffolder";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,11 +65,17 @@ export async function POST(request: NextRequest) {
     if (action === "register") {
       return NextResponse.json(await registerWorkspaceProject(requiredString(candidate.path, "Project directory")));
     }
+    if (action === "create") {
+      return NextResponse.json(await createWorkspaceTypeScriptProject({
+        parentDirectory: requiredString(candidate.parentDirectory, "Parent directory"),
+        projectName: requiredString(candidate.projectName, "Project name"),
+      }));
+    }
     if (action === "select") {
       const project = await selectWorkspaceProject(requiredString(candidate.projectId, "Project id"));
       return NextResponse.json({ project, activeProjectId: project.id });
     }
-    throw new Error("Workspace project action must be register or select.");
+    throw new Error("Workspace project action must be create, register, or select.");
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Workspace project request failed." },
