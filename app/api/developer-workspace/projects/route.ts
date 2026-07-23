@@ -6,6 +6,8 @@ import {
   selectWorkspaceProject,
 } from "@/lib/developer-workspace/workspaceProjectRegistry";
 import { createWorkspaceTypeScriptProject } from "@/lib/developer-workspace/workspaceProjectScaffolder";
+import { establishWorkspaceAdoptionBaseline } from "@/lib/developer-workspace/workspaceAdoptionBaseline";
+import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,11 +73,15 @@ export async function POST(request: NextRequest) {
         projectName: requiredString(candidate.projectName, "Project name"),
       }));
     }
+    if (action === "baseline") {
+      const context = await resolveWorkspaceRequestContext(request);
+      return NextResponse.json(await establishWorkspaceAdoptionBaseline(context.root));
+    }
     if (action === "select") {
       const project = await selectWorkspaceProject(requiredString(candidate.projectId, "Project id"));
       return NextResponse.json({ project, activeProjectId: project.id });
     }
-    throw new Error("Workspace project action must be create, register, or select.");
+    throw new Error("Workspace project action must be baseline, create, register, or select.");
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Workspace project request failed." },

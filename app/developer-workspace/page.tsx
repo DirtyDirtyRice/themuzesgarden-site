@@ -1,6 +1,7 @@
 import DeveloperWorkspace from "../tools/developer-workspace/DeveloperWorkspace";
 import StandaloneReadiness from "./StandaloneReadiness";
 import StandaloneProjectCreator from "./StandaloneProjectCreator";
+import StandaloneProjectAdoption from "./StandaloneProjectAdoption";
 
 export const metadata = {
   title: "Developer Workspace",
@@ -12,6 +13,7 @@ export default function StandaloneDeveloperWorkspacePage() {
     <>
       <StandaloneReadiness />
       <StandaloneProjectCreator />
+      <StandaloneProjectAdoption />
       <DeveloperWorkspace />
     </>
   );
