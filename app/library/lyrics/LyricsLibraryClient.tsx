@@ -57,6 +57,7 @@ export default function LyricsLibraryClient() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
+  const editorSectionRef = useRef<HTMLElement | null>(null);
 
   const [entries, setEntries] = useState<LyricEntry[]>(STARTER_LYRICS);
   const [hasLoadedBrowserLyrics, setHasLoadedBrowserLyrics] = useState(false);
@@ -199,6 +200,13 @@ export default function LyricsLibraryClient() {
       setTags,
       setBody,
       setSaveStatus,
+    });
+
+    window.requestAnimationFrame(() => {
+      editorSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     });
   }
 
@@ -407,7 +415,10 @@ export default function LyricsLibraryClient() {
           </section>
         ) : null}
 
-        <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+<section
+          ref={editorSectionRef}
+          className="scroll-mt-24 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]"
+        >
           <LyricsLibraryEditor
             editingEntryId={editingEntryId}
             title={title}
