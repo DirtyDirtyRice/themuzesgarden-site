@@ -1,14 +1,15 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnyTrack, PlayerTab } from "../../player/playerTypes";
 import { readPersisted, writePersisted } from "../../player/playerStorage";
 import { useAllTracks } from "../../player/useAllTracks";
-import { listPrivateProjectTrackIds } from "../../lib/projectTracksApi";
+import { getPublicProjectTrackIds } from "../../lib/getPublicProjectTrackIds";
 import { useProjectContext } from "../../player/useProjectContext";
 import { useProjectSetlist } from "../../player/useProjectSetlist";
 import { useAudioEngine } from "../../player/useAudioEngine";
 import PlayerPanel from "../../player/PlayerPanel";
+import { filterGlobalPlayerPublicTracks, isGlobalPlayerPublicTrack } from "../../player/globalPlayerPrivacy";
 
 type ProjectPlayerBridgeState = {
   projectId: string;
@@ -53,21 +54,7 @@ function readProjectPlayerBridge(): ProjectPlayerBridgeState | null {
   }
 }
 
-function getTrackPrivacyKeys(track: AnyTrack): string[] {
-  const keys = new Set<string>();
-  const id = String(track?.id ?? "").trim();
-  const path = String(track?.path ?? "").trim();
-  const bucket = String(track?.bucket ?? "audio").trim() || "audio";
 
-  if (id) keys.add(id);
-  if (path) {
-    keys.add(path);
-    keys.add(`sb:${bucket}:${path}`);
-    keys.add(`sb:audio:${path}`);
-  }
-
-  return [...keys];
-}
 export default function GlobalPlayer() {
   const { onProjectPage, projectId } = useProjectContext();
 
@@ -83,9 +70,9 @@ export default function GlobalPlayer() {
 
   const { allTracks } = useAllTracks();
 
-  const [privateProjectTrackIds, setPrivateProjectTrackIds] = useState<Set<string>>(new Set());
+  const [publicProjectTrackIds, setPublicProjectTrackIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => { let cancelled = false; async function loadPrivateProjectTracks() { try { const ids = await listPrivateProjectTrackIds(); if (!cancelled) setPrivateProjectTrackIds(ids); } catch { if (!cancelled) setPrivateProjectTrackIds(new Set()); } } void loadPrivateProjectTracks(); window.addEventListener("muzes:projectTracksChanged", loadPrivateProjectTracks); return () => { cancelled = true; window.removeEventListener("muzes:projectTracksChanged", loadPrivateProjectTracks); }; }, []);
+  useEffect(() => { let cancelled = false; async function loadPublicProjectTracks() { try { const ids = await getPublicProjectTrackIds(); if (!cancelled) setPublicProjectTrackIds(new Set(ids)); } catch { if (!cancelled) setPublicProjectTrackIds(new Set()); } } void loadPublicProjectTracks(); window.addEventListener("muzes:projectTracksChanged", loadPublicProjectTracks); return () => { cancelled = true; window.removeEventListener("muzes:projectTracksChanged", loadPublicProjectTracks); }; }, []);
 
 
 
@@ -106,15 +93,13 @@ export default function GlobalPlayer() {
     allTracks,
   });
 
-  const projectTrackIds = useMemo(() => new Set(projectTracks.map((track) => String(track.id))), [projectTracks]);
-
-  const playerTracks = useMemo(() => allTracks.filter((track) => { const trackId = String(track?.id ?? ""); const trackVisibility = String(track?.visibility ?? "shared").toLowerCase(); if (onProjectPage && projectTrackIds.has(trackId)) return true; return trackVisibility !== "private" && !privateProjectTrackIds.has(trackId); }), [allTracks, onProjectPage, privateProjectTrackIds, projectTrackIds]);
+  const playerTracks = useMemo(() => filterGlobalPlayerPublicTracks(allTracks, publicProjectTrackIds), [allTracks, publicProjectTrackIds]);
+  const publicProjectTracks = useMemo(() => filterGlobalPlayerPublicTracks(projectTracks, publicProjectTrackIds), [projectTracks, publicProjectTrackIds]);
+  const playerTrackIds = useMemo(() => new Set(playerTracks.map((track) => String(track.id))), [playerTracks]);
 
   const isPlaybackBlocked = useCallback((track: AnyTrack) => {
-    const trackId = String(track?.id ?? "");
-    if (onProjectPage && projectTrackIds.has(trackId)) return false;
-    return getTrackPrivacyKeys(track).some((key) => privateProjectTrackIds.has(key));
-  }, [onProjectPage, privateProjectTrackIds, projectTrackIds]);
+    return !isGlobalPlayerPublicTrack(track, publicProjectTrackIds);
+  }, [publicProjectTrackIds]);
 
   const setTab = useCallback((nextValue: PlayerTab) => {
     GLOBAL_PLAYER_TAB_MEMORY = nextValue;
@@ -127,11 +112,11 @@ export default function GlobalPlayer() {
     onProjectPage,
     projectId,
     allTracks: playerTracks,
-    projectTracks,
+    projectTracks: publicProjectTracks,
     isPlaybackBlocked,
   });
 
-  useEffect(() => { if (onProjectPage) return; if (!engine.nowId) return; if (!privateProjectTrackIds.has(String(engine.nowId))) return; engine.clearNow(); }, [engine, onProjectPage, privateProjectTrackIds]);
+  useEffect(() => { if (!engine.nowId) return; if (playerTrackIds.has(String(engine.nowId))) return; engine.clearNow(); }, [engine, playerTrackIds]);
 
   const setQ = useCallback((nextValue: string) => {
     const clean = String(nextValue ?? "");
@@ -334,7 +319,7 @@ export default function GlobalPlayer() {
       onClearNow={engine.clearNow}
       statusTime={engine.statusTime}
       statusVolPct={engine.statusVolPct}
-      projectTracks={projectTracks}
+      projectTracks={publicProjectTracks}
       loadingProject={loadingProject}
       projectErr={projectErr}
       onRefreshProject={refreshProjectIds}
