@@ -12,6 +12,9 @@ import type {
   BuildDiagnostic,
 } from "@/lib/developer-workspace/buildDiagnostics";
 import type { ProjectFileView } from "@/lib/developer-workspace/projectFile";
+import type { DiagnosticTriageReport } from "@/lib/developer-workspace/diagnosticTriage";
+
+type BuildWorkspaceResult = BuildCheckResult & { triage: DiagnosticTriageReport };
 
 type ApiError = {
   error: string;
@@ -40,7 +43,7 @@ function statusClasses(result: BuildCheckResult): string {
 }
 
 export default function BuildErrorWorkspace() {
-  const [result, setResult] = useState<BuildCheckResult | null>(null);
+  const [result, setResult] = useState<BuildWorkspaceResult | null>(null);
   const [running, setRunning] = useState<BuildCheckKind | null>(null);
   const [showCascades, setShowCascades] = useState(false);
   const [selected, setSelected] = useState<BuildDiagnostic | null>(null);
@@ -68,7 +71,7 @@ export default function BuildErrorWorkspace() {
       if (!response.ok || isApiError(body)) {
         throw new Error(isApiError(body) ? body.error : "Build check failed.");
       }
-      setResult(body as BuildCheckResult);
+      setResult(body as BuildWorkspaceResult);
     } catch (runError) {
       setError(runError instanceof Error ? runError.message : "Build check failed.");
     } finally {
@@ -195,6 +198,21 @@ export default function BuildErrorWorkspace() {
                 />
                 Show likely cascading errors
               </label>
+            </div>
+          ) : null}
+
+          {result.triage.clusters.length ? (
+            <div className="mt-4 rounded-lg border border-amber-300/25 bg-amber-300/5 p-4">
+              <div className="text-xs font-black uppercase tracking-[0.2em] text-amber-200">Recommended repair order</div>
+              <div className="mt-3 space-y-2">
+                {result.triage.clusters.map((cluster, index) => (
+                  <button key={cluster.id} type="button" onClick={() => void openDiagnostic(cluster.primary)} className="w-full rounded-lg border border-white/10 bg-black/20 p-3 text-left hover:border-amber-300/35">
+                    <div className="flex flex-wrap items-center gap-2"><span className="rounded-full border border-amber-300/35 px-2 py-0.5 text-xs font-black text-amber-100">{index + 1}</span><span className="text-xs font-black uppercase text-white/45">{cluster.category}</span><span className="text-xs text-white/35">{cluster.related.length} cascade(s)</span></div>
+                    <div className="mt-2 font-black text-white/85">{cluster.title}</div>
+                    <div className="mt-1 text-sm text-white/55">{cluster.primary.file ?? "Build process"}:{cluster.primary.line ?? "?"} · {cluster.primary.code ?? "error"} · {cluster.primary.message}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
 
