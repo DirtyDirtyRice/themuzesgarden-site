@@ -15,6 +15,7 @@ export default function StandaloneDeveloperWorkspaceLayout({ children }: { child
           </div>
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-100">Local engine</span>
+            <a href="/api/developer-workspace/support-report" download className="rounded-lg border border-cyan-300/25 px-3 py-2 text-xs font-bold text-cyan-100 hover:border-cyan-300/50">Download support report</a>
             <Link href="/tools/developer-workspace" className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 hover:border-cyan-300/40 hover:text-white">Host-site view</Link>
           </div>
         </div>
