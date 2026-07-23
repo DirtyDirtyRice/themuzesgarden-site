@@ -149,6 +149,7 @@ function HomeInfoCardView({ card }: { card: HomeInfoCard }) {
         <Link
           href={card.infoHref}
           className="inline-flex rounded-lg border border-white/15 bg-white px-3 py-2 text-sm font-semibold text-black transition hover:opacity-85 active:scale-[0.98]"
+          style={{ backgroundColor: "#ffffff", color: "#000000" }}
         >
           More Info
         </Link>
@@ -218,6 +219,7 @@ export default function Home() {
             <Link
               href="/about"
               className="rounded-lg border border-white/15 bg-white px-4 py-2 text-sm font-semibold text-black transition hover:opacity-85 active:scale-[0.98]"
+              style={{ backgroundColor: "#ffffff", color: "#000000" }}
             >
               Open Manual
             </Link>
