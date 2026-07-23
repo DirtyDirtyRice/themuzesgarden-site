@@ -11,6 +11,7 @@ type LyricsLibraryEditorProps = {
   artist: string;
   tags: string;
   body: string;
+  saveStatus: string;
   fileInputRef: RefObject<HTMLInputElement | null>;
   folderInputRef: RefObject<HTMLInputElement | null>;
   onTitleChange: (value: string) => void;
@@ -38,6 +39,7 @@ export default function LyricsLibraryEditor({
   artist,
   tags,
   body,
+  saveStatus,
   fileInputRef,
   folderInputRef,
   onTitleChange,
@@ -71,7 +73,7 @@ export default function LyricsLibraryEditor({
             onClick={onSaveEntry}
             className="rounded-lg border border-white bg-black px-4 py-2 text-sm font-semibold text-white transition-transform duration-150 hover:scale-[0.99] active:scale-[0.98]"
           >
-            {editingEntryId ? "Save Changes" : "Add Lyrics Entry"}
+            {editingEntryId ? "Replace Saved Lyrics" : "Add Lyrics Entry"}
           </button>
 
           <button
@@ -133,7 +135,9 @@ export default function LyricsLibraryEditor({
         placeholder="Example: The Muzes Garden"
       />
 
-      <label className="mt-4 block text-sm font-semibold text-white">Tags</label>
+      <label className="mt-4 block text-sm font-semibold text-white">
+        Tags
+      </label>
       <input
         value={tags}
         onChange={(event) => onTagsChange(event.target.value)}
@@ -150,6 +154,17 @@ export default function LyricsLibraryEditor({
         className="mt-2 min-h-[220px] w-full rounded-lg border border-white/25 bg-black px-3 py-2 text-sm leading-6 text-white outline-none"
         placeholder="Paste or type lyrics here..."
       />
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={onSaveEntry}
+          className="rounded-lg border border-emerald-200 bg-emerald-200 px-4 py-2 text-sm font-black text-black"
+        >
+          {editingEntryId ? "Replace Saved Lyrics" : "Save New Lyrics"}
+        </button>
+        <span className="text-sm text-white/65">{saveStatus}</span>
+      </div>
 
       <input
         ref={fileInputRef}

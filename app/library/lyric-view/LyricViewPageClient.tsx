@@ -32,7 +32,7 @@ function getImportedBodyTitle(body: string): string {
   const lines = body.split("\n");
 
   const titleLine = lines.find((line) =>
-    line.trim().toLowerCase().startsWith("title:")
+    line.trim().toLowerCase().startsWith("title:"),
   );
 
   if (!titleLine) return "";
@@ -127,7 +127,7 @@ function getLyricBodyScore(entry: LyricEntry): number {
 
 function findBestLyricMatch(
   entries: LyricEntry[],
-  lyricId: string
+  lyricId: string,
 ): LyricEntry | null {
   const directEntry = findLyricEntryById(entries, lyricId);
 
@@ -137,7 +137,9 @@ function findBestLyricMatch(
 
   const importedBodyTitle = getImportedBodyTitle(directEntry.body);
   const directTitle = directEntry.title || importedBodyTitle;
-  const targetTitle = normalizeLyricSearchText(importedBodyTitle || directTitle);
+  const targetTitle = normalizeLyricSearchText(
+    importedBodyTitle || directTitle,
+  );
 
   if (!targetTitle) {
     return directEntry;
@@ -145,7 +147,9 @@ function findBestLyricMatch(
 
   const titleMatches = entries
     .filter((entry) => normalizeLyricSearchText(entry.title) === targetTitle)
-    .sort((first, second) => getLyricBodyScore(second) - getLyricBodyScore(first));
+    .sort(
+      (first, second) => getLyricBodyScore(second) - getLyricBodyScore(first),
+    );
 
   const bestTitleMatch = titleMatches[0] || null;
 
@@ -193,25 +197,25 @@ export default function LyricViewPageClient() {
 
   const directEntry = useMemo(
     () => findLyricEntryById(entries, lyricId),
-    [entries, lyricId]
+    [entries, lyricId],
   );
 
   const entry = useMemo(
     () => findBestLyricMatch(entries, lyricId),
-    [entries, lyricId]
+    [entries, lyricId],
   );
 
   const displayBody = useMemo(
     () => (entry ? getDisplayLyricBody(entry) : ""),
-    [entry]
+    [entry],
   );
 
   const isShowingMatchedLyric = Boolean(
-    directEntry && entry && directEntry.id !== entry.id
+    directEntry && entry && directEntry.id !== entry.id,
   );
 
   const isShowingCleanedBody = Boolean(
-    entry && displayBody && displayBody !== entry.body
+    entry && displayBody && displayBody !== entry.body,
   );
 
   function handleBackToLyricsLibrary() {
@@ -227,7 +231,8 @@ export default function LyricViewPageClient() {
   }
 
   function handleEditInLibrary() {
-    router.push("/library/lyrics");
+    if (!entry) return;
+    router.push(`/library/lyrics?editLyricId=${encodeURIComponent(entry.id)}`);
   }
 
   return (

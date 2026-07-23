@@ -54,10 +54,12 @@ export default function LyricsLibraryClient() {
   const searchParams = useSearchParams();
   const openedFromTrackId = searchParams.get("trackId");
   const openedFromTrackTitle = searchParams.get("trackTitle") || "";
+  const editLyricId = searchParams.get("editLyricId") || "";
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const editorSectionRef = useRef<HTMLElement | null>(null);
+  const openedEditIdRef = useRef("");
 
   const [entries, setEntries] = useState<LyricEntry[]>(STARTER_LYRICS);
   const [hasLoadedBrowserLyrics, setHasLoadedBrowserLyrics] = useState(false);
@@ -69,8 +71,9 @@ export default function LyricsLibraryClient() {
   const [folderStatus, setFolderStatus] = useState("");
   const [saveStatus, setSaveStatus] = useState("Loading browser lyrics...");
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
-  const [selectedViewerEntryId, setSelectedViewerEntryId] =
-    useState<string | null>(null);
+  const [selectedViewerEntryId, setSelectedViewerEntryId] = useState<
+    string | null
+  >(null);
   const [importReport, setImportReport] = useState(EMPTY_IMPORT_REPORT);
   const [showMoreLyricInfo, setShowMoreLyricInfo] = useState(false);
 
@@ -114,13 +117,47 @@ export default function LyricsLibraryClient() {
     };
   }, [entries, hasLoadedBrowserLyrics]);
 
+  useEffect(() => {
+    if (
+      !hasLoadedBrowserLyrics ||
+      !editLyricId ||
+      openedEditIdRef.current === editLyricId
+    ) {
+      return;
+    }
+    const entry = entries.find((candidate) => candidate.id === editLyricId);
+    if (!entry) {
+      setSaveStatus("The selected lyric could not be found for editing");
+      openedEditIdRef.current = editLyricId;
+      return;
+    }
+    openedEditIdRef.current = editLyricId;
+    editLyricEntry({
+      entry,
+      setEditingEntryId,
+      setSelectedViewerEntryId,
+      setTitle,
+      setArtist,
+      setTags,
+      setBody,
+      setSaveStatus,
+    });
+    window.requestAnimationFrame(() => {
+      editorSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [editLyricId, entries, hasLoadedBrowserLyrics]);
+
   const exactTrackTitleMatch = useMemo(() => {
     const trackTitle = normalizeTitle(openedFromTrackTitle);
 
     if (!trackTitle) return null;
 
     return (
-      entries.find((entry) => normalizeTitle(entry.title) === trackTitle) || null
+      entries.find((entry) => normalizeTitle(entry.title) === trackTitle) ||
+      null
     );
   }, [entries, openedFromTrackTitle]);
 
@@ -143,18 +180,18 @@ export default function LyricsLibraryClient() {
     if (!search) return entries;
 
     return entries.filter((entry) =>
-      entry.title.toLowerCase().includes(search)
+      entry.title.toLowerCase().includes(search),
     );
   }, [entries, searchValue]);
 
   const lyricsStats = useMemo(
     () => buildLyricsLibraryStats(entries, filteredEntries),
-    [entries, filteredEntries]
+    [entries, filteredEntries],
   );
 
   const lyricsInsights = useMemo(
     () => buildLyricsLibraryInsights(entries, lyricsStats),
-    [entries, lyricsStats]
+    [entries, lyricsStats],
   );
 
   function clearForm() {
@@ -415,7 +452,7 @@ export default function LyricsLibraryClient() {
           </section>
         ) : null}
 
-<section
+        <section
           ref={editorSectionRef}
           className="scroll-mt-24 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]"
         >
@@ -425,6 +462,7 @@ export default function LyricsLibraryClient() {
             artist={artist}
             tags={tags}
             body={body}
+            saveStatus={saveStatus}
             fileInputRef={fileInputRef}
             folderInputRef={folderInputRef}
             onTitleChange={setTitle}
