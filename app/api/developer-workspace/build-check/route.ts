@@ -1,4 +1,5 @@
 import { updateBuildEventLedger } from "@/lib/developer-workspace/buildEventLedger";
+import { triageBuildDiagnostics } from "@/lib/developer-workspace/diagnosticTriage";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -43,7 +44,8 @@ export async function POST(request: NextRequest) {
     if (!job.result) throw new Error("Verification completed without a result.");
     const result = job.result;
     const ledger = await updateBuildEventLedger(result, context.root);
-    return NextResponse.json({ ...result, ledger, project: context.project }, {
+    const triage = triageBuildDiagnostics(result.diagnostics);
+    return NextResponse.json({ ...result, ledger, triage, project: context.project }, {
       headers: {
         "Cache-Control": "no-store",
       },
