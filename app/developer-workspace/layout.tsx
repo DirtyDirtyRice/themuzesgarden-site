@@ -1,5 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
+
+export const metadata: Metadata = {
+  title: "AI Developer Workspace",
+  description: "Local AI-assisted code intelligence, verification, error prevention, and project history workspace.",
+  manifest: "/developer-workspace/manifest.webmanifest",
+  applicationName: "AI Developer Workspace",
+  appleWebApp: {
+    capable: true,
+    title: "Dev Workspace",
+    statusBarStyle: "black-translucent",
+  },
+};
 
 export default function StandaloneDeveloperWorkspaceLayout({ children }: { children: ReactNode }) {
   return (
