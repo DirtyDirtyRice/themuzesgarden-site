@@ -12,9 +12,16 @@ const manifest = {
   categories: ["developer", "productivity", "utilities"],
   icons: [
     {
-      src: "/favicon.ico",
-      sizes: "any",
-      type: "image/x-icon",
+      src: "/developer-workspace/install-icon/192",
+      sizes: "192x192",
+      type: "image/png",
+      purpose: "any",
+    },
+    {
+      src: "/developer-workspace/install-icon/512",
+      sizes: "512x512",
+      type: "image/png",
+      purpose: "any maskable",
     },
   ],
 } as const;
