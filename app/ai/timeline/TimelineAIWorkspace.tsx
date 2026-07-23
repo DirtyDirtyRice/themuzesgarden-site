@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { TIMELINE_WORKSPACE } from "@/lib/timeline/TimelineSeed";
 import type { TimelineWorkspace } from "@/lib/timeline/TimelineTypes";
 
 type ProjectOption = { id: string; title: string };
@@ -52,15 +51,6 @@ type LedgerRow = {
   cost: { estimatedTotalCost?: number } | null;
 };
 
-function projectWorkspace(projectId: string): TimelineWorkspace {
-  const workspace = structuredClone(TIMELINE_WORKSPACE);
-  workspace.projectId = projectId;
-  workspace.events = workspace.events.map((event) => ({
-    ...event,
-    projectId,
-  }));
-  return workspace;
-}
 
 function display(value: unknown): string {
   if (value === undefined) return "undefined";
@@ -132,6 +122,7 @@ export default function TimelineAIWorkspace() {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Workflow history failed.");
     setHistory(result.records ?? []);
+    if (result.workspace?.workspace) setWorkspace(result.workspace.workspace);
   }, [accessToken, projectId]);
 
   useEffect(() => {
@@ -162,7 +153,7 @@ export default function TimelineAIWorkspace() {
 
   useEffect(() => {
     if (!projectId) return;
-    setWorkspace(projectWorkspace(projectId));
+    setWorkspace(null);
     setWorkflow(null);
     setProposals([]);
     setPlan(null);
@@ -188,7 +179,7 @@ export default function TimelineAIWorkspace() {
     const response = await api({
       action: "start",
       instruction,
-      workspace,
+      projectId,
       eventIds: workspace.selection.selectedEventIds,
     });
     setWorkflow(response.result);
@@ -207,6 +198,7 @@ export default function TimelineAIWorkspace() {
     if (result.proposals) setProposals(result.proposals);
     if ("actionPlan" in result) setPlan(result.actionPlan);
     if (result.workspace) setWorkspace(result.workspace);
+    if (response.workspaceRecord?.workspace) setWorkspace(response.workspaceRecord.workspace);
     await refreshHistory();
   }
 
@@ -271,8 +263,8 @@ export default function TimelineAIWorkspace() {
               {busy === "start" ? "Creating…" : "Create held AI workflow"}
             </button>
             <p className="mt-4 text-xs leading-5 text-white/45">
-              Current context is supplied by the Timeline engine workspace and bound to
-              the selected owned project. The server ignores browser-supplied identity,
+              Context is loaded from the selected project persistent Timeline workspace.
+              Every apply creates a new protected revision. The server ignores browser-supplied identity,
               model, and API credentials.
             </p>
           </section>
@@ -314,7 +306,7 @@ export default function TimelineAIWorkspace() {
                     </>
                   ) : null}
                   {workflow.status === "ready-to-apply" ? (
-                    <button onClick={() => void run("apply", () => act("apply", { workspace }))} disabled={Boolean(busy)} className="rounded-xl bg-amber-300 px-5 py-3 font-black text-black disabled:opacity-40">Apply reviewed changes</button>
+                    <button onClick={() => void run("apply", () => act("apply"))} disabled={Boolean(busy)} className="rounded-xl bg-amber-300 px-5 py-3 font-black text-black disabled:opacity-40">Apply reviewed changes</button>
                   ) : null}
                   {workflow.status === "applied" ? (
                     <button onClick={() => void run("revert", () => act("revert"))} disabled={Boolean(busy)} className="rounded-xl border border-white/30 px-5 py-3 font-black disabled:opacity-40">Revert exact changes</button>

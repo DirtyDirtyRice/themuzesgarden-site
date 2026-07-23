@@ -10,7 +10,7 @@ describe("TimelineWorkflowApiPolicy", () => {
     const payload = parseTimelineWorkflowApiPayload({
       action: "start",
       instruction: "Review the opening.",
-      workspace: TIMELINE_WORKSPACE,
+      projectId: TIMELINE_WORKSPACE.projectId,
       eventIds: [TIMELINE_WORKSPACE.events[0].id],
       createdBy: "impersonated-user",
       model: "client-model",
@@ -22,10 +22,10 @@ describe("TimelineWorkflowApiPolicy", () => {
     expect(payload).not.toHaveProperty("apiKey");
   });
 
-  it("requires workspaces only for start and apply actions", () => {
+  it("requires project identity for starts and workflow identity later", () => {
     expect(() =>
-      parseTimelineWorkflowApiPayload({ action: "apply", workflowId: "workflow-1" })
-    ).toThrow("workspace");
+      parseTimelineWorkflowApiPayload({ action: "start", instruction: "Review" })
+    ).toThrow("project ID");
     expect(
       parseTimelineWorkflowApiPayload({
         action: "approve",
@@ -39,14 +39,14 @@ describe("TimelineWorkflowApiPolicy", () => {
       parseTimelineWorkflowApiPayload({
         action: "start",
         instruction: "x".repeat(4_001),
-        workspace: TIMELINE_WORKSPACE,
+        projectId: TIMELINE_WORKSPACE.projectId,
       })
     ).toThrow("4,000");
     expect(() =>
       parseTimelineWorkflowApiPayload({
         action: "start",
         instruction: "Review",
-        workspace: TIMELINE_WORKSPACE,
+        projectId: TIMELINE_WORKSPACE.projectId,
         eventIds: Array.from({ length: 501 }, (_, index) => `event-${index}`),
       })
     ).toThrow("500");

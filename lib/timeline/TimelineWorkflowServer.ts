@@ -3,6 +3,7 @@ import "server-only";
 import { join } from "node:path";
 import { TimelineOrchestrationEngine } from "./TimelineOrchestrationEngine";
 import { TimelinePromptEngine } from "./TimelinePromptEngine";
+import { TimelineProjectWorkspaceStore } from "./TimelineProjectWorkspaceStore";
 import { TimelineRecordedOrchestrationEngine } from "./TimelineRecordedOrchestrationEngine";
 import { createTimelineOpenAITransport } from "./TimelineOpenAITransport";
 import {
@@ -13,6 +14,7 @@ import {
 export const TIMELINE_ASSISTANT_TEMPLATE_ID = "timeline-workspace-assistant";
 
 let servicePromise: Promise<TimelineRecordedOrchestrationEngine> | null = null;
+let projectWorkspaceStore: TimelineProjectWorkspaceStore | null = null;
 
 function nonNegativeRate(name: string): number {
   const value = Number(process.env[name] ?? 0);
@@ -73,4 +75,14 @@ export function getTimelineWorkflowServer(): Promise<TimelineRecordedOrchestrati
     });
   }
   return servicePromise;
+}
+
+
+export function getTimelineProjectWorkspaceStore(): TimelineProjectWorkspaceStore {
+  if (!projectWorkspaceStore) {
+    projectWorkspaceStore = new TimelineProjectWorkspaceStore(
+      join(process.cwd(), "code-map-reports", "timeline-workflows", "projects")
+    );
+  }
+  return projectWorkspaceStore;
 }

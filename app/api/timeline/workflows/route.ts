@@ -6,6 +6,7 @@ import {
 } from "@/lib/timeline/TimelineWorkflowApiPolicy";
 import {
   getTimelineWorkflowServer,
+  getTimelineProjectWorkspaceStore,
   TIMELINE_ASSISTANT_TEMPLATE_ID,
 } from "@/lib/timeline/TimelineWorkflowServer";
 import type { TimelineProjectId, TimelineUserId } from "@/lib/timeline/TimelineTypes";
@@ -119,6 +120,10 @@ export async function GET(request: NextRequest) {
       throw new TimelineApiError("A projectId query parameter is required.", 400);
     }
     await requireProjectOwner(user, projectId);
+    const workspaceRecord = await getTimelineProjectWorkspaceStore().ensure(
+      projectId,
+      user.id
+    );
     const service = await getTimelineWorkflowServer();
     const workflows = service.listWorkflows(projectId);
     const records = service.ledger.getProjectHistory(projectId).map((record) => ({
@@ -139,6 +144,7 @@ export async function GET(request: NextRequest) {
       projectId,
       workflows,
       records,
+      workspace: workspaceRecord,
       ledger: service.ledger.snapshot(),
     });
   } catch (error) {
@@ -157,8 +163,12 @@ export async function POST(request: NextRequest) {
     }
     const payload = parseTimelineWorkflowApiPayload(raw);
     if (payload.action === "start") {
-      const workspace = payload.workspace!;
-      await requireProjectOwner(user, workspace.projectId);
+      await requireProjectOwner(user, payload.projectId!);
+      const workspaceRecord = await getTimelineProjectWorkspaceStore().ensure(
+        payload.projectId!,
+        user.id
+      );
+      const workspace = workspaceRecord.workspace;
       const service = await getTimelineWorkflowServer();
       const started = await service.start({
         templateId: TIMELINE_ASSISTANT_TEMPLATE_ID,
@@ -192,15 +202,44 @@ export async function POST(request: NextRequest) {
         return response(
           await service.reject(payload.workflowId!, user.id, payload.reason!)
         );
-      case "apply":
-        if (payload.workspace!.projectId !== service.getWorkflow(payload.workflowId!)?.projectId) {
-          throw new TimelineApiError("Workspace project does not match workflow.", 403);
-        }
-        return response(
-          await service.apply(payload.workflowId!, payload.workspace!, user.id)
+      case "apply": {
+        const workflow = service.getWorkflow(payload.workflowId!)!;
+        const store = getTimelineProjectWorkspaceStore();
+        const current = await store.ensure(workflow.projectId, user.id);
+        const applied = await service.apply(
+          payload.workflowId!,
+          current.workspace,
+          user.id
         );
-      case "revert":
-        return response(await service.revert(payload.workflowId!, user.id));
+        const workspaceRecord = await store.save({
+          workspace: applied.result.workspace,
+          expectedRevision: current.revision,
+          updatedBy: user.id,
+        });
+        return response({ ...applied, workspaceRecord });
+      }
+      case "revert": {
+        const workflow = service.getWorkflow(payload.workflowId!)!;
+        const receipt = workflow.receiptId
+          ? service.orchestration.actionEngine.getReceipt(workflow.receiptId)
+          : null;
+        if (!receipt) throw new TimelineApiError("Applied receipt was not found.", 409);
+        const store = getTimelineProjectWorkspaceStore();
+        const current = await store.ensure(workflow.projectId, user.id);
+        if (JSON.stringify(current.workspace) !== JSON.stringify(receipt.afterWorkspace)) {
+          throw new TimelineApiError(
+            "Timeline changed after application. Revert was refused to protect newer work.",
+            409
+          );
+        }
+        const reverted = await service.revert(payload.workflowId!, user.id);
+        const workspaceRecord = await store.save({
+          workspace: reverted.result.workspace,
+          expectedRevision: current.revision,
+          updatedBy: user.id,
+        });
+        return response({ ...reverted, workspaceRecord });
+      }
       case "cancel":
         return response(await service.cancel(payload.workflowId!, user.id));
       default:

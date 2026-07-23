@@ -12,6 +12,7 @@ export type TimelineWorkflowApiAction =
 export type TimelineWorkflowApiPayload = {
   action: TimelineWorkflowApiAction;
   workflowId?: string;
+  projectId?: string;
   instruction?: string;
   workspace?: TimelineWorkspace;
   reason?: string;
@@ -67,9 +68,11 @@ export function parseTimelineWorkflowApiPayload(
   const action = cleanString(payload.action) as TimelineWorkflowApiAction;
   if (!ACTIONS.has(action)) throw new Error("Timeline workflow action is invalid.");
   const workflowId = cleanString(payload.workflowId) || undefined;
+  const projectId = cleanString(payload.projectId) || undefined;
   const instruction = cleanString(payload.instruction) || undefined;
   const reason = cleanString(payload.reason) || undefined;
   if (action === "start") {
+    if (!projectId) throw new Error("Timeline project ID is required.");
     if (!instruction) throw new Error("Timeline AI instruction is required.");
     if (instruction.length > 4_000) {
       throw new Error("Timeline AI instruction is limited to 4,000 characters.");
@@ -81,12 +84,11 @@ export function parseTimelineWorkflowApiPayload(
     throw new Error("A rejection reason is required.");
   }
   const workspace =
-    action === "start" || action === "apply"
-      ? validateWorkspace(payload.workspace)
-      : undefined;
+    payload.workspace === undefined ? undefined : validateWorkspace(payload.workspace);
   return {
     action,
     workflowId,
+    projectId,
     instruction,
     reason,
     workspace,
