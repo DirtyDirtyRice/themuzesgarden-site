@@ -14,6 +14,11 @@ import {
   type TimelineAIEventIntakeResult,
 } from "./TimelineAIEventIntakeEngine";
 import type { TimelineAIProposal } from "./TimelineAIEngine";
+import {
+  TimelineEventDependencyEngine,
+  type TimelineEventDependency,
+  type TimelineEventDependencyPlan,
+} from "./TimelineEventDependencyEngine";
 import type {
   TimelineId,
   TimelineUserId,
@@ -32,7 +37,12 @@ export type TimelineEventEvidenceRecord = {
   draftId: TimelineId;
   eventId: TimelineId;
   originEventId?: TimelineId;
-  action: "begin-edit" | "validation" | "activation" | "ai-intake";
+  action:
+    | "begin-edit"
+    | "validation"
+    | "activation"
+    | "ai-intake"
+    | "dependency-activation";
   outcome: "prevented" | "validated" | "activated" | "edit-held";
   lifecycle: string;
   recordedAt: string;
@@ -45,17 +55,20 @@ export type TimelineEventLifecycleServiceSnapshot =
     evidence: TimelineEventEvidenceRecord[];
     evidenceCount: number;
     successfulActivationCount: number;
+    dependencies: TimelineEventDependency[];
   };
 
 type TimelineEventLifecycleFile = {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   savedAt: string;
   drafts: TimelineEventDraft[];
   evidence?: TimelineEventEvidenceRecord[];
+  dependencies?: TimelineEventDependency[];
 };
 
 export class TimelineEventLifecycleService {
   readonly engine: TimelineEventLifecycleEngine;
+  readonly dependencyEngine: TimelineEventDependencyEngine;
   private initialized = false;
   private writeQueue: Promise<void> = Promise.resolve();
   private evidence: TimelineEventEvidenceRecord[] = [];
@@ -64,8 +77,10 @@ export class TimelineEventLifecycleService {
   constructor(
     private readonly filePath: string,
     engine = new TimelineEventLifecycleEngine(),
+    dependencyEngine = new TimelineEventDependencyEngine(),
   ) {
     this.engine = engine;
+    this.dependencyEngine = dependencyEngine;
   }
 
   async initialize(): Promise<void> {
@@ -75,13 +90,16 @@ export class TimelineEventLifecycleService {
         await readFile(this.filePath, "utf8"),
       ) as TimelineEventLifecycleFile;
       if (
-        ![1, 2].includes(parsed.schemaVersion) ||
+        ![1, 2, 3].includes(parsed.schemaVersion) ||
         !Array.isArray(parsed.drafts) ||
-        (parsed.evidence !== undefined && !Array.isArray(parsed.evidence))
+        (parsed.evidence !== undefined && !Array.isArray(parsed.evidence)) ||
+        (parsed.dependencies !== undefined &&
+          !Array.isArray(parsed.dependencies))
       ) {
         throw new Error("Timeline lifecycle file has an unsupported format.");
       }
       this.engine.restoreDrafts(parsed.drafts);
+      this.dependencyEngine.restore(parsed.dependencies ?? []);
       this.evidence = structuredClone(parsed.evidence ?? []);
       for (const record of this.evidence) {
         this.evidenceSequence = Math.max(
@@ -209,21 +227,107 @@ export class TimelineEventLifecycleService {
   }): Promise<TimelineEventLifecycleResult> {
     await this.initialize();
     const before = this.engine.getDraft(input.draftId);
-    const result = this.engine.activateDraft(input);
-    this.record({
-      projectId: input.workspace.projectId,
-      draftId: input.draftId,
-      eventId: result.draft?.event.id ?? before?.event.id ?? "unknown-event",
-      originEventId: result.draft?.originEventId ?? before?.originEventId,
-      action: "activation",
-      outcome: result.accepted ? "activated" : "prevented",
-      lifecycle: result.lifecycle,
-      recordedBy: input.activatedBy,
-      issues: result.issues,
+    const activation = this.dependencyEngine.activate({
+      ...input,
+      lifecycle: this.engine,
+      draftIds: [input.draftId],
     });
-    if (result.accepted) this.engine.removeDraft(input.draftId);
+    let result: TimelineEventLifecycleResult;
+    if (activation.accepted) {
+      const activated = new Map(
+        activation.results.map((item) => [item.draft?.id, item]),
+      );
+      for (const draftId of activation.activatedDraftIds) {
+        const item = activated.get(draftId);
+        const held = this.engine.getDraft(draftId);
+        this.record({
+          projectId: input.workspace.projectId,
+          draftId,
+          eventId: item?.draft?.event.id ?? held?.event.id ?? "unknown-event",
+          originEventId: item?.draft?.originEventId ?? held?.originEventId,
+          action:
+            activation.activatedDraftIds.length > 1
+              ? "dependency-activation"
+              : "activation",
+          outcome: "activated",
+          lifecycle: "active",
+          recordedBy: input.activatedBy,
+          issues: [],
+        });
+        this.engine.removeDraft(draftId);
+      }
+      result =
+        activation.results.find((item) => item.draft?.id === input.draftId) ??
+        ({
+          accepted: true,
+          lifecycle: "active",
+          draft: before,
+          workspace: activation.workspace,
+          issues: [],
+        } satisfies TimelineEventLifecycleResult);
+      result = { ...result, workspace: activation.workspace };
+    } else {
+      result = {
+        accepted: false,
+        lifecycle: before?.lifecycle ?? "incomplete",
+        draft: before,
+        workspace: activation.workspace,
+        issues: activation.issues.map((issue) => ({
+          code: "not-validated",
+          message: issue.message,
+        })),
+      };
+      this.record({
+        projectId: input.workspace.projectId,
+        draftId: input.draftId,
+        eventId: before?.event.id ?? "unknown-event",
+        originEventId: before?.originEventId,
+        action: "dependency-activation",
+        outcome: "prevented",
+        lifecycle: result.lifecycle,
+        recordedBy: input.activatedBy,
+        issues: activation.issues,
+      });
+    }
     await this.save();
     return result;
+  }
+
+  async addDependency(input: {
+    projectId: TimelineId;
+    dependentEventId: TimelineId;
+    requiredEventId: TimelineId;
+    createdBy: TimelineUserId;
+  }): Promise<TimelineEventDependency> {
+    await this.initialize();
+    const dependency = this.dependencyEngine.addDependency(input);
+    await this.save();
+    return dependency;
+  }
+
+  async removeDependency(
+    dependencyId: TimelineId,
+    projectId: TimelineId,
+  ): Promise<boolean> {
+    await this.initialize();
+    const dependency = this.dependencyEngine
+      .listDependencies(projectId)
+      .find((item) => item.id === dependencyId);
+    if (!dependency) return false;
+    const removed = this.dependencyEngine.removeDependency(dependencyId);
+    if (removed) await this.save();
+    return removed;
+  }
+
+  async planDependencies(input: {
+    workspace: TimelineWorkspace;
+    draftIds?: TimelineId[];
+  }): Promise<TimelineEventDependencyPlan> {
+    await this.initialize();
+    return this.dependencyEngine.plan({
+      ...input,
+      drafts: this.engine.exportDrafts(),
+    });
   }
 
   async snapshot(
@@ -246,6 +350,7 @@ export class TimelineEventLifecycleService {
       successfulActivationCount: evidence.filter(
         (record) => record.outcome === "activated",
       ).length,
+      dependencies: this.dependencyEngine.listDependencies(projectId),
     };
   }
 
@@ -267,10 +372,11 @@ export class TimelineEventLifecycleService {
   private async save(): Promise<void> {
     const operation = async () => {
       const payload: TimelineEventLifecycleFile = {
-        schemaVersion: 2,
+        schemaVersion: 3,
         savedAt: new Date().toISOString(),
         drafts: this.engine.exportDrafts(),
         evidence: structuredClone(this.evidence),
+        dependencies: this.dependencyEngine.listDependencies(),
       };
       const folder = dirname(this.filePath);
       const temporary = `${this.filePath}.${process.pid}.${Date.now()}.tmp`;

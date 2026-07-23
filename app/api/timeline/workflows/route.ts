@@ -95,7 +95,9 @@ type TimelineEventApiAction =
   | "begin-event-edit"
   | "update-event-draft"
   | "validate-event-draft"
-  | "activate-event-draft";
+  | "activate-event-draft"
+  | "add-event-dependency"
+  | "remove-event-dependency";
 
 const EVENT_ACTIONS = new Set<TimelineEventApiAction>([
   "create-event-draft",
@@ -103,6 +105,8 @@ const EVENT_ACTIONS = new Set<TimelineEventApiAction>([
   "update-event-draft",
   "validate-event-draft",
   "activate-event-draft",
+  "add-event-dependency",
+  "remove-event-dependency",
 ]);
 
 const EDITABLE_EVENT_TYPES = new Set([
@@ -122,6 +126,9 @@ function eventApiPayload(raw: unknown): {
   projectId: string;
   draftId?: string;
   eventId?: string;
+  dependentEventId?: string;
+  requiredEventId?: string;
+  dependencyId?: string;
   patch?: TimelineEventDraftPatch;
 } | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
@@ -143,6 +150,18 @@ function eventApiPayload(raw: unknown): {
     typeof record.draftId === "string" ? record.draftId.trim() : undefined;
   const eventId =
     typeof record.eventId === "string" ? record.eventId.trim() : undefined;
+  const dependentEventId =
+    typeof record.dependentEventId === "string"
+      ? record.dependentEventId.trim()
+      : undefined;
+  const requiredEventId =
+    typeof record.requiredEventId === "string"
+      ? record.requiredEventId.trim()
+      : undefined;
+  const dependencyId =
+    typeof record.dependencyId === "string"
+      ? record.dependencyId.trim()
+      : undefined;
   if (action === "begin-event-edit" && !eventId) {
     throw new TimelineApiError(
       "An eventId is required to begin a safe edit.",
@@ -152,12 +171,26 @@ function eventApiPayload(raw: unknown): {
   if (
     action !== "create-event-draft" &&
     action !== "begin-event-edit" &&
+    action !== "add-event-dependency" &&
+    action !== "remove-event-dependency" &&
     !draftId
   ) {
     throw new TimelineApiError(
       "A draftId is required for this event lifecycle action.",
       400,
     );
+  }
+  if (
+    action === "add-event-dependency" &&
+    (!dependentEventId || !requiredEventId)
+  ) {
+    throw new TimelineApiError(
+      "Both dependentEventId and requiredEventId are required.",
+      400,
+    );
+  }
+  if (action === "remove-event-dependency" && !dependencyId) {
+    throw new TimelineApiError("A dependencyId is required.", 400);
   }
   let patch: TimelineEventDraftPatch | undefined;
   if (action === "create-event-draft" || action === "update-event-draft") {
@@ -249,6 +282,9 @@ function eventApiPayload(raw: unknown): {
     projectId: record.projectId.trim(),
     draftId,
     eventId,
+    dependentEventId,
+    requiredEventId,
+    dependencyId,
     patch,
   };
 }
@@ -384,6 +420,39 @@ export async function POST(request: NextRequest) {
           },
           201,
         );
+      }
+      if (eventPayload.action === "add-event-dependency") {
+        const dependency = await lifecycle.addDependency({
+          projectId: eventPayload.projectId,
+          dependentEventId: eventPayload.dependentEventId!,
+          requiredEventId: eventPayload.requiredEventId!,
+          createdBy: user.id,
+        });
+        return response(
+          {
+            dependency,
+            holding: await lifecycle.snapshot(eventPayload.projectId),
+            workspaceRecord,
+          },
+          201,
+        );
+      }
+      if (eventPayload.action === "remove-event-dependency") {
+        const removed = await lifecycle.removeDependency(
+          eventPayload.dependencyId!,
+          eventPayload.projectId,
+        );
+        if (!removed) {
+          throw new TimelineApiError(
+            "Timeline event dependency was not found in this project.",
+            404,
+          );
+        }
+        return response({
+          removed: true,
+          holding: await lifecycle.snapshot(eventPayload.projectId),
+          workspaceRecord,
+        });
       }
       const existing = await lifecycle.getDraft(eventPayload.draftId!);
       if (!existing || existing.projectId !== eventPayload.projectId) {

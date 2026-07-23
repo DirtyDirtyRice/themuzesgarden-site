@@ -100,6 +100,14 @@ type EvidenceRecord = {
   recordedBy: string;
   issues: Array<{ code: string; message: string; path?: string }>;
 };
+type DependencyView = {
+  id: string;
+  projectId: string;
+  dependentEventId: string;
+  requiredEventId: string;
+  createdAt: string;
+  createdBy: string;
+};
 type HoldingView = {
   generatedAt: string;
   drafts: HeldDraft[];
@@ -109,6 +117,7 @@ type HoldingView = {
   evidence: EvidenceRecord[];
   evidenceCount: number;
   successfulActivationCount: number;
+  dependencies: DependencyView[];
 };
 type DraftEdit = {
   title: string;
@@ -155,6 +164,9 @@ export default function TimelineAIWorkspace() {
   const [draftType, setDraftType] = useState("note");
   const [eventSearch, setEventSearch] = useState("");
   const [draftEdits, setDraftEdits] = useState<Record<string, DraftEdit>>({});
+  const [dependencyChoices, setDependencyChoices] = useState<
+    Record<string, string>
+  >({});
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === projectId) ?? null,
@@ -387,8 +399,28 @@ export default function TimelineAIWorkspace() {
 
   async function activateEventDraft(draftId: string) {
     await eventLifecycleAction("activate-event-draft", { draftId });
-    setMessage("Validated event activated in the live Timeline workspace.");
+    setMessage(
+      "Event and every validated requirement activated atomically in dependency order.",
+    );
     await refreshHistory();
+  }
+
+  async function addEventDependency(draft: HeldDraft) {
+    const requiredEventId = dependencyChoices[draft.id];
+    if (!requiredEventId) throw new Error("Choose a required event first.");
+    await eventLifecycleAction("add-event-dependency", {
+      dependentEventId: draft.event.id,
+      requiredEventId,
+    });
+    setDependencyChoices((current) => ({ ...current, [draft.id]: "" }));
+    setMessage(
+      "Requirement saved. Activation now waits for this event and cannot bypass it.",
+    );
+  }
+
+  async function removeEventDependency(dependencyId: string) {
+    await eventLifecycleAction("remove-event-dependency", { dependencyId });
+    setMessage("Event requirement removed.");
   }
   const canStart = Boolean(
     projectId && workspace && instruction.trim() && !busy,
@@ -772,6 +804,24 @@ export default function TimelineAIWorkspace() {
                 trackId: draft.event.trackId,
               };
               const lastAttempt = draft.validationAttempts.at(-1);
+              const dependencies = (holding?.dependencies ?? []).filter(
+                (item) => item.dependentEventId === draft.event.id,
+              );
+              const dependencyOptions = [
+                ...(holding?.drafts ?? []).map((item) => ({
+                  id: item.event.id,
+                  label: `${item.event.title || item.event.id} (held)`,
+                })),
+                ...(workspace?.events ?? []).map((event) => ({
+                  id: event.id,
+                  label: `${event.title || event.id} (live)`,
+                })),
+              ].filter(
+                (option, index, all) =>
+                  option.id !== draft.event.id &&
+                  all.findIndex((candidate) => candidate.id === option.id) ===
+                    index,
+              );
               return (
                 <article
                   key={draft.id}
@@ -881,8 +931,80 @@ export default function TimelineAIWorkspace() {
                       }
                       className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-25"
                     >
-                      Activate
+                      Activate with Requirements
                     </button>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-sky-300/20 bg-sky-300/5 p-4">
+                    <div className="text-sm font-black text-sky-100">
+                      Activation Requirements
+                    </div>
+                    <p className="mt-1 text-xs text-white/50">
+                      Required held events activate first. Missing, incomplete,
+                      or inactive requirements keep the entire group safely
+                      held.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <select
+                        value={dependencyChoices[draft.id] ?? ""}
+                        onChange={(event) =>
+                          setDependencyChoices((current) => ({
+                            ...current,
+                            [draft.id]: event.target.value,
+                          }))
+                        }
+                        className="min-w-64 rounded-lg border border-white/15 bg-black px-3 py-2 text-sm text-white"
+                      >
+                        <option value="">Choose required event...</option>
+                        {dependencyOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() =>
+                          void run(`dependency-${draft.id}`, () =>
+                            addEventDependency(draft),
+                          )
+                        }
+                        disabled={!dependencyChoices[draft.id] || Boolean(busy)}
+                        className="rounded-lg border border-sky-200/40 px-3 py-2 text-xs font-black text-sky-100 disabled:opacity-30"
+                      >
+                        Add Requirement
+                      </button>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {dependencies.map((dependency) => {
+                        const required = dependencyOptions.find(
+                          (option) => option.id === dependency.requiredEventId,
+                        );
+                        return (
+                          <span
+                            key={dependency.id}
+                            className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-black/40 px-3 py-2 text-xs"
+                          >
+                            Requires{" "}
+                            {required?.label ?? dependency.requiredEventId}
+                            <button
+                              onClick={() =>
+                                void run(`remove-${dependency.id}`, () =>
+                                  removeEventDependency(dependency.id),
+                                )
+                              }
+                              disabled={Boolean(busy)}
+                              className="font-black text-rose-200 disabled:opacity-30"
+                            >
+                              Remove
+                            </button>
+                          </span>
+                        );
+                      })}
+                      {!dependencies.length ? (
+                        <span className="text-xs text-white/35">
+                          No requirements. This event can activate by itself.
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   {lastAttempt && !lastAttempt.accepted ? (
                     <div className="mt-4 rounded-xl border border-rose-300/25 bg-rose-300/5 p-4">

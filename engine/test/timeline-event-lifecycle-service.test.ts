@@ -58,7 +58,7 @@ describe("TimelineEventLifecycleService", () => {
       "validated",
     ]);
     expect(snapshot.successfulActivationCount).toBe(1);
-    expect(stored.schemaVersion).toBe(2);
+    expect(stored.schemaVersion).toBe(3);
     expect(stored.evidence).toHaveLength(2);
   });
 
@@ -123,8 +123,92 @@ describe("TimelineEventLifecycleService", () => {
     const stored = JSON.parse(await readFile(filePath, "utf8"));
 
     expect(before.evidence).toEqual([]);
-    expect(stored.schemaVersion).toBe(2);
+    expect(stored.schemaVersion).toBe(3);
     expect(stored.drafts).toHaveLength(1);
     expect(stored.evidence).toEqual([]);
+  });
+  it("persists dependencies and atomically activates prerequisite drafts first", async () => {
+    const filePath = await lifecycleFile();
+    const service = new TimelineEventLifecycleService(filePath);
+    const required = await service.createDraft({
+      workspace: TIMELINE_WORKSPACE,
+      createdBy: "member-1",
+      patch: { title: "Required event", content: "Ready prerequisite" },
+    });
+    const dependent = await service.createDraft({
+      workspace: TIMELINE_WORKSPACE,
+      createdBy: "member-1",
+      patch: { title: "Dependent event", content: "Ready dependent" },
+    });
+    await service.validateDraft({
+      draftId: required.id,
+      workspace: TIMELINE_WORKSPACE,
+      validatedBy: "member-1",
+    });
+    await service.validateDraft({
+      draftId: dependent.id,
+      workspace: TIMELINE_WORKSPACE,
+      validatedBy: "member-1",
+    });
+    await service.addDependency({
+      projectId: TIMELINE_WORKSPACE.projectId,
+      dependentEventId: dependent.event.id,
+      requiredEventId: required.event.id,
+      createdBy: "member-1",
+    });
+
+    const restarted = new TimelineEventLifecycleService(filePath);
+    const before = await restarted.snapshot(TIMELINE_WORKSPACE.projectId);
+    const activation = await restarted.activateDraft({
+      draftId: dependent.id,
+      workspace: TIMELINE_WORKSPACE,
+      activatedBy: "member-1",
+    });
+    const after = await restarted.snapshot(TIMELINE_WORKSPACE.projectId);
+
+    expect(before.dependencies).toHaveLength(1);
+    expect(activation.accepted).toBe(true);
+    expect(
+      activation.workspace.events.slice(-2).map((event) => event.id),
+    ).toEqual([required.event.id, dependent.event.id]);
+    expect(after.heldCount).toBe(0);
+    expect(after.successfulActivationCount).toBe(2);
+  });
+
+  it("prevents direct activation when a persistent requirement is missing", async () => {
+    const filePath = await lifecycleFile();
+    const service = new TimelineEventLifecycleService(filePath);
+    const draft = await service.createDraft({
+      workspace: TIMELINE_WORKSPACE,
+      createdBy: "member-1",
+      patch: { title: "Blocked dependent", content: "Otherwise complete" },
+    });
+    await service.validateDraft({
+      draftId: draft.id,
+      workspace: TIMELINE_WORKSPACE,
+      validatedBy: "member-1",
+    });
+    await service.addDependency({
+      projectId: TIMELINE_WORKSPACE.projectId,
+      dependentEventId: draft.event.id,
+      requiredEventId: "event-that-does-not-exist",
+      createdBy: "member-1",
+    });
+
+    const activation = await service.activateDraft({
+      draftId: draft.id,
+      workspace: TIMELINE_WORKSPACE,
+      activatedBy: "member-1",
+    });
+    const snapshot = await service.snapshot(TIMELINE_WORKSPACE.projectId);
+
+    expect(activation.accepted).toBe(false);
+    expect(activation.workspace).toEqual(TIMELINE_WORKSPACE);
+    expect(activation.issues[0]?.message).toContain("neither live nor held");
+    expect(snapshot.heldCount).toBe(1);
+    expect(snapshot.evidence[0]).toMatchObject({
+      action: "dependency-activation",
+      outcome: "prevented",
+    });
   });
 });
