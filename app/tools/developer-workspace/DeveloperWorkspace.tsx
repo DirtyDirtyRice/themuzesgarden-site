@@ -244,9 +244,9 @@ export default function DeveloperWorkspace() {
         ) : null}
       </header>
 
-      <WorkspaceProjectSelector />
-      <CodeRootNavigator />
-      <ArchitecturalHealthDashboard />
+      <div id="workspace-projects"><WorkspaceProjectSelector /></div>
+      <div id="code-roots"><CodeRootNavigator /></div>
+      <div id="architecture"><ArchitecturalHealthDashboard /></div>
 
       {error ? (
         <div className="mt-4 rounded-lg border border-red-400/50 bg-red-400/10 p-3 text-red-100">
@@ -254,15 +254,15 @@ export default function DeveloperWorkspace() {
         </div>
       ) : null}
 
-      <BuildErrorWorkspace />
-      <LiveEventTimeline />
-      <DraftActivationWorkspace />
-      <PreventedErrorWorkspace />
-      <AiDriftHoldingReport />
-      <AiCodingAssistant />
-      <ProjectContextInvestigator />
+      <div id="build-errors"><BuildErrorWorkspace /></div>
+      <div id="event-timeline"><LiveEventTimeline /></div>
+      <div id="draft-activation"><DraftActivationWorkspace /></div>
+      <div id="prevented-errors"><PreventedErrorWorkspace /></div>
+      <div id="ai-drift"><AiDriftHoldingReport /></div>
+      <div id="ai-assistant"><AiCodingAssistant /></div>
+      <div id="project-context"><ProjectContextInvestigator /></div>
 
-      <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.4fr)]">
+      <section id="code-explorer" className="mt-4 grid scroll-mt-28 gap-4 lg:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.4fr)]">
         <div className="rounded-xl border border-white/10 bg-[#0b1720] p-4">
           <label htmlFor="project-search" className="text-sm font-black text-cyan-100">
             Search files and folders

@@ -19,6 +19,9 @@ export default function StandaloneDeveloperWorkspaceLayout({ children }: { child
             <Link href="/tools/developer-workspace" className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 hover:border-cyan-300/40 hover:text-white">Host-site view</Link>
           </div>
         </div>
+        <nav aria-label="Developer Workspace sections" className="mx-auto mt-3 flex max-w-[1800px] gap-2 overflow-x-auto pb-1 text-xs">
+          {[["Projects", "#workspace-projects"], ["Architecture", "#architecture"], ["Build Errors", "#build-errors"], ["Event Timeline", "#event-timeline"], ["Draft Holding", "#draft-activation"], ["Prevented Errors", "#prevented-errors"], ["AI Drift", "#ai-drift"], ["AI Assistant", "#ai-assistant"], ["Code Explorer", "#code-explorer"]].map(([label, href]) => <a key={href} href={href} className="shrink-0 rounded-full border border-white/10 px-3 py-1.5 font-bold text-white/60 hover:border-cyan-300/35 hover:text-cyan-100">{label}</a>)}
+        </nav>
       </header>
       {children}
     </div>
