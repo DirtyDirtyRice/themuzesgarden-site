@@ -10,6 +10,7 @@ import AiCodingAssistant from "./AiCodingAssistant";
 import LiveEventTimeline from "./LiveEventTimeline";
 import DraftActivationWorkspace from "./DraftActivationWorkspace";
 import PreventedErrorWorkspace from "./PreventedErrorWorkspace";
+import AiDriftHoldingReport from "./AiDriftHoldingReport";
 import WorkspaceProjectSelector from "./WorkspaceProjectSelector";
 import CodeRootNavigator from "./CodeRootNavigator";
 import ArchitecturalHealthDashboard from "./ArchitecturalHealthDashboard";
@@ -257,6 +258,7 @@ export default function DeveloperWorkspace() {
       <LiveEventTimeline />
       <DraftActivationWorkspace />
       <PreventedErrorWorkspace />
+      <AiDriftHoldingReport />
       <AiCodingAssistant />
       <ProjectContextInvestigator />
 

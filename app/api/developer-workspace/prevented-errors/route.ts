@@ -6,6 +6,7 @@ import {
   type PreventedErrorEvent,
 } from "@/lib/developer-workspace/preventedErrorLedger";
 import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { readAiDriftReport } from "@/lib/developer-workspace/aiDriftReport";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
       Math.min(2_000, Math.max(limit, query || attemptId ? 2_000 : limit)),
       workspaceContext.root
     );
+    const driftReport = await readAiDriftReport(workspaceContext.root);
     const selected = stored
       .filter((event) => !attemptId || event.attemptId === attemptId)
       .filter((event) => !query || searchable(event).includes(query))
@@ -68,6 +70,7 @@ export async function GET(request: NextRequest) {
         events,
         count: events.length,
         summary: summarizePreventedErrors(stored),
+        driftReport,
         snapshotsIncluded: false,
       },
       { headers: { "Cache-Control": "no-store" } }
