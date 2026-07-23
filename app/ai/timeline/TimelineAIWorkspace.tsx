@@ -63,6 +63,7 @@ type LifecycleState =
 type HeldDraft = {
   id: string;
   lifecycle: LifecycleState;
+  originEventId?: string;
   event: {
     id: string;
     trackId: string;
@@ -134,6 +135,7 @@ export default function TimelineAIWorkspace() {
   const [draftTitle, setDraftTitle] = useState("");
   const [draftContent, setDraftContent] = useState("");
   const [draftType, setDraftType] = useState("note");
+  const [eventSearch, setEventSearch] = useState("");
   const [draftEdits, setDraftEdits] = useState<Record<string, DraftEdit>>({});
 
   const selectedProject = useMemo(
@@ -161,7 +163,11 @@ export default function TimelineAIWorkspace() {
       });
       const result = await response.json();
       if (!response.ok)
-        throw new Error(result.error || "Timeline AI request failed.");
+        throw new Error(
+          result.error ||
+            result.result?.issues?.[0]?.message ||
+            "Timeline AI request failed.",
+        );
       return result;
     },
     [accessToken],
@@ -321,6 +327,13 @@ export default function TimelineAIWorkspace() {
     await refreshHistory();
   }
 
+  async function beginEventEdit(eventId: string) {
+    await eventLifecycleAction("begin-event-edit", { eventId });
+    setMessage(
+      "A safe edit copy is now in the holding bin. The live event is unchanged.",
+    );
+    await refreshHistory();
+  }
   async function saveEventDraft(draft: HeldDraft) {
     const edit = draftEdits[draft.id];
     if (!edit) return;
@@ -644,6 +657,77 @@ export default function TimelineAIWorkspace() {
             >
               {busy === "create-event" ? "Creating..." : "Create Draft"}
             </button>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="font-black">Live Timeline Events</h3>
+                <p className="mt-1 text-xs text-white/45">
+                  Choose Edit Safely to create a held copy. The live original
+                  stays untouched.
+                </p>
+              </div>
+              <input
+                value={eventSearch}
+                onChange={(event) => setEventSearch(event.target.value)}
+                placeholder="Search live events..."
+                className="rounded-xl border border-white/15 bg-black px-4 py-2 text-sm text-white"
+              />
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {(workspace?.events ?? [])
+                .filter((event) => {
+                  const query = eventSearch.trim().toLowerCase();
+                  return (
+                    !query ||
+                    `${event.title} ${event.content ?? ""} ${event.type}`
+                      .toLowerCase()
+                      .includes(query)
+                  );
+                })
+                .slice(0, 24)
+                .map((event) => {
+                  const alreadyHeld = (holding?.drafts ?? []).some(
+                    (draft) => draft.originEventId === event.id,
+                  );
+                  return (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/45 p-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-bold">
+                          {event.title || "Untitled event"}
+                        </div>
+                        <div className="mt-1 text-xs text-white/40">
+                          {event.type} · {event.status} · {event.id}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() =>
+                          void run(`edit-${event.id}`, () =>
+                            beginEventEdit(event.id),
+                          )
+                        }
+                        disabled={event.locked || alreadyHeld || Boolean(busy)}
+                        className="shrink-0 rounded-lg border border-cyan-200/40 px-3 py-2 text-xs font-black text-cyan-100 disabled:opacity-30"
+                      >
+                        {event.locked
+                          ? "Locked"
+                          : alreadyHeld
+                            ? "Edit Held"
+                            : "Edit Safely"}
+                      </button>
+                    </div>
+                  );
+                })}
+              {!workspace?.events.length ? (
+                <div className="text-sm text-white/40">
+                  No live events yet. Create and activate a draft first.
+                </div>
+              ) : null}
+            </div>
           </div>
 
           <div className="mt-5 space-y-4">

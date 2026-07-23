@@ -66,6 +66,16 @@ export class TimelineEventLifecycleService {
     return draft;
   }
 
+  async beginEdit(input: {
+    workspace: TimelineWorkspace;
+    eventId: TimelineId;
+    createdBy: TimelineUserId;
+  }): Promise<TimelineEventLifecycleResult> {
+    await this.initialize();
+    const result = this.engine.beginEdit(input);
+    if (result.accepted) await this.save();
+    return result;
+  }
   async updateDraft(
     draftId: TimelineId,
     patch: TimelineEventDraftPatch,

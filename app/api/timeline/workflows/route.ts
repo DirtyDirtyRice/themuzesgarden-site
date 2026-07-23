@@ -92,12 +92,14 @@ async function requireProjectOwner(
 
 type TimelineEventApiAction =
   | "create-event-draft"
+  | "begin-event-edit"
   | "update-event-draft"
   | "validate-event-draft"
   | "activate-event-draft";
 
 const EVENT_ACTIONS = new Set<TimelineEventApiAction>([
   "create-event-draft",
+  "begin-event-edit",
   "update-event-draft",
   "validate-event-draft",
   "activate-event-draft",
@@ -119,6 +121,7 @@ function eventApiPayload(raw: unknown): {
   action: TimelineEventApiAction;
   projectId: string;
   draftId?: string;
+  eventId?: string;
   patch?: TimelineEventDraftPatch;
 } | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
@@ -138,7 +141,19 @@ function eventApiPayload(raw: unknown): {
   const action = record.action as TimelineEventApiAction;
   const draftId =
     typeof record.draftId === "string" ? record.draftId.trim() : undefined;
-  if (action !== "create-event-draft" && !draftId) {
+  const eventId =
+    typeof record.eventId === "string" ? record.eventId.trim() : undefined;
+  if (action === "begin-event-edit" && !eventId) {
+    throw new TimelineApiError(
+      "An eventId is required to begin a safe edit.",
+      400,
+    );
+  }
+  if (
+    action !== "create-event-draft" &&
+    action !== "begin-event-edit" &&
+    !draftId
+  ) {
     throw new TimelineApiError(
       "A draftId is required for this event lifecycle action.",
       400,
@@ -229,7 +244,13 @@ function eventApiPayload(raw: unknown): {
       patch.tags = input.tags.map((tag) => tag.trim()).filter(Boolean);
     }
   }
-  return { action, projectId: record.projectId.trim(), draftId, patch };
+  return {
+    action,
+    projectId: record.projectId.trim(),
+    draftId,
+    eventId,
+    patch,
+  };
 }
 function response(data: unknown, status = 200): NextResponse {
   const result = NextResponse.json(data, { status });
@@ -333,6 +354,31 @@ export async function POST(request: NextRequest) {
         return response(
           {
             draft,
+            holding: await lifecycle.snapshot(eventPayload.projectId),
+            workspaceRecord,
+          },
+          201,
+        );
+      }
+      if (eventPayload.action === "begin-event-edit") {
+        const result = await lifecycle.beginEdit({
+          workspace: workspaceRecord.workspace,
+          eventId: eventPayload.eventId!,
+          createdBy: user.id,
+        });
+        if (!result.accepted) {
+          return response(
+            {
+              result,
+              holding: await lifecycle.snapshot(eventPayload.projectId),
+              workspaceRecord,
+            },
+            409,
+          );
+        }
+        return response(
+          {
+            result,
             holding: await lifecycle.snapshot(eventPayload.projectId),
             workspaceRecord,
           },

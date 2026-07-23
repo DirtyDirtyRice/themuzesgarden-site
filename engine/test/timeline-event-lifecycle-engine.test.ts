@@ -154,6 +154,44 @@ describe("TimelineEventLifecycleEngine", () => {
       "Someone else's newer edit",
     );
   });
+  it("replaces exactly one unchanged live event after safe edit validation", () => {
+    const engine = new TimelineEventLifecycleEngine();
+    const event = { ...TIMELINE_SAMPLE_EVENTS[0], relationships: [] };
+    const workspace = {
+      ...TIMELINE_WORKSPACE,
+      events: [event],
+      statistics: { ...TIMELINE_WORKSPACE.statistics, totalEvents: 1 },
+    };
+    const edit = engine.beginEdit({
+      workspace,
+      eventId: event.id,
+      createdBy: "member-1",
+    });
+    const draftId = edit.draft?.id ?? "";
+    engine.updateDraft(draftId, { title: "Safely replaced title" }, "member-1");
+    const validation = engine.validateDraft({
+      draftId,
+      workspace,
+      validatedBy: "member-1",
+    });
+    const activation = engine.activateDraft({
+      draftId,
+      workspace,
+      activatedBy: "member-1",
+    });
+
+    expect(validation.lifecycle).toBe("validated");
+    expect(activation.accepted).toBe(true);
+    expect(activation.workspace.events).toHaveLength(1);
+    expect(activation.workspace.events[0]).toMatchObject({
+      id: event.id,
+      title: "Safely replaced title",
+      status: "active",
+    });
+    expect(activation.workspace.history.at(-1)?.action).toBe(
+      "activate-event-edit",
+    );
+  });
   it("restores held drafts after a server restart", () => {
     const beforeRestart = new TimelineEventLifecycleEngine();
     const draft = beforeRestart.createDraft({
