@@ -6,8 +6,16 @@ import type { TimelineWorkspace } from "@/lib/timeline/TimelineTypes";
 
 type ProjectOption = { id: string; title: string };
 type WorkflowStatus =
-  | "blocked" | "queued" | "running" | "awaiting-review" | "completed"
-  | "ready-to-apply" | "applied" | "failed" | "cancelled" | "reverted";
+  | "blocked"
+  | "queued"
+  | "running"
+  | "awaiting-review"
+  | "completed"
+  | "ready-to-apply"
+  | "applied"
+  | "failed"
+  | "cancelled"
+  | "reverted";
 type WorkflowView = {
   id: string;
   projectId: string;
@@ -50,7 +58,45 @@ type LedgerRow = {
   receiptId: string | null;
   cost: { estimatedTotalCost?: number } | null;
 };
-
+type LifecycleState =
+  "draft" | "incomplete" | "waiting-validation" | "validated" | "active";
+type HeldDraft = {
+  id: string;
+  lifecycle: LifecycleState;
+  event: {
+    id: string;
+    trackId: string;
+    type: string;
+    title: string;
+    content?: string;
+  };
+  validationAttempts: Array<{
+    id: string;
+    at: string;
+    accepted: boolean;
+    issues: Array<{ id: string; code: string; message: string; path: string }>;
+  }>;
+  transitions: Array<{
+    id: string;
+    from: LifecycleState | null;
+    to: LifecycleState;
+    at: string;
+    reason: string;
+  }>;
+};
+type HoldingView = {
+  generatedAt: string;
+  drafts: HeldDraft[];
+  heldCount: number;
+  validationAttemptCount: number;
+  preventedActivationCount: number;
+};
+type DraftEdit = {
+  title: string;
+  content: string;
+  type: string;
+  trackId: string;
+};
 
 function display(value: unknown): string {
   if (value === undefined) return "undefined";
@@ -75,7 +121,7 @@ export default function TimelineAIWorkspace() {
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [projectId, setProjectId] = useState("");
   const [instruction, setInstruction] = useState(
-    "Review the selected Timeline context and recommend only changes that improve clarity without removing creative history."
+    "Review the selected Timeline context and recommend only changes that improve clarity without removing creative history.",
   );
   const [workflow, setWorkflow] = useState<WorkflowView | null>(null);
   const [proposals, setProposals] = useState<ProposalView[]>([]);
@@ -84,10 +130,15 @@ export default function TimelineAIWorkspace() {
   const [history, setHistory] = useState<LedgerRow[]>([]);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [holding, setHolding] = useState<HoldingView | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftContent, setDraftContent] = useState("");
+  const [draftType, setDraftType] = useState("note");
+  const [draftEdits, setDraftEdits] = useState<Record<string, DraftEdit>>({});
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === projectId) ?? null,
-    [projectId, projects]
+    [projectId, projects],
   );
 
   const accessToken = useCallback(async () => {
@@ -97,40 +148,66 @@ export default function TimelineAIWorkspace() {
     return token;
   }, []);
 
-  const api = useCallback(async (body: Record<string, unknown>) => {
-    const token = await accessToken();
-    const response = await fetch("/api/timeline/workflows", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Timeline AI request failed.");
-    return result;
-  }, [accessToken]);
+  const api = useCallback(
+    async (body: Record<string, unknown>) => {
+      const token = await accessToken();
+      const response = await fetch("/api/timeline/workflows", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Timeline AI request failed.");
+      return result;
+    },
+    [accessToken],
+  );
 
-  const refreshHistory = useCallback(async (targetProjectId = projectId) => {
-    if (!targetProjectId) return;
-    const token = await accessToken();
-    const response = await fetch(
-      `/api/timeline/workflows?projectId=${encodeURIComponent(targetProjectId)}`,
-      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
-    );
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Workflow history failed.");
-    setHistory(result.records ?? []);
-    if (result.workspace?.workspace) setWorkspace(result.workspace.workspace);
-  }, [accessToken, projectId]);
+  const refreshHistory = useCallback(
+    async (targetProjectId = projectId) => {
+      if (!targetProjectId) return;
+      const token = await accessToken();
+      const response = await fetch(
+        `/api/timeline/workflows?projectId=${encodeURIComponent(targetProjectId)}`,
+        { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
+      );
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Workflow history failed.");
+      setHistory(result.records ?? []);
+      if (result.workspace?.workspace) setWorkspace(result.workspace.workspace);
+      if (result.holding) {
+        setHolding(result.holding);
+        setDraftEdits((current) => {
+          const next = { ...current };
+          for (const draft of result.holding.drafts as HeldDraft[]) {
+            if (!next[draft.id]) {
+              next[draft.id] = {
+                title: draft.event.title,
+                content: draft.event.content ?? "",
+                type: draft.event.type,
+                trackId: draft.event.trackId,
+              };
+            }
+          }
+          return next;
+        });
+      }
+    },
+    [accessToken, projectId],
+  );
 
   useEffect(() => {
     let active = true;
     void (async () => {
       try {
         const { data: auth, error: authError } = await supabase.auth.getUser();
-        if (authError || !auth.user) throw new Error("Sign in to load your projects.");
+        if (authError || !auth.user)
+          throw new Error("Sign in to load your projects.");
         const { data, error } = await supabase
           .from("projects")
           .select("id, title")
@@ -145,10 +222,15 @@ export default function TimelineAIWorkspace() {
         setProjects(options);
         if (options[0]) setProjectId(options[0].id);
       } catch (error) {
-        if (active) setMessage(error instanceof Error ? error.message : "Projects failed.");
+        if (active)
+          setMessage(
+            error instanceof Error ? error.message : "Projects failed.",
+          );
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -157,8 +239,9 @@ export default function TimelineAIWorkspace() {
     setWorkflow(null);
     setProposals([]);
     setPlan(null);
+    setHolding(null);
     void refreshHistory(projectId).catch((error) =>
-      setMessage(error instanceof Error ? error.message : "History failed.")
+      setMessage(error instanceof Error ? error.message : "History failed."),
     );
   }, [projectId, refreshHistory]);
 
@@ -168,7 +251,9 @@ export default function TimelineAIWorkspace() {
     try {
       await operation();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Timeline AI action failed.");
+      setMessage(
+        error instanceof Error ? error.message : "Timeline AI action failed.",
+      );
     } finally {
       setBusy("");
     }
@@ -198,11 +283,76 @@ export default function TimelineAIWorkspace() {
     if (result.proposals) setProposals(result.proposals);
     if ("actionPlan" in result) setPlan(result.actionPlan);
     if (result.workspace) setWorkspace(result.workspace);
-    if (response.workspaceRecord?.workspace) setWorkspace(response.workspaceRecord.workspace);
+    if (response.workspaceRecord?.workspace)
+      setWorkspace(response.workspaceRecord.workspace);
     await refreshHistory();
   }
 
-  const canStart = Boolean(projectId && workspace && instruction.trim() && !busy);
+  async function eventLifecycleAction(
+    action: string,
+    extra: Record<string, unknown> = {},
+  ) {
+    if (!projectId || !workspace) throw new Error("Choose a project first.");
+    const response = await api({ action, projectId, ...extra });
+    if (response.holding) setHolding(response.holding);
+    if (response.workspaceRecord?.workspace) {
+      setWorkspace(response.workspaceRecord.workspace);
+    }
+    return response;
+  }
+
+  async function createEventDraft() {
+    if (!draftTitle.trim() && !draftContent.trim()) {
+      throw new Error(
+        "Enter a title or content. Incomplete drafts are allowed, but an empty card is not useful.",
+      );
+    }
+    await eventLifecycleAction("create-event-draft", {
+      patch: {
+        type: draftType,
+        title: draftTitle,
+        content: draftContent,
+        trackId: workspace?.tracks[0]?.id,
+      },
+    });
+    setDraftTitle("");
+    setDraftContent("");
+    setMessage("Draft created in the holding bin. It is not live yet.");
+    await refreshHistory();
+  }
+
+  async function saveEventDraft(draft: HeldDraft) {
+    const edit = draftEdits[draft.id];
+    if (!edit) return;
+    await eventLifecycleAction("update-event-draft", {
+      draftId: draft.id,
+      patch: edit,
+    });
+    setMessage("Draft saved. Any earlier validation was cleared.");
+    await refreshHistory();
+  }
+
+  async function validateEventDraft(draftId: string) {
+    const response = await eventLifecycleAction("validate-event-draft", {
+      draftId,
+    });
+    const result = response.result;
+    setMessage(
+      result.accepted
+        ? "Validation passed. The event is ready for explicit activation."
+        : "Validation blocked activation. The missing pieces are recorded below.",
+    );
+    await refreshHistory();
+  }
+
+  async function activateEventDraft(draftId: string) {
+    await eventLifecycleAction("activate-event-draft", { draftId });
+    setMessage("Validated event activated in the live Timeline workspace.");
+    await refreshHistory();
+  }
+  const canStart = Boolean(
+    projectId && workspace && instruction.trim() && !busy,
+  );
 
   return (
     <main className="min-h-screen bg-[#05070a] px-4 py-8 text-white md:px-8">
@@ -211,14 +361,28 @@ export default function TimelineAIWorkspace() {
           <div className="text-xs font-black uppercase tracking-[0.3em] text-sky-200">
             The Muzes Garden · AI Workspace
           </div>
-          <h1 className="mt-3 text-4xl font-black md:text-6xl">Timeline AI Control Room</h1>
+          <h1 className="mt-3 text-4xl font-black md:text-6xl">
+            Timeline AI Control Room
+          </h1>
           <p className="mt-4 max-w-4xl text-base leading-7 text-white/70">
-            AI can analyze and propose. Nothing changes until proposals pass validation,
-            you review the exact differences, and you approve the atomic application.
+            AI can analyze and propose. Nothing changes until proposals pass
+            validation, you review the exact differences, and you approve the
+            atomic application.
           </p>
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-bold">
-            {["Server-authenticated", "Project-owner only", "Held proposals", "Reversible", "Ledger recorded"].map((item) => (
-              <span key={item} className="rounded-full border border-white/20 bg-black/35 px-3 py-2">{item}</span>
+            {[
+              "Server-authenticated",
+              "Project-owner only",
+              "Held proposals",
+              "Reversible",
+              "Ledger recorded",
+            ].map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-white/20 bg-black/35 px-3 py-2"
+              >
+                {item}
+              </span>
             ))}
           </div>
         </header>
@@ -232,7 +396,9 @@ export default function TimelineAIWorkspace() {
         <div className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <section className="rounded-3xl border border-white/15 bg-white/[0.035] p-6">
             <h2 className="text-2xl font-black">1. Choose context and ask</h2>
-            <label className="mt-5 block text-sm font-bold text-white/75">Owned project</label>
+            <label className="mt-5 block text-sm font-bold text-white/75">
+              Owned project
+            </label>
             <select
               value={projectId}
               onChange={(event) => setProjectId(event.target.value)}
@@ -240,10 +406,14 @@ export default function TimelineAIWorkspace() {
             >
               <option value="">Choose a project…</option>
               {projects.map((project) => (
-                <option key={project.id} value={project.id}>{project.title}</option>
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
               ))}
             </select>
-            <label className="mt-5 block text-sm font-bold text-white/75">Instruction</label>
+            <label className="mt-5 block text-sm font-bold text-white/75">
+              Instruction
+            </label>
             <textarea
               value={instruction}
               onChange={(event) => setInstruction(event.target.value)}
@@ -252,7 +422,10 @@ export default function TimelineAIWorkspace() {
               className="mt-2 w-full rounded-xl border border-white/20 bg-black p-4 leading-6 text-white"
             />
             <div className="mt-2 flex justify-between text-xs text-white/45">
-              <span>Context: {workspace?.events.length ?? 0} events · {workspace?.tracks.length ?? 0} tracks</span>
+              <span>
+                Context: {workspace?.events.length ?? 0} events ·{" "}
+                {workspace?.tracks.length ?? 0} tracks
+              </span>
               <span>{instruction.length}/4,000</span>
             </div>
             <button
@@ -263,9 +436,10 @@ export default function TimelineAIWorkspace() {
               {busy === "start" ? "Creating…" : "Create held AI workflow"}
             </button>
             <p className="mt-4 text-xs leading-5 text-white/45">
-              Context is loaded from the selected project persistent Timeline workspace.
-              Every apply creates a new protected revision. The server ignores browser-supplied identity,
-              model, and API credentials.
+              Context is loaded from the selected project persistent Timeline
+              workspace. Every apply creates a new protected revision. The
+              server ignores browser-supplied identity, model, and API
+              credentials.
             </p>
           </section>
 
@@ -273,7 +447,9 @@ export default function TimelineAIWorkspace() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-2xl font-black">2. Workflow review</h2>
               {workflow ? (
-                <span className={`rounded-full border px-3 py-2 text-xs font-black uppercase ${statusStyle(workflow.status)}`}>
+                <span
+                  className={`rounded-full border px-3 py-2 text-xs font-black uppercase ${statusStyle(workflow.status)}`}
+                >
                   {workflow.status.replaceAll("-", " ")}
                 </span>
               ) : null}
@@ -285,31 +461,73 @@ export default function TimelineAIWorkspace() {
             ) : (
               <>
                 <div className="mt-5 rounded-2xl border border-white/10 bg-black/45 p-4 text-sm">
-                  <div className="font-mono text-xs text-white/45">{workflow.id}</div>
+                  <div className="font-mono text-xs text-white/45">
+                    {workflow.id}
+                  </div>
                   {workflow.responseText ? (
-                    <p className="mt-3 whitespace-pre-wrap leading-6">{workflow.responseText}</p>
+                    <p className="mt-3 whitespace-pre-wrap leading-6">
+                      {workflow.responseText}
+                    </p>
                   ) : null}
                   {workflow.errors.map((error) => (
-                    <div key={error} className="mt-2 text-rose-200">Blocked: {error}</div>
+                    <div key={error} className="mt-2 text-rose-200">
+                      Blocked: {error}
+                    </div>
                   ))}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-3">
                   {workflow.status === "queued" ? (
-                    <button onClick={() => void run("execute", () => act("execute"))} disabled={Boolean(busy)} className="rounded-xl bg-sky-300 px-5 py-3 font-black text-black disabled:opacity-40">
+                    <button
+                      onClick={() => void run("execute", () => act("execute"))}
+                      disabled={Boolean(busy)}
+                      className="rounded-xl bg-sky-300 px-5 py-3 font-black text-black disabled:opacity-40"
+                    >
                       {busy === "execute" ? "Analyzing…" : "Run AI analysis"}
                     </button>
                   ) : null}
                   {workflow.status === "awaiting-review" ? (
                     <>
-                      <button onClick={() => void run("approve", () => act("approve"))} disabled={Boolean(busy)} className="rounded-xl bg-emerald-300 px-5 py-3 font-black text-black disabled:opacity-40">Approve proposals</button>
-                      <button onClick={() => void run("reject", () => act("reject", { reason: "Rejected in Timeline AI review." }))} disabled={Boolean(busy)} className="rounded-xl border border-rose-300 px-5 py-3 font-black text-rose-100 disabled:opacity-40">Reject proposals</button>
+                      <button
+                        onClick={() =>
+                          void run("approve", () => act("approve"))
+                        }
+                        disabled={Boolean(busy)}
+                        className="rounded-xl bg-emerald-300 px-5 py-3 font-black text-black disabled:opacity-40"
+                      >
+                        Approve proposals
+                      </button>
+                      <button
+                        onClick={() =>
+                          void run("reject", () =>
+                            act("reject", {
+                              reason: "Rejected in Timeline AI review.",
+                            }),
+                          )
+                        }
+                        disabled={Boolean(busy)}
+                        className="rounded-xl border border-rose-300 px-5 py-3 font-black text-rose-100 disabled:opacity-40"
+                      >
+                        Reject proposals
+                      </button>
                     </>
                   ) : null}
                   {workflow.status === "ready-to-apply" ? (
-                    <button onClick={() => void run("apply", () => act("apply"))} disabled={Boolean(busy)} className="rounded-xl bg-amber-300 px-5 py-3 font-black text-black disabled:opacity-40">Apply reviewed changes</button>
+                    <button
+                      onClick={() => void run("apply", () => act("apply"))}
+                      disabled={Boolean(busy)}
+                      className="rounded-xl bg-amber-300 px-5 py-3 font-black text-black disabled:opacity-40"
+                    >
+                      Apply reviewed changes
+                    </button>
                   ) : null}
                   {workflow.status === "applied" ? (
-                    <button onClick={() => void run("revert", () => act("revert"))} disabled={Boolean(busy)} className="rounded-xl border border-white/30 px-5 py-3 font-black disabled:opacity-40">Revert exact changes</button>
+                    <button
+                      onClick={() => void run("revert", () => act("revert"))}
+                      disabled={Boolean(busy)}
+                      className="rounded-xl border border-white/30 px-5 py-3 font-black disabled:opacity-40"
+                    >
+                      Revert exact changes
+                    </button>
                   ) : null}
                 </div>
               </>
@@ -317,15 +535,31 @@ export default function TimelineAIWorkspace() {
 
             {proposals.length ? (
               <div className="mt-6">
-                <h3 className="font-black">Held proposals ({proposals.length})</h3>
+                <h3 className="font-black">
+                  Held proposals ({proposals.length})
+                </h3>
                 <div className="mt-3 space-y-3">
                   {proposals.map((proposal) => (
-                    <details key={proposal.id} className="rounded-xl border border-amber-300/25 bg-amber-300/5 p-4" open>
+                    <details
+                      key={proposal.id}
+                      className="rounded-xl border border-amber-300/25 bg-amber-300/5 p-4"
+                      open
+                    >
                       <summary className="cursor-pointer font-bold">
-                        {proposal.kind} · {proposal.targetId ?? "no target"} · {proposal.status}
+                        {proposal.kind} · {proposal.targetId ?? "no target"} ·{" "}
+                        {proposal.status}
                       </summary>
-                      <pre className="mt-3 overflow-auto whitespace-pre-wrap text-xs text-white/65">{display(proposal.payload)}</pre>
-                      {proposal.reasons.map((reason) => <div key={reason} className="mt-2 text-sm text-rose-200">{reason}</div>)}
+                      <pre className="mt-3 overflow-auto whitespace-pre-wrap text-xs text-white/65">
+                        {display(proposal.payload)}
+                      </pre>
+                      {proposal.reasons.map((reason) => (
+                        <div
+                          key={reason}
+                          className="mt-2 text-sm text-rose-200"
+                        >
+                          {reason}
+                        </div>
+                      ))}
                     </details>
                   ))}
                 </div>
@@ -334,47 +568,343 @@ export default function TimelineAIWorkspace() {
           </section>
         </div>
 
+        <section className="mt-6 rounded-3xl border border-cyan-300/25 bg-cyan-300/[0.035] p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200">
+                Draft / Activation Engine
+              </div>
+              <h2 className="mt-2 text-2xl font-black">Event Holding Bin</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-white/60">
+                Drafts exist and retain their history, but they cannot affect
+                the live Timeline until every required part passes validation
+                and you press Activate.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="rounded-xl border border-white/15 bg-black/40 p-3">
+                <div className="text-xl font-black">
+                  {holding?.heldCount ?? 0}
+                </div>
+                <div className="text-white/45">Held</div>
+              </div>
+              <div className="rounded-xl border border-white/15 bg-black/40 p-3">
+                <div className="text-xl font-black">
+                  {holding?.validationAttemptCount ?? 0}
+                </div>
+                <div className="text-white/45">Checks</div>
+              </div>
+              <div className="rounded-xl border border-rose-300/25 bg-rose-300/5 p-3">
+                <div className="text-xl font-black">
+                  {holding?.preventedActivationCount ?? 0}
+                </div>
+                <div className="text-white/45">Prevented</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/40 p-4 lg:grid-cols-[160px_1fr_1.5fr_auto]">
+            <select
+              value={draftType}
+              onChange={(event) => setDraftType(event.target.value)}
+              className="rounded-xl border border-white/20 bg-black px-3 py-3 text-white"
+            >
+              {[
+                "note",
+                "lyric",
+                "marker",
+                "idea",
+                "comment",
+                "task",
+                "prompt",
+                "response",
+                "analysis",
+              ].map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+            <input
+              value={draftTitle}
+              onChange={(event) => setDraftTitle(event.target.value)}
+              placeholder="Event title"
+              className="rounded-xl border border-white/20 bg-black px-4 py-3 text-white"
+            />
+            <input
+              value={draftContent}
+              onChange={(event) => setDraftContent(event.target.value)}
+              placeholder="Event content (can be completed later)"
+              className="rounded-xl border border-white/20 bg-black px-4 py-3 text-white"
+            />
+            <button
+              onClick={() => void run("create-event", createEventDraft)}
+              disabled={!workspace || Boolean(busy)}
+              className="rounded-xl bg-cyan-200 px-5 py-3 font-black text-black disabled:opacity-35"
+            >
+              {busy === "create-event" ? "Creating..." : "Create Draft"}
+            </button>
+          </div>
+
+          <div className="mt-5 space-y-4">
+            {(holding?.drafts ?? []).map((draft) => {
+              const edit = draftEdits[draft.id] ?? {
+                title: draft.event.title,
+                content: draft.event.content ?? "",
+                type: draft.event.type,
+                trackId: draft.event.trackId,
+              };
+              const lastAttempt = draft.validationAttempts.at(-1);
+              return (
+                <article
+                  key={draft.id}
+                  className="rounded-2xl border border-white/15 bg-black/45 p-5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="font-mono text-xs text-white/40">
+                        {draft.id} / {draft.event.id}
+                      </div>
+                      <div className="mt-2 text-lg font-black">
+                        {draft.event.title || "Untitled held event"}
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-full border px-3 py-2 text-xs font-black uppercase ${statusStyle(draft.lifecycle)}`}
+                    >
+                      {draft.lifecycle.replaceAll("-", " ")}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid gap-3 lg:grid-cols-[150px_1fr_1.5fr]">
+                    <select
+                      value={edit.type}
+                      onChange={(event) =>
+                        setDraftEdits((current) => ({
+                          ...current,
+                          [draft.id]: { ...edit, type: event.target.value },
+                        }))
+                      }
+                      className="rounded-xl border border-white/15 bg-black px-3 py-2 text-white"
+                    >
+                      {[
+                        "note",
+                        "lyric",
+                        "marker",
+                        "idea",
+                        "comment",
+                        "task",
+                        "prompt",
+                        "response",
+                        "analysis",
+                      ].map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      value={edit.title}
+                      onChange={(event) =>
+                        setDraftEdits((current) => ({
+                          ...current,
+                          [draft.id]: { ...edit, title: event.target.value },
+                        }))
+                      }
+                      placeholder="Title required"
+                      className="rounded-xl border border-white/15 bg-black px-3 py-2 text-white"
+                    />
+                    <input
+                      value={edit.content}
+                      onChange={(event) =>
+                        setDraftEdits((current) => ({
+                          ...current,
+                          [draft.id]: { ...edit, content: event.target.value },
+                        }))
+                      }
+                      placeholder="Usable content required"
+                      className="rounded-xl border border-white/15 bg-black px-3 py-2 text-white"
+                    />
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      onClick={() =>
+                        void run(`save-${draft.id}`, () =>
+                          saveEventDraft(draft),
+                        )
+                      }
+                      disabled={Boolean(busy)}
+                      className="rounded-xl border border-white/25 px-4 py-2 text-sm font-black disabled:opacity-35"
+                    >
+                      Save Draft
+                    </button>
+                    <button
+                      onClick={() =>
+                        void run(`validate-${draft.id}`, () =>
+                          validateEventDraft(draft.id),
+                        )
+                      }
+                      disabled={Boolean(busy)}
+                      className="rounded-xl bg-amber-200 px-4 py-2 text-sm font-black text-black disabled:opacity-35"
+                    >
+                      Validate
+                    </button>
+                    <button
+                      onClick={() =>
+                        void run(`activate-${draft.id}`, () =>
+                          activateEventDraft(draft.id),
+                        )
+                      }
+                      disabled={
+                        draft.lifecycle !== "validated" || Boolean(busy)
+                      }
+                      className="rounded-xl bg-emerald-300 px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-25"
+                    >
+                      Activate
+                    </button>
+                  </div>
+                  {lastAttempt && !lastAttempt.accepted ? (
+                    <div className="mt-4 rounded-xl border border-rose-300/25 bg-rose-300/5 p-4">
+                      <div className="text-sm font-black text-rose-100">
+                        Activation prevented - {lastAttempt.issues.length}{" "}
+                        issue(s)
+                      </div>
+                      {lastAttempt.issues.map((issue) => (
+                        <div
+                          key={issue.id}
+                          className="mt-2 text-sm text-rose-100/75"
+                        >
+                          <span className="font-mono text-xs">
+                            {issue.code}
+                          </span>
+                          : {issue.message}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  <details className="mt-4 text-sm text-white/55">
+                    <summary className="cursor-pointer font-bold">
+                      Lifecycle history ({draft.transitions.length} transitions)
+                    </summary>
+                    {draft.transitions.map((transition) => (
+                      <div
+                        key={transition.id}
+                        className="mt-2 border-l border-white/15 pl-3"
+                      >
+                        {transition.from ?? "new"} → {transition.to}:{" "}
+                        {transition.reason}
+                      </div>
+                    ))}
+                  </details>
+                </article>
+              );
+            })}
+            {!holding?.drafts.length ? (
+              <div className="rounded-2xl border border-dashed border-white/15 p-7 text-center text-white/40">
+                The holding bin is empty. Create a draft above to test the full
+                lifecycle.
+              </div>
+            ) : null}
+          </div>
+        </section>
         <section className="mt-6 rounded-3xl border border-white/15 bg-white/[0.035] p-6">
           <h2 className="text-2xl font-black">3. Exact change preview</h2>
-          {!plan ? <p className="mt-4 text-white/45">No action preview yet.</p> : (
+          {!plan ? (
+            <p className="mt-4 text-white/45">No action preview yet.</p>
+          ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead className="text-xs uppercase text-white/45">
-                  <tr><th className="p-3">Target</th><th className="p-3">Field</th><th className="p-3">Before</th><th className="p-3">After</th></tr>
+                  <tr>
+                    <th className="p-3">Target</th>
+                    <th className="p-3">Field</th>
+                    <th className="p-3">Before</th>
+                    <th className="p-3">After</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {plan.changes.map((change, index) => (
-                    <tr key={`${change.entityId}-${change.field}-${index}`} className="border-t border-white/10 align-top">
-                      <td className="p-3 font-mono text-xs">{change.entity}:{change.entityId}</td>
+                    <tr
+                      key={`${change.entityId}-${change.field}-${index}`}
+                      className="border-t border-white/10 align-top"
+                    >
+                      <td className="p-3 font-mono text-xs">
+                        {change.entity}:{change.entityId}
+                      </td>
                       <td className="p-3 font-bold">{change.field}</td>
-                      <td className="max-w-sm whitespace-pre-wrap p-3 text-rose-100/80">{display(change.before)}</td>
-                      <td className="max-w-sm whitespace-pre-wrap p-3 text-emerald-100/80">{display(change.after)}</td>
+                      <td className="max-w-sm whitespace-pre-wrap p-3 text-rose-100/80">
+                        {display(change.before)}
+                      </td>
+                      <td className="max-w-sm whitespace-pre-wrap p-3 text-emerald-100/80">
+                        {display(change.after)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {plan.issues.map((issue) => <div key={`${issue.code}-${issue.message}`} className="mt-3 text-rose-200">{issue.code}: {issue.message}</div>)}
+              {plan.issues.map((issue) => (
+                <div
+                  key={`${issue.code}-${issue.message}`}
+                  className="mt-3 text-rose-200"
+                >
+                  {issue.code}: {issue.message}
+                </div>
+              ))}
             </div>
           )}
         </section>
 
         <section className="mt-6 rounded-3xl border border-white/15 bg-white/[0.035] p-6">
           <div className="flex items-center justify-between gap-3">
-            <div><h2 className="text-2xl font-black">Workflow ledger</h2><p className="mt-1 text-sm text-white/50">{selectedProject?.title ?? "Choose a project"} · restart-safe history</p></div>
-            <button onClick={() => void run("history", () => refreshHistory())} disabled={!projectId || Boolean(busy)} className="rounded-xl border border-white/25 px-4 py-2 text-sm font-bold disabled:opacity-40">Refresh</button>
+            <div>
+              <h2 className="text-2xl font-black">Workflow ledger</h2>
+              <p className="mt-1 text-sm text-white/50">
+                {selectedProject?.title ?? "Choose a project"} · restart-safe
+                history
+              </p>
+            </div>
+            <button
+              onClick={() => void run("history", () => refreshHistory())}
+              disabled={!projectId || Boolean(busy)}
+              className="rounded-xl border border-white/25 px-4 py-2 text-sm font-bold disabled:opacity-40"
+            >
+              Refresh
+            </button>
           </div>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {history.slice().reverse().slice(0, 20).map((row) => (
-              <div key={row.id} className="rounded-xl border border-white/10 bg-black/45 p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={`rounded-full border px-2 py-1 text-[10px] font-black uppercase ${statusStyle(row.status)}`}>{row.status}</span>
-                  <span className="text-xs text-white/45">{new Date(row.recordedAt).toLocaleString()}</span>
+            {history
+              .slice()
+              .reverse()
+              .slice(0, 20)
+              .map((row) => (
+                <div
+                  key={row.id}
+                  className="rounded-xl border border-white/10 bg-black/45 p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`rounded-full border px-2 py-1 text-[10px] font-black uppercase ${statusStyle(row.status)}`}
+                    >
+                      {row.status}
+                    </span>
+                    <span className="text-xs text-white/45">
+                      {new Date(row.recordedAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="mt-3 font-mono text-xs text-white/60">
+                    {row.workflowId}
+                  </div>
+                  <div className="mt-2 text-xs text-white/45">
+                    Actor: {row.recordedBy} · Proposals: {row.proposalCount} ·
+                    Changes: {row.actionCount} · Cost: $
+                    {(row.cost?.estimatedTotalCost ?? 0).toFixed(6)}
+                  </div>
                 </div>
-                <div className="mt-3 font-mono text-xs text-white/60">{row.workflowId}</div>
-                <div className="mt-2 text-xs text-white/45">Actor: {row.recordedBy} · Proposals: {row.proposalCount} · Changes: {row.actionCount} · Cost: ${(row.cost?.estimatedTotalCost ?? 0).toFixed(6)}</div>
-              </div>
-            ))}
-            {!history.length ? <p className="text-white/45">No recorded workflows for this project yet.</p> : null}
+              ))}
+            {!history.length ? (
+              <p className="text-white/45">
+                No recorded workflows for this project yet.
+              </p>
+            ) : null}
           </div>
         </section>
       </div>

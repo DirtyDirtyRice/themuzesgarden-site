@@ -675,6 +675,36 @@ export class TimelineEventLifecycleEngine {
     return draft ? clone(draft) : null;
   }
 
+  exportDrafts(): TimelineEventDraft[] {
+    return Array.from(this.drafts.values()).map(clone);
+  }
+
+  restoreDrafts(drafts: TimelineEventDraft[]): void {
+    this.drafts.clear();
+    for (const draft of drafts) {
+      this.drafts.set(draft.id, clone(draft));
+      const sequence = Number(draft.id.match(/(\d+)$/)?.[1] ?? 0);
+      this.draftSequence = Math.max(this.draftSequence, sequence);
+      for (const transition of draft.transitions) {
+        const transitionSequence = Number(
+          transition.id.match(/(\d+)$/)?.[1] ?? 0,
+        );
+        this.transitionSequence = Math.max(
+          this.transitionSequence,
+          transitionSequence,
+        );
+      }
+      for (const attempt of draft.validationAttempts) {
+        const attemptSequence = Number(attempt.id.match(/(\d+)$/)?.[1] ?? 0);
+        this.attemptSequence = Math.max(this.attemptSequence, attemptSequence);
+      }
+    }
+  }
+
+  removeDraft(draftId: TimelineId): boolean {
+    return this.drafts.delete(draftId);
+  }
+
   getHoldingSnapshot(projectId?: TimelineId): TimelineEventHoldingSnapshot {
     const drafts = Array.from(this.drafts.values())
       .filter((draft) => !projectId || draft.projectId === projectId)

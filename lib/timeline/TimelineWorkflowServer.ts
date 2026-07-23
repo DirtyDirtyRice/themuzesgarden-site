@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { TimelineOrchestrationEngine } from "./TimelineOrchestrationEngine";
 import { TimelinePromptEngine } from "./TimelinePromptEngine";
 import { TimelineProjectWorkspaceStore } from "./TimelineProjectWorkspaceStore";
+import { TimelineEventLifecycleService } from "./TimelineEventLifecycleService";
 import { TimelineRecordedOrchestrationEngine } from "./TimelineRecordedOrchestrationEngine";
 import { createTimelineOpenAITransport } from "./TimelineOpenAITransport";
 import {
@@ -15,6 +16,7 @@ export const TIMELINE_ASSISTANT_TEMPLATE_ID = "timeline-workspace-assistant";
 
 let servicePromise: Promise<TimelineRecordedOrchestrationEngine> | null = null;
 let projectWorkspaceStore: TimelineProjectWorkspaceStore | null = null;
+let eventLifecycleService: TimelineEventLifecycleService | null = null;
 
 function nonNegativeRate(name: string): number {
   const value = Number(process.env[name] ?? 0);
@@ -44,10 +46,10 @@ async function createService(): Promise<TimelineRecordedOrchestrationEngine> {
   });
   const orchestration = new TimelineOrchestrationEngine(
     promptEngine,
-    createTimelineOpenAITransport()
+    createTimelineOpenAITransport(),
   );
   const ledger = new TimelineWorkflowLedger(
-    new TimelineWorkflowFileStore(ledgerPath())
+    new TimelineWorkflowFileStore(ledgerPath()),
   );
   const service = new TimelineRecordedOrchestrationEngine(
     orchestration,
@@ -55,13 +57,13 @@ async function createService(): Promise<TimelineRecordedOrchestrationEngine> {
     {
       pricing: {
         inputTokenRatePerMillion: nonNegativeRate(
-          "OPENAI_TIMELINE_INPUT_RATE_PER_MILLION"
+          "OPENAI_TIMELINE_INPUT_RATE_PER_MILLION",
         ),
         outputTokenRatePerMillion: nonNegativeRate(
-          "OPENAI_TIMELINE_OUTPUT_RATE_PER_MILLION"
+          "OPENAI_TIMELINE_OUTPUT_RATE_PER_MILLION",
         ),
       },
-    }
+    },
   );
   await service.initialize();
   return service;
@@ -77,12 +79,24 @@ export function getTimelineWorkflowServer(): Promise<TimelineRecordedOrchestrati
   return servicePromise;
 }
 
-
 export function getTimelineProjectWorkspaceStore(): TimelineProjectWorkspaceStore {
   if (!projectWorkspaceStore) {
     projectWorkspaceStore = new TimelineProjectWorkspaceStore(
-      join(process.cwd(), "code-map-reports", "timeline-workflows", "projects")
+      join(process.cwd(), "code-map-reports", "timeline-workflows", "projects"),
     );
   }
   return projectWorkspaceStore;
+}
+export function getTimelineEventLifecycleService(): TimelineEventLifecycleService {
+  if (!eventLifecycleService) {
+    eventLifecycleService = new TimelineEventLifecycleService(
+      join(
+        process.cwd(),
+        "code-map-reports",
+        "timeline-workflows",
+        "event-lifecycle.json",
+      ),
+    );
+  }
+  return eventLifecycleService;
 }

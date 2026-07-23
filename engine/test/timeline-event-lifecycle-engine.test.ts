@@ -154,4 +154,36 @@ describe("TimelineEventLifecycleEngine", () => {
       "Someone else's newer edit",
     );
   });
+  it("restores held drafts after a server restart", () => {
+    const beforeRestart = new TimelineEventLifecycleEngine();
+    const draft = beforeRestart.createDraft({
+      workspace: TIMELINE_WORKSPACE,
+      createdBy: "member-1",
+      patch: { title: "Restart-safe note" },
+    });
+    beforeRestart.validateDraft({
+      draftId: draft.id,
+      workspace: TIMELINE_WORKSPACE,
+      validatedBy: "member-1",
+    });
+
+    const afterRestart = new TimelineEventLifecycleEngine();
+    afterRestart.restoreDrafts(beforeRestart.exportDrafts());
+    const restored = afterRestart.getDraft(draft.id);
+    const updated = afterRestart.updateDraft(
+      draft.id,
+      { content: "Completed after restart" },
+      "member-1",
+    );
+    const validation = afterRestart.validateDraft({
+      draftId: draft.id,
+      workspace: TIMELINE_WORKSPACE,
+      validatedBy: "member-1",
+    });
+
+    expect(restored?.lifecycle).toBe("incomplete");
+    expect(restored?.validationAttempts).toHaveLength(1);
+    expect(updated?.event.content).toBe("Completed after restart");
+    expect(validation.lifecycle).toBe("validated");
+  });
 });
