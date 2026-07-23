@@ -1,4 +1,5 @@
 import DeveloperWorkspace from "../tools/developer-workspace/DeveloperWorkspace";
+import StandaloneReadiness from "./StandaloneReadiness";
 
 export const metadata = {
   title: "Developer Workspace",
@@ -6,5 +7,10 @@ export const metadata = {
 };
 
 export default function StandaloneDeveloperWorkspacePage() {
-  return <DeveloperWorkspace />;
+  return (
+    <>
+      <StandaloneReadiness />
+      <DeveloperWorkspace />
+    </>
+  );
 }
