@@ -460,7 +460,10 @@ export default function TitleBar() {
   const [findItOpen, setFindItOpen] = useState(false);
   const [findItSearchValue, setFindItSearchValue] = useState("");
 
-  const helpActive = isActivePath(pathname, "/help") || findItOpen;
+  const helpActive =
+    isActivePath(pathname, "/help") ||
+    isActivePath(pathname, "/about") ||
+    findItOpen;
 
   const helpItems = useMemo<HelpMenuItem[]>(
     () => [
@@ -470,6 +473,12 @@ export default function TitleBar() {
         detail: "Open the current-page navigation helper",
         onSelect: () => setFindItOpen((current) => !current),
       },
+      {
+        kind: "link",
+        label: "Details",
+        href: detailsRoute.href,
+        detail: detailsRoute.label,
+      },
       ...HELP_LINKS.map((link) => ({
         kind: "link" as const,
         label: link.label,
@@ -477,7 +486,7 @@ export default function TitleBar() {
         detail: link.detail ?? "Open Help",
       })),
     ],
-    []
+    [detailsRoute.href, detailsRoute.label]
   );
 
   return (
@@ -556,13 +565,6 @@ export default function TitleBar() {
             onOpen={() => setMetadataMenuOpen(true)}
           />
 
-          <Link
-            href={detailsRoute.href}
-            className={getPrimaryLinkClass(isActivePath(pathname, "/about"))}
-            title={detailsRoute.label}
-          >
-            Details
-          </Link>
 
           <HelpDropdown
             active={helpActive}

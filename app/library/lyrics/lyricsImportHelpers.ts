@@ -16,7 +16,7 @@ type ImportLyricFilesResult = {
 };
 
 type ImportLyricFilesOptions = {
-  files: FileList;
+  files: FileList | File[];
   onProgress: (report: LyricImportReport) => void;
 };
 

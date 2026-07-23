@@ -11,6 +11,9 @@ import {
   type UploadedProjectItem,
   type UploadVisibility,
 } from "../shared/uploads/projectUploadHelpers";
+import { importLyricFilesFromFileList } from "../library/lyrics/lyricsImportHelpers";
+import { isReadableLyricFile } from "../library/lyrics/lyricsFileActions";
+import { getStartingLyrics, saveLyricsToBrowser } from "../library/lyrics/lyricsStorage";
 
 const buttonClass =
   "rounded-xl border border-white/25 bg-black px-4 py-2 text-sm font-bold text-white transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
@@ -21,6 +24,7 @@ const secondaryButtonClass =
 const panelClass = "rounded-2xl border border-white/25 bg-black p-5";
 
 const helperTextClass = "text-sm leading-6 text-white/70";
+const uploadAccept = `${projectUploadAccept},.txt,.text,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf`;
 
 export default function UploadPage() {
   const router = useRouter();
@@ -80,15 +84,36 @@ export default function UploadPage() {
     setIsUploading(true);
 
     try {
-      const result = await uploadProjectAudioFiles({
-        files,
-        visibility,
-        userId,
-      });
+      const lyricFiles = files.filter((file) => isReadableLyricFile(file.name));
+      const remainingFiles = files.filter(
+        (file) => !isReadableLyricFile(file.name)
+      );
+      const messages: string[] = [];
 
-      setItems((prev) => [...result.uploadedItems, ...prev]);
-      setSkippedFiles(result.skippedFiles);
-      setUploadMessage(summarizeUploadResult(result));
+      if (lyricFiles.length > 0) {
+        const lyricResult = await importLyricFilesFromFileList({
+          files: lyricFiles,
+          onProgress: () => undefined,
+        });
+        const existingLyrics = await getStartingLyrics();
+        await saveLyricsToBrowser([...lyricResult.entries, ...existingLyrics]);
+        messages.push(
+          `Imported ${lyricResult.entries.length} lyric files into the Lyrics Library.`
+        );
+      }
+
+      if (remainingFiles.length > 0) {
+        const result = await uploadProjectAudioFiles({
+          files: remainingFiles,
+          visibility,
+          userId,
+        });
+        setItems((prev) => [...result.uploadedItems, ...prev]);
+        setSkippedFiles(result.skippedFiles);
+        messages.push(summarizeUploadResult(result));
+      }
+
+      setUploadMessage(messages.join(" "));
 
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (folderInputRef.current) folderInputRef.current.value = "";
@@ -127,7 +152,7 @@ export default function UploadPage() {
         <h1 className="text-3xl font-black text-white">Upload</h1>
 
         <div className="mt-2 space-y-2 text-base leading-7 text-white/70">
-          <p>Upload audio files from your computer to add them to your Library.</p>
+          <p>Upload audio or readable lyric files from your computer. Audio enters the Music Library; TXT, MD, and PDF lyrics enter the Lyrics Library.</p>
           <p>
             Click Choose files to add a single song, multiple songs, or choose a
             song folder.
@@ -142,7 +167,7 @@ export default function UploadPage() {
                   Choose audio files
                 </div>
                 <div className="mt-1 text-sm text-white/70">
-                  WAV, MP3, FLAC, AIFF, and AIF files are supported.
+                  WAV, MP3, FLAC, AIFF, AIF, TXT, MD, and PDF files are supported.
                 </div>
               </div>
 
@@ -150,7 +175,7 @@ export default function UploadPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept={projectUploadAccept}
+                  accept={uploadAccept}
                   multiple
                   onChange={(event) => uploadFiles(event.target.files)}
                   className="hidden"
@@ -159,7 +184,7 @@ export default function UploadPage() {
                 <input
                   ref={folderInputRef}
                   type="file"
-                  accept={projectUploadAccept}
+                  accept={uploadAccept}
                   multiple
                   onChange={(event) => uploadFiles(event.target.files)}
                   className="hidden"
