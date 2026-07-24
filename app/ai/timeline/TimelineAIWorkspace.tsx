@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { TimelineWorkspace } from "@/lib/timeline/TimelineTypes";
+import TimelineArrangementWorkspace from "./TimelineArrangementWorkspace";
 
 type ProjectOption = { id: string; title: string };
 type WorkflowStatus =
@@ -704,6 +705,13 @@ export default function TimelineAIWorkspace() {
             ) : null}
           </section>
         </div>
+
+        {selectedProject ? (
+          <TimelineArrangementWorkspace
+            projectId={selectedProject.id}
+            projectTitle={selectedProject.title}
+          />
+        ) : null}
 
         <section className="mt-6 rounded-3xl border border-cyan-300/25 bg-cyan-300/[0.035] p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { TimelineSongArrangementBranchEngine } from "../../lib/timeline/TimelineSongArrangementBranchEngine";
 
 describe("TimelineSongArrangementBranchEngine", () => {
@@ -121,6 +121,23 @@ describe("TimelineSongArrangementBranchEngine", () => {
         committedBy: "member-2",
       }),
     ).toThrow("Stale arrangement head");
+  });
+
+  it("rejects merging an arrangement into itself", () => {
+    const engine = new TimelineSongArrangementBranchEngine();
+    const main = engine.createRoot({
+      songId: "song-1",
+      name: "Main",
+      createdBy: "member-1",
+    });
+
+    expect(() =>
+      engine.merge({
+        sourceBranchId: main.id,
+        targetBranchId: main.id,
+        mergedBy: "member-1",
+      }),
+    ).toThrow("cannot be merged into itself");
   });
 
   it("restores branch history and continues stable IDs after restart", () => {

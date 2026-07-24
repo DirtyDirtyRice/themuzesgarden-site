@@ -1,4 +1,4 @@
-﻿import type { TimelineId, TimelineUserId } from "./TimelineTypes";
+import type { TimelineId, TimelineUserId } from "./TimelineTypes";
 
 export type TimelineArrangementState = Record<TimelineId, TimelineId>;
 
@@ -167,6 +167,9 @@ export class TimelineSongArrangementBranchEngine {
     targetBranchId: TimelineId;
     mergedBy: TimelineUserId;
   }): TimelineArrangementMerge {
+    if (input.sourceBranchId === input.targetBranchId) {
+      throw new Error("An arrangement cannot be merged into itself.");
+    }
     const source = this.requiredBranch(input.sourceBranchId);
     const target = this.requiredBranch(input.targetBranchId);
     if (source.songId !== target.songId) {
@@ -376,4 +379,3 @@ export class TimelineSongArrangementBranchEngine {
 
 export const timelineSongArrangementBranchEngine =
   new TimelineSongArrangementBranchEngine();
-
