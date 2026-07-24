@@ -96,6 +96,7 @@ type TimelineEventApiAction =
   | "update-event-draft"
   | "validate-event-draft"
   | "plan-event-dependencies"
+  | "inspect-event-dependency-impact"
   | "activate-event-draft"
   | "add-event-dependency"
   | "remove-event-dependency";
@@ -106,6 +107,7 @@ const EVENT_ACTIONS = new Set<TimelineEventApiAction>([
   "update-event-draft",
   "validate-event-draft",
   "plan-event-dependencies",
+  "inspect-event-dependency-impact",
   "activate-event-draft",
   "add-event-dependency",
   "remove-event-dependency",
@@ -164,15 +166,20 @@ function eventApiPayload(raw: unknown): {
     typeof record.dependencyId === "string"
       ? record.dependencyId.trim()
       : undefined;
-  if (action === "begin-event-edit" && !eventId) {
+  if (
+    (action === "begin-event-edit" ||
+      action === "inspect-event-dependency-impact") &&
+    !eventId
+  ) {
     throw new TimelineApiError(
-      "An eventId is required to begin a safe edit.",
+      "An eventId is required for this event action.",
       400,
     );
   }
   if (
     action !== "create-event-draft" &&
     action !== "begin-event-edit" &&
+    action !== "inspect-event-dependency-impact" &&
     action !== "add-event-dependency" &&
     action !== "remove-event-dependency" &&
     !draftId
@@ -422,6 +429,17 @@ export async function POST(request: NextRequest) {
           },
           201,
         );
+      }
+      if (eventPayload.action === "inspect-event-dependency-impact") {
+        const impact = await lifecycle.inspectDependencyImpact({
+          projectId: eventPayload.projectId,
+          eventId: eventPayload.eventId!,
+        });
+        return response({
+          impact,
+          holding: await lifecycle.snapshot(eventPayload.projectId),
+          workspaceRecord,
+        });
       }
       if (eventPayload.action === "add-event-dependency") {
         const dependency = await lifecycle.addDependency({

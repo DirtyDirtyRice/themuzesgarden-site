@@ -121,6 +121,19 @@ type DependencyPlanView = {
   }>;
   generatedAt: string;
 };
+type DependencyImpactView = {
+  safeToChange: boolean;
+  affectedDraftIds: string[];
+  affectedEventIds: string[];
+  paths: Array<{
+    draftId: string;
+    eventId: string;
+    title: string;
+    distance: number;
+    path: string[];
+  }>;
+  generatedAt: string;
+};
 type HoldingView = {
   generatedAt: string;
   drafts: HeldDraft[];
@@ -182,6 +195,9 @@ export default function TimelineAIWorkspace() {
   >({});
   const [dependencyPlans, setDependencyPlans] = useState<
     Record<string, DependencyPlanView>
+  >({});
+  const [dependencyImpacts, setDependencyImpacts] = useState<
+    Record<string, DependencyImpactView>
   >({});
 
   const selectedProject = useMemo(
@@ -455,6 +471,22 @@ export default function TimelineAIWorkspace() {
         : "Readiness check found blockers. Nothing was activated.",
     );
   }
+  async function inspectEventImpact(eventId: string) {
+    const response = await eventLifecycleAction(
+      "inspect-event-dependency-impact",
+      { eventId },
+    );
+    setDependencyImpacts((current) => ({
+      ...current,
+      [eventId]: response.impact,
+    }));
+    setMessage(
+      response.impact.safeToChange
+        ? "No held events currently depend on this live event."
+        : `${response.impact.affectedDraftIds.length} held event(s) depend on this live event. Review the chain before editing, archiving, or replacing it.`,
+    );
+  }
+
   const canStart = Boolean(
     projectId && workspace && instruction.trim() && !busy,
   );
@@ -789,34 +821,79 @@ export default function TimelineAIWorkspace() {
                   const alreadyHeld = (holding?.drafts ?? []).some(
                     (draft) => draft.originEventId === event.id,
                   );
+                  const impact = dependencyImpacts[event.id];
                   return (
                     <div
                       key={event.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/45 p-3"
+                      className="rounded-xl border border-white/10 bg-black/45 p-3"
                     >
-                      <div className="min-w-0">
-                        <div className="truncate font-bold">
-                          {event.title || "Untitled event"}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="truncate font-bold">
+                            {event.title || "Untitled event"}
+                          </div>
+                          <div className="mt-1 text-xs text-white/40">
+                            {event.type} · {event.status} · {event.id}
+                          </div>
                         </div>
-                        <div className="mt-1 text-xs text-white/40">
-                          {event.type} · {event.status} · {event.id}
+                        <div className="flex shrink-0 flex-wrap gap-2">
+                          <button
+                            onClick={() =>
+                              void run(`impact-${event.id}`, () =>
+                                inspectEventImpact(event.id),
+                              )
+                            }
+                            disabled={Boolean(busy)}
+                            className="rounded-lg border border-amber-200/40 px-3 py-2 text-xs font-black text-amber-100 disabled:opacity-30"
+                          >
+                            Check Impact
+                          </button>
+                          <button
+                            onClick={() =>
+                              void run(`edit-${event.id}`, () =>
+                                beginEventEdit(event.id),
+                              )
+                            }
+                            disabled={
+                              event.locked || alreadyHeld || Boolean(busy)
+                            }
+                            className="rounded-lg border border-cyan-200/40 px-3 py-2 text-xs font-black text-cyan-100 disabled:opacity-30"
+                          >
+                            {event.locked
+                              ? "Locked"
+                              : alreadyHeld
+                                ? "Edit Held"
+                                : "Edit Safely"}
+                          </button>
                         </div>
                       </div>
-                      <button
-                        onClick={() =>
-                          void run(`edit-${event.id}`, () =>
-                            beginEventEdit(event.id),
-                          )
-                        }
-                        disabled={event.locked || alreadyHeld || Boolean(busy)}
-                        className="shrink-0 rounded-lg border border-cyan-200/40 px-3 py-2 text-xs font-black text-cyan-100 disabled:opacity-30"
-                      >
-                        {event.locked
-                          ? "Locked"
-                          : alreadyHeld
-                            ? "Edit Held"
-                            : "Edit Safely"}
-                      </button>
+                      {impact ? (
+                        <div
+                          className={`mt-3 rounded-lg border p-3 text-xs ${
+                            impact.safeToChange
+                              ? "border-emerald-300/25 bg-emerald-300/5"
+                              : "border-amber-300/30 bg-amber-300/5"
+                          }`}
+                        >
+                          <div className="font-black">
+                            {impact.safeToChange
+                              ? "No downstream held events"
+                              : `${impact.affectedDraftIds.length} downstream held event(s)`}
+                          </div>
+                          {impact.paths.map((path) => (
+                            <div
+                              key={path.draftId}
+                              className="mt-2 text-white/65"
+                            >
+                              Level {path.distance}:{" "}
+                              {path.title || path.eventId}
+                              <div className="mt-1 font-mono text-[10px] text-white/35">
+                                {path.path.join(" → ")}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   );
                 })}

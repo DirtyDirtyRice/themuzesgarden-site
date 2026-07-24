@@ -45,6 +45,22 @@ export type TimelineEventDependencyPlan = {
   generatedAt: string;
 };
 
+export type TimelineEventDependencyImpact = {
+  projectId: TimelineId;
+  eventId: TimelineId;
+  safeToChange: boolean;
+  affectedDraftIds: TimelineId[];
+  affectedEventIds: TimelineId[];
+  paths: Array<{
+    draftId: TimelineId;
+    eventId: TimelineId;
+    title: string;
+    distance: number;
+    path: TimelineId[];
+  }>;
+  generatedAt: string;
+};
+
 export type TimelineEventDependencyActivation = {
   accepted: boolean;
   plan: TimelineEventDependencyPlan;
@@ -257,6 +273,58 @@ export class TimelineEventDependencyEngine {
       activationOrder,
       dependencies,
       issues,
+      generatedAt: this.now().toISOString(),
+    };
+  }
+
+  impact(input: {
+    projectId: TimelineId;
+    eventId: TimelineId;
+    drafts: TimelineEventDraft[];
+  }): TimelineEventDependencyImpact {
+    const dependencies = this.listDependencies(input.projectId);
+    const draftByEventId = new Map(
+      input.drafts
+        .filter((draft) => draft.projectId === input.projectId)
+        .map((draft) => [draft.event.id, draft]),
+    );
+    const paths = new Map<TimelineId, TimelineId[]>();
+    const queue: Array<{ eventId: TimelineId; path: TimelineId[] }> = [
+      { eventId: input.eventId, path: [input.eventId] },
+    ];
+    while (queue.length) {
+      const current = queue.shift()!;
+      for (const edge of dependencies.filter(
+        (dependency) => dependency.requiredEventId === current.eventId,
+      )) {
+        if (paths.has(edge.dependentEventId)) continue;
+        const path = [...current.path, edge.dependentEventId];
+        paths.set(edge.dependentEventId, path);
+        queue.push({ eventId: edge.dependentEventId, path });
+      }
+    }
+    const affected = Array.from(paths.entries())
+      .map(([eventId, path]) => {
+        const draft = draftByEventId.get(eventId);
+        return draft
+          ? {
+              draftId: draft.id,
+              eventId,
+              title: draft.event.title,
+              distance: path.length - 1,
+              path,
+            }
+          : null;
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item))
+      .sort((left, right) => left.distance - right.distance);
+    return {
+      projectId: input.projectId,
+      eventId: input.eventId,
+      safeToChange: affected.length === 0,
+      affectedDraftIds: affected.map((item) => item.draftId),
+      affectedEventIds: affected.map((item) => item.eventId),
+      paths: affected,
       generatedAt: this.now().toISOString(),
     };
   }

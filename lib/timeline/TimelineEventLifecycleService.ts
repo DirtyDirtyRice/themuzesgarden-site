@@ -18,6 +18,7 @@ import {
   TimelineEventDependencyEngine,
   type TimelineEventDependency,
   type TimelineEventDependencyPlan,
+  type TimelineEventDependencyImpact,
 } from "./TimelineEventDependencyEngine";
 import type {
   TimelineId,
@@ -325,6 +326,17 @@ export class TimelineEventLifecycleService {
   }): Promise<TimelineEventDependencyPlan> {
     await this.initialize();
     return this.dependencyEngine.plan({
+      ...input,
+      drafts: this.engine.exportDrafts(),
+    });
+  }
+
+  async inspectDependencyImpact(input: {
+    projectId: TimelineId;
+    eventId: TimelineId;
+  }): Promise<TimelineEventDependencyImpact> {
+    await this.initialize();
+    return this.dependencyEngine.impact({
       ...input,
       drafts: this.engine.exportDrafts(),
     });

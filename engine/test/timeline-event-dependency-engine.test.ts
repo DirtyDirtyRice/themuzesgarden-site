@@ -157,4 +157,53 @@ describe("TimelineEventDependencyEngine", () => {
     expect(lifecycle.getDraft(second.id)?.lifecycle).toBe("validated");
     expect(activation.issues[0].code).toBe("activation-failed");
   });
+  it("reports direct and transitive held-event impact from a live requirement", () => {
+    const lifecycle = new TimelineEventLifecycleEngine();
+    const engine = new TimelineEventDependencyEngine();
+    const direct = validatedDraft(
+      lifecycle,
+      TIMELINE_WORKSPACE,
+      "Direct dependent",
+    );
+    const transitive = validatedDraft(
+      lifecycle,
+      TIMELINE_WORKSPACE,
+      "Transitive dependent",
+    );
+    const liveEventId = TIMELINE_WORKSPACE.events[0].id;
+    engine.addDependency({
+      projectId: TIMELINE_WORKSPACE.projectId,
+      dependentEventId: direct.event.id,
+      requiredEventId: liveEventId,
+      createdBy: "member-1",
+    });
+    engine.addDependency({
+      projectId: TIMELINE_WORKSPACE.projectId,
+      dependentEventId: transitive.event.id,
+      requiredEventId: direct.event.id,
+      createdBy: "member-1",
+    });
+
+    const impact = engine.impact({
+      projectId: TIMELINE_WORKSPACE.projectId,
+      eventId: liveEventId,
+      drafts: lifecycle.exportDrafts(),
+    });
+    const unrelated = engine.impact({
+      projectId: TIMELINE_WORKSPACE.projectId,
+      eventId: "unrelated-live-event",
+      drafts: lifecycle.exportDrafts(),
+    });
+
+    expect(impact.safeToChange).toBe(false);
+    expect(impact.affectedDraftIds).toEqual([direct.id, transitive.id]);
+    expect(impact.paths.map((path) => path.distance)).toEqual([1, 2]);
+    expect(impact.paths[1].path).toEqual([
+      liveEventId,
+      direct.event.id,
+      transitive.event.id,
+    ]);
+    expect(unrelated.safeToChange).toBe(true);
+    expect(unrelated.paths).toEqual([]);
+  });
 });
