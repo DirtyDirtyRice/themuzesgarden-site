@@ -5,7 +5,7 @@ import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/worksp
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 600;
+export const maxDuration = 300;
 
 function local(request: NextRequest): boolean {
   const hostname = request.nextUrl.hostname.toLowerCase();
