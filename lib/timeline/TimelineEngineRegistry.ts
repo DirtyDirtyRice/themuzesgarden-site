@@ -126,6 +126,7 @@ export const TIMELINE_ENGINE_CATALOG: TimelineEngineDescriptor[] = [
   descriptor("workspace-recovery", "TimelineAudioWorkspaceRecoveryEngine", "recovery", ["recovery-policy", "workspace-store"]),
   descriptor("project-sync", "TimelineProjectSyncEngine", "recovery", ["workspace-recovery"]),
   descriptor("production-coordinator", "TimelineProductionCoordinatorEngine", "production", ["orchestration", "collaboration-approval", "mastering", "rights", "interchange-export", "project-sync"]),
+  descriptor("activation-gate", "TimelineEngineActivationGate", "core", ["production-coordinator"]),
 ];
 
 export class TimelineEngineRegistry {

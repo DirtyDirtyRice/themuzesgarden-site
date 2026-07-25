@@ -29,7 +29,7 @@ describe("timeline engine health dashboard", () => {
     );
     expect(dashboard.report.ready).toBe(true);
     expect(dashboard.report.healthy).toBe(dashboard.report.registered);
-    expect(dashboard.engines.at(-1)?.descriptor.id).toBe("production-coordinator");
+    expect(dashboard.engines.at(-1)?.descriptor.id).toBe("activation-gate");
     expect(dashboard.domains.every((domain) => domain.ready)).toBe(true);
     expect(dashboard.dependencyLinks).toBeGreaterThan(dashboard.report.registered);
   });
