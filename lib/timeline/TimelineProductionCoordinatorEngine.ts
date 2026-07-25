@@ -1,4 +1,5 @@
 import type { TimelineId, TimelineUserId } from "./TimelineTypes";
+import type { TimelineEngineActivationGate } from "./TimelineEngineActivationGate";
 
 export type TimelineProductionStageKind =
   | "writing"
@@ -50,6 +51,8 @@ export type TimelineProductionPlan = {
   createdBy: TimelineUserId;
   activatedAt?: string;
   activatedBy?: TimelineUserId;
+  activationAuthorizationId?: TimelineId;
+  engineRegistryFingerprint?: string;
   releasedAt?: string;
   releasedBy?: TimelineUserId;
 };
@@ -105,7 +108,10 @@ export class TimelineProductionCoordinatorEngine {
   private gateSequence = 0;
   private receiptSequence = 0;
 
-  constructor(private readonly now: () => Date = () => new Date()) {}
+  constructor(
+    private readonly now: () => Date = () => new Date(),
+    private readonly activationGate?: TimelineEngineActivationGate,
+  ) {}
 
   createPlan(input: {
     projectId: TimelineId;
@@ -153,6 +159,8 @@ export class TimelineProductionCoordinatorEngine {
       createdBy: input.revisedBy,
       activatedAt: undefined,
       activatedBy: undefined,
+      activationAuthorizationId: undefined,
+      engineRegistryFingerprint: undefined,
       releasedAt: undefined,
       releasedBy: undefined,
     };
@@ -162,9 +170,20 @@ export class TimelineProductionCoordinatorEngine {
     return clone(value);
   }
 
-  activatePlan(input: { planId: TimelineId; activatedBy: TimelineUserId }): TimelineProductionPlan {
+  activatePlan(input: {
+    planId: TimelineId;
+    activatedBy: TimelineUserId;
+    activationAuthorizationId?: TimelineId;
+  }): TimelineProductionPlan {
     const value = this.requirePlan(input.planId);
     if (value.status !== "draft") throw new Error("Only a draft production plan can be activated.");
+    const authorization = this.activationGate
+      ? this.activationGate.consume({
+          authorizationId: text(input.activationAuthorizationId ?? "", "Engine activation authorization"),
+          workflowId: value.id,
+          consumedBy: input.activatedBy,
+        })
+      : null;
     for (const current of this.plans.values()) {
       if (current.projectId === value.projectId && current.status === "active") {
         this.plans.set(current.id, { ...current, status: "archived" });
@@ -177,9 +196,19 @@ export class TimelineProductionCoordinatorEngine {
     const active: TimelineProductionPlan = {
       ...value, status: "active", stages,
       activatedAt: this.now().toISOString(), activatedBy: input.activatedBy,
+      activationAuthorizationId: authorization?.id,
+      engineRegistryFingerprint: authorization?.registryFingerprint,
     };
     this.plans.set(active.id, clone(active));
-    this.record(active, active.id, "plan-activated", "Production coordination is active.", input.activatedBy);
+    this.record(
+      active,
+      active.id,
+      "plan-activated",
+      authorization
+        ? `Production coordination is active with engine authorization ${authorization.id}.`
+        : "Production coordination is active.",
+      input.activatedBy,
+    );
     return clone(active);
   }
 

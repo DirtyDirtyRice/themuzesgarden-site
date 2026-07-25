@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { TimelineProductionCoordinatorEngine } from "../../lib/timeline/TimelineProductionCoordinatorEngine";
+import { TimelineEngineActivationGate } from "../../lib/timeline/TimelineEngineActivationGate";
+import { TimelineEngineRegistry, type TimelineEngineDescriptor } from "../../lib/timeline/TimelineEngineRegistry";
 
 function stages() {
   return [
@@ -22,6 +24,32 @@ function passStageGate(engine: TimelineProductionCoordinatorEngine, planId: stri
 }
 
 describe("TimelineProductionCoordinatorEngine", () => {
+  it("requires and consumes current engine authorization when configured", () => {
+    const descriptor: TimelineEngineDescriptor = {
+      id: "production", name: "production", module: "./production", version: "1.0.0",
+      domain: "production", capabilities: ["coordinate"], dependencies: [], required: true,
+    };
+    const registry = new TimelineEngineRegistry([descriptor], () => new Date("2026-07-25T12:00:00.000Z"));
+    registry.probeAll(() => ({ healthy: true, message: "green" }));
+    const gate = new TimelineEngineActivationGate(registry, () => new Date("2026-07-25T12:00:00.000Z"));
+    const engine = new TimelineProductionCoordinatorEngine(
+      () => new Date("2026-07-25T12:00:00.000Z"), gate,
+    );
+    const plan = engine.createPlan({
+      projectId: "song-gated", name: "Gated production", stages: stages(), createdBy: "producer-1",
+    });
+    expect(() => engine.activatePlan({ planId: plan.id, activatedBy: "producer-1" }))
+      .toThrow("authorization");
+    const authorization = gate.request({ workflowId: plan.id, requestedBy: "producer-1" });
+    const active = engine.activatePlan({
+      planId: plan.id, activatedBy: "producer-1", activationAuthorizationId: authorization.id,
+    });
+    expect(active.activationAuthorizationId).toBe(authorization.id);
+    expect(active.engineRegistryFingerprint).toBe(authorization.registryFingerprint);
+    expect(gate.getDecision(authorization.id)?.status).toBe("consumed");
+    expect(engine.listReceipts("song-gated").at(-1)?.message).toContain(authorization.id);
+  });
+
   it("rejects unknown and cyclic dependencies", () => {
     const engine = new TimelineProductionCoordinatorEngine();
     expect(() => engine.createPlan({ projectId: "song", name: "Bad", stages: [{ ...stages()[0], dependsOn: ["Missing"] }], createdBy: "p" })).toThrow("Unknown");
