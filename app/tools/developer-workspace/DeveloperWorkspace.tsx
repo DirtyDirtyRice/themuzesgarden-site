@@ -14,6 +14,7 @@ import AiDriftHoldingReport from "./AiDriftHoldingReport";
 import WorkspaceProjectSelector from "./WorkspaceProjectSelector";
 import CodeRootNavigator from "./CodeRootNavigator";
 import ArchitecturalHealthDashboard from "./ArchitecturalHealthDashboard";
+import EngineHealthDashboard from "./EngineHealthDashboard";
 
 import type {
   ProjectEntry,
@@ -247,6 +248,7 @@ export default function DeveloperWorkspace() {
       <div id="workspace-projects"><WorkspaceProjectSelector /></div>
       <div id="code-roots"><CodeRootNavigator /></div>
       <div id="architecture"><ArchitecturalHealthDashboard /></div>
+      <div id="engine-health"><EngineHealthDashboard /></div>
 
       {error ? (
         <div className="mt-4 rounded-lg border border-red-400/50 bg-red-400/10 p-3 text-red-100">
