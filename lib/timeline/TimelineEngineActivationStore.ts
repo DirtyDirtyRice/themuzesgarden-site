@@ -2,6 +2,7 @@ import "server-only";
 
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { createHash } from "node:crypto";
 
 import type { TimelineEngineActivationArchive } from "./TimelineEngineActivationGate";
 
@@ -9,7 +10,17 @@ export type TimelineEngineActivationDocument = {
   schemaVersion: 1;
   savedAt: string;
   archive: TimelineEngineActivationArchive;
+  integrity?: {
+    algorithm: "sha256";
+    archiveHash: string;
+  };
 };
+
+export function hashTimelineEngineActivationArchive(
+  archive: TimelineEngineActivationArchive,
+): string {
+  return createHash("sha256").update(JSON.stringify(archive)).digest("hex");
+}
 
 export interface TimelineEngineActivationStore {
   readonly kind: "atomic-file" | "supabase";

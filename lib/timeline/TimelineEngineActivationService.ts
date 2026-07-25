@@ -6,6 +6,7 @@ import {
 } from "./TimelineEngineActivationGate";
 import {
   TimelineEngineActivationFileStore,
+  hashTimelineEngineActivationArchive,
   type TimelineEngineActivationDocument,
   type TimelineEngineActivationStore,
 } from "./TimelineEngineActivationStore";
@@ -19,12 +20,16 @@ export type TimelineEngineActivationSnapshot = {
   expired: number;
   revoked: number;
   latestDecisionAt: string | null;
+  integrityStatus: "empty" | "legacy-unverified" | "verified";
+  archiveHash: string | null;
   decisions: TimelineEngineActivationDecision[];
 };
 
 export class TimelineEngineActivationService {
   private initialized = false;
   private writeQueue: Promise<void> = Promise.resolve();
+  private integrityStatus: TimelineEngineActivationSnapshot["integrityStatus"] = "empty";
+  private archiveHash: string | null = null;
 
   private readonly store: TimelineEngineActivationStore;
 
@@ -52,6 +57,20 @@ export class TimelineEngineActivationService {
           !Array.isArray(document.archive.decisions)
         ) {
           throw new Error("Engine activation ledger has an unsupported format.");
+        }
+        const actualHash = hashTimelineEngineActivationArchive(document.archive);
+        if (document.integrity) {
+          if (
+            document.integrity.algorithm !== "sha256" ||
+            document.integrity.archiveHash !== actualHash
+          ) {
+            throw new Error("Engine activation ledger integrity verification failed.");
+          }
+          this.integrityStatus = "verified";
+          this.archiveHash = actualHash;
+        } else {
+          this.integrityStatus = "legacy-unverified";
+          this.archiveHash = null;
         }
         this.gate.restoreArchive(document.archive);
       }
@@ -110,18 +129,25 @@ export class TimelineEngineActivationService {
       expired: decisions.filter((value) => value.status === "expired").length,
       revoked: decisions.filter((value) => value.status === "revoked").length,
       latestDecisionAt: decisions.at(-1)?.requestedAt ?? null,
+      integrityStatus: this.integrityStatus,
+      archiveHash: this.archiveHash,
       decisions,
     };
   }
 
   private async save(): Promise<void> {
     const operation = async () => {
+      const archive = this.gate.exportArchive();
+      const archiveHash = hashTimelineEngineActivationArchive(archive);
       const document: TimelineEngineActivationDocument = {
         schemaVersion: 1,
         savedAt: this.now().toISOString(),
-        archive: this.gate.exportArchive(),
+        archive,
+        integrity: { algorithm: "sha256", archiveHash },
       };
       await this.store.save(document);
+      this.integrityStatus = "verified";
+      this.archiveHash = archiveHash;
     };
     this.writeQueue = this.writeQueue.then(operation, operation);
     await this.writeQueue;

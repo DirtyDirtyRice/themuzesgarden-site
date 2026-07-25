@@ -6,6 +6,8 @@ import type { TimelineEngineActivationSnapshot } from "../../lib/timeline/Timeli
 const snapshot: TimelineEngineActivationSnapshot = {
   total: 2, authorized: 1, blocked: 1, consumed: 0, expired: 0, revoked: 0,
   latestDecisionAt: "2026-07-25T12:01:00.000Z",
+  integrityStatus: "verified",
+  archiveHash: "a".repeat(64),
   decisions: [
     {
       id: "activation-1", workflowId: "workflow-one", requestedBy: "private-user-one",

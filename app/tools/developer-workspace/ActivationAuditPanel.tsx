@@ -112,6 +112,33 @@ export default function ActivationAuditPanel() {
             : "Safe for local development; production durability is awaiting private database configuration."}
         </span>
       </div>
+      <div className={`mt-3 rounded-lg border p-3 text-sm ${
+        summary?.integrityStatus === "verified"
+          ? "border-emerald-300/35 bg-emerald-300/5 text-emerald-100"
+          : summary?.integrityStatus === "legacy-unverified"
+            ? "border-amber-300/35 bg-amber-300/5 text-amber-100"
+            : "border-cyan-300/25 bg-cyan-300/5 text-cyan-100"
+      }`}>
+        <strong>
+          {summary?.integrityStatus === "verified"
+            ? "Ledger integrity verified"
+            : summary?.integrityStatus === "legacy-unverified"
+              ? "Legacy ledger awaiting checksum upgrade"
+              : "No activation evidence to verify yet"}
+        </strong>
+        <span className="ml-2 text-white/55">
+          {summary?.integrityStatus === "verified"
+            ? "The saved archive matches its SHA-256 fingerprint."
+            : summary?.integrityStatus === "legacy-unverified"
+              ? "The next legitimate activation write will add an integrity fingerprint."
+              : "Integrity verification begins with the first saved activation decision."}
+        </span>
+        {summary?.archiveHash ? (
+          <div className="mt-2 break-all font-mono text-[10px] text-white/35">
+            SHA-256: {summary.archiveHash}
+          </div>
+        ) : null}
+      </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
         {[
           ["Total", summary?.total ?? 0],

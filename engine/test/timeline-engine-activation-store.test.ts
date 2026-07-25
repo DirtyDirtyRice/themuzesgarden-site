@@ -72,6 +72,23 @@ describe("TimelineEngineActivationStore", () => {
     expect(snapshot).toMatchObject({ total: 1, consumed: 1 });
   });
 
+  it("marks legacy evidence unverified and upgrades it on the next write", async () => {
+    const store = new MemoryStore();
+    store.document = {
+      schemaVersion: 1,
+      savedAt: "2026-07-25T12:00:00.000Z",
+      archive: { decisions: [] },
+    };
+    const service = new TimelineEngineActivationService(
+      store,
+      new TimelineEngineActivationGate(registry()),
+    );
+
+    expect((await service.initialize()).integrityStatus).toBe("legacy-unverified");
+    await service.request({ workflowId: "plan-upgrade", requestedBy: "producer-1" });
+    expect((await service.snapshot()).integrityStatus).toBe("verified");
+    expect(store.document?.integrity?.archiveHash).toMatch(/^[0-9a-f]{64}$/);
+  });
   it("rejects an unsupported persisted schema", async () => {
     const store = new MemoryStore();
     store.document = {
@@ -100,6 +117,7 @@ describe("TimelineEngineActivationStore", () => {
             schema_version: value.schema_version,
             saved_at: value.saved_at,
             archive: value.archive,
+            integrity: value.integrity,
           };
           return { error: null };
         },
@@ -110,6 +128,10 @@ describe("TimelineEngineActivationStore", () => {
       schemaVersion: 1,
       savedAt: "2026-07-25T22:00:00.000Z",
       archive: { decisions: [] },
+      integrity: {
+        algorithm: "sha256",
+        archiveHash: "f".repeat(64),
+      },
     };
 
     expect(await store.load()).toBeNull();

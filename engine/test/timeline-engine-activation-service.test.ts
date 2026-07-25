@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -67,9 +67,30 @@ describe("TimelineEngineActivationService", () => {
     expect(snapshot).toMatchObject({ total: 1, consumed: 1, blocked: 0 });
     expect(snapshot.decisions[0].id).toBe(authorization.id);
     expect(stored.schemaVersion).toBe(1);
+    expect(stored.integrity.algorithm).toBe("sha256");
+    expect(stored.integrity.archiveHash).toMatch(/^[0-9a-f]{64}$/);
     expect(stored.archive.decisions[0].status).toBe("consumed");
+    expect(snapshot.integrityStatus).toBe("verified");
   });
 
+  it("rejects activation evidence altered after it was saved", async () => {
+    const filePath = await ledgerFile();
+    const source = new TimelineEngineActivationService(
+      filePath,
+      new TimelineEngineActivationGate(registry()),
+    );
+    await source.request({ workflowId: "plan-original", requestedBy: "producer-1" });
+
+    const stored = JSON.parse(await readFile(filePath, "utf8"));
+    stored.archive.decisions[0].workflowId = "plan-tampered";
+    await writeFile(filePath, `${JSON.stringify(stored, null, 2)}\n`, "utf8");
+
+    const restarted = new TimelineEngineActivationService(
+      filePath,
+      new TimelineEngineActivationGate(registry()),
+    );
+    await expect(restarted.initialize()).rejects.toThrow("integrity verification failed");
+  });
   it("persists blocked decisions as prevented activation evidence", async () => {
     const filePath = await ledgerFile();
     const service = new TimelineEngineActivationService(
