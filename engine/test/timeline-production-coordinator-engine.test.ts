@@ -11,10 +11,10 @@ function stages() {
   ];
 }
 
-function setup() {
+async function setup() {
   const engine = new TimelineProductionCoordinatorEngine(() => new Date("2026-07-25T12:00:00.000Z"));
   const plan = engine.createPlan({ projectId: "song-1", name: "Single production", stages: stages(), createdBy: "producer-1" });
-  return { engine, plan: engine.activatePlan({ planId: plan.id, activatedBy: "producer-1" }) };
+  return { engine, plan: await engine.activatePlan({ planId: plan.id, activatedBy: "producer-1" }) };
 }
 
 function passStageGate(engine: TimelineProductionCoordinatorEngine, planId: string, stageId: string) {
@@ -24,7 +24,7 @@ function passStageGate(engine: TimelineProductionCoordinatorEngine, planId: stri
 }
 
 describe("TimelineProductionCoordinatorEngine", () => {
-  it("requires and consumes current engine authorization when configured", () => {
+  it("requires and consumes current engine authorization when configured", async () => {
     const descriptor: TimelineEngineDescriptor = {
       id: "production", name: "production", module: "./production", version: "1.0.0",
       domain: "production", capabilities: ["coordinate"], dependencies: [], required: true,
@@ -38,10 +38,10 @@ describe("TimelineProductionCoordinatorEngine", () => {
     const plan = engine.createPlan({
       projectId: "song-gated", name: "Gated production", stages: stages(), createdBy: "producer-1",
     });
-    expect(() => engine.activatePlan({ planId: plan.id, activatedBy: "producer-1" }))
-      .toThrow("authorization");
+    await expect(engine.activatePlan({ planId: plan.id, activatedBy: "producer-1" }))
+      .rejects.toThrow("authorization");
     const authorization = gate.request({ workflowId: plan.id, requestedBy: "producer-1" });
-    const active = engine.activatePlan({
+    const active = await engine.activatePlan({
       planId: plan.id, activatedBy: "producer-1", activationAuthorizationId: authorization.id,
     });
     expect(active.activationAuthorizationId).toBe(authorization.id);
@@ -50,14 +50,14 @@ describe("TimelineProductionCoordinatorEngine", () => {
     expect(engine.listReceipts("song-gated").at(-1)?.message).toContain(authorization.id);
   });
 
-  it("rejects unknown and cyclic dependencies", () => {
+  it("rejects unknown and cyclic dependencies", async () => {
     const engine = new TimelineProductionCoordinatorEngine();
     expect(() => engine.createPlan({ projectId: "song", name: "Bad", stages: [{ ...stages()[0], dependsOn: ["Missing"] }], createdBy: "p" })).toThrow("Unknown");
     expect(() => engine.createPlan({ projectId: "song", name: "Cycle", stages: [{ ...stages()[0], dependsOn: ["Mix"] }, { ...stages()[1], dependsOn: ["Record"] }], createdBy: "p" })).toThrow("cycle");
   });
 
-  it("holds work until dependencies and required gates pass", () => {
-    const { engine, plan } = setup();
+  it("holds work until dependencies and required gates pass", async () => {
+    const { engine, plan } = await setup();
     const record = plan.stages[0];
     const mix = plan.stages[1];
     expect(() => engine.startStage({ planId: plan.id, stageId: mix.id, startedBy: "mixer-1" })).toThrow("dependency");
@@ -66,8 +66,8 @@ describe("TimelineProductionCoordinatorEngine", () => {
     expect(engine.startStage({ planId: plan.id, stageId: record.id, startedBy: "artist-1" }).stages[0].status).toBe("active");
   });
 
-  it("coordinates the complete path and blocks premature release", () => {
-    const { engine, plan } = setup();
+  it("coordinates the complete path and blocks premature release", async () => {
+    const { engine, plan } = await setup();
     expect(() => engine.authorizeRelease({ planId: plan.id, authorizedBy: "producer-1" })).toThrow("stage");
     for (const original of plan.stages) {
       passStageGate(engine, plan.id, original.id);
@@ -77,8 +77,8 @@ describe("TimelineProductionCoordinatorEngine", () => {
     expect(engine.authorizeRelease({ planId: plan.id, authorizedBy: "producer-1" }).status).toBe("completed");
   });
 
-  it("holds failures and recovers without losing evidence", () => {
-    const { engine, plan } = setup();
+  it("holds failures and recovers without losing evidence", async () => {
+    const { engine, plan } = await setup();
     const stage = plan.stages[0];
     passStageGate(engine, plan.id, stage.id);
     engine.startStage({ planId: plan.id, stageId: stage.id, startedBy: stage.ownerId });
@@ -87,18 +87,18 @@ describe("TimelineProductionCoordinatorEngine", () => {
     expect(engine.listReceipts("song-1").map((value) => value.action)).toContain("stage-failed");
   });
 
-  it("creates non-destructive revisions and holds overdue stages", () => {
+  it("creates non-destructive revisions and holds overdue stages", async () => {
     const engine = new TimelineProductionCoordinatorEngine(() => new Date("2026-09-01T00:00:00.000Z"));
     const source = engine.createPlan({ projectId: "song-1", name: "Old", stages: stages(), createdBy: "producer-1" });
     const revised = engine.revisePlan({ planId: source.id, stages: stages(), revisedBy: "producer-1" });
     expect(revised.parentPlanId).toBe(source.id);
-    engine.activatePlan({ planId: revised.id, activatedBy: "producer-1" });
+    await engine.activatePlan({ planId: revised.id, activatedBy: "producer-1" });
     expect(engine.holdOverdueStages({ planId: revised.id, checkedBy: "coordinator-1" }).status).toBe("held");
     expect(engine.getPlan(source.id)?.status).toBe("draft");
   });
 
-  it("restores stable production identities and continues sequences", () => {
-    const { engine, plan } = setup();
+  it("restores stable production identities and continues sequences", async () => {
+    const { engine, plan } = await setup();
     const restored = new TimelineProductionCoordinatorEngine();
     restored.restoreArchive(engine.exportArchive());
     expect(restored.getPlan(plan.id)?.stages[0].id).toBe("timeline-production-stage-1");

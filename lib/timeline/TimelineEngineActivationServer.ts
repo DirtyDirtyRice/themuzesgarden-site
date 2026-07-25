@@ -9,8 +9,10 @@ import {
 } from "./TimelineEngineRegistry";
 import { TimelineEngineActivationGate } from "./TimelineEngineActivationGate";
 import { TimelineEngineActivationService } from "./TimelineEngineActivationService";
+import { TimelineProductionCoordinatorEngine } from "./TimelineProductionCoordinatorEngine";
 
 let servicePromise: Promise<TimelineEngineActivationService> | null = null;
+let productionCoordinatorPromise: Promise<TimelineProductionCoordinatorEngine> | null = null;
 
 function activationLedgerPath(): string {
   return (
@@ -56,4 +58,18 @@ export function getTimelineEngineActivationService(): Promise<TimelineEngineActi
     });
   }
   return servicePromise;
+}
+export function getTimelineProductionCoordinatorServer(): Promise<TimelineProductionCoordinatorEngine> {
+  if (!productionCoordinatorPromise) {
+    productionCoordinatorPromise = getTimelineEngineActivationService()
+      .then((service) => new TimelineProductionCoordinatorEngine(
+        () => new Date(),
+        service,
+      ))
+      .catch((error) => {
+        productionCoordinatorPromise = null;
+        throw error;
+      });
+  }
+  return productionCoordinatorPromise;
 }

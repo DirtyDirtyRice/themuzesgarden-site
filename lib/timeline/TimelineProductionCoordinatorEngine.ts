@@ -1,5 +1,16 @@
 import type { TimelineId, TimelineUserId } from "./TimelineTypes";
-import type { TimelineEngineActivationGate } from "./TimelineEngineActivationGate";
+import type {
+  TimelineEngineActivationDecision,
+  TimelineEngineActivationGate,
+} from "./TimelineEngineActivationGate";
+
+type TimelineEngineActivationConsumer = Pick<TimelineEngineActivationGate, "consume"> | {
+  consume(input: {
+    authorizationId: TimelineId;
+    workflowId: TimelineId;
+    consumedBy: TimelineUserId;
+  }): Promise<TimelineEngineActivationDecision>;
+};
 
 export type TimelineProductionStageKind =
   | "writing"
@@ -110,7 +121,7 @@ export class TimelineProductionCoordinatorEngine {
 
   constructor(
     private readonly now: () => Date = () => new Date(),
-    private readonly activationGate?: TimelineEngineActivationGate,
+    private readonly activationGate?: TimelineEngineActivationConsumer,
   ) {}
 
   createPlan(input: {
@@ -170,15 +181,15 @@ export class TimelineProductionCoordinatorEngine {
     return clone(value);
   }
 
-  activatePlan(input: {
+  async activatePlan(input: {
     planId: TimelineId;
     activatedBy: TimelineUserId;
     activationAuthorizationId?: TimelineId;
-  }): TimelineProductionPlan {
+  }): Promise<TimelineProductionPlan> {
     const value = this.requirePlan(input.planId);
     if (value.status !== "draft") throw new Error("Only a draft production plan can be activated.");
     const authorization = this.activationGate
-      ? this.activationGate.consume({
+      ? await this.activationGate.consume({
           authorizationId: text(input.activationAuthorizationId ?? "", "Engine activation authorization"),
           workflowId: value.id,
           consumedBy: input.activatedBy,

@@ -8,6 +8,7 @@ vi.mock("server-only", () => ({}));
 
 import { TimelineEngineActivationGate } from "../../lib/timeline/TimelineEngineActivationGate";
 import { TimelineEngineActivationService } from "../../lib/timeline/TimelineEngineActivationService";
+import { TimelineProductionCoordinatorEngine } from "../../lib/timeline/TimelineProductionCoordinatorEngine";
 import {
   TimelineEngineRegistry,
   type TimelineEngineDescriptor,
@@ -120,5 +121,50 @@ describe("TimelineEngineActivationService", () => {
       new TimelineEngineActivationGate(registry()),
     );
     expect((await restarted.initialize()).total).toBe(25);
+  });
+
+  it("persists real coordinator consumption before activating production state", async () => {
+    const filePath = await ledgerFile();
+    const service = new TimelineEngineActivationService(
+      filePath,
+      new TimelineEngineActivationGate(registry(), () => new Date("2026-07-25T12:01:00.000Z")),
+      () => new Date("2026-07-25T12:01:00.000Z"),
+    );
+    const coordinator = new TimelineProductionCoordinatorEngine(
+      () => new Date("2026-07-25T12:01:00.000Z"),
+      service,
+    );
+    const plan = coordinator.createPlan({
+      projectId: "song-persistent",
+      name: "Persistent activation",
+      createdBy: "producer-1",
+      stages: [{
+        kind: "recording",
+        name: "Record",
+        ownerId: "artist-1",
+        dependsOn: [],
+        dueAt: "2026-08-01T00:00:00.000Z",
+        gates: [],
+      }],
+    });
+    const authorization = await service.request({
+      workflowId: plan.id,
+      requestedBy: "producer-1",
+    });
+    const active = await coordinator.activatePlan({
+      planId: plan.id,
+      activatedBy: "producer-1",
+      activationAuthorizationId: authorization.id,
+    });
+    const restarted = new TimelineEngineActivationService(
+      filePath,
+      new TimelineEngineActivationGate(registry()),
+    );
+    const snapshot = await restarted.initialize();
+
+    expect(active.status).toBe("active");
+    expect(active.activationAuthorizationId).toBe(authorization.id);
+    expect(snapshot).toMatchObject({ total: 1, consumed: 1 });
+    expect(snapshot.decisions[0]?.workflowId).toBe(plan.id);
   });
 });
