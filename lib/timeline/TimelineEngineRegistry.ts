@@ -92,6 +92,7 @@ export const TIMELINE_ENGINE_CATALOG: TimelineEngineDescriptor[] = [
   descriptor("ai-mix-assistant", "AIMixAssistantEngine", "ai", ["ai", "mix-evaluation"]),
   descriptor("lyric-pronunciation", "TimelineLyricPronunciationEngine", "ai", ["ai", "validation"]),
   descriptor("audio-artifacts", "TimelineAudioArtifactRepositoryEngine", "audio", ["validation"]),
+  descriptor("audio-decode", "TimelineAudioDecodeEngine", "audio", ["audio-artifacts"]),
   descriptor("audio-integrity", "TimelineAudioArtifactIntegrityEngine", "audio", ["audio-artifacts"]),
   descriptor("audio-processing", "TimelineAudioProcessingQueueEngine", "audio", ["audio-integrity"]),
   descriptor("performance-capture", "TimelinePerformanceCaptureEngine", "audio", ["audio-artifacts"]),
