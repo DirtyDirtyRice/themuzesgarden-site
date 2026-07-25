@@ -9,7 +9,7 @@ describe("TimelineEngineRegistry", () => {
   it("catalogs the completed engine system with a valid activation graph", () => {
     const registry = new TimelineEngineRegistry();
     expect(TIMELINE_ENGINE_CATALOG.length).toBeGreaterThanOrEqual(56);
-    expect(registry.startupOrder().at(-1)).toBe("activation-gate");
+    expect(registry.startupOrder().at(-1)).toBe("activation-ledger");
     expect(registry.impact("validation")).toContain("production-coordinator");
   });
 
