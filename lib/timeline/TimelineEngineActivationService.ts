@@ -1,20 +1,15 @@
 import "server-only";
 
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
-
 import {
   TimelineEngineActivationGate,
-  type TimelineEngineActivationArchive,
   type TimelineEngineActivationDecision,
 } from "./TimelineEngineActivationGate";
+import {
+  TimelineEngineActivationFileStore,
+  type TimelineEngineActivationDocument,
+  type TimelineEngineActivationStore,
+} from "./TimelineEngineActivationStore";
 import type { TimelineId, TimelineUserId } from "./TimelineTypes";
-
-type TimelineEngineActivationFile = {
-  schemaVersion: 1;
-  savedAt: string;
-  archive: TimelineEngineActivationArchive;
-};
 
 export type TimelineEngineActivationSnapshot = {
   total: number;
@@ -31,20 +26,26 @@ export class TimelineEngineActivationService {
   private initialized = false;
   private writeQueue: Promise<void> = Promise.resolve();
 
+  private readonly store: TimelineEngineActivationStore;
+
   constructor(
-    private readonly filePath: string,
+    store: string | TimelineEngineActivationStore,
     readonly gate: TimelineEngineActivationGate,
     private readonly now: () => Date = () => new Date(),
   ) {
-    if (!filePath.trim()) throw new Error("Engine activation ledger path is required.");
+    this.store = typeof store === "string"
+      ? new TimelineEngineActivationFileStore(store)
+      : store;
+  }
+
+  get storageKind(): TimelineEngineActivationStore["kind"] {
+    return this.store.kind;
   }
 
   async initialize(): Promise<TimelineEngineActivationSnapshot> {
     if (!this.initialized) {
-      try {
-        const document = JSON.parse(
-          await readFile(this.filePath, "utf8"),
-        ) as Partial<TimelineEngineActivationFile>;
+      const document = await this.store.load();
+      if (document) {
         if (
           document.schemaVersion !== 1 ||
           !document.archive ||
@@ -53,17 +54,6 @@ export class TimelineEngineActivationService {
           throw new Error("Engine activation ledger has an unsupported format.");
         }
         this.gate.restoreArchive(document.archive);
-      } catch (error) {
-        if (
-          !(error instanceof Error) ||
-          !("code" in error) ||
-          error.code !== "ENOENT"
-        ) {
-          if (error instanceof SyntaxError) {
-            throw new Error("Engine activation ledger contains invalid JSON.");
-          }
-          throw error;
-        }
       }
       this.initialized = true;
     }
@@ -126,15 +116,12 @@ export class TimelineEngineActivationService {
 
   private async save(): Promise<void> {
     const operation = async () => {
-      const document: TimelineEngineActivationFile = {
+      const document: TimelineEngineActivationDocument = {
         schemaVersion: 1,
         savedAt: this.now().toISOString(),
         archive: this.gate.exportArchive(),
       };
-      await mkdir(dirname(this.filePath), { recursive: true });
-      const temporary = `${this.filePath}.${process.pid}.${Date.now()}.tmp`;
-      await writeFile(temporary, `${JSON.stringify(document, null, 2)}\n`, "utf8");
-      await rename(temporary, this.filePath);
+      await this.store.save(document);
     };
     this.writeQueue = this.writeQueue.then(operation, operation);
     await this.writeQueue;

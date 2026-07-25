@@ -96,6 +96,22 @@ export default function ActivationAuditPanel() {
         </button>
       </div>
 
+      <div className={`mt-4 rounded-lg border p-3 text-sm ${
+        report?.storage.durableAcrossDeployments
+          ? "border-emerald-300/35 bg-emerald-300/5 text-emerald-100"
+          : "border-amber-300/35 bg-amber-300/5 text-amber-100"
+      }`}>
+        <strong>
+          {report?.storage.durableAcrossDeployments
+            ? "Deployment-durable Supabase ledger"
+            : "Local atomic-file ledger"}
+        </strong>
+        <span className="ml-2 text-white/55">
+          {report?.storage.durableAcrossDeployments
+            ? "Evidence survives deployments and server replacement."
+            : "Safe for local development; production durability is awaiting private database configuration."}
+        </span>
+      </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
         {[
           ["Total", summary?.total ?? 0],

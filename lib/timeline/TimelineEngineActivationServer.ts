@@ -1,6 +1,7 @@
 import "server-only";
 
 import { existsSync } from "node:fs";
+import { createClient } from "@supabase/supabase-js";
 import { join, resolve } from "node:path";
 
 import {
@@ -9,6 +10,8 @@ import {
 } from "./TimelineEngineRegistry";
 import { TimelineEngineActivationGate } from "./TimelineEngineActivationGate";
 import { TimelineEngineActivationService } from "./TimelineEngineActivationService";
+import { TimelineEngineActivationFileStore, type TimelineEngineActivationStore } from "./TimelineEngineActivationStore";
+import { TimelineEngineActivationSupabaseStore } from "./TimelineEngineActivationSupabaseStore";
 import { TimelineProductionCoordinatorEngine } from "./TimelineProductionCoordinatorEngine";
 
 let servicePromise: Promise<TimelineEngineActivationService> | null = null;
@@ -26,6 +29,22 @@ function activationLedgerPath(): string {
   );
 }
 
+function activationStore(): TimelineEngineActivationStore {
+  const requested = process.env.TIMELINE_ENGINE_ACTIVATION_STORAGE?.trim().toLowerCase();
+  if (requested === "supabase") {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    if (!url || !serviceRoleKey) {
+      throw new Error(
+        "Supabase activation storage requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+      );
+    }
+    return new TimelineEngineActivationSupabaseStore(createClient(url, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    }));
+  }
+  return new TimelineEngineActivationFileStore(activationLedgerPath());
+}
 async function createService(): Promise<TimelineEngineActivationService> {
   const registry = new TimelineEngineRegistry();
   registry.probeAll((descriptor) => {
@@ -43,7 +62,7 @@ async function createService(): Promise<TimelineEngineActivationService> {
     throw new Error("Engine activation registry is incomplete.");
   }
   const service = new TimelineEngineActivationService(
-    activationLedgerPath(),
+    activationStore(),
     new TimelineEngineActivationGate(registry),
   );
   await service.initialize();

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const report = buildTimelineActivationAudit(snapshot, {
       workflowId: request.nextUrl.searchParams.get("workflowId") ?? undefined,
       status: request.nextUrl.searchParams.get("status") ?? undefined,
-    });
+    }, service.storageKind);
     return NextResponse.json(report, {
       headers: { "Cache-Control": "no-store" },
     });

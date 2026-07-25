@@ -19,6 +19,10 @@ export type TimelineActivationAuditEntry = {
 };
 
 export type TimelineActivationAuditReport = {
+  storage: {
+    kind: "atomic-file" | "supabase";
+    durableAcrossDeployments: boolean;
+  };
   summary: Omit<TimelineEngineActivationSnapshot, "decisions">;
   entries: TimelineActivationAuditEntry[];
 };
@@ -26,6 +30,7 @@ export type TimelineActivationAuditReport = {
 export function buildTimelineActivationAudit(
   snapshot: TimelineEngineActivationSnapshot,
   filters: { workflowId?: string; status?: string } = {},
+  storageKind: "atomic-file" | "supabase" = "atomic-file",
 ): TimelineActivationAuditReport {
   const workflowId = filters.workflowId?.trim();
   const status = filters.status?.trim();
@@ -50,5 +55,12 @@ export function buildTimelineActivationAudit(
     .reverse();
 
   const { decisions: _decisions, ...summary } = snapshot;
-  return { summary, entries };
+  return {
+    storage: {
+      kind: storageKind,
+      durableAcrossDeployments: storageKind === "supabase",
+    },
+    summary,
+    entries,
+  };
 }
