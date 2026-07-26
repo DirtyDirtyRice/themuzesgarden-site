@@ -13,6 +13,7 @@ import {
   timelineCountInSchedule,
   timelineMetronomeBeatAtOrAfterTick,
   timelineBarNavigationTick,
+  timelineSnapTick,
   timelineTickToSeconds,
   timelineTickToTempoMappedSeconds,
   timelineTickToPosition,
@@ -98,6 +99,19 @@ describe("TimelineDawTransportViewModel", () => {
     expect(timelineBarNavigationTick(3_840, "next", 960, signatures)).toBe(6_720);
     expect(timelineBarNavigationTick(7_000, "previous", 960, signatures)).toBe(6_720);
     expect(timelineBarNavigationTick(0, "previous", 960, signatures)).toBe(0);
+  });
+
+  it("snaps scrub ticks to the nearest beat or bar across signature changes", () => {
+    const signatures = [
+      { tick: 0, numerator: 4, denominator: 4 },
+      { tick: 3_840, numerator: 3, denominator: 4 },
+    ];
+    expect(timelineSnapTick(600, "free", 960, signatures)).toBe(600);
+    expect(timelineSnapTick(400, "beat", 960, signatures)).toBe(0);
+    expect(timelineSnapTick(600, "beat", 960, signatures)).toBe(960);
+    expect(timelineSnapTick(2_000, "bar", 960, signatures)).toBe(3_840);
+    expect(timelineSnapTick(4_800, "bar", 960, signatures)).toBe(3_840);
+    expect(timelineSnapTick(5_400, "bar", 960, signatures)).toBe(6_720);
   });
 
   it("checkpoints only after playback advances by at least one quarter note", () => {

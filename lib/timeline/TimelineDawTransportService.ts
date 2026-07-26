@@ -8,6 +8,7 @@ import {
 } from "./TimelineDawWorkspaceService";
 import {
   TimelineTransportAndSynchronizationEngine,
+  type TimelineTransportScrubSnap,
   type TimelineTransportEvent,
   type TimelineTransportSynchronization,
 } from "./TimelineTransportAndSynchronizationEngine";
@@ -88,6 +89,13 @@ export type TimelineDawTransportCommand =
       expectedTransportHead: number;
       expectedWorkspaceRevision: number;
       returnToCue: boolean;
+    }
+  | {
+      action: "set-scrub-snap";
+      sessionId: TimelineId;
+      expectedTransportHead: number;
+      expectedWorkspaceRevision: number;
+      snap: TimelineTransportScrubSnap;
     };
 
 export type TimelineDawTransportSnapshot = {
@@ -244,10 +252,16 @@ export class TimelineDawTransportService {
           tick: command.tick,
           editedBy: actorId,
         });
-      } else {
+      } else if (command.action === "set-stop-return") {
         transport = engine.setStopReturn({
           ...common,
           returnToCue: command.returnToCue,
+          editedBy: actorId,
+        });
+      } else {
+        transport = engine.setScrubSnap({
+          ...common,
+          snap: command.snap,
           editedBy: actorId,
         });
       }

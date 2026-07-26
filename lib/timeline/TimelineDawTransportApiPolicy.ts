@@ -12,6 +12,7 @@ const actions = new Set([
   "set-metronome",
   "set-cue",
   "set-stop-return",
+  "set-scrub-snap",
 ]);
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 const whole = (value: unknown) =>
@@ -123,6 +124,18 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
       expectedTransportHead,
       expectedWorkspaceRevision,
       returnToCue: value.returnToCue,
+    };
+  }
+  if (value.action === "set-scrub-snap") {
+    if (value.snap !== "free" && value.snap !== "beat" && value.snap !== "bar") {
+      throw new Error("Scrub snap must be free, beat, or bar.");
+    }
+    return {
+      action: "set-scrub-snap",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
+      snap: value.snap,
     };
   }
   if (value.action === "stop") {

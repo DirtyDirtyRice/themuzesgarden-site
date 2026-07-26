@@ -142,6 +142,15 @@ describe("TimelineDawTransportService", () => {
       cueTick: null,
       returnToCueOnStop: false,
     });
+    const snapped = await service.execute({
+      action: "set-scrub-snap",
+      sessionId: activated.session.id,
+      expectedTransportHead: clearedCue.transport!.head,
+      expectedWorkspaceRevision: clearedCue.workspaceRevision,
+      snap: "bar",
+    }, "owner-1");
+    expect(snapped.transport?.scrubSnap).toBe("bar");
+    expect(snapped.events.at(-1)?.action).toBe("scrub-snap-updated");
   });
 
   it("rejects stale workspace and transport revisions", async () => {

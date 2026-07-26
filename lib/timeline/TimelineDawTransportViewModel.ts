@@ -352,3 +352,27 @@ export function timelineBarNavigationTick(
     + Math.floor(Math.max(previousSegmentLength - 1, 0) / previousTicksPerBar)
       * previousTicksPerBar;
 }
+
+export function timelineSnapTick(
+  tick: number,
+  snap: "free" | "beat" | "bar",
+  ppq: number,
+  signatureMap: TimelineDawSignaturePoint[],
+): number {
+  timelineTickToMappedPosition(tick, ppq, signatureMap);
+  if (snap === "free") return tick;
+  const points = [...signatureMap].sort((left, right) => left.tick - right.tick);
+  const activeIndex = points.findLastIndex((point) => point.tick <= tick);
+  const active = points[activeIndex]!;
+  const ticksPerBeat = ppq * 4 / active.denominator;
+  const unit = snap === "beat" ? ticksPerBeat : ticksPerBeat * active.numerator;
+  const segmentOffset = tick - active.tick;
+  const lower = active.tick + Math.floor(segmentOffset / unit) * unit;
+  if (lower === tick) return tick;
+  const nextSignatureTick = points[activeIndex + 1]?.tick;
+  const naturalUpper = lower + unit;
+  const upper = nextSignatureTick !== undefined && naturalUpper > nextSignatureTick
+    ? nextSignatureTick
+    : naturalUpper;
+  return tick - lower < upper - tick ? lower : upper;
+}

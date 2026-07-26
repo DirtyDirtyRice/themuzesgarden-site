@@ -32,6 +32,8 @@ export type TimelineTransportLoop = {
   endTick: number;
 };
 
+export type TimelineTransportScrubSnap = "free" | "beat" | "bar";
+
 export type TimelineSynchronizationSource = {
   id: TimelineId;
   kind: "internal" | "midi-clock" | "link" | "ltc" | "mtc";
@@ -73,6 +75,7 @@ export type TimelineTransportSynchronization = {
   metronomeEnabled: boolean;
   cueTick: number | null;
   returnToCueOnStop: boolean;
+  scrubSnap: TimelineTransportScrubSnap;
   tempoMap: TimelineTempoPoint[];
   timeSignatureMap: TimelineTimeSignaturePoint[];
   loop: TimelineTransportLoop;
@@ -97,6 +100,7 @@ export type TimelineTransportEvent = {
     | "metronome-updated"
     | "cue-updated"
     | "stop-return-updated"
+    | "scrub-snap-updated"
     | "validated"
     | "held"
     | "activated"
@@ -187,6 +191,7 @@ export class TimelineTransportAndSynchronizationEngine {
       metronomeEnabled: false,
       cueTick: null,
       returnToCueOnStop: false,
+      scrubSnap: "free",
       tempoMap: [
         {
           id: `timeline-tempo-point-${++this.tempoSequence}`,
@@ -380,6 +385,26 @@ export class TimelineTransportAndSynchronizationEngine {
       input.returnToCue ? "Stop will return to the saved cue." : "Stop will return to song start.",
       input.editedBy,
     );
+    return next;
+  }
+
+  setScrubSnap(input: {
+    transportId: TimelineId;
+    expectedHead: number;
+    snap: TimelineTransportScrubSnap;
+    editedBy: TimelineUserId;
+  }): TimelineTransportSynchronization {
+    const transport = this.getRequired(input.transportId);
+    this.head(transport, input.expectedHead);
+    if (transport.status === "archived") {
+      throw new Error("Archived transports cannot be edited.");
+    }
+    if (!["free", "beat", "bar"].includes(input.snap)) {
+      throw new Error("Scrub snap must be free, beat, or bar.");
+    }
+    transport.scrubSnap = input.snap;
+    const next = this.save(transport, input.editedBy);
+    this.record(next, "scrub-snap-updated", `Scrub snap set to ${input.snap}.`, input.editedBy);
     return next;
   }
 
@@ -680,6 +705,9 @@ export class TimelineTransportAndSynchronizationEngine {
         returnToCueOnStop: transport.returnToCueOnStop === true
           && Number.isInteger(transport.cueTick)
           && (transport.cueTick ?? -1) >= 0,
+        scrubSnap: ["beat", "bar"].includes(transport.scrubSnap)
+          ? transport.scrubSnap
+          : "free",
       };
       this.transports.set(transport.id, clone(compatible));
       this.transportSequence = Math.max(this.transportSequence, this.sequence(transport.id));

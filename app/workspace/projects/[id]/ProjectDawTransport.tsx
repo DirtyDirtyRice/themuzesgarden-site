@@ -18,6 +18,7 @@ import {
   timelineCountInSchedule,
   timelineBarNavigationTick,
   timelineMetronomeBeatAtOrAfterTick,
+  timelineSnapTick,
   timelineTempoAtTick,
   timelineTickToTempoMappedSeconds,
   timelineTickToMappedPosition,
@@ -229,7 +230,8 @@ export default function ProjectDawTransport({
       | "complete-count-in"
       | "set-metronome"
       | "set-cue"
-      | "set-stop-return",
+      | "set-stop-return"
+      | "set-scrub-snap",
     extras: {
       returnToTick?: number;
       tick?: number;
@@ -239,6 +241,7 @@ export default function ProjectDawTransport({
       bars?: number;
       cueTick?: number | null;
       returnToCue?: boolean;
+      snap?: "free" | "beat" | "bar";
     } = {},
   ) {
     return commandQueueRef.current.enqueue(async () => {
@@ -413,6 +416,26 @@ export default function ProjectDawTransport({
     setElapsed(nextSeconds);
   }
 
+  function snapScrubSeconds(nextSeconds: number) {
+    const current = transportRef.current;
+    if (!current || current.scrubSnap === "free") return nextSeconds;
+    const rawTick = tempoMappedSecondsToTimelineTick(
+      nextSeconds,
+      current.ppq,
+      current.tempoMap,
+    );
+    const snappedTick = timelineSnapTick(
+      rawTick,
+      current.scrubSnap,
+      current.ppq,
+      current.timeSignatureMap,
+    );
+    return Math.min(
+      timelineTickToTempoMappedSeconds(snappedTick, current.ppq, current.tempoMap),
+      duration,
+    );
+  }
+
   async function commitScrub() {
     if (!scrubDirtyRef.current) return;
     const nextSeconds = scrubSecondsRef.current;
@@ -478,6 +501,15 @@ export default function ProjectDawTransport({
       await update("set-stop-return", { returnToCue });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Stop return preference could not be saved.");
+    }
+  }
+
+  async function saveScrubSnap(snap: "free" | "beat" | "bar") {
+    setError(null);
+    try {
+      await update("set-scrub-snap", { snap });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Scrub snap could not be saved.");
     }
   }
 
@@ -780,7 +812,7 @@ export default function ProjectDawTransport({
         max={Math.max(duration, 0)}
         step={0.01}
         value={Math.min(elapsed, duration || 0)}
-        onChange={(event) => previewLocate(Number(event.target.value))}
+        onChange={(event) => previewLocate(snapScrubSeconds(Number(event.target.value)))}
         onPointerUp={() => void commitScrub()}
         onKeyUp={() => void commitScrub()}
         onBlur={() => void commitScrub()}
@@ -788,6 +820,27 @@ export default function ProjectDawTransport({
         className="mt-4 w-full accent-emerald-300 disabled:opacity-35"
         aria-label="DAW transport location"
       />
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <label htmlFor={`daw-scrub-snap-${session.id}`} className="text-xs font-bold text-white/45">
+          Scrub grid
+        </label>
+        <select
+          id={`daw-scrub-snap-${session.id}`}
+          value={transport?.scrubSnap ?? "free"}
+          onChange={(event) => void saveScrubSnap(
+            event.target.value as "free" | "beat" | "bar",
+          )}
+          disabled={!active || !transport}
+          className="rounded-lg border border-white/15 bg-black px-3 py-1.5 text-xs font-black disabled:opacity-35"
+        >
+          <option value="free">Free</option>
+          <option value="beat">Beat</option>
+          <option value="bar">Bar</option>
+        </select>
+        <span className="text-xs text-white/35">
+          Slider moves lock to the selected musical grid.
+        </span>
+      </div>
       <p className="mt-2 text-xs text-white/35">
         Keyboard: Space plays/pauses · Escape stops · Shift+←/→ moves by bar · Home returns to start
       </p>

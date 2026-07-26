@@ -209,11 +209,13 @@ describe("TimelineTransportAndSynchronizationEngine", () => {
     delete legacyArchive.transports[0]!.metronomeEnabled;
     delete legacyArchive.transports[0]!.cueTick;
     delete legacyArchive.transports[0]!.returnToCueOnStop;
+    delete legacyArchive.transports[0]!.scrubSnap;
     const restored = new TimelineTransportAndSynchronizationEngine();
     restored.restoreArchive(legacyArchive as never);
     expect(restored.getTransport(created.id)?.metronomeEnabled).toBe(false);
     expect(restored.getTransport(created.id)?.cueTick).toBeNull();
     expect(restored.getTransport(created.id)?.returnToCueOnStop).toBe(false);
+    expect(restored.getTransport(created.id)?.scrubSnap).toBe("free");
     expect(archive.transports).toEqual([]);
   });
 });
