@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { listLinkedProjectTrackIds } from "../../../../lib/projectTracksApi";
 import {
@@ -18,6 +18,7 @@ import {
   splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
+  timelineSecondsFromPixels,
   trimTimelineClip,
   type TimelineDawClipState,
   type TimelineDawLaneState,
@@ -27,6 +28,12 @@ import type { DawSession } from "./projectDawTypes";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
 type PlayheadDetail = { sessionId: string; elapsed: number; duration: number };
+type ClipDrag = {
+  clipId: string;
+  mode: "move" | "trim-start" | "trim-end";
+  originX: number;
+  originClips: TimelineDawClipState[];
+};
 
 function clock(seconds: number) {
   const safe = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
@@ -35,6 +42,7 @@ function clock(seconds: number) {
 
 export default function ProjectDawTimeline({ session }: { session: DawSession }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const clipDragRef = useRef<ClipDrag | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
@@ -152,6 +160,51 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     });
   }
 
+  function startClipDrag(
+    event: ReactPointerEvent<HTMLDivElement>,
+    clipId: string,
+    mode: ClipDrag["mode"],
+    trackId: string,
+  ) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const originClips = selectTimelineClip(clips, clipId);
+    clipDragRef.current = { clipId, mode, originX: event.clientX, originClips };
+    setClipHistory((history) => [...history.slice(-19), originClips]);
+    setClips(originClips);
+    updateLane(trackId, { selected: true });
+    setFollow(false);
+  }
+
+  function continueClipDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = clipDragRef.current;
+    if (!drag) return;
+    const deltaSeconds = timelineSecondsFromPixels(
+      event.clientX - drag.originX,
+      canvasWidth,
+      duration,
+    );
+    if (drag.mode === "move") {
+      setClips(moveTimelineClip(drag.originClips, drag.clipId, deltaSeconds));
+    } else {
+      setClips(trimTimelineClip(
+        drag.originClips,
+        drag.clipId,
+        drag.mode === "trim-start" ? "start" : "end",
+        deltaSeconds,
+      ));
+    }
+  }
+
+  function finishClipDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!clipDragRef.current) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    clipDragRef.current = null;
+  }
+
   return (
     <section className="overflow-hidden rounded-3xl border border-white/15 bg-[#050505]">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 p-5">
@@ -265,18 +318,26 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     const left = timelinePlayheadPercent(clip.timelineStartSeconds, duration);
                     const right = timelinePlayheadPercent(clip.timelineEndSeconds, duration);
                     return (
-                      <button
+                      <div
                         key={clip.id}
-                        type="button"
-                        onClick={() => {
-                          setClips((value) => selectTimelineClip(value, clip.id));
-                          updateLane(lane.trackId, { selected: true });
+                        role="button"
+                        tabIndex={0}
+                        onPointerDown={(event) => startClipDrag(event, clip.id, "move", lane.trackId)}
+                        onPointerMove={continueClipDrag}
+                        onPointerUp={finishClipDrag}
+                        onPointerCancel={finishClipDrag}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setClips((value) => selectTimelineClip(value, clip.id));
+                            updateLane(lane.trackId, { selected: true });
+                          }
                         }}
-                        className={`absolute inset-y-3 overflow-hidden rounded-xl border text-left ${
+                        className={`absolute inset-y-3 touch-none overflow-hidden rounded-xl border text-left ${
                           clip.selected
-                            ? "z-10 border-rose-300 bg-rose-300/15 ring-2 ring-rose-300/30"
+                            ? "z-10 cursor-grab border-rose-300 bg-rose-300/15 ring-2 ring-rose-300/30 active:cursor-grabbing"
                             : audible
-                              ? "border-cyan-300/25 bg-cyan-300/10"
+                              ? "cursor-grab border-cyan-300/25 bg-cyan-300/10 active:cursor-grabbing"
                               : "border-white/10 bg-white/[0.03] opacity-45"
                         }`}
                         style={{
@@ -285,15 +346,37 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                         }}
                         aria-label={`Select ${track?.title || lane.trackId} clip from ${clock(clip.timelineStartSeconds)} to ${clock(clip.timelineEndSeconds)}`}
                       >
-                        <span className="flex h-full items-center gap-px px-2" aria-hidden="true">
+                        <div
+                          className="absolute inset-y-0 left-0 z-20 w-3 cursor-ew-resize border-r border-white/30 bg-black/25 hover:bg-rose-300/40"
+                          onPointerDown={(event) => {
+                            event.stopPropagation();
+                            startClipDrag(event, clip.id, "trim-start", lane.trackId);
+                          }}
+                          onPointerMove={continueClipDrag}
+                          onPointerUp={finishClipDrag}
+                          onPointerCancel={finishClipDrag}
+                          aria-hidden="true"
+                        />
+                        <span className="pointer-events-none flex h-full items-center gap-px px-3" aria-hidden="true">
                           {bars.map((height, index) => (
                             <span key={index} className={`min-w-px flex-1 rounded-full ${laneIndex % 2 ? "bg-violet-200/70" : "bg-cyan-200/75"}`} style={{ height: `${height}%` }} />
                           ))}
                         </span>
-                        <span className="absolute left-2 top-2 max-w-[80%] truncate rounded bg-black/65 px-2 py-1 text-[10px] font-black text-cyan-100">
+                        <span className="pointer-events-none absolute left-4 top-2 max-w-[75%] truncate rounded bg-black/65 px-2 py-1 text-[10px] font-black text-cyan-100">
                           {track?.title || lane.trackId}
                         </span>
-                      </button>
+                        <div
+                          className="absolute inset-y-0 right-0 z-20 w-3 cursor-ew-resize border-l border-white/30 bg-black/25 hover:bg-rose-300/40"
+                          onPointerDown={(event) => {
+                            event.stopPropagation();
+                            startClipDrag(event, clip.id, "trim-end", lane.trackId);
+                          }}
+                          onPointerMove={continueClipDrag}
+                          onPointerUp={finishClipDrag}
+                          onPointerCancel={finishClipDrag}
+                          aria-hidden="true"
+                        />
+                      </div>
                     );
                   })}
                 </div>

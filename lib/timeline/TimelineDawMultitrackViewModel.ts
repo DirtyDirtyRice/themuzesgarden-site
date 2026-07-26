@@ -151,6 +151,21 @@ export function moveTimelineLane(
 
 const clipPrecision = (value: number) => Math.round(value * 100) / 100;
 
+export function timelineSecondsFromPixels(
+  deltaPixels: number,
+  canvasWidthPixels: number,
+  durationSeconds: number,
+): number {
+  if (
+    !Number.isFinite(deltaPixels)
+    || !Number.isFinite(canvasWidthPixels)
+    || canvasWidthPixels <= 0
+    || !Number.isFinite(durationSeconds)
+    || durationSeconds <= 0
+  ) return 0;
+  return clipPrecision((deltaPixels / canvasWidthPixels) * durationSeconds);
+}
+
 export function reconcileTimelineClips(
   raw: string | null,
   trackIds: string[],

@@ -15,6 +15,7 @@ import {
   splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
+  timelineSecondsFromPixels,
   trimTimelineClip,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
 
@@ -30,6 +31,12 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(timelinePlayheadPercent(30, 120)).toBe(25);
     expect(timelinePlayheadPercent(150, 120)).toBe(100);
     expect(timelinePlayheadPercent(Number.NaN, 120)).toBe(0);
+  });
+
+  it("converts pointer movement into timeline seconds", () => {
+    expect(timelineSecondsFromPixels(120, 1440, 180)).toBe(15);
+    expect(timelineSecondsFromPixels(-48, 960, 120)).toBe(-6);
+    expect(timelineSecondsFromPixels(40, 0, 120)).toBe(0);
   });
 
   it("creates readable ruler marks at zoom-aware intervals", () => {
