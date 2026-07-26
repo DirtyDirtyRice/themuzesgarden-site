@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../../../components/AuthProvider";
+import ProjectDawTransport from "../../ProjectDawTransport";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -175,6 +176,8 @@ export default function ProjectDawSessionPage() {
           {error}
         </div>
       ) : null}
+
+      <ProjectDawTransport session={session} userId={user.id} />
 
       <section>
         <div className="mb-3">
