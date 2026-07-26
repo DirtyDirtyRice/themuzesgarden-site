@@ -4,10 +4,13 @@ import {
   type TimelineDawSession,
   type TimelineDawSessionArchive,
 } from "./TimelineDawSessionCoordinator";
+import type { TimelineTransportArchive } from "./TimelineTransportAndSynchronizationEngine";
 
 export type TimelineDawWorkspaceDocument = {
   revision: number;
-  archive: TimelineDawSessionArchive;
+  archive: TimelineDawSessionArchive & {
+    transports?: Record<TimelineId, TimelineTransportArchive>;
+  };
   updatedAt: string;
 };
 
@@ -158,7 +161,10 @@ export class TimelineDawWorkspaceService {
     const recordedAt = this.now().toISOString();
     await this.store.save({
       revision: nextRevision,
-      archive: coordinator.exportArchive(),
+      archive: {
+        ...coordinator.exportArchive(),
+        transports: document?.archive.transports,
+      },
       updatedAt: recordedAt,
     }, currentRevision);
     return {

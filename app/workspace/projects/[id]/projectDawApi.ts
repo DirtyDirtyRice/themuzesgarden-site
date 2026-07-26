@@ -1,5 +1,9 @@
 import { requireProjectSupabase } from "./projectSupabase";
 import type { DawSession, DawSessionAction, DawSnapshot } from "./projectDawTypes";
+import type {
+  TimelineTransportEvent,
+  TimelineTransportSynchronization,
+} from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
 
 async function accessToken(): Promise<string> {
   const { data, error } = await requireProjectSupabase().auth.getSession();
@@ -50,4 +54,29 @@ export async function changeDawSession(input: {
     "/api/timeline/daw-workspaces",
     { method: "POST", body: JSON.stringify(input) },
   );
+}
+
+export type DawTransportSnapshot = {
+  workspaceRevision: number;
+  session: DawSession;
+  transport: TimelineTransportSynchronization | null;
+  events: TimelineTransportEvent[];
+};
+
+export function loadDawTransport(sessionId: string): Promise<DawTransportSnapshot> {
+  return request(`/api/timeline/daw-transports?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function changeDawTransport(input: {
+  action: "initialize" | "play" | "pause" | "stop" | "locate";
+  sessionId: string;
+  expectedWorkspaceRevision: number;
+  expectedTransportHead?: number;
+  returnToTick?: number;
+  tick?: number;
+}): Promise<{ receipt: DawTransportSnapshot }> {
+  return request("/api/timeline/daw-transports", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }

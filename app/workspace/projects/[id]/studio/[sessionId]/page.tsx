@@ -55,6 +55,10 @@ export default function ProjectDawSessionPage() {
     }
   }, [projectId, user]);
 
+  const handleWorkspaceRevision = useCallback((revision: number) => {
+    setSnapshot((value) => ({ ...value, workspaceRevision: revision }));
+  }, []);
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -177,7 +181,11 @@ export default function ProjectDawSessionPage() {
         </div>
       ) : null}
 
-      <ProjectDawTransport session={session} userId={user.id} />
+      <ProjectDawTransport
+        session={session}
+        workspaceRevision={snapshot.workspaceRevision}
+        onWorkspaceRevision={handleWorkspaceRevision}
+      />
 
       <section>
         <div className="mb-3">

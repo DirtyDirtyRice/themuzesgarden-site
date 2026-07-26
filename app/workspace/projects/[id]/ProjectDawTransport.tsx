@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import {
-  TimelineTransportAndSynchronizationEngine,
+  type TimelineTransportEvent,
   type TimelineTransportSynchronization,
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
 import {
@@ -11,6 +11,7 @@ import {
   timelineTickToPosition,
 } from "../../../../lib/timeline/TimelineDawTransportViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
+import { changeDawTransport, loadDawTransport } from "./projectDawApi";
 import { getPlayableTrackUrl } from "./projectPlaybackHelpers";
 import type { DawSession } from "./projectDawTypes";
 
@@ -24,31 +25,6 @@ type Track = {
 const BPM = 120;
 const PPQ = 960;
 
-function createTransport(session: DawSession, userId: string) {
-  const engine = new TimelineTransportAndSynchronizationEngine();
-  let transport = engine.createTransport({
-    projectId: session.projectId,
-    sessionId: session.id,
-    audioGraphId: `browser-audio-graph-${session.id}`,
-    name: `${session.name} transport`,
-    sampleRate: 48_000,
-    ppq: PPQ,
-    bpm: BPM,
-    createdBy: userId,
-  });
-  transport = engine.validate({
-    transportId: transport.id,
-    expectedHead: transport.head,
-    validatedBy: userId,
-  });
-  transport = engine.activate({
-    transportId: transport.id,
-    expectedHead: transport.head,
-    activatedBy: userId,
-  });
-  return { engine, transport };
-}
-
 function clock(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const minutes = Math.floor(seconds / 60);
@@ -57,14 +33,16 @@ function clock(seconds: number) {
 
 export default function ProjectDawTransport({
   session,
-  userId,
+  workspaceRevision,
+  onWorkspaceRevision,
 }: {
   session: DawSession;
-  userId: string;
+  workspaceRevision: number;
+  onWorkspaceRevision: (revision: number) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const controllerRef = useRef<ReturnType<typeof createTransport> | null>(null);
   const [transport, setTransport] = useState<TimelineTransportSynchronization | null>(null);
+  const [events, setEvents] = useState<TimelineTransportEvent[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
   const [source, setSource] = useState("");
   const [elapsed, setElapsed] = useState(0);
@@ -72,13 +50,30 @@ export default function ProjectDawTransport({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const controller = createTransport(session, userId);
-    controllerRef.current = controller;
-    setTransport(controller.transport);
-    return () => {
-      controllerRef.current = null;
-    };
-  }, [session.id, session.name, session.projectId, userId]);
+    let current = true;
+    void (async () => {
+      try {
+        let next = await loadDawTransport(session.id);
+        if (!next.transport) {
+          const initialized = await changeDawTransport({
+            action: "initialize",
+            sessionId: session.id,
+            expectedWorkspaceRevision: next.workspaceRevision,
+          });
+          next = initialized.receipt;
+        }
+        if (!current) return;
+        setTransport(next.transport);
+        setEvents(next.events);
+        onWorkspaceRevision(next.workspaceRevision);
+      } catch (cause) {
+        if (current) {
+          setError(cause instanceof Error ? cause.message : "Transport could not be restored.");
+        }
+      }
+    })();
+    return () => { current = false; };
+  }, [session.id, onWorkspaceRevision]);
 
   useEffect(() => {
     let current = true;
@@ -106,17 +101,22 @@ export default function ProjectDawTransport({
     [elapsed],
   );
   const active = session.state === "active";
-  const events = controllerRef.current?.engine.listEvents(transport?.id).slice(-6).reverse() ?? [];
-
-  function update(
-    command: (controller: ReturnType<typeof createTransport>) => TimelineTransportSynchronization,
+  async function update(
+    action: "play" | "pause" | "stop" | "locate",
+    extras: { returnToTick?: number; tick?: number } = {},
   ) {
-    const controller = controllerRef.current;
-    if (!controller) return null;
-    const next = command(controller);
-    controller.transport = next;
-    setTransport(next);
-    return next;
+    if (!transport) return null;
+    const result = await changeDawTransport({
+      action,
+      sessionId: session.id,
+      expectedTransportHead: transport.head,
+      expectedWorkspaceRevision: workspaceRevision,
+      ...extras,
+    });
+    setTransport(result.receipt.transport);
+    setEvents(result.receipt.events);
+    onWorkspaceRevision(result.receipt.workspaceRevision);
+    return result.receipt.transport;
   }
 
   async function play() {
@@ -124,61 +124,43 @@ export default function ProjectDawTransport({
     if (!active || !audio || !source || !transport) return;
     setError(null);
     try {
-      update(({ engine, transport: current }) =>
-        engine.play({
-          transportId: current.id,
-          expectedHead: current.head,
-          playedBy: userId,
-        }),
-      );
+      await update("play");
       await audio.play();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Playback could not start.");
     }
   }
 
-  function pause() {
+  async function pause() {
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
     audio.pause();
-    update(({ engine, transport: current }) =>
-      engine.pause({
-        transportId: current.id,
-        expectedHead: current.head,
-        pausedBy: userId,
-      }),
-    );
+    try { await update("pause"); } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Pause could not be saved.");
+    }
   }
 
-  function stop() {
+  async function stop() {
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
     audio.pause();
     audio.currentTime = 0;
     setElapsed(0);
-    update(({ engine, transport: current }) =>
-      engine.stop({
-        transportId: current.id,
-        expectedHead: current.head,
-        returnToTick: 0,
-        stoppedBy: userId,
-      }),
-    );
+    try { await update("stop", { returnToTick: 0 }); } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Stop could not be saved.");
+    }
   }
 
-  function locate(nextSeconds: number) {
+  async function locate(nextSeconds: number) {
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
     audio.currentTime = nextSeconds;
     setElapsed(nextSeconds);
-    update(({ engine, transport: current }) =>
-      engine.locate({
-        transportId: current.id,
-        expectedHead: current.head,
-        tick: secondsToTimelineTick(nextSeconds, BPM, PPQ),
-        locatedBy: userId,
-      }),
-    );
+    try {
+      await update("locate", { tick: secondsToTimelineTick(nextSeconds, BPM, PPQ) });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Transport location could not be saved.");
+    }
   }
 
   return (
@@ -201,10 +183,10 @@ export default function ProjectDawTransport({
         <button type="button" onClick={() => void play()} disabled={!active || !source} className="rounded-xl bg-emerald-300 px-5 py-3 font-black text-black disabled:opacity-35">
           Play
         </button>
-        <button type="button" onClick={pause} disabled={!active || !source} className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
+        <button type="button" onClick={() => void pause()} disabled={!active || !source} className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
           Pause
         </button>
-        <button type="button" onClick={stop} disabled={!active || !source} className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
+        <button type="button" onClick={() => void stop()} disabled={!active || !source} className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
           Stop
         </button>
         <span className="ml-auto font-mono text-sm text-white/65">
@@ -218,7 +200,7 @@ export default function ProjectDawTransport({
         max={Math.max(duration, 0)}
         step={0.01}
         value={Math.min(elapsed, duration || 0)}
-        onChange={(event) => locate(Number(event.target.value))}
+        onChange={(event) => void locate(Number(event.target.value))}
         disabled={!active || !source || duration <= 0}
         className="mt-4 w-full accent-emerald-300 disabled:opacity-35"
         aria-label="DAW transport location"
@@ -241,7 +223,7 @@ export default function ProjectDawTransport({
             Recent transport receipts
           </p>
           <ol className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
+            {[...events].slice(-6).reverse().map((event) => (
               <li key={event.id} className="rounded-xl bg-white/[0.04] p-3 text-xs">
                 <span className="font-black uppercase text-emerald-300">{event.action}</span>
                 <span className="ml-2 text-white/45">rev {event.id.split("-").at(-1)}</span>
@@ -258,7 +240,7 @@ export default function ProjectDawTransport({
         onTimeUpdate={(event) => setElapsed(event.currentTarget.currentTime)}
         onEnded={() => {
           setElapsed(0);
-          if (transport?.playbackState === "playing") stop();
+          if (transport?.playbackState === "playing") void stop();
         }}
       />
     </section>

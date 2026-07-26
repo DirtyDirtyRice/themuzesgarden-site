@@ -21,3 +21,15 @@ export function createTimelineDawWorkspaceServer(ownerId: TimelineUserId, access
   );
   return new TimelineDawWorkspaceService(new TimelineDawWorkspaceSupabaseStore(client, ownerId));
 }
+
+export function createTimelineDawWorkspaceStore(ownerId: TimelineUserId, accessToken: string) {
+  const client = createClient(
+    environment("NEXT_PUBLIC_SUPABASE_URL"),
+    environment("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    },
+  );
+  return new TimelineDawWorkspaceSupabaseStore(client, ownerId);
+}
