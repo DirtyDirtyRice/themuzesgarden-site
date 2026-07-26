@@ -115,6 +115,33 @@ describe("TimelineDawTransportService", () => {
       activated.session.id,
     );
     expect(restoredCue.transport?.cueTick).toBe(2_880);
+    const stopReturn = await service.execute({
+      action: "set-stop-return",
+      sessionId: activated.session.id,
+      expectedTransportHead: cued.transport!.head,
+      expectedWorkspaceRevision: cued.workspaceRevision,
+      returnToCue: true,
+    }, "owner-1");
+    expect(stopReturn.transport?.returnToCueOnStop).toBe(true);
+    const stoppedAtCue = await service.execute({
+      action: "stop",
+      sessionId: activated.session.id,
+      expectedTransportHead: stopReturn.transport!.head,
+      expectedWorkspaceRevision: stopReturn.workspaceRevision,
+      returnToTick: stopReturn.transport!.cueTick!,
+    }, "owner-1");
+    expect(stoppedAtCue.transport).toMatchObject({ playbackState: "stopped", tick: 2_880 });
+    const clearedCue = await service.execute({
+      action: "set-cue",
+      sessionId: activated.session.id,
+      expectedTransportHead: stoppedAtCue.transport!.head,
+      expectedWorkspaceRevision: stoppedAtCue.workspaceRevision,
+      tick: null,
+    }, "owner-1");
+    expect(clearedCue.transport).toMatchObject({
+      cueTick: null,
+      returnToCueOnStop: false,
+    });
   });
 
   it("rejects stale workspace and transport revisions", async () => {

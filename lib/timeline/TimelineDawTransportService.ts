@@ -81,6 +81,13 @@ export type TimelineDawTransportCommand =
       expectedTransportHead: number;
       expectedWorkspaceRevision: number;
       tick: number | null;
+    }
+  | {
+      action: "set-stop-return";
+      sessionId: TimelineId;
+      expectedTransportHead: number;
+      expectedWorkspaceRevision: number;
+      returnToCue: boolean;
     };
 
 export type TimelineDawTransportSnapshot = {
@@ -231,10 +238,16 @@ export class TimelineDawTransportService {
           enabled: command.enabled,
           editedBy: actorId,
         });
-      } else {
+      } else if (command.action === "set-cue") {
         transport = engine.setCue({
           ...common,
           tick: command.tick,
+          editedBy: actorId,
+        });
+      } else {
+        transport = engine.setStopReturn({
+          ...common,
+          returnToCue: command.returnToCue,
           editedBy: actorId,
         });
       }

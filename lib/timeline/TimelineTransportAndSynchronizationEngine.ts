@@ -72,6 +72,7 @@ export type TimelineTransportSynchronization = {
   countInRemainingTicks: number;
   metronomeEnabled: boolean;
   cueTick: number | null;
+  returnToCueOnStop: boolean;
   tempoMap: TimelineTempoPoint[];
   timeSignatureMap: TimelineTimeSignaturePoint[];
   loop: TimelineTransportLoop;
@@ -95,6 +96,7 @@ export type TimelineTransportEvent = {
     | "count-in-completed"
     | "metronome-updated"
     | "cue-updated"
+    | "stop-return-updated"
     | "validated"
     | "held"
     | "activated"
@@ -184,6 +186,7 @@ export class TimelineTransportAndSynchronizationEngine {
       countInRemainingTicks: 0,
       metronomeEnabled: false,
       cueTick: null,
+      returnToCueOnStop: false,
       tempoMap: [
         {
           id: `timeline-tempo-point-${++this.tempoSequence}`,
@@ -344,11 +347,37 @@ export class TimelineTransportAndSynchronizationEngine {
     transport.cueTick = input.tick === null
       ? null
       : integer(input.tick, 0, Number.MAX_SAFE_INTEGER, "Cue tick");
+    if (transport.cueTick === null) transport.returnToCueOnStop = false;
     const next = this.save(transport, input.editedBy);
     this.record(
       next,
       "cue-updated",
       input.tick === null ? "Transport cue cleared." : "Transport cue updated.",
+      input.editedBy,
+    );
+    return next;
+  }
+
+  setStopReturn(input: {
+    transportId: TimelineId;
+    expectedHead: number;
+    returnToCue: boolean;
+    editedBy: TimelineUserId;
+  }): TimelineTransportSynchronization {
+    const transport = this.getRequired(input.transportId);
+    this.head(transport, input.expectedHead);
+    if (transport.status === "archived") {
+      throw new Error("Archived transports cannot be edited.");
+    }
+    if (input.returnToCue && transport.cueTick === null) {
+      throw new Error("A saved cue is required before Stop can return to it.");
+    }
+    transport.returnToCueOnStop = input.returnToCue;
+    const next = this.save(transport, input.editedBy);
+    this.record(
+      next,
+      "stop-return-updated",
+      input.returnToCue ? "Stop will return to the saved cue." : "Stop will return to song start.",
       input.editedBy,
     );
     return next;
@@ -648,6 +677,9 @@ export class TimelineTransportAndSynchronizationEngine {
         cueTick: Number.isInteger(transport.cueTick) && (transport.cueTick ?? -1) >= 0
           ? transport.cueTick
           : null,
+        returnToCueOnStop: transport.returnToCueOnStop === true
+          && Number.isInteger(transport.cueTick)
+          && (transport.cueTick ?? -1) >= 0,
       };
       this.transports.set(transport.id, clone(compatible));
       this.transportSequence = Math.max(this.transportSequence, this.sequence(transport.id));

@@ -228,7 +228,8 @@ export default function ProjectDawTransport({
       | "set-count-in"
       | "complete-count-in"
       | "set-metronome"
-      | "set-cue",
+      | "set-cue"
+      | "set-stop-return",
     extras: {
       returnToTick?: number;
       tick?: number;
@@ -237,6 +238,7 @@ export default function ProjectDawTransport({
       endTick?: number;
       bars?: number;
       cueTick?: number | null;
+      returnToCue?: boolean;
     } = {},
   ) {
     return commandQueueRef.current.enqueue(async () => {
@@ -349,12 +351,19 @@ export default function ProjectDawTransport({
     countInAudioRef.current = null;
     audio.pause();
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
-    audio.currentTime = 0;
-    scrubSecondsRef.current = 0;
+    const current = transportRef.current;
+    const returnTick = current?.returnToCueOnStop && current.cueTick !== null
+      ? current.cueTick
+      : 0;
+    const returnSeconds = current
+      ? timelineTickToTempoMappedSeconds(returnTick, current.ppq, current.tempoMap)
+      : 0;
+    audio.currentTime = returnSeconds;
+    scrubSecondsRef.current = returnSeconds;
     scrubDirtyRef.current = false;
-    setElapsed(0);
-    lastCheckpointTickRef.current = 0;
-    try { await update("stop", { returnToTick: 0 }); } catch (cause) {
+    setElapsed(returnSeconds);
+    lastCheckpointTickRef.current = returnTick;
+    try { await update("stop", { returnToTick: returnTick }); } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Stop could not be saved.");
     }
   }
@@ -460,6 +469,15 @@ export default function ProjectDawTransport({
       await update("set-cue", { cueTick: tick });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Cue position could not be saved.");
+    }
+  }
+
+  async function saveStopReturn(returnToCue: boolean) {
+    setError(null);
+    try {
+      await update("set-stop-return", { returnToCue });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Stop return preference could not be saved.");
     }
   }
 
@@ -783,6 +801,19 @@ export default function ProjectDawTransport({
         </button>
         <button type="button" onClick={() => void saveCue(null)} disabled={!active || transport?.cueTick === null || transport?.cueTick === undefined} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-35">
           Clear Cue
+        </button>
+        <button
+          type="button"
+          onClick={() => void saveStopReturn(!transport?.returnToCueOnStop)}
+          disabled={!active || transport?.cueTick === null || transport?.cueTick === undefined}
+          aria-pressed={transport?.returnToCueOnStop ?? false}
+          className={`rounded-lg border px-3 py-2 text-xs font-black disabled:opacity-35 ${
+            transport?.returnToCueOnStop
+              ? "border-sky-300 bg-sky-300 text-black"
+              : "border-white/15"
+          }`}
+        >
+          Stop Returns to {transport?.returnToCueOnStop ? "Cue" : "Start"}
         </button>
         <span className="ml-auto font-mono text-xs text-white/55">
           {transport?.cueTick === null || transport?.cueTick === undefined

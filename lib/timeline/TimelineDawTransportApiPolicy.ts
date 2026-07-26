@@ -11,6 +11,7 @@ const actions = new Set([
   "complete-count-in",
   "set-metronome",
   "set-cue",
+  "set-stop-return",
 ]);
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 const whole = (value: unknown) =>
@@ -110,6 +111,18 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
       expectedTransportHead,
       expectedWorkspaceRevision,
       tick,
+    };
+  }
+  if (value.action === "set-stop-return") {
+    if (typeof value.returnToCue !== "boolean") {
+      throw new Error("Stop return requires a returnToCue setting.");
+    }
+    return {
+      action: "set-stop-return",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
+      returnToCue: value.returnToCue,
     };
   }
   if (value.action === "stop") {

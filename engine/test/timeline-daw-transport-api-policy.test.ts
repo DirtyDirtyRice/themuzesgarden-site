@@ -56,6 +56,13 @@ describe("TimelineDawTransportApiPolicy", () => {
       expectedWorkspaceRevision: 9,
       cueTick: null,
     })).toMatchObject({ action: "set-cue", tick: null });
+    expect(parseTimelineDawTransportCommand({
+      action: "set-stop-return",
+      sessionId: "session-1",
+      expectedTransportHead: 9,
+      expectedWorkspaceRevision: 10,
+      returnToCue: true,
+    })).toMatchObject({ action: "set-stop-return", returnToCue: true });
   });
 
   it("rejects invented actions and missing revision guards", () => {
@@ -95,5 +102,12 @@ describe("TimelineDawTransportApiPolicy", () => {
       expectedWorkspaceRevision: 1,
       cueTick: -1,
     })).toThrow(/cue tick/i);
+    expect(() => parseTimelineDawTransportCommand({
+      action: "set-stop-return",
+      sessionId: "session-1",
+      expectedTransportHead: 1,
+      expectedWorkspaceRevision: 1,
+      returnToCue: "yes",
+    })).toThrow(/returnToCue/i);
   });
 });
