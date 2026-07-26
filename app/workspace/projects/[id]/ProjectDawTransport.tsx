@@ -227,7 +227,8 @@ export default function ProjectDawTransport({
       | "set-loop"
       | "set-count-in"
       | "complete-count-in"
-      | "set-metronome",
+      | "set-metronome"
+      | "set-cue",
     extras: {
       returnToTick?: number;
       tick?: number;
@@ -235,6 +236,7 @@ export default function ProjectDawTransport({
       startTick?: number;
       endTick?: number;
       bars?: number;
+      cueTick?: number | null;
     } = {},
   ) {
     return commandQueueRef.current.enqueue(async () => {
@@ -450,6 +452,31 @@ export default function ProjectDawTransport({
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Count-in could not be saved.");
     }
+  }
+
+  async function saveCue(tick: number | null) {
+    setError(null);
+    try {
+      await update("set-cue", { cueTick: tick });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Cue position could not be saved.");
+    }
+  }
+
+  async function setCueAtPlayhead() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    await saveCue(secondsToTick(audio.currentTime));
+  }
+
+  async function goToCue() {
+    const current = transportRef.current;
+    if (current?.cueTick === null || current?.cueTick === undefined) return;
+    await locate(timelineTickToTempoMappedSeconds(
+      current.cueTick,
+      current.ppq,
+      current.tempoMap,
+    ));
   }
 
   async function saveMetronome(enabled: boolean) {
@@ -746,6 +773,27 @@ export default function ProjectDawTransport({
       <p className="mt-2 text-xs text-white/35">
         Keyboard: Space plays/pauses · Escape stops · Shift+←/→ moves by bar · Home returns to start
       </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-white/[0.04] px-3 py-2">
+        <button type="button" onClick={() => void setCueAtPlayhead()} disabled={!active || !source} className="rounded-lg bg-sky-300 px-3 py-2 text-xs font-black text-black disabled:opacity-35">
+          Set Cue
+        </button>
+        <button type="button" onClick={() => void goToCue()} disabled={!active || !source || transport?.cueTick === null || transport?.cueTick === undefined} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-35">
+          Go to Cue
+        </button>
+        <button type="button" onClick={() => void saveCue(null)} disabled={!active || transport?.cueTick === null || transport?.cueTick === undefined} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-35">
+          Clear Cue
+        </button>
+        <span className="ml-auto font-mono text-xs text-white/55">
+          {transport?.cueTick === null || transport?.cueTick === undefined
+            ? "No saved cue"
+            : `Cue ${timelineTickToMappedPosition(
+              transport.cueTick,
+              activePpq,
+              activeSignatureMap,
+            ).label}`}
+        </span>
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2">
         <label htmlFor={`daw-count-in-${session.id}`} className="text-xs font-bold text-white/55">

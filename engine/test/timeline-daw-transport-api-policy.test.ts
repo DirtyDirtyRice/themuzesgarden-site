@@ -42,6 +42,20 @@ describe("TimelineDawTransportApiPolicy", () => {
       expectedWorkspaceRevision: 7,
       enabled: true,
     })).toMatchObject({ action: "set-metronome", enabled: true });
+    expect(parseTimelineDawTransportCommand({
+      action: "set-cue",
+      sessionId: "session-1",
+      expectedTransportHead: 7,
+      expectedWorkspaceRevision: 8,
+      cueTick: 2_880,
+    })).toMatchObject({ action: "set-cue", tick: 2_880 });
+    expect(parseTimelineDawTransportCommand({
+      action: "set-cue",
+      sessionId: "session-1",
+      expectedTransportHead: 8,
+      expectedWorkspaceRevision: 9,
+      cueTick: null,
+    })).toMatchObject({ action: "set-cue", tick: null });
   });
 
   it("rejects invented actions and missing revision guards", () => {
@@ -74,5 +88,12 @@ describe("TimelineDawTransportApiPolicy", () => {
       expectedWorkspaceRevision: 1,
       enabled: "yes",
     })).toThrow(/enabled/i);
+    expect(() => parseTimelineDawTransportCommand({
+      action: "set-cue",
+      sessionId: "session-1",
+      expectedTransportHead: 1,
+      expectedWorkspaceRevision: 1,
+      cueTick: -1,
+    })).toThrow(/cue tick/i);
   });
 });

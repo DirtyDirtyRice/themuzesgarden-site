@@ -74,6 +74,13 @@ export type TimelineDawTransportCommand =
       expectedTransportHead: number;
       expectedWorkspaceRevision: number;
       enabled: boolean;
+    }
+  | {
+      action: "set-cue";
+      sessionId: TimelineId;
+      expectedTransportHead: number;
+      expectedWorkspaceRevision: number;
+      tick: number | null;
     };
 
 export type TimelineDawTransportSnapshot = {
@@ -218,10 +225,16 @@ export class TimelineDawTransportService {
           ...common,
           completedBy: actorId,
         });
-      } else {
+      } else if (command.action === "set-metronome") {
         transport = engine.setMetronome({
           ...common,
           enabled: command.enabled,
+          editedBy: actorId,
+        });
+      } else {
+        transport = engine.setCue({
+          ...common,
+          tick: command.tick,
           editedBy: actorId,
         });
       }

@@ -86,7 +86,8 @@ export function changeDawTransport(input: {
     | "set-loop"
     | "set-count-in"
     | "complete-count-in"
-    | "set-metronome";
+    | "set-metronome"
+    | "set-cue";
   sessionId: string;
   expectedWorkspaceRevision: number;
   expectedTransportHead?: number;
@@ -96,6 +97,7 @@ export function changeDawTransport(input: {
   startTick?: number;
   endTick?: number;
   bars?: number;
+  cueTick?: number | null;
 }): Promise<{ receipt: DawTransportSnapshot }> {
   return request("/api/timeline/daw-transports", {
     method: "POST",

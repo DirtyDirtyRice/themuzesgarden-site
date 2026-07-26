@@ -198,7 +198,7 @@ describe("TimelineTransportAndSynchronizationEngine", () => {
     })).toThrow(/duplicate/i);
   });
 
-  it("restores pre-metronome archives with the safe default disabled", () => {
+  it("restores older archives with safe metronome and cue defaults", () => {
     const source = new TimelineTransportAndSynchronizationEngine();
     const archive = source.exportArchive();
     const created = create(source);
@@ -207,9 +207,11 @@ describe("TimelineTransportAndSynchronizationEngine", () => {
       events: ReturnType<TimelineTransportAndSynchronizationEngine["listEvents"]>;
     };
     delete legacyArchive.transports[0]!.metronomeEnabled;
+    delete legacyArchive.transports[0]!.cueTick;
     const restored = new TimelineTransportAndSynchronizationEngine();
     restored.restoreArchive(legacyArchive as never);
     expect(restored.getTransport(created.id)?.metronomeEnabled).toBe(false);
+    expect(restored.getTransport(created.id)?.cueTick).toBeNull();
     expect(archive.transports).toEqual([]);
   });
 });

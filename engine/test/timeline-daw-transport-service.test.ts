@@ -101,6 +101,20 @@ describe("TimelineDawTransportService", () => {
     }, "owner-1");
     expect(metronome.transport?.metronomeEnabled).toBe(true);
     expect(metronome.events.at(-1)?.action).toBe("metronome-updated");
+    const cued = await service.execute({
+      action: "set-cue",
+      sessionId: activated.session.id,
+      expectedTransportHead: metronome.transport!.head,
+      expectedWorkspaceRevision: metronome.workspaceRevision,
+      tick: 2_880,
+    }, "owner-1");
+    expect(cued.transport?.cueTick).toBe(2_880);
+    expect(cued.events.at(-1)?.action).toBe("cue-updated");
+    const restoredCue = await new TimelineDawTransportService(store).snapshot(
+      "owner-1",
+      activated.session.id,
+    );
+    expect(restoredCue.transport?.cueTick).toBe(2_880);
   });
 
   it("rejects stale workspace and transport revisions", async () => {

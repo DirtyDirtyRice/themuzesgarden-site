@@ -71,6 +71,7 @@ export type TimelineTransportSynchronization = {
   countInBars: number;
   countInRemainingTicks: number;
   metronomeEnabled: boolean;
+  cueTick: number | null;
   tempoMap: TimelineTempoPoint[];
   timeSignatureMap: TimelineTimeSignaturePoint[];
   loop: TimelineTransportLoop;
@@ -93,6 +94,7 @@ export type TimelineTransportEvent = {
     | "count-in-updated"
     | "count-in-completed"
     | "metronome-updated"
+    | "cue-updated"
     | "validated"
     | "held"
     | "activated"
@@ -181,6 +183,7 @@ export class TimelineTransportAndSynchronizationEngine {
       countInBars: integer(input.countInBars ?? 0, 0, 16, "Count-in bars"),
       countInRemainingTicks: 0,
       metronomeEnabled: false,
+      cueTick: null,
       tempoMap: [
         {
           id: `timeline-tempo-point-${++this.tempoSequence}`,
@@ -324,6 +327,30 @@ export class TimelineTransportAndSynchronizationEngine {
     transport.metronomeEnabled = input.enabled;
     const next = this.save(transport, input.editedBy);
     this.record(next, "metronome-updated", "Transport metronome updated.", input.editedBy);
+    return next;
+  }
+
+  setCue(input: {
+    transportId: TimelineId;
+    expectedHead: number;
+    tick: number | null;
+    editedBy: TimelineUserId;
+  }): TimelineTransportSynchronization {
+    const transport = this.getRequired(input.transportId);
+    this.head(transport, input.expectedHead);
+    if (transport.status === "archived") {
+      throw new Error("Archived transports cannot be edited.");
+    }
+    transport.cueTick = input.tick === null
+      ? null
+      : integer(input.tick, 0, Number.MAX_SAFE_INTEGER, "Cue tick");
+    const next = this.save(transport, input.editedBy);
+    this.record(
+      next,
+      "cue-updated",
+      input.tick === null ? "Transport cue cleared." : "Transport cue updated.",
+      input.editedBy,
+    );
     return next;
   }
 
@@ -618,6 +645,9 @@ export class TimelineTransportAndSynchronizationEngine {
       const compatible = {
         ...transport,
         metronomeEnabled: transport.metronomeEnabled === true,
+        cueTick: Number.isInteger(transport.cueTick) && (transport.cueTick ?? -1) >= 0
+          ? transport.cueTick
+          : null,
       };
       this.transports.set(transport.id, clone(compatible));
       this.transportSequence = Math.max(this.transportSequence, this.sequence(transport.id));

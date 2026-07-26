@@ -10,6 +10,7 @@ const actions = new Set([
   "set-count-in",
   "complete-count-in",
   "set-metronome",
+  "set-cue",
 ]);
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 const whole = (value: unknown) =>
@@ -96,6 +97,19 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
       expectedTransportHead,
       expectedWorkspaceRevision,
       enabled: value.enabled,
+    };
+  }
+  if (value.action === "set-cue") {
+    const tick = value.cueTick === null ? null : whole(value.cueTick);
+    if (tick === null && value.cueTick !== null) {
+      throw new Error("Cue tick must be null or a non-negative whole number.");
+    }
+    return {
+      action: "set-cue",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
+      tick,
     };
   }
   if (value.action === "stop") {
