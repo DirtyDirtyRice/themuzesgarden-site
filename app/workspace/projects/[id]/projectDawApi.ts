@@ -13,6 +13,13 @@ async function accessToken(): Promise<string> {
   return token;
 }
 
+export class ProjectDawApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "ProjectDawApiError";
+  }
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const token = await accessToken();
   const response = await fetch(url, {
@@ -24,7 +31,9 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     },
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error || "Studio request failed.");
+  if (!response.ok) {
+    throw new ProjectDawApiError(body.error || "Studio request failed.", response.status);
+  }
   return body as T;
 }
 

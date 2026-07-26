@@ -8,13 +8,18 @@ import {
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
 import {
   secondsToTimelineTick,
+  retryTimelineDawTransportConflict,
   shouldCheckpointTransport,
   TimelineDawTransportCommandQueue,
   timelineTickToSeconds,
   timelineTickToPosition,
 } from "../../../../lib/timeline/TimelineDawTransportViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
-import { changeDawTransport, loadDawTransport } from "./projectDawApi";
+import {
+  changeDawTransport,
+  loadDawTransport,
+  ProjectDawApiError,
+} from "./projectDawApi";
 import { getPlayableTrackUrl } from "./projectPlaybackHelpers";
 import type { DawSession } from "./projectDawTypes";
 
@@ -129,21 +134,37 @@ export default function ProjectDawTransport({
     extras: { returnToTick?: number; tick?: number } = {},
   ) {
     return commandQueueRef.current.enqueue(async () => {
-      const currentTransport = transportRef.current;
-      if (!currentTransport) return null;
-      const result = await changeDawTransport({
-        action,
-        sessionId: session.id,
-        expectedTransportHead: currentTransport.head,
-        expectedWorkspaceRevision: workspaceRevisionRef.current,
-        ...extras,
-      });
-      setTransport(result.receipt.transport);
-      transportRef.current = result.receipt.transport;
-      setEvents(result.receipt.events);
-      workspaceRevisionRef.current = result.receipt.workspaceRevision;
-      onWorkspaceRevision(result.receipt.workspaceRevision);
-      return result.receipt.transport;
+      const operate = async () => {
+        const currentTransport = transportRef.current;
+        if (!currentTransport) return null;
+        const result = await changeDawTransport({
+          action,
+          sessionId: session.id,
+          expectedTransportHead: currentTransport.head,
+          expectedWorkspaceRevision: workspaceRevisionRef.current,
+          ...extras,
+        });
+        return result.receipt;
+      };
+      const receipt = await retryTimelineDawTransportConflict(
+        operate,
+        async () => {
+          const refreshed = await loadDawTransport(session.id);
+          transportRef.current = refreshed.transport;
+          workspaceRevisionRef.current = refreshed.workspaceRevision;
+          setTransport(refreshed.transport);
+          setEvents(refreshed.events);
+          onWorkspaceRevision(refreshed.workspaceRevision);
+        },
+        (cause) => cause instanceof ProjectDawApiError && cause.status === 409,
+      );
+      if (!receipt) return null;
+      setTransport(receipt.transport);
+      transportRef.current = receipt.transport;
+      setEvents(receipt.events);
+      workspaceRevisionRef.current = receipt.workspaceRevision;
+      onWorkspaceRevision(receipt.workspaceRevision);
+      return receipt.transport;
     });
   }
 

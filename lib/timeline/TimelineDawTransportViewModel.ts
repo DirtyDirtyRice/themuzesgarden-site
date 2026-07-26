@@ -40,6 +40,20 @@ export class TimelineDawTransportCommandQueue {
   }
 }
 
+export async function retryTimelineDawTransportConflict<T>(
+  operation: () => Promise<T>,
+  refresh: () => Promise<void>,
+  isConflict: (cause: unknown) => boolean,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (cause) {
+    if (!isConflict(cause)) throw cause;
+    await refresh();
+    return operation();
+  }
+}
+
 export function timelineTickToPosition(
   tick: number,
   ppq: number,

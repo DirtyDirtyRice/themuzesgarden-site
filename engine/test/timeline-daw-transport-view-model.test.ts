@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  retryTimelineDawTransportConflict,
   secondsToTimelineTick,
   shouldCheckpointTransport,
   TimelineDawTransportCommandQueue,
@@ -46,6 +47,34 @@ describe("TimelineDawTransportViewModel", () => {
     await expect(rejected).rejects.toThrow("expected");
     await third;
     expect(order).toEqual(["first", "rejected", "third"]);
+  });
+
+  it("refreshes and retries a revision conflict exactly once", async () => {
+    let attempts = 0;
+    let refreshes = 0;
+    const result = await retryTimelineDawTransportConflict(
+      async () => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("conflict");
+        return "saved";
+      },
+      async () => { refreshes += 1; },
+      (cause) => cause instanceof Error && cause.message === "conflict",
+    );
+
+    expect(result).toBe("saved");
+    expect(attempts).toBe(2);
+    expect(refreshes).toBe(1);
+  });
+
+  it("does not retry a non-conflict failure", async () => {
+    let refreshes = 0;
+    await expect(retryTimelineDawTransportConflict(
+      async () => { throw new Error("unauthorized"); },
+      async () => { refreshes += 1; },
+      () => false,
+    )).rejects.toThrow("unauthorized");
+    expect(refreshes).toBe(0);
   });
 
   it("rejects invalid transport measurements", () => {
