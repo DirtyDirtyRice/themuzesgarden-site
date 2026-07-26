@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   clampTimelineDawMediaPosition,
+  parseTimelineDawMonitorLevel,
   resolveTimelineDawTransportShortcut,
   retryTimelineDawTransportConflict,
   secondsToTimelineTick,
@@ -66,6 +67,19 @@ describe("TimelineDawTransportViewModel", () => {
     expect(clampTimelineDawMediaPosition(125, 100)).toBe(100);
     expect(clampTimelineDawMediaPosition(10, Number.NaN)).toBeNull();
     expect(clampTimelineDawMediaPosition(10, 0)).toBeNull();
+  });
+
+  it("restores and bounds device-local DAW monitor preferences", () => {
+    expect(parseTimelineDawMonitorLevel('{"volume":0.42,"muted":true}')).toEqual({
+      volume: 0.42,
+      muted: true,
+    });
+    expect(parseTimelineDawMonitorLevel({ volume: 4, muted: false })).toEqual({
+      volume: 1,
+      muted: false,
+    });
+    expect(parseTimelineDawMonitorLevel(-2)).toEqual({ volume: 0, muted: false });
+    expect(parseTimelineDawMonitorLevel("not-json")).toEqual({ volume: 1, muted: false });
   });
 
   it("serializes transport commands and continues after a rejected command", async () => {

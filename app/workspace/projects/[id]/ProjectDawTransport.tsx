@@ -8,6 +8,7 @@ import {
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
 import {
   clampTimelineDawMediaPosition,
+  parseTimelineDawMonitorLevel,
   secondsToTimelineTick,
   retryTimelineDawTransportConflict,
   resolveTimelineDawTransportShortcut,
@@ -35,6 +36,7 @@ type Track = {
 
 const BPM = 120;
 const PPQ = 960;
+const MONITOR_LEVEL_KEY = "muzes-daw-monitor-level";
 
 function clock(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -73,6 +75,9 @@ export default function ProjectDawTransport({
   const [source, setSource] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [monitorReady, setMonitorReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -138,6 +143,32 @@ export default function ProjectDawTransport({
   useEffect(() => {
     workspaceRevisionRef.current = workspaceRevision;
   }, [workspaceRevision]);
+
+  useEffect(() => {
+    try {
+      const saved = parseTimelineDawMonitorLevel(localStorage.getItem(MONITOR_LEVEL_KEY));
+      setVolume(saved.volume);
+      setMuted(saved.muted);
+    } catch {
+      setVolume(1);
+      setMuted(false);
+    } finally {
+      setMonitorReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = volume;
+      audio.muted = muted;
+    }
+    if (monitorReady) {
+      try {
+        localStorage.setItem(MONITOR_LEVEL_KEY, JSON.stringify({ volume, muted }));
+      } catch {}
+    }
+  }, [monitorReady, muted, volume]);
 
   async function update(
     action: "play" | "pause" | "stop" | "locate",
@@ -435,6 +466,34 @@ export default function ProjectDawTransport({
       <p className="mt-2 text-xs text-white/35">
         Keyboard: Space toggles playback · Escape stops · Media keys supported
       </p>
+
+      <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2">
+        <button
+          type="button"
+          onClick={() => setMuted((current) => !current)}
+          className="min-w-16 rounded-lg border border-white/15 px-3 py-2 text-xs font-black"
+          aria-pressed={muted}
+        >
+          {muted ? "Unmute" : "Mute"}
+        </button>
+        <label htmlFor={`daw-volume-${session.id}`} className="text-xs font-bold text-white/55">
+          Monitor
+        </label>
+        <input
+          id={`daw-volume-${session.id}`}
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          onChange={(event) => setVolume(Number(event.target.value))}
+          className="min-w-0 flex-1 accent-emerald-300"
+          aria-label="DAW monitor volume"
+        />
+        <span className="w-10 text-right font-mono text-xs text-white/55">
+          {Math.round(volume * 100)}%
+        </span>
+      </div>
 
       {!active ? (
         <p className="mt-3 text-sm text-amber-200">

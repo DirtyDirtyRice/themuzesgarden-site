@@ -59,6 +59,32 @@ export function clampTimelineDawMediaPosition(
   return Math.min(Math.max(position, 0), duration);
 }
 
+export type TimelineDawMonitorLevel = {
+  volume: number;
+  muted: boolean;
+};
+
+export function parseTimelineDawMonitorLevel(value: unknown): TimelineDawMonitorLevel {
+  let parsed = value;
+  if (typeof value === "string") {
+    try { parsed = JSON.parse(value); } catch { return { volume: 1, muted: false }; }
+  }
+  if (typeof parsed === "number") {
+    return {
+      volume: Number.isFinite(parsed) ? Math.min(Math.max(parsed, 0), 1) : 1,
+      muted: false,
+    };
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return { volume: 1, muted: false };
+  }
+  const record = parsed as Record<string, unknown>;
+  const volume = typeof record.volume === "number" && Number.isFinite(record.volume)
+    ? Math.min(Math.max(record.volume, 0), 1)
+    : 1;
+  return { volume, muted: record.muted === true };
+}
+
 export class TimelineDawTransportCommandQueue {
   private tail: Promise<void> = Promise.resolve();
 
