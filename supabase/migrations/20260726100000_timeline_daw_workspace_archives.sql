@@ -10,8 +10,16 @@ alter table public.timeline_daw_workspace_archives enable row level security;
 
 revoke all on table public.timeline_daw_workspace_archives from anon, authenticated;
 
+grant select on table public.timeline_daw_workspace_archives to authenticated;
+
+create policy timeline_daw_workspace_owner_read
+on public.timeline_daw_workspace_archives
+for select
+to authenticated
+using (owner_id = auth.uid());
+
 comment on table public.timeline_daw_workspace_archives is
-  'Private, owner-scoped DAW session archives. Access requires the service role.';
+  'Private, owner-scoped DAW session archives protected by authenticated owner identity.';
 
 create or replace function public.save_timeline_daw_workspace_archive(
   p_owner_id uuid,
@@ -28,6 +36,9 @@ as $$
 declare
   affected integer;
 begin
+  if auth.uid() is null or auth.uid() <> p_owner_id then
+    raise exception 'DAW workspace owner authentication failed';
+  end if;
   if p_next_revision <> p_expected_revision + 1 then
     raise exception 'DAW workspace revision must advance exactly once';
   end if;
@@ -57,4 +68,8 @@ $$;
 
 revoke all on function public.save_timeline_daw_workspace_archive(
   uuid, bigint, bigint, jsonb, text, timestamptz
-) from public, anon, authenticated;
+) from public, anon;
+
+grant execute on function public.save_timeline_daw_workspace_archive(
+  uuid, bigint, bigint, jsonb, text, timestamptz
+) to authenticated;
