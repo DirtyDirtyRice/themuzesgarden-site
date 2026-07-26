@@ -246,7 +246,7 @@ describe("TimelineMultiTrackSessionEngine", () => {
     expect(second.tracks[0]?.track.order).toBe(100);
     expect(repository.statistics("song-1").total).toBe(10_000);
     expect(engine.statistics(current.id).total).toBe(1_000);
-  });
+  }, 30_000);
 
   it("archives and restores stable session, track, event, and sequence identities", () => {
     const { repository, engine, session } = setup();

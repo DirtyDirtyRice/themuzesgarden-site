@@ -1,55 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { requireProjectSupabase } from "./projectSupabase";
+import Link from "next/link";
+import { changeDawSession, loadDawSnapshot, openDawSession } from "./projectDawApi";
+import {
+  dawActionsByState,
+  type DawSession,
+  type DawSessionAction,
+  type DawSnapshot,
+} from "./projectDawTypes";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
-type SessionState = "draft" | "ready" | "active" | "suspended" | "closed";
-type DawSession = {
-  id: string;
-  songId: string;
-  name: string;
-  state: SessionState;
-  revision: number;
-  readiness: { ready: boolean; completed: number; required: number; errors: string[] };
-  updatedAt: string;
-};
-type Snapshot = { workspaceRevision: number; sessions: DawSession[] };
-type SessionAction = "validate" | "activate" | "suspend" | "resume" | "close";
-
-const actionByState: Record<SessionState, SessionAction[]> = {
-  draft: ["validate"],
-  ready: ["activate", "close"],
-  active: ["suspend", "close"],
-  suspended: ["resume", "close"],
-  closed: [],
-};
 
 const buttonClass =
   "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
-
-async function accessToken(): Promise<string> {
-  const { data, error } = await requireProjectSupabase().auth.getSession();
-  if (error) throw error;
-  const token = data.session?.access_token;
-  if (!token) throw new Error("Your member session expired. Sign in again to use Studio.");
-  return token;
-}
-
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const token = await accessToken();
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
-      ...init?.headers,
-    },
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error || "Studio request failed.");
-  return body as T;
-}
 
 function trackName(track: Track): string {
   return track.title?.trim() || `Song ${track.id.slice(0, 8)}`;
@@ -64,7 +28,7 @@ export default function ProjectDawWorkspace({
   projectTitle: string;
   tracks: Track[];
 }) {
-  const [snapshot, setSnapshot] = useState<Snapshot>({ workspaceRevision: 0, sessions: [] });
+  const [snapshot, setSnapshot] = useState<DawSnapshot>({ workspaceRevision: 0, sessions: [] });
   const [songId, setSongId] = useState("");
   const [sessionName, setSessionName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -75,9 +39,7 @@ export default function ProjectDawWorkspace({
     setLoading(true);
     setError(null);
     try {
-      const next = await request<Snapshot>(
-        `/api/timeline/daw-workspaces?projectId=${encodeURIComponent(projectId)}`,
-      );
+      const next = await loadDawSnapshot(projectId);
       setSnapshot(next);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Studio could not be loaded.");
@@ -104,19 +66,12 @@ export default function ProjectDawWorkspace({
     setBusy("open");
     setError(null);
     try {
-      const result = await request<{ receipt: { workspaceRevision: number; session: DawSession } }>(
-        "/api/timeline/daw-workspaces",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            action: "open",
-            projectId,
-            songId,
-            name: sessionName.trim(),
-            expectedWorkspaceRevision: snapshot.workspaceRevision,
-          }),
-        },
-      );
+      const result = await openDawSession({
+        projectId,
+        songId,
+        name: sessionName.trim(),
+        expectedWorkspaceRevision: snapshot.workspaceRevision,
+      });
       setSnapshot((current) => ({
         workspaceRevision: result.receipt.workspaceRevision,
         sessions: [...current.sessions, result.receipt.session],
@@ -130,22 +85,16 @@ export default function ProjectDawWorkspace({
     }
   }
 
-  async function runAction(session: DawSession, action: SessionAction) {
+  async function runAction(session: DawSession, action: DawSessionAction) {
     setBusy(session.id);
     setError(null);
     try {
-      const result = await request<{ receipt: { workspaceRevision: number; session: DawSession } }>(
-        "/api/timeline/daw-workspaces",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            action,
-            sessionId: session.id,
-            expectedSessionRevision: session.revision,
-            expectedWorkspaceRevision: snapshot.workspaceRevision,
-          }),
-        },
-      );
+      const result = await changeDawSession({
+        action,
+        sessionId: session.id,
+        expectedSessionRevision: session.revision,
+        expectedWorkspaceRevision: snapshot.workspaceRevision,
+      });
       setSnapshot((current) => ({
         workspaceRevision: result.receipt.workspaceRevision,
         sessions: current.sessions.map((item) =>
@@ -244,7 +193,15 @@ export default function ProjectDawWorkspace({
                 </ul>
               ) : null}
               <div className="mt-4 flex flex-wrap gap-2">
-                {actionByState[session.state].map((action) => (
+                {session.state !== "closed" ? (
+                  <Link
+                    href={`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(session.id)}`}
+                    className={buttonClass}
+                  >
+                    Enter Workspace
+                  </Link>
+                ) : null}
+                {dawActionsByState[session.state].map((action) => (
                   <button
                     key={action}
                     type="button"
