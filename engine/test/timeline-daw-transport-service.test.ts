@@ -65,6 +65,33 @@ describe("TimelineDawTransportService", () => {
     }, "owner-1");
     expect(looped.transport?.loop).toEqual({ enabled: true, startTick: 1_920, endTick: 5_760 });
     expect(looped.events.at(-1)?.action).toBe("loop-updated");
+    const counted = await service.execute({
+      action: "set-count-in",
+      sessionId: activated.session.id,
+      expectedTransportHead: looped.transport!.head,
+      expectedWorkspaceRevision: looped.workspaceRevision,
+      bars: 1,
+    }, "owner-1");
+    expect(counted.transport?.countInBars).toBe(1);
+    const countStarted = await service.execute({
+      action: "play",
+      sessionId: activated.session.id,
+      expectedTransportHead: counted.transport!.head,
+      expectedWorkspaceRevision: counted.workspaceRevision,
+    }, "owner-1");
+    expect(countStarted.transport?.playbackState).toBe("counting-in");
+    const countCompleted = await service.execute({
+      action: "complete-count-in",
+      sessionId: activated.session.id,
+      expectedTransportHead: countStarted.transport!.head,
+      expectedWorkspaceRevision: countStarted.workspaceRevision,
+    }, "owner-1");
+    expect(countCompleted.transport).toMatchObject({
+      playbackState: "playing",
+      countInRemainingTicks: 0,
+      tick: 3_840,
+    });
+    expect(countCompleted.events.at(-1)?.action).toBe("count-in-completed");
   });
 
   it("rejects stale workspace and transport revisions", async () => {

@@ -15,6 +15,7 @@ import {
   shouldIssueTransportPlay,
   TimelineDawTransportCommandQueue,
   tempoMappedSecondsToTimelineTick,
+  timelineCountInSchedule,
   timelineTempoAtTick,
   timelineTickToTempoMappedSeconds,
   timelineTickToMappedPosition,
@@ -71,6 +72,8 @@ export default function ProjectDawTransport({
   const commandQueueRef = useRef(new TimelineDawTransportCommandQueue());
   const scrubSecondsRef = useRef(0);
   const scrubDirtyRef = useRef(false);
+  const countInTokenRef = useRef(0);
+  const countInAudioRef = useRef<AudioContext | null>(null);
   const [transport, setTransport] = useState<TimelineTransportSynchronization | null>(null);
   const [events, setEvents] = useState<TimelineTransportEvent[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
@@ -206,13 +209,21 @@ export default function ProjectDawTransport({
   }, [monitorReady, muted, volume]);
 
   async function update(
-    action: "play" | "pause" | "stop" | "locate" | "set-loop",
+    action:
+      | "play"
+      | "pause"
+      | "stop"
+      | "locate"
+      | "set-loop"
+      | "set-count-in"
+      | "complete-count-in",
     extras: {
       returnToTick?: number;
       tick?: number;
       enabled?: boolean;
       startTick?: number;
       endTick?: number;
+      bars?: number;
     } = {},
   ) {
     return commandQueueRef.current.enqueue(async () => {
@@ -255,8 +266,43 @@ export default function ProjectDawTransport({
     if (!active || !audio || !source || !transport) return;
     setError(null);
     try {
-      if (shouldIssueTransportPlay(transportRef.current?.playbackState ?? "stopped")) {
-        await update("play");
+      let nextTransport = transportRef.current;
+      if (shouldIssueTransportPlay(nextTransport?.playbackState ?? "stopped")) {
+        nextTransport = await update("play");
+      }
+      if (nextTransport?.playbackState === "counting-in") {
+        const token = ++countInTokenRef.current;
+        const signature = timelineTickToMappedPosition(
+          nextTransport.tick,
+          nextTransport.ppq,
+          nextTransport.timeSignatureMap,
+        );
+        const schedule = timelineCountInSchedule({
+          bars: nextTransport.countInBars,
+          bpm: timelineTempoAtTick(nextTransport.tick, nextTransport.tempoMap),
+          numerator: signature.numerator,
+        });
+        const context = new AudioContext();
+        countInAudioRef.current = context;
+        for (const [index, offsetMs] of schedule.beatOffsetsMs.entries()) {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          const start = context.currentTime + offsetMs / 1_000;
+          const peak = muted ? 0.0001 : Math.max(0.0001, volume * 0.2);
+          oscillator.frequency.value = index % signature.numerator === 0 ? 1_320 : 880;
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(peak, start + 0.005);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.06);
+          oscillator.connect(gain).connect(context.destination);
+          oscillator.start(start);
+          oscillator.stop(start + 0.065);
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, schedule.durationMs));
+        if (context.state !== "closed") await context.close();
+        if (countInAudioRef.current === context) countInAudioRef.current = null;
+        if (token !== countInTokenRef.current) return;
+        nextTransport = await update("complete-count-in");
+        if (nextTransport?.playbackState !== "playing") return;
       }
       await audio.play();
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
@@ -268,6 +314,9 @@ export default function ProjectDawTransport({
   async function pause() {
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
+    countInTokenRef.current += 1;
+    void countInAudioRef.current?.close();
+    countInAudioRef.current = null;
     audio.pause();
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
     try {
@@ -282,6 +331,9 @@ export default function ProjectDawTransport({
   async function stop() {
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
+    countInTokenRef.current += 1;
+    void countInAudioRef.current?.close();
+    countInAudioRef.current = null;
     audio.pause();
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
     audio.currentTime = 0;
@@ -355,6 +407,15 @@ export default function ProjectDawTransport({
       await update("set-loop", { enabled, startTick, endTick });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Loop settings could not be saved.");
+    }
+  }
+
+  async function saveCountIn(bars: number) {
+    setError(null);
+    try {
+      await update("set-count-in", { bars });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Count-in could not be saved.");
     }
   }
 
@@ -543,6 +604,29 @@ export default function ProjectDawTransport({
       <p className="mt-2 text-xs text-white/35">
         Keyboard: Space toggles playback · Escape stops · Media keys supported
       </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2">
+        <label htmlFor={`daw-count-in-${session.id}`} className="text-xs font-bold text-white/55">
+          Count-in
+        </label>
+        <select
+          id={`daw-count-in-${session.id}`}
+          value={transport?.countInBars ?? 0}
+          onChange={(event) => void saveCountIn(Number(event.target.value))}
+          disabled={!active || !transport || ["playing", "counting-in"].includes(transport.playbackState)}
+          className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black disabled:opacity-35"
+        >
+          <option value={0}>Off</option>
+          <option value={1}>1 bar</option>
+          <option value={2}>2 bars</option>
+          <option value={4}>4 bars</option>
+        </select>
+        <span className="text-xs text-white/35">
+          {transport?.playbackState === "counting-in"
+            ? "Counting in…"
+            : "Audible beat cues play before the song starts."}
+        </span>
+      </div>
 
       <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2">
         <button

@@ -1,6 +1,15 @@
 import type { TimelineDawTransportCommand } from "./TimelineDawTransportService";
 
-const actions = new Set(["initialize", "play", "pause", "stop", "locate", "set-loop"]);
+const actions = new Set([
+  "initialize",
+  "play",
+  "pause",
+  "stop",
+  "locate",
+  "set-loop",
+  "set-count-in",
+  "complete-count-in",
+]);
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 const whole = (value: unknown) =>
   typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : null;
@@ -53,6 +62,27 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
       enabled: value.enabled,
       startTick,
       endTick,
+    };
+  }
+  if (value.action === "set-count-in") {
+    const bars = whole(value.bars);
+    if (bars === null || bars > 16) {
+      throw new Error("Count-in bars must be a whole number from 0 to 16.");
+    }
+    return {
+      action: "set-count-in",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
+      bars,
+    };
+  }
+  if (value.action === "complete-count-in") {
+    return {
+      action: "complete-count-in",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
     };
   }
   if (value.action === "stop") {

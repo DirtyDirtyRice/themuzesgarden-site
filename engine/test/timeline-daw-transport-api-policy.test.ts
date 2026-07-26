@@ -28,6 +28,13 @@ describe("TimelineDawTransportApiPolicy", () => {
       startTick: 1_920,
       endTick: 5_760,
     })).toMatchObject({ action: "set-loop", enabled: true, startTick: 1_920, endTick: 5_760 });
+    expect(parseTimelineDawTransportCommand({
+      action: "set-count-in",
+      sessionId: "session-1",
+      expectedTransportHead: 5,
+      expectedWorkspaceRevision: 6,
+      bars: 2,
+    })).toMatchObject({ action: "set-count-in", bars: 2 });
   });
 
   it("rejects invented actions and missing revision guards", () => {
@@ -46,5 +53,12 @@ describe("TimelineDawTransportApiPolicy", () => {
       startTick: 960,
       endTick: 960,
     })).toThrow(/after loop start/i);
+    expect(() => parseTimelineDawTransportCommand({
+      action: "set-count-in",
+      sessionId: "session-1",
+      expectedTransportHead: 1,
+      expectedWorkspaceRevision: 1,
+      bars: 17,
+    })).toThrow(/0 to 16/i);
   });
 });

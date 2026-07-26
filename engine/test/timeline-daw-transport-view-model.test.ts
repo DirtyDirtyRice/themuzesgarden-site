@@ -10,6 +10,7 @@ import {
   TimelineDawTransportCommandQueue,
   tempoMappedSecondsToTimelineTick,
   timelineTempoAtTick,
+  timelineCountInSchedule,
   timelineTickToSeconds,
   timelineTickToTempoMappedSeconds,
   timelineTickToPosition,
@@ -52,6 +53,17 @@ describe("TimelineDawTransportViewModel", () => {
       denominator: 4,
     });
     expect(timelineTickToMappedPosition(6_720, 960, signatures).label).toBe("3:1:0");
+  });
+
+  it("builds a meter-aware count-in schedule", () => {
+    expect(timelineCountInSchedule({ bars: 1, bpm: 120, numerator: 3 })).toEqual({
+      beatOffsetsMs: [0, 500, 1_000],
+      durationMs: 1_500,
+    });
+    expect(timelineCountInSchedule({ bars: 0, bpm: 120, numerator: 4 })).toEqual({
+      beatOffsetsMs: [],
+      durationMs: 0,
+    });
   });
 
   it("checkpoints only after playback advances by at least one quarter note", () => {

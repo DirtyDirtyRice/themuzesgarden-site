@@ -54,6 +54,19 @@ export type TimelineDawTransportCommand =
       enabled: boolean;
       startTick: number;
       endTick: number;
+    }
+  | {
+      action: "set-count-in";
+      sessionId: TimelineId;
+      expectedTransportHead: number;
+      expectedWorkspaceRevision: number;
+      bars: number;
+    }
+  | {
+      action: "complete-count-in";
+      sessionId: TimelineId;
+      expectedTransportHead: number;
+      expectedWorkspaceRevision: number;
     };
 
 export type TimelineDawTransportSnapshot = {
@@ -179,13 +192,24 @@ export class TimelineDawTransportService {
         });
       } else if (command.action === "locate") {
         transport = engine.locate({ ...common, tick: command.tick, locatedBy: actorId });
-      } else {
+      } else if (command.action === "set-loop") {
         transport = engine.setLoop({
           ...common,
           enabled: command.enabled,
           startTick: command.startTick,
           endTick: command.endTick,
           editedBy: actorId,
+        });
+      } else if (command.action === "set-count-in") {
+        transport = engine.setCountIn({
+          ...common,
+          bars: command.bars,
+          editedBy: actorId,
+        });
+      } else {
+        transport = engine.completeCountIn({
+          ...common,
+          completedBy: actorId,
         });
       }
     }

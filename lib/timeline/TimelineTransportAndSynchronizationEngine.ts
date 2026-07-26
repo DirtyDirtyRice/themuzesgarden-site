@@ -89,6 +89,8 @@ export type TimelineTransportEvent = {
     | "tempo-added"
     | "signature-added"
     | "loop-updated"
+    | "count-in-updated"
+    | "count-in-completed"
     | "validated"
     | "held"
     | "activated"
@@ -284,6 +286,27 @@ export class TimelineTransportAndSynchronizationEngine {
     return next;
   }
 
+  setCountIn(input: {
+    transportId: TimelineId;
+    expectedHead: number;
+    bars: number;
+    editedBy: TimelineUserId;
+  }): TimelineTransportSynchronization {
+    const transport = this.getRequired(input.transportId);
+    this.head(transport, input.expectedHead);
+    if (transport.status === "archived") {
+      throw new Error("Archived transports cannot be edited.");
+    }
+    if (["playing", "counting-in"].includes(transport.playbackState)) {
+      throw new Error("Count-in cannot be changed during playback.");
+    }
+    transport.countInBars = integer(input.bars, 0, 16, "Count-in bars");
+    transport.countInRemainingTicks = 0;
+    const next = this.save(transport, input.editedBy);
+    this.record(next, "count-in-updated", "Transport count-in updated.", input.editedBy);
+    return next;
+  }
+
   configureSynchronization(input: {
     transportId: TimelineId;
     expectedHead: number;
@@ -364,6 +387,22 @@ export class TimelineTransportAndSynchronizationEngine {
       transport.countInRemainingTicks > 0 ? "counting-in" : "playing";
     const next = this.save(transport, input.playedBy);
     this.record(next, "played", "Playback started.", input.playedBy);
+    return next;
+  }
+
+  completeCountIn(input: {
+    transportId: TimelineId;
+    expectedHead: number;
+    completedBy: TimelineUserId;
+  }): TimelineTransportSynchronization {
+    const transport = this.active(input.transportId, input.expectedHead);
+    if (transport.playbackState !== "counting-in" || transport.countInRemainingTicks <= 0) {
+      throw new Error("Transport is not waiting for a count-in.");
+    }
+    transport.countInRemainingTicks = 0;
+    transport.playbackState = "playing";
+    const next = this.save(transport, input.completedBy);
+    this.record(next, "count-in-completed", "Transport count-in completed.", input.completedBy);
     return next;
   }
 

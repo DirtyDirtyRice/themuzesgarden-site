@@ -84,6 +84,29 @@ export function timelineTempoAtTick(
   return [...points].reverse().find((point) => point.tick <= tick)!.bpm;
 }
 
+export function timelineCountInSchedule(input: {
+  bars: number;
+  bpm: number;
+  numerator: number;
+}): { beatOffsetsMs: number[]; durationMs: number } {
+  const { bars, bpm, numerator } = input;
+  if (!Number.isInteger(bars)
+    || bars < 0
+    || bars > 16
+    || !Number.isFinite(bpm)
+    || bpm <= 0
+    || !Number.isInteger(numerator)
+    || numerator <= 0) {
+    throw new Error("Count-in bars, tempo, and meter must be valid.");
+  }
+  const beatDurationMs = 60_000 / bpm;
+  const beatCount = bars * numerator;
+  return {
+    beatOffsetsMs: Array.from({ length: beatCount }, (_, index) => index * beatDurationMs),
+    durationMs: beatCount * beatDurationMs,
+  };
+}
+
 export function shouldCheckpointTransport(
   currentTick: number,
   lastCheckpointTick: number,

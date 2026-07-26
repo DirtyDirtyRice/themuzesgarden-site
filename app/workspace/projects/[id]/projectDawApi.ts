@@ -77,7 +77,15 @@ export function loadDawTransport(sessionId: string): Promise<DawTransportSnapsho
 }
 
 export function changeDawTransport(input: {
-  action: "initialize" | "play" | "pause" | "stop" | "locate" | "set-loop";
+  action:
+    | "initialize"
+    | "play"
+    | "pause"
+    | "stop"
+    | "locate"
+    | "set-loop"
+    | "set-count-in"
+    | "complete-count-in";
   sessionId: string;
   expectedWorkspaceRevision: number;
   expectedTransportHead?: number;
@@ -86,6 +94,7 @@ export function changeDawTransport(input: {
   enabled?: boolean;
   startTick?: number;
   endTick?: number;
+  bars?: number;
 }): Promise<{ receipt: DawTransportSnapshot }> {
   return request("/api/timeline/daw-transports", {
     method: "POST",
