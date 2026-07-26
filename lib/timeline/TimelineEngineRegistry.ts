@@ -106,6 +106,7 @@ export const TIMELINE_ENGINE_CATALOG: TimelineEngineDescriptor[] = [
   descriptor("transport-synchronization", "TimelineTransportAndSynchronizationEngine", "audio", ["multi-track-session", "real-time-audio-graph"]),
   descriptor("recording-take-management", "TimelineRecordingAndTakeManagementEngine", "audio", ["transport-synchronization", "multi-track-session", "performance-capture"]),
   descriptor("audio-clip-arrangement", "TimelineAudioClipAndArrangementEngine", "editing", ["recording-take-management", "non-destructive-editing", "arrangement-branches"]),
+  descriptor("midi-performance", "TimelineMidiPerformanceEngine", "editing", ["transport-synchronization", "multi-track-session", "midi-arrangement"]),
   descriptor("audio-integrity", "TimelineAudioArtifactIntegrityEngine", "audio", ["audio-artifacts"]),
   descriptor("audio-processing", "TimelineAudioProcessingQueueEngine", "audio", ["audio-integrity"]),
   descriptor("performance-capture", "TimelinePerformanceCaptureEngine", "audio", ["audio-artifacts"]),
