@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import {
   type TimelineTransportEvent,
@@ -9,13 +9,14 @@ import {
 import {
   clampTimelineDawMediaPosition,
   parseTimelineDawMonitorLevel,
-  secondsToTimelineTick,
   retryTimelineDawTransportConflict,
   resolveTimelineDawTransportShortcut,
   shouldCheckpointTransport,
   shouldIssueTransportPlay,
   TimelineDawTransportCommandQueue,
-  timelineTickToSeconds,
+  tempoMappedSecondsToTimelineTick,
+  timelineTempoAtTick,
+  timelineTickToTempoMappedSeconds,
   timelineTickToPosition,
 } from "../../../../lib/timeline/TimelineDawTransportViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
@@ -34,8 +35,8 @@ type Track = {
   [key: string]: unknown;
 };
 
-const BPM = 120;
-const PPQ = 960;
+const FALLBACK_PPQ = 960;
+const FALLBACK_TEMPO_MAP = [{ tick: 0, bpm: 120 }];
 const MONITOR_LEVEL_KEY = "muzes-daw-monitor-level";
 
 function clock(seconds: number) {
@@ -103,7 +104,11 @@ export default function ProjectDawTransport({
           lastCheckpointTickRef.current = next.transport.tick;
           setLoopStartTick(next.transport.loop.startTick);
           setLoopEndTick(next.transport.loop.endTick);
-          const restoredSeconds = timelineTickToSeconds(next.transport.tick, BPM, PPQ);
+          const restoredSeconds = timelineTickToTempoMappedSeconds(
+            next.transport.tick,
+            next.transport.ppq,
+            next.transport.tempoMap,
+          );
           scrubSecondsRef.current = restoredSeconds;
           setElapsed(restoredSeconds);
         }
@@ -139,11 +144,39 @@ export default function ProjectDawTransport({
     };
   }, [session.songId]);
 
-  const position = useMemo(
-    () => timelineTickToPosition(secondsToTimelineTick(elapsed, BPM, PPQ), PPQ),
-    [elapsed],
-  );
   const active = session.state === "active";
+  const activeTransport = transport ?? transportRef.current;
+  const activePpq = activeTransport?.ppq ?? FALLBACK_PPQ;
+  const activeTempoMap = activeTransport?.tempoMap ?? FALLBACK_TEMPO_MAP;
+  const activeTick = tempoMappedSecondsToTimelineTick(elapsed, activePpq, activeTempoMap);
+  const activeSignature = [...(activeTransport?.timeSignatureMap ?? [])]
+    .reverse()
+    .find((point) => point.tick <= activeTick) ?? { numerator: 4, denominator: 4 };
+  const position = timelineTickToPosition(
+    activeTick,
+    activePpq,
+    activeSignature.numerator,
+    activeSignature.denominator,
+  );
+  const activeBpm = timelineTempoAtTick(activeTick, activeTempoMap);
+
+  function secondsToTick(seconds: number) {
+    const current = transportRef.current;
+    return tempoMappedSecondsToTimelineTick(
+      seconds,
+      current?.ppq ?? FALLBACK_PPQ,
+      current?.tempoMap ?? FALLBACK_TEMPO_MAP,
+    );
+  }
+
+  function tickToSeconds(tick: number) {
+    const current = transportRef.current;
+    return timelineTickToTempoMappedSeconds(
+      tick,
+      current?.ppq ?? FALLBACK_PPQ,
+      current?.tempoMap ?? FALLBACK_TEMPO_MAP,
+    );
+  }
   useEffect(() => {
     workspaceRevisionRef.current = workspaceRevision;
   }, [workspaceRevision]);
@@ -240,7 +273,7 @@ export default function ProjectDawTransport({
     audio.pause();
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
     try {
-      const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
+      const tick = secondsToTick(audio.currentTime);
       await update("pause", { tick });
       lastCheckpointTickRef.current = tick;
     } catch (cause) {
@@ -269,7 +302,7 @@ export default function ProjectDawTransport({
     audio.currentTime = nextSeconds;
     setElapsed(nextSeconds);
     try {
-      const tick = secondsToTimelineTick(nextSeconds, BPM, PPQ);
+      const tick = secondsToTick(nextSeconds);
       await update("locate", { tick });
       lastCheckpointTickRef.current = tick;
     } catch (cause) {
@@ -300,7 +333,7 @@ export default function ProjectDawTransport({
   function setLoopBoundary(boundary: "start" | "end") {
     const audio = audioRef.current;
     if (!audio) return;
-    const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
+    const tick = secondsToTick(audio.currentTime);
     if (boundary === "start") {
       setLoopStartTick(tick);
       if (loopEndTick <= tick) setLoopEndTick(0);
@@ -330,8 +363,12 @@ export default function ProjectDawTransport({
   async function checkpoint() {
     const audio = audioRef.current;
     if (!active || !audio || audio.paused || checkpointPendingRef.current) return;
-    const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
-    if (!shouldCheckpointTransport(tick, lastCheckpointTickRef.current, PPQ)) return;
+    const tick = secondsToTick(audio.currentTime);
+    if (!shouldCheckpointTransport(
+      tick,
+      lastCheckpointTickRef.current,
+      transportRef.current?.ppq ?? FALLBACK_PPQ,
+    )) return;
     checkpointPendingRef.current = true;
     try {
       await update("locate", { tick });
@@ -351,7 +388,7 @@ export default function ProjectDawTransport({
       return;
     }
     audio.pause();
-    const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
+    const tick = secondsToTick(audio.currentTime);
     await update("pause", { tick });
     lastCheckpointTickRef.current = tick;
   }
@@ -470,7 +507,9 @@ export default function ProjectDawTransport({
         </div>
         <div className="text-right">
           <p className="font-mono text-2xl font-black">{position.label}</p>
-          <p className="text-xs text-white/45">{BPM} BPM · 4/4 · 48 kHz</p>
+          <p className="text-xs text-white/45">
+            {activeBpm} BPM · {activeSignature.numerator}/{activeSignature.denominator} · 48 kHz
+          </p>
         </div>
       </div>
 
@@ -550,9 +589,9 @@ export default function ProjectDawTransport({
             Disable Loop
           </button>
           <span className="ml-auto font-mono text-xs text-white/55">
-            {timelineTickToPosition(loopStartTick, PPQ).label}
+            {timelineTickToPosition(loopStartTick, activePpq, activeSignature.numerator, activeSignature.denominator).label}
             {" → "}
-            {timelineTickToPosition(loopEndTick, PPQ).label}
+            {timelineTickToPosition(loopEndTick, activePpq, activeSignature.numerator, activeSignature.denominator).label}
           </span>
         </div>
         <p className="mt-2 text-xs text-white/35">
@@ -594,7 +633,7 @@ export default function ProjectDawTransport({
           const audio = event.currentTarget;
           setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
           if (transport?.tick) {
-            const restored = timelineTickToSeconds(transport.tick, BPM, PPQ);
+            const restored = tickToSeconds(transport.tick);
             audio.currentTime = Math.min(restored, Number.isFinite(audio.duration) ? audio.duration : restored);
             scrubSecondsRef.current = audio.currentTime;
             setElapsed(audio.currentTime);
@@ -604,15 +643,15 @@ export default function ProjectDawTransport({
             setLoopStartTick(savedLoop.startTick);
             setLoopEndTick(savedLoop.endTick);
           } else if (Number.isFinite(audio.duration)) {
-            setLoopEndTick(secondsToTimelineTick(audio.duration, BPM, PPQ));
+            setLoopEndTick(secondsToTick(audio.duration));
           }
         }}
         onTimeUpdate={(event) => {
           const audio = event.currentTarget;
           const activeLoop = transportRef.current?.loop;
           if (activeLoop?.enabled
-            && secondsToTimelineTick(audio.currentTime, BPM, PPQ) >= activeLoop.endTick) {
-            audio.currentTime = timelineTickToSeconds(activeLoop.startTick, BPM, PPQ);
+            && secondsToTick(audio.currentTime) >= activeLoop.endTick) {
+            audio.currentTime = tickToSeconds(activeLoop.startTick);
           }
           scrubSecondsRef.current = audio.currentTime;
           setElapsed(audio.currentTime);

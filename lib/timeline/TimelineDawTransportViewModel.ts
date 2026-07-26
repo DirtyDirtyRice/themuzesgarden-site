@@ -16,6 +16,74 @@ export function timelineTickToSeconds(tick: number, bpm: number, ppq: number): n
   return tick / ((bpm / 60) * ppq);
 }
 
+type TimelineDawTempoPoint = { tick: number; bpm: number };
+
+function validatedTempoMap(
+  tempoMap: TimelineDawTempoPoint[],
+  ppq: number,
+): TimelineDawTempoPoint[] {
+  const sorted = [...tempoMap].sort((left, right) => left.tick - right.tick);
+  if (!Number.isInteger(ppq) || ppq <= 0
+    || sorted.length === 0
+    || sorted[0]?.tick !== 0
+    || sorted.some((point) => !Number.isInteger(point.tick)
+      || point.tick < 0
+      || !Number.isFinite(point.bpm)
+      || point.bpm <= 0)) {
+    throw new Error("Tempo map and PPQ must define a valid tick-zero tempo.");
+  }
+  return sorted;
+}
+
+export function timelineTickToTempoMappedSeconds(
+  tick: number,
+  ppq: number,
+  tempoMap: TimelineDawTempoPoint[],
+): number {
+  if (!Number.isInteger(tick) || tick < 0) throw new Error("Timeline tick must be non-negative.");
+  const points = validatedTempoMap(tempoMap, ppq);
+  let seconds = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const point = points[index]!;
+    const endTick = Math.min(tick, points[index + 1]?.tick ?? tick);
+    if (endTick > point.tick) {
+      seconds += (endTick - point.tick) / ((point.bpm / 60) * ppq);
+    }
+    if (tick <= endTick) break;
+  }
+  return seconds;
+}
+
+export function tempoMappedSecondsToTimelineTick(
+  seconds: number,
+  ppq: number,
+  tempoMap: TimelineDawTempoPoint[],
+): number {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new Error("Transport time must be non-negative.");
+  }
+  const points = validatedTempoMap(tempoMap, ppq);
+  let remaining = seconds;
+  for (let index = 0; index < points.length; index += 1) {
+    const point = points[index]!;
+    const nextTick = points[index + 1]?.tick;
+    const ticksPerSecond = (point.bpm / 60) * ppq;
+    if (nextTick === undefined) return Math.round(point.tick + remaining * ticksPerSecond);
+    const segmentSeconds = (nextTick - point.tick) / ticksPerSecond;
+    if (remaining <= segmentSeconds) return Math.round(point.tick + remaining * ticksPerSecond);
+    remaining -= segmentSeconds;
+  }
+  return 0;
+}
+
+export function timelineTempoAtTick(
+  tick: number,
+  tempoMap: TimelineDawTempoPoint[],
+): number {
+  const points = validatedTempoMap(tempoMap, 1);
+  return [...points].reverse().find((point) => point.tick <= tick)!.bpm;
+}
+
 export function shouldCheckpointTransport(
   currentTick: number,
   lastCheckpointTick: number,
@@ -113,14 +181,21 @@ export function timelineTickToPosition(
   tick: number,
   ppq: number,
   numerator = 4,
+  denominator = 4,
 ): { bar: number; beat: number; tick: number; label: string } {
-  if (![tick, ppq, numerator].every(Number.isInteger) || tick < 0 || ppq <= 0 || numerator <= 0) {
+  if (![tick, ppq, numerator, denominator].every(Number.isInteger)
+    || tick < 0
+    || ppq <= 0
+    || numerator <= 0
+    || denominator <= 0
+    || (ppq * 4) % denominator !== 0) {
     throw new Error("Tick, PPQ, and time signature must be valid whole numbers.");
   }
-  const ticksPerBar = ppq * numerator;
+  const ticksPerBeat = ppq * 4 / denominator;
+  const ticksPerBar = ticksPerBeat * numerator;
   const bar = Math.floor(tick / ticksPerBar) + 1;
   const withinBar = tick % ticksPerBar;
-  const beat = Math.floor(withinBar / ppq) + 1;
-  const remainder = withinBar % ppq;
+  const beat = Math.floor(withinBar / ticksPerBeat) + 1;
+  const remainder = withinBar % ticksPerBeat;
   return { bar, beat, tick: remainder, label: `${bar}:${beat}:${remainder}` };
 }

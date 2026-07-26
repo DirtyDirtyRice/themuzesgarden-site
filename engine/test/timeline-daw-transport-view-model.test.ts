@@ -8,7 +8,10 @@ import {
   shouldCheckpointTransport,
   shouldIssueTransportPlay,
   TimelineDawTransportCommandQueue,
+  tempoMappedSecondsToTimelineTick,
+  timelineTempoAtTick,
   timelineTickToSeconds,
+  timelineTickToTempoMappedSeconds,
   timelineTickToPosition,
 } from "../../lib/timeline/TimelineDawTransportViewModel";
 
@@ -23,6 +26,18 @@ describe("TimelineDawTransportViewModel", () => {
       label: "2:1:0",
     });
     expect(timelineTickToPosition(5_280, 960).label).toBe("2:2:480");
+    expect(timelineTickToPosition(2_880, 960, 6, 8).label).toBe("2:1:0");
+  });
+
+  it("maps time through persisted tempo changes in both directions", () => {
+    const tempoMap = [
+      { tick: 0, bpm: 120 },
+      { tick: 1_920, bpm: 60 },
+    ];
+    expect(timelineTickToTempoMappedSeconds(2_880, 960, tempoMap)).toBe(2);
+    expect(tempoMappedSecondsToTimelineTick(2, 960, tempoMap)).toBe(2_880);
+    expect(timelineTempoAtTick(1_919, tempoMap)).toBe(120);
+    expect(timelineTempoAtTick(1_920, tempoMap)).toBe(60);
   });
 
   it("checkpoints only after playback advances by at least one quarter note", () => {
