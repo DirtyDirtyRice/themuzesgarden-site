@@ -15,6 +15,7 @@ import {
   reconcileTimelineLanes,
   restoreTimelineClip,
   selectTimelineClip,
+  snapTimelineSeconds,
   splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
@@ -51,8 +52,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [duration, setDuration] = useState(180);
   const [zoom, setZoom] = useState(1);
   const [follow, setFollow] = useState(true);
+  const [snapSeconds, setSnapSeconds] = useState(1);
   const storageKey = `muzes:daw-timeline-lanes:v2:${session.id}`;
   const clipStorageKey = `muzes:daw-timeline-clips:v1:${session.id}`;
+  const snapStorageKey = `muzes:daw-timeline-snap:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
@@ -93,6 +96,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [clipStorageKey, clips]);
 
   useEffect(() => {
+    const raw = localStorage.getItem(snapStorageKey);
+    if (raw === null) return;
+    const saved = Number(raw);
+    if ([0, 0.25, 0.5, 1, 5].includes(saved)) setSnapSeconds(saved);
+  }, [snapStorageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(snapStorageKey, String(snapSeconds));
+  }, [snapSeconds, snapStorageKey]);
+
+  useEffect(() => {
     const update = (event: Event) => {
       const detail = (event as CustomEvent<PlayheadDetail>).detail;
       if (!detail || detail.sessionId !== session.id) return;
@@ -118,7 +132,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
   const selectedClip = clips.find((clip) => clip.selected && !clip.archived) ?? null;
   const archivedClips = clips.filter((clip) => clip.archived);
-  const editStep = zoom >= 4 ? 0.25 : zoom >= 2 ? 0.5 : 1;
+  const editStep = snapSeconds || (zoom >= 4 ? 0.25 : zoom >= 2 ? 0.5 : 1);
 
   function applyClipEdit(
     edit: (current: TimelineDawClipState[]) => TimelineDawClipState[],
@@ -139,7 +153,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     } else if (action === "trim-end") {
       applyClipEdit((value) => trimTimelineClip(value, selectedClip.id, "end", -editStep));
     } else {
-      applyClipEdit((value) => splitTimelineClip(value, selectedClip.id, elapsed));
+      applyClipEdit((value) => splitTimelineClip(
+        value,
+        selectedClip.id,
+        snapTimelineSeconds(elapsed, snapSeconds),
+      ));
     }
   }
 
@@ -147,7 +165,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const trackId = lanes.find((lane) => lane.selected)?.trackId ?? session.songId;
     applyClipEdit((value) => addTimelineClip(value, {
       trackId,
-      timelineStartSeconds: elapsed,
+      timelineStartSeconds: snapTimelineSeconds(elapsed, snapSeconds),
       durationSeconds: Math.min(8, Math.max(0.25, duration - elapsed)),
     }));
   }
@@ -180,11 +198,18 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   function continueClipDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const drag = clipDragRef.current;
     if (!drag) return;
-    const deltaSeconds = timelineSecondsFromPixels(
+    const rawDelta = timelineSecondsFromPixels(
       event.clientX - drag.originX,
       canvasWidth,
       duration,
     );
+    const originClip = drag.originClips.find((clip) => clip.id === drag.clipId);
+    const anchor = drag.mode === "trim-end"
+      ? originClip?.timelineEndSeconds
+      : originClip?.timelineStartSeconds;
+    const deltaSeconds = anchor === undefined
+      ? rawDelta
+      : snapTimelineSeconds(anchor + rawDelta, snapSeconds) - anchor;
     if (drag.mode === "move") {
       setClips(moveTimelineClip(drag.originClips, drag.clipId, deltaSeconds));
     } else {
@@ -205,6 +230,58 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     clipDragRef.current = null;
   }
 
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.isContentEditable
+        || target?.tagName === "INPUT"
+        || target?.tagName === "TEXTAREA"
+        || target?.tagName === "SELECT"
+      ) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        undoClipEdit();
+        return;
+      }
+      if (event.ctrlKey || event.metaKey) return;
+      if (!selectedClip) return;
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault();
+        const direction = event.key === "ArrowLeft" ? -1 : 1;
+        if (event.altKey) {
+          applyClipEdit((value) => trimTimelineClip(
+            value,
+            selectedClip.id,
+            "start",
+            direction * editStep,
+          ));
+        } else if (event.shiftKey) {
+          applyClipEdit((value) => trimTimelineClip(
+            value,
+            selectedClip.id,
+            "end",
+            direction * editStep,
+          ));
+        } else {
+          applyClipEdit((value) => moveTimelineClip(
+            value,
+            selectedClip.id,
+            direction * editStep,
+          ));
+        }
+      } else if (event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        editSelected("split");
+      } else if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        applyClipEdit((value) => archiveTimelineClip(value, selectedClip.id));
+      }
+    }
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  });
+
   return (
     <section className="overflow-hidden rounded-3xl border border-white/15 bg-[#050505]">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 p-5">
@@ -216,6 +293,21 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-black">
+            <span className="text-white/45">Snap</span>
+            <select
+              value={snapSeconds}
+              onChange={(event) => setSnapSeconds(Number(event.target.value))}
+              className="bg-transparent text-cyan-200 outline-none"
+              aria-label="Timeline snap grid"
+            >
+              <option className="bg-black" value={0}>Off</option>
+              <option className="bg-black" value={0.25}>0.25s</option>
+              <option className="bg-black" value={0.5}>0.5s</option>
+              <option className="bg-black" value={1}>1s</option>
+              <option className="bg-black" value={5}>5s</option>
+            </select>
+          </label>
           <button type="button" onClick={() => setFollow((value) => !value)} aria-pressed={follow}
             className={`rounded-lg border px-3 py-2 text-xs font-black ${follow ? "border-cyan-300 bg-cyan-300 text-black" : "border-white/15"}`}>
             Follow {follow ? "On" : "Off"}
@@ -392,6 +484,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-5 py-3 text-xs text-white/35">
         <span>{clips.length - archivedClips.length} active · {archivedClips.length} archived · edits and lane order saved on this device</span>
         <span className="font-mono">{clock(elapsed)} / {clock(duration)}</span>
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 bg-white/[0.02] px-5 py-2 text-[10px] font-bold uppercase tracking-wide text-white/30">
+        <span>Arrow: move</span>
+        <span>Shift + Arrow: trim end</span>
+        <span>Alt + Arrow: trim start</span>
+        <span>S: split</span>
+        <span>Delete: archive</span>
+        <span>Ctrl/Cmd + Z: undo</span>
       </div>
       {archivedClips.length ? (
         <div className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-amber-300/[0.04] px-5 py-3">

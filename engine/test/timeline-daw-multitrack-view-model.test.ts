@@ -12,6 +12,7 @@ import {
   restoreTimelineClip,
   reconcileTimelineClips,
   selectTimelineClip,
+  snapTimelineSeconds,
   splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
@@ -37,6 +38,13 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(timelineSecondsFromPixels(120, 1440, 180)).toBe(15);
     expect(timelineSecondsFromPixels(-48, 960, 120)).toBe(-6);
     expect(timelineSecondsFromPixels(40, 0, 120)).toBe(0);
+  });
+
+  it("snaps timeline positions to the selected grid", () => {
+    expect(snapTimelineSeconds(3.62, 0.25)).toBe(3.5);
+    expect(snapTimelineSeconds(3.62, 1)).toBe(4);
+    expect(snapTimelineSeconds(-0.7, 0.5)).toBe(-0.5);
+    expect(snapTimelineSeconds(3.627, 0)).toBe(3.63);
   });
 
   it("creates readable ruler marks at zoom-aware intervals", () => {

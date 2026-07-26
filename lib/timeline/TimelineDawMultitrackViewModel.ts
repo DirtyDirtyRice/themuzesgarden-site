@@ -166,6 +166,12 @@ export function timelineSecondsFromPixels(
   return clipPrecision((deltaPixels / canvasWidthPixels) * durationSeconds);
 }
 
+export function snapTimelineSeconds(value: number, gridSeconds: number): number {
+  if (!Number.isFinite(value)) return 0;
+  if (!Number.isFinite(gridSeconds) || gridSeconds <= 0) return clipPrecision(value);
+  return clipPrecision(Math.round(value / gridSeconds) * gridSeconds);
+}
+
 export function reconcileTimelineClips(
   raw: string | null,
   trackIds: string[],
