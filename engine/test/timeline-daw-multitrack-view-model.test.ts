@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  addTimelineClip,
+  archiveTimelineClip,
   clampTimelineZoom,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
@@ -7,6 +9,7 @@ import {
   moveTimelineLane,
   parseTimelineLaneState,
   reconcileTimelineLanes,
+  restoreTimelineClip,
   reconcileTimelineClips,
   selectTimelineClip,
   splitTimelineClip,
@@ -84,12 +87,14 @@ describe("TimelineDawMultitrackViewModel", () => {
         timelineStartSeconds: 0, timelineEndSeconds: 120,
         sourceStartSeconds: 0, sourceEndSeconds: 120,
         selected: true, parentClipId: null,
+        archived: false,
       },
       {
         id: "clip:stem-1:1", trackId: "stem-1",
         timelineStartSeconds: 0, timelineEndSeconds: 120,
         sourceStartSeconds: 0, sourceEndSeconds: 120,
         selected: false, parentClipId: null,
+        archived: false,
       },
     ]);
   });
@@ -137,5 +142,31 @@ describe("TimelineDawMultitrackViewModel", () => {
       selected: false,
       parentClipId: "clip:song-1:1",
     });
+  });
+
+  it("adds, archives, and restores clips without deleting history", () => {
+    const original = reconcileTimelineClips(null, ["song-1"], 120);
+    const added = addTimelineClip(original, {
+      trackId: "song-1",
+      timelineStartSeconds: 32,
+      durationSeconds: 8,
+    });
+    expect(added).toHaveLength(2);
+    expect(added[1]).toMatchObject({
+      id: "clip:song-1:added:1",
+      timelineStartSeconds: 32,
+      timelineEndSeconds: 40,
+      sourceStartSeconds: 0,
+      sourceEndSeconds: 8,
+      selected: true,
+      archived: false,
+    });
+    const archived = archiveTimelineClip(added, added[1].id);
+    expect(archived).toHaveLength(2);
+    expect(archived[1]).toMatchObject({ archived: true, selected: false });
+    expect(archived[0].selected).toBe(true);
+    const restored = restoreTimelineClip(archived, added[1].id);
+    expect(restored[1]).toMatchObject({ archived: false, selected: true });
+    expect(restored[0].selected).toBe(false);
   });
 });

@@ -21,6 +21,7 @@ export type TimelineDawClipState = {
   sourceEndSeconds: number;
   selected: boolean;
   parentClipId: string | null;
+  archived: boolean;
 };
 
 export function clampTimelineZoom(value: number): number {
@@ -182,10 +183,12 @@ export function reconcileTimelineClips(
       sourceEndSeconds: duration,
       selected: valid.length === 0,
       parentClipId: null,
+      archived: false,
     });
   }
   return valid.map((clip, index) => ({
     ...clip,
+    archived: clip.archived === true,
     selected: valid.some((item) => item.selected) ? clip.selected : index === 0,
   }));
 }
@@ -289,4 +292,59 @@ export function splitTimelineClip(
     right,
     ...clips.slice(index + 1).map((clip) => ({ ...clip, selected: false })),
   ];
+}
+
+export function addTimelineClip(
+  clips: TimelineDawClipState[],
+  input: {
+    trackId: string;
+    timelineStartSeconds: number;
+    sourceStartSeconds?: number;
+    durationSeconds?: number;
+  },
+): TimelineDawClipState[] {
+  const start = Math.max(0, clipPrecision(input.timelineStartSeconds));
+  const sourceStart = Math.max(0, clipPrecision(input.sourceStartSeconds ?? 0));
+  const duration = Math.max(0.25, clipPrecision(input.durationSeconds ?? 8));
+  const sequence = clips.reduce((highest, clip) => {
+    const match = clip.id.match(/:added:(\d+)$/);
+    return Math.max(highest, Number(match?.[1] ?? 0));
+  }, 0) + 1;
+  return [
+    ...clips.map((clip) => ({ ...clip, selected: false })),
+    {
+      id: `clip:${input.trackId}:added:${sequence}`,
+      trackId: input.trackId,
+      timelineStartSeconds: start,
+      timelineEndSeconds: clipPrecision(start + duration),
+      sourceStartSeconds: sourceStart,
+      sourceEndSeconds: clipPrecision(sourceStart + duration),
+      selected: true,
+      parentClipId: null,
+      archived: false,
+    },
+  ];
+}
+
+export function archiveTimelineClip(
+  clips: TimelineDawClipState[],
+  clipId: string,
+): TimelineDawClipState[] {
+  const next = clips.map((clip) => clip.id === clipId
+    ? { ...clip, archived: true, selected: false }
+    : { ...clip });
+  if (!next.some((clip) => clip.selected && !clip.archived)) {
+    const firstActive = next.find((clip) => !clip.archived);
+    if (firstActive) firstActive.selected = true;
+  }
+  return next;
+}
+
+export function restoreTimelineClip(
+  clips: TimelineDawClipState[],
+  clipId: string,
+): TimelineDawClipState[] {
+  return clips.map((clip) => clip.id === clipId
+    ? { ...clip, archived: false, selected: true }
+    : { ...clip, selected: false });
 }

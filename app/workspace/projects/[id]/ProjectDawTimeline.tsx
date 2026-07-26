@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { listLinkedProjectTrackIds } from "../../../../lib/projectTracksApi";
 import {
+  addTimelineClip,
+  archiveTimelineClip,
   clampTimelineZoom,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
@@ -11,6 +13,7 @@ import {
   moveTimelineLane,
   reconcileTimelineClips,
   reconcileTimelineLanes,
+  restoreTimelineClip,
   selectTimelineClip,
   splitTimelineClip,
   timelineCanvasWidth,
@@ -35,6 +38,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
+  const [clipHistory, setClipHistory] = useState<TimelineDawClipState[][]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(180);
   const [zoom, setZoom] = useState(1);
@@ -104,22 +108,48 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       : patch.selected ? { ...lane, selected: false } : lane));
   }
 
-  const selectedClip = clips.find((clip) => clip.selected) ?? null;
+  const selectedClip = clips.find((clip) => clip.selected && !clip.archived) ?? null;
+  const archivedClips = clips.filter((clip) => clip.archived);
   const editStep = zoom >= 4 ? 0.25 : zoom >= 2 ? 0.5 : 1;
+
+  function applyClipEdit(
+    edit: (current: TimelineDawClipState[]) => TimelineDawClipState[],
+  ) {
+    const snapshot = clips.map((clip) => ({ ...clip }));
+    setClipHistory((history) => [...history.slice(-19), snapshot]);
+    setClips(edit(clips));
+  }
 
   function editSelected(action: "move-left" | "move-right" | "trim-start" | "trim-end" | "split") {
     if (!selectedClip) return;
     if (action === "move-left") {
-      setClips((value) => moveTimelineClip(value, selectedClip.id, -editStep));
+      applyClipEdit((value) => moveTimelineClip(value, selectedClip.id, -editStep));
     } else if (action === "move-right") {
-      setClips((value) => moveTimelineClip(value, selectedClip.id, editStep));
+      applyClipEdit((value) => moveTimelineClip(value, selectedClip.id, editStep));
     } else if (action === "trim-start") {
-      setClips((value) => trimTimelineClip(value, selectedClip.id, "start", editStep));
+      applyClipEdit((value) => trimTimelineClip(value, selectedClip.id, "start", editStep));
     } else if (action === "trim-end") {
-      setClips((value) => trimTimelineClip(value, selectedClip.id, "end", -editStep));
+      applyClipEdit((value) => trimTimelineClip(value, selectedClip.id, "end", -editStep));
     } else {
-      setClips((value) => splitTimelineClip(value, selectedClip.id, elapsed));
+      applyClipEdit((value) => splitTimelineClip(value, selectedClip.id, elapsed));
     }
+  }
+
+  function addClip() {
+    const trackId = lanes.find((lane) => lane.selected)?.trackId ?? session.songId;
+    applyClipEdit((value) => addTimelineClip(value, {
+      trackId,
+      timelineStartSeconds: elapsed,
+      durationSeconds: Math.min(8, Math.max(0.25, duration - elapsed)),
+    }));
+  }
+
+  function undoClipEdit() {
+    setClipHistory((history) => {
+      const previous = history.at(-1);
+      if (previous) setClips(previous.map((clip) => ({ ...clip })));
+      return history.slice(0, -1);
+    });
   }
 
   return (
@@ -167,6 +197,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           className="rounded-lg bg-violet-300 px-3 py-2 text-xs font-black text-black disabled:opacity-30">
           Split at Playhead
         </button>
+        <button type="button" onClick={addClip}
+          className="rounded-lg bg-cyan-300 px-3 py-2 text-xs font-black text-black">
+          Add Clip
+        </button>
+        <button type="button" disabled={!selectedClip} onClick={() => {
+          if (selectedClip) applyClipEdit((value) => archiveTimelineClip(value, selectedClip.id));
+        }}
+          className="rounded-lg border border-amber-300/40 px-3 py-2 text-xs font-black text-amber-200 disabled:opacity-30">
+          Archive
+        </button>
+        <button type="button" disabled={!clipHistory.length} onClick={undoClipEdit}
+          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-30">
+          Undo
+        </button>
         <span className="ml-auto font-mono text-xs text-white/40">
           {selectedClip
             ? `${clock(selectedClip.timelineStartSeconds)}–${clock(selectedClip.timelineEndSeconds)} · source preserved`
@@ -213,7 +257,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             {lanes.map((lane, laneIndex) => {
               const track = trackById.get(lane.trackId);
               const audible = !lane.muted && (!anySoloed || lane.soloed);
-              const laneClips = clips.filter((clip) => clip.trackId === lane.trackId);
+              const laneClips = clips.filter((clip) => clip.trackId === lane.trackId && !clip.archived);
               return (
                 <div key={lane.trackId} className={`relative h-28 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
                   {laneClips.map((clip) => {
@@ -263,9 +307,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-5 py-3 text-xs text-white/35">
-        <span>{clips.length} non-destructive {clips.length === 1 ? "clip" : "clips"} · edits and lane order saved on this device</span>
+        <span>{clips.length - archivedClips.length} active · {archivedClips.length} archived · edits and lane order saved on this device</span>
         <span className="font-mono">{clock(elapsed)} / {clock(duration)}</span>
       </div>
+      {archivedClips.length ? (
+        <div className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-amber-300/[0.04] px-5 py-3">
+          <span className="text-xs font-black uppercase tracking-wider text-amber-200">Clip archive</span>
+          {archivedClips.map((clip) => (
+            <button
+              key={clip.id}
+              type="button"
+              onClick={() => applyClipEdit((value) => restoreTimelineClip(value, clip.id))}
+              className="rounded-lg border border-amber-300/25 px-3 py-1.5 text-xs font-bold text-amber-100"
+            >
+              Restore {trackById.get(clip.trackId)?.title || clip.trackId} {clock(clip.timelineStartSeconds)}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }
