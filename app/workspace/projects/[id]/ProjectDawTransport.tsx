@@ -78,6 +78,8 @@ export default function ProjectDawTransport({
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [monitorReady, setMonitorReady] = useState(false);
+  const [loopStartTick, setLoopStartTick] = useState(0);
+  const [loopEndTick, setLoopEndTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -99,6 +101,8 @@ export default function ProjectDawTransport({
         setEvents(next.events);
         if (next.transport) {
           lastCheckpointTickRef.current = next.transport.tick;
+          setLoopStartTick(next.transport.loop.startTick);
+          setLoopEndTick(next.transport.loop.endTick);
           const restoredSeconds = timelineTickToSeconds(next.transport.tick, BPM, PPQ);
           scrubSecondsRef.current = restoredSeconds;
           setElapsed(restoredSeconds);
@@ -171,8 +175,14 @@ export default function ProjectDawTransport({
   }, [monitorReady, muted, volume]);
 
   async function update(
-    action: "play" | "pause" | "stop" | "locate",
-    extras: { returnToTick?: number; tick?: number } = {},
+    action: "play" | "pause" | "stop" | "locate" | "set-loop",
+    extras: {
+      returnToTick?: number;
+      tick?: number;
+      enabled?: boolean;
+      startTick?: number;
+      endTick?: number;
+    } = {},
   ) {
     return commandQueueRef.current.enqueue(async () => {
       const operate = async () => {
@@ -284,6 +294,36 @@ export default function ProjectDawTransport({
       await locate(nextSeconds);
     } catch {
       scrubDirtyRef.current = true;
+    }
+  }
+
+  function setLoopBoundary(boundary: "start" | "end") {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
+    if (boundary === "start") {
+      setLoopStartTick(tick);
+      if (loopEndTick <= tick) setLoopEndTick(0);
+    } else if (tick > loopStartTick) {
+      setLoopEndTick(tick);
+    } else {
+      setError("Loop Out must be after Loop In.");
+    }
+  }
+
+  async function saveLoop(enabled: boolean) {
+    if (!transportRef.current) return;
+    const startTick = loopStartTick;
+    const endTick = loopEndTick;
+    if (enabled && endTick <= startTick) {
+      setError("Set Loop In and Loop Out before enabling the loop.");
+      return;
+    }
+    setError(null);
+    try {
+      await update("set-loop", { enabled, startTick, endTick });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Loop settings could not be saved.");
     }
   }
 
@@ -495,6 +535,31 @@ export default function ProjectDawTransport({
         </span>
       </div>
 
+      <div className="mt-3 rounded-xl bg-white/[0.04] p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setLoopBoundary("start")} disabled={!active || !source} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-35">
+            Set Loop In
+          </button>
+          <button type="button" onClick={() => setLoopBoundary("end")} disabled={!active || !source} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-35">
+            Set Loop Out
+          </button>
+          <button type="button" onClick={() => void saveLoop(true)} disabled={!active || !source || loopEndTick <= loopStartTick} className="rounded-lg bg-violet-300 px-3 py-2 text-xs font-black text-black disabled:opacity-35">
+            {transport?.loop.enabled ? "Update Loop" : "Enable Loop"}
+          </button>
+          <button type="button" onClick={() => void saveLoop(false)} disabled={!active || !transport?.loop.enabled} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-35">
+            Disable Loop
+          </button>
+          <span className="ml-auto font-mono text-xs text-white/55">
+            {timelineTickToPosition(loopStartTick, PPQ).label}
+            {" → "}
+            {timelineTickToPosition(loopEndTick, PPQ).label}
+          </span>
+        </div>
+        <p className="mt-2 text-xs text-white/35">
+          Move the playhead, set Loop In and Loop Out, then enable the saved loop.
+        </p>
+      </div>
+
       {!active ? (
         <p className="mt-3 text-sm text-amber-200">
           Activate this DAW session before operating the transport.
@@ -534,9 +599,21 @@ export default function ProjectDawTransport({
             scrubSecondsRef.current = audio.currentTime;
             setElapsed(audio.currentTime);
           }
+          const savedLoop = transportRef.current?.loop;
+          if (savedLoop && savedLoop.endTick > savedLoop.startTick) {
+            setLoopStartTick(savedLoop.startTick);
+            setLoopEndTick(savedLoop.endTick);
+          } else if (Number.isFinite(audio.duration)) {
+            setLoopEndTick(secondsToTimelineTick(audio.duration, BPM, PPQ));
+          }
         }}
         onTimeUpdate={(event) => {
           const audio = event.currentTarget;
+          const activeLoop = transportRef.current?.loop;
+          if (activeLoop?.enabled
+            && secondsToTimelineTick(audio.currentTime, BPM, PPQ) >= activeLoop.endTick) {
+            audio.currentTime = timelineTickToSeconds(activeLoop.startTick, BPM, PPQ);
+          }
           scrubSecondsRef.current = audio.currentTime;
           setElapsed(audio.currentTime);
           if ("mediaSession" in navigator && Number.isFinite(audio.duration) && audio.duration > 0) {

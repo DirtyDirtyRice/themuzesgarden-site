@@ -268,7 +268,11 @@ export class TimelineTransportAndSynchronizationEngine {
     endTick: number;
     editedBy: TimelineUserId;
   }): TimelineTransportSynchronization {
-    const transport = this.editable(input.transportId, input.expectedHead);
+    const transport = this.getRequired(input.transportId);
+    this.head(transport, input.expectedHead);
+    if (transport.status === "archived") {
+      throw new Error("Archived transports cannot be edited.");
+    }
     const startTick = integer(input.startTick, 0, Number.MAX_SAFE_INTEGER, "Loop start");
     const endTick = integer(input.endTick, 0, Number.MAX_SAFE_INTEGER, "Loop end");
     if (input.enabled && endTick <= startTick) {

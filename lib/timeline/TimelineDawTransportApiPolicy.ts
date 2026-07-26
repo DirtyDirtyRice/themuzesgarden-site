@@ -1,6 +1,6 @@
 import type { TimelineDawTransportCommand } from "./TimelineDawTransportService";
 
-const actions = new Set(["initialize", "play", "pause", "stop", "locate"]);
+const actions = new Set(["initialize", "play", "pause", "stop", "locate", "set-loop"]);
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 const whole = (value: unknown) =>
   typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : null;
@@ -34,6 +34,25 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
       expectedTransportHead,
       expectedWorkspaceRevision,
       tick,
+    };
+  }
+  if (value.action === "set-loop") {
+    const startTick = whole(value.startTick);
+    const endTick = whole(value.endTick);
+    if (typeof value.enabled !== "boolean" || startTick === null || endTick === null) {
+      throw new Error("Loop requires enabled, startTick, and endTick.");
+    }
+    if (value.enabled && endTick <= startTick) {
+      throw new Error("Loop end must be after loop start.");
+    }
+    return {
+      action: "set-loop",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
+      enabled: value.enabled,
+      startTick,
+      endTick,
     };
   }
   if (value.action === "stop") {

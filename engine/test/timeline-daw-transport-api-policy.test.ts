@@ -19,6 +19,15 @@ describe("TimelineDawTransportApiPolicy", () => {
       expectedWorkspaceRevision: 4,
       tick: 1_920,
     })).toMatchObject({ action: "locate", tick: 1_920 });
+    expect(parseTimelineDawTransportCommand({
+      action: "set-loop",
+      sessionId: "session-1",
+      expectedTransportHead: 4,
+      expectedWorkspaceRevision: 5,
+      enabled: true,
+      startTick: 1_920,
+      endTick: 5_760,
+    })).toMatchObject({ action: "set-loop", enabled: true, startTick: 1_920, endTick: 5_760 });
   });
 
   it("rejects invented actions and missing revision guards", () => {
@@ -28,5 +37,14 @@ describe("TimelineDawTransportApiPolicy", () => {
       sessionId: "session-1",
       expectedWorkspaceRevision: 1,
     })).toThrow(/expectedTransportHead/);
+    expect(() => parseTimelineDawTransportCommand({
+      action: "set-loop",
+      sessionId: "session-1",
+      expectedTransportHead: 1,
+      expectedWorkspaceRevision: 1,
+      enabled: true,
+      startTick: 960,
+      endTick: 960,
+    })).toThrow(/after loop start/i);
   });
 });

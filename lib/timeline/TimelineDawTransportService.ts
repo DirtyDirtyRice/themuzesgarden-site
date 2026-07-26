@@ -45,6 +45,15 @@ export type TimelineDawTransportCommand =
       expectedTransportHead: number;
       expectedWorkspaceRevision: number;
       tick: number;
+    }
+  | {
+      action: "set-loop";
+      sessionId: TimelineId;
+      expectedTransportHead: number;
+      expectedWorkspaceRevision: number;
+      enabled: boolean;
+      startTick: number;
+      endTick: number;
     };
 
 export type TimelineDawTransportSnapshot = {
@@ -168,8 +177,16 @@ export class TimelineDawTransportService {
           returnToTick: command.returnToTick,
           stoppedBy: actorId,
         });
-      } else {
+      } else if (command.action === "locate") {
         transport = engine.locate({ ...common, tick: command.tick, locatedBy: actorId });
+      } else {
+        transport = engine.setLoop({
+          ...common,
+          enabled: command.enabled,
+          startTick: command.startTick,
+          endTick: command.endTick,
+          editedBy: actorId,
+        });
       }
     }
     const nextRevision = document.revision + 1;

@@ -85,6 +85,15 @@ describe("TimelineTransportAndSynchronizationEngine", () => {
       pausedBy: "steve",
     });
     expect(current.playbackState).toBe("paused");
+    current = engine.setLoop({
+      transportId: current.id,
+      expectedHead: current.head,
+      enabled: false,
+      startTick: 960,
+      endTick: 2_880,
+      editedBy: "steve",
+    });
+    expect(current.loop.enabled).toBe(false);
     current = engine.stop({
       transportId: current.id,
       expectedHead: current.head,
