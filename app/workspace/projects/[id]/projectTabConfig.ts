@@ -9,5 +9,6 @@ export const PROJECT_TAB_CONFIG: ProjectTabConfigItem[] = [
   { key: "overview", label: "Overview" },
   { key: "notes", label: "Description" },
   { key: "library", label: "Library" },
+  { key: "studio", label: "Studio" },
   { key: "activity", label: "Activity" },
 ];

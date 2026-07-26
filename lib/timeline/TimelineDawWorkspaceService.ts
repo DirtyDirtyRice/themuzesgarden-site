@@ -70,6 +70,11 @@ export type TimelineDawWorkspaceReceipt = {
   recordedBy: TimelineUserId;
 };
 
+export type TimelineDawWorkspaceSnapshot = {
+  workspaceRevision: number;
+  sessions: TimelineDawSession[];
+};
+
 export class TimelineDawWorkspaceService {
   private queue: Promise<void> = Promise.resolve();
   private receiptSequence = 0;
@@ -86,13 +91,23 @@ export class TimelineDawWorkspaceService {
   }
 
   async list(actorId: TimelineUserId, projectId?: TimelineProjectId): Promise<TimelineDawSession[]> {
+    return (await this.snapshot(actorId, projectId)).sessions;
+  }
+
+  async snapshot(
+    actorId: TimelineUserId,
+    projectId?: TimelineProjectId,
+  ): Promise<TimelineDawWorkspaceSnapshot> {
     const ownerId = this.required(actorId, "Actor identity");
     await this.queue;
     const document = await this.store.load();
-    if (!document) return [];
+    if (!document) return { workspaceRevision: 0, sessions: [] };
     const coordinator = new TimelineDawSessionCoordinator();
     coordinator.restoreArchive(document.archive);
-    return coordinator.list({ ownerId, projectId, includeClosed: true });
+    return {
+      workspaceRevision: document.revision,
+      sessions: coordinator.list({ ownerId, projectId, includeClosed: true }),
+    };
   }
 
   async get(actorId: TimelineUserId, sessionId: TimelineId): Promise<TimelineDawSession | null> {

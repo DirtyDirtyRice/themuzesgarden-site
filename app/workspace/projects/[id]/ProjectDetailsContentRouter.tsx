@@ -2,6 +2,7 @@
 
 import type { MetadataTargetType } from "../../../../lib/metadata/metadataTypes";
 import ProjectActivityPanel from "./ProjectActivityPanel";
+import ProjectDawWorkspace from "./ProjectDawWorkspace";
 import ProjectLibraryWorkspace from "./ProjectLibraryWorkspace";
 import ProjectNotesWorkspace from "./ProjectNotesWorkspace";
 import ProjectOverviewWorkspace from "./ProjectOverviewWorkspace";
@@ -225,6 +226,16 @@ export default function ProjectDetailsContentRouter(props: {
         onSelectTrackMetadataTarget={onSelectTrackMetadataTarget}
         onUnlinkTrack={onUnlinkTrack}
         onLinkTrack={onLinkTrack}
+      />
+    );
+  }
+
+  if (tab === "studio") {
+    return (
+      <ProjectDawWorkspace
+        projectId={String(project?.id ?? "")}
+        projectTitle={String(project?.title ?? "Project")}
+        tracks={orderedLinkedTracks}
       />
     );
   }

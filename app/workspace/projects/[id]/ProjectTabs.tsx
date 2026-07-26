@@ -146,6 +146,7 @@ export default function ProjectTabs({
           <ol className="mt-3 list-decimal space-y-2 pl-5">
             <li><span className="font-black text-white">Overview</span> shows project status and playback readiness.</li>
             <li><span className="font-black text-white">Library</span> shows the songs/files linked to this project.</li>
+            <li><span className="font-black text-white">Studio</span> opens and controls protected DAW sessions for linked songs.</li>
             <li><span className="font-black text-white">Upload File</span> and <span className="font-black text-white">Upload Folder</span> add new files into this project.</li>
             <li><span className="font-black text-white">Project Liaison</span> sends existing Library songs into projects.</li>
             <li><span className="font-black text-white">Play Project</span> uses the linked songs as the project setlist.</li>

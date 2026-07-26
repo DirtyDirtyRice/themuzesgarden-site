@@ -4,7 +4,7 @@ export type ProjectKind = "music" | "education" | "game" | "experiment" | "colla
 
 export type ProjectVisibility = "private" | "shared" | "public";
 
-export type Tab = "overview" | "notes" | "library" | "activity";
+export type Tab = "overview" | "notes" | "library" | "studio" | "activity";
 
 export type LoopMode = "off" | "track" | "setlist";
 

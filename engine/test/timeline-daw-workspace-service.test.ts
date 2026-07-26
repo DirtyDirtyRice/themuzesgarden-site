@@ -6,6 +6,25 @@ import {
 } from "../../lib/timeline/TimelineDawWorkspaceService";
 
 describe("TimelineDawWorkspaceService", () => {
+  it("reports the durable workspace revision with owner-scoped sessions", async () => {
+    const service = new TimelineDawWorkspaceService(new InMemoryTimelineDawWorkspaceStore());
+    expect(await service.snapshot("owner-1", "project-1")).toEqual({
+      workspaceRevision: 0,
+      sessions: [],
+    });
+    await service.execute({
+      action: "open",
+      projectId: "project-1",
+      songId: "song-1",
+      name: "Main session",
+      expectedWorkspaceRevision: 0,
+    }, "owner-1");
+    const snapshot = await service.snapshot("owner-1", "project-1");
+    expect(snapshot.workspaceRevision).toBe(1);
+    expect(snapshot.sessions).toHaveLength(1);
+    expect(snapshot.sessions[0]).toMatchObject({ projectId: "project-1", ownerId: "owner-1" });
+  });
+
   it("persists a complete owner-scoped command lifecycle", async () => {
     const store = new InMemoryTimelineDawWorkspaceStore();
     const service = new TimelineDawWorkspaceService(store);

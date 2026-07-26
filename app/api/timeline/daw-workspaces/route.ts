@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
   try {
     const user = await authorize(request);
     const projectId = request.nextUrl.searchParams.get("projectId")?.trim() || undefined;
-    const sessions = await createTimelineDawWorkspaceServer(user.id, user.token).list(user.id, projectId);
-    return NextResponse.json({ sessions }, { headers: { "Cache-Control": "no-store" } });
+    const snapshot = await createTimelineDawWorkspaceServer(user.id, user.token).snapshot(user.id, projectId);
+    return NextResponse.json(snapshot, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return failure(error); }
 }
 export async function POST(request: NextRequest) {
