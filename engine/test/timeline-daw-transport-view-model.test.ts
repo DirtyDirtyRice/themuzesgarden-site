@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clampTimelineDawMediaPosition,
   resolveTimelineDawTransportShortcut,
   retryTimelineDawTransportConflict,
   secondsToTimelineTick,
@@ -57,6 +58,14 @@ describe("TimelineDawTransportViewModel", () => {
       hasModifier: true,
     })).toBeNull();
     expect(resolveTimelineDawTransportShortcut({ ...base, key: "Enter" })).toBeNull();
+  });
+
+  it("clamps hardware media seeks to the playable audio duration", () => {
+    expect(clampTimelineDawMediaPosition(25, 100)).toBe(25);
+    expect(clampTimelineDawMediaPosition(-10, 100)).toBe(0);
+    expect(clampTimelineDawMediaPosition(125, 100)).toBe(100);
+    expect(clampTimelineDawMediaPosition(10, Number.NaN)).toBeNull();
+    expect(clampTimelineDawMediaPosition(10, 0)).toBeNull();
   });
 
   it("serializes transport commands and continues after a rejected command", async () => {

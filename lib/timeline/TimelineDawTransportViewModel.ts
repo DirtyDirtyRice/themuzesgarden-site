@@ -51,6 +51,14 @@ export function resolveTimelineDawTransportShortcut(input: {
   return null;
 }
 
+export function clampTimelineDawMediaPosition(
+  position: number,
+  duration: number,
+): number | null {
+  if (!Number.isFinite(position) || !Number.isFinite(duration) || duration <= 0) return null;
+  return Math.min(Math.max(position, 0), duration);
+}
+
 export class TimelineDawTransportCommandQueue {
   private tail: Promise<void> = Promise.resolve();
 

@@ -7,6 +7,7 @@ import {
   type TimelineTransportSynchronization,
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
 import {
+  clampTimelineDawMediaPosition,
   secondsToTimelineTick,
   retryTimelineDawTransportConflict,
   resolveTimelineDawTransportShortcut,
@@ -60,6 +61,9 @@ export default function ProjectDawTransport({
   const shortcutRef = useRef<(action: "toggle-playback" | "stop") => Promise<void>>(
     async () => undefined,
   );
+  const mediaSeekRef = useRef<(seconds: number) => Promise<void>>(async () => undefined);
+  const mediaPlayRef = useRef<() => Promise<void>>(async () => undefined);
+  const mediaPauseRef = useRef<() => Promise<void>>(async () => undefined);
   const commandQueueRef = useRef(new TimelineDawTransportCommandQueue());
   const scrubSecondsRef = useRef(0);
   const scrubDirtyRef = useRef(false);
@@ -183,6 +187,7 @@ export default function ProjectDawTransport({
         await update("play");
       }
       await audio.play();
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Playback could not start.");
     }
@@ -192,6 +197,7 @@ export default function ProjectDawTransport({
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
     audio.pause();
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
     try {
       const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
       await update("pause", { tick });
@@ -205,6 +211,7 @@ export default function ProjectDawTransport({
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
     audio.pause();
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
     audio.currentTime = 0;
     scrubSecondsRef.current = 0;
     scrubDirtyRef.current = false;
@@ -291,6 +298,9 @@ export default function ProjectDawTransport({
     }
   }
   shortcutRef.current = runShortcut;
+  mediaSeekRef.current = locate;
+  mediaPlayRef.current = play;
+  mediaPauseRef.current = pause;
 
   useEffect(() => {
     const interval = window.setInterval(() => void checkpointRef.current(), 10_000);
@@ -306,6 +316,56 @@ export default function ProjectDawTransport({
       window.removeEventListener("pagehide", saveWhenLeaving);
     };
   }, []);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    const handlers: Array<[MediaSessionAction, MediaSessionActionHandler]> = [
+      ["play", () => void mediaPlayRef.current()],
+      ["pause", () => void mediaPauseRef.current()],
+      ["stop", () => void shortcutRef.current("stop")],
+      ["seekto", (details) => {
+        const audio = audioRef.current;
+        const position = clampTimelineDawMediaPosition(
+          details.seekTime ?? Number.NaN,
+          audio?.duration ?? Number.NaN,
+        );
+        if (position !== null) void mediaSeekRef.current(position);
+      }],
+      ["seekbackward", (details) => {
+        const audio = audioRef.current;
+        const position = clampTimelineDawMediaPosition(
+          (audio?.currentTime ?? 0) - (details.seekOffset ?? 10),
+          audio?.duration ?? Number.NaN,
+        );
+        if (position !== null) void mediaSeekRef.current(position);
+      }],
+      ["seekforward", (details) => {
+        const audio = audioRef.current;
+        const position = clampTimelineDawMediaPosition(
+          (audio?.currentTime ?? 0) + (details.seekOffset ?? 10),
+          audio?.duration ?? Number.NaN,
+        );
+        if (position !== null) void mediaSeekRef.current(position);
+      }],
+    ];
+    for (const [action, handler] of handlers) {
+      try { navigator.mediaSession.setActionHandler(action, handler); } catch {}
+    }
+    return () => {
+      for (const [action] of handlers) {
+        try { navigator.mediaSession.setActionHandler(action, null); } catch {}
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator) || !("MediaMetadata" in window)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: track?.title || session.name,
+      artist: track?.artist || "The Muzes Garden",
+      album: "DAW Studio",
+    });
+  }, [session.name, track?.artist, track?.title]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -373,7 +433,7 @@ export default function ProjectDawTransport({
         aria-label="DAW transport location"
       />
       <p className="mt-2 text-xs text-white/35">
-        Keyboard: Space toggles playback · Escape stops
+        Keyboard: Space toggles playback · Escape stops · Media keys supported
       </p>
 
       {!active ? (
@@ -417,8 +477,18 @@ export default function ProjectDawTransport({
           }
         }}
         onTimeUpdate={(event) => {
-          scrubSecondsRef.current = event.currentTarget.currentTime;
-          setElapsed(event.currentTarget.currentTime);
+          const audio = event.currentTarget;
+          scrubSecondsRef.current = audio.currentTime;
+          setElapsed(audio.currentTime);
+          if ("mediaSession" in navigator && Number.isFinite(audio.duration) && audio.duration > 0) {
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: audio.duration,
+                playbackRate: audio.playbackRate,
+                position: Math.min(audio.currentTime, audio.duration),
+              });
+            } catch {}
+          }
         }}
         onEnded={() => {
           setElapsed(0);
