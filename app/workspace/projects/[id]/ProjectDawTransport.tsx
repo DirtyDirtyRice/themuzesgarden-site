@@ -9,6 +9,7 @@ import {
 import {
   secondsToTimelineTick,
   shouldCheckpointTransport,
+  TimelineDawTransportCommandQueue,
   timelineTickToSeconds,
   timelineTickToPosition,
 } from "../../../../lib/timeline/TimelineDawTransportViewModel";
@@ -48,6 +49,9 @@ export default function ProjectDawTransport({
   const checkpointPendingRef = useRef(false);
   const lastCheckpointTickRef = useRef(0);
   const checkpointRef = useRef<() => Promise<void>>(async () => undefined);
+  const commandQueueRef = useRef(new TimelineDawTransportCommandQueue());
+  const scrubSecondsRef = useRef(0);
+  const scrubDirtyRef = useRef(false);
   const [transport, setTransport] = useState<TimelineTransportSynchronization | null>(null);
   const [events, setEvents] = useState<TimelineTransportEvent[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
@@ -75,7 +79,9 @@ export default function ProjectDawTransport({
         setEvents(next.events);
         if (next.transport) {
           lastCheckpointTickRef.current = next.transport.tick;
-          setElapsed(timelineTickToSeconds(next.transport.tick, BPM, PPQ));
+          const restoredSeconds = timelineTickToSeconds(next.transport.tick, BPM, PPQ);
+          scrubSecondsRef.current = restoredSeconds;
+          setElapsed(restoredSeconds);
         }
         workspaceRevisionRef.current = next.workspaceRevision;
         onWorkspaceRevision(next.workspaceRevision);
@@ -122,21 +128,23 @@ export default function ProjectDawTransport({
     action: "play" | "pause" | "stop" | "locate",
     extras: { returnToTick?: number; tick?: number } = {},
   ) {
-    const currentTransport = transportRef.current;
-    if (!currentTransport) return null;
-    const result = await changeDawTransport({
-      action,
-      sessionId: session.id,
-      expectedTransportHead: currentTransport.head,
-      expectedWorkspaceRevision: workspaceRevisionRef.current,
-      ...extras,
+    return commandQueueRef.current.enqueue(async () => {
+      const currentTransport = transportRef.current;
+      if (!currentTransport) return null;
+      const result = await changeDawTransport({
+        action,
+        sessionId: session.id,
+        expectedTransportHead: currentTransport.head,
+        expectedWorkspaceRevision: workspaceRevisionRef.current,
+        ...extras,
+      });
+      setTransport(result.receipt.transport);
+      transportRef.current = result.receipt.transport;
+      setEvents(result.receipt.events);
+      workspaceRevisionRef.current = result.receipt.workspaceRevision;
+      onWorkspaceRevision(result.receipt.workspaceRevision);
+      return result.receipt.transport;
     });
-    setTransport(result.receipt.transport);
-    transportRef.current = result.receipt.transport;
-    setEvents(result.receipt.events);
-    workspaceRevisionRef.current = result.receipt.workspaceRevision;
-    onWorkspaceRevision(result.receipt.workspaceRevision);
-    return result.receipt.transport;
   }
 
   async function play() {
@@ -169,6 +177,8 @@ export default function ProjectDawTransport({
     if (!active || !audio || !transport) return;
     audio.pause();
     audio.currentTime = 0;
+    scrubSecondsRef.current = 0;
+    scrubDirtyRef.current = false;
     setElapsed(0);
     lastCheckpointTickRef.current = 0;
     try { await update("stop", { returnToTick: 0 }); } catch (cause) {
@@ -187,6 +197,26 @@ export default function ProjectDawTransport({
       lastCheckpointTickRef.current = tick;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Transport location could not be saved.");
+    }
+  }
+
+  function previewLocate(nextSeconds: number) {
+    const audio = audioRef.current;
+    if (!active || !audio || !transport) return;
+    audio.currentTime = nextSeconds;
+    scrubSecondsRef.current = nextSeconds;
+    scrubDirtyRef.current = true;
+    setElapsed(nextSeconds);
+  }
+
+  async function commitScrub() {
+    if (!scrubDirtyRef.current) return;
+    const nextSeconds = scrubSecondsRef.current;
+    scrubDirtyRef.current = false;
+    try {
+      await locate(nextSeconds);
+    } catch {
+      scrubDirtyRef.current = true;
     }
   }
 
@@ -259,7 +289,10 @@ export default function ProjectDawTransport({
         max={Math.max(duration, 0)}
         step={0.01}
         value={Math.min(elapsed, duration || 0)}
-        onChange={(event) => void locate(Number(event.target.value))}
+        onChange={(event) => previewLocate(Number(event.target.value))}
+        onPointerUp={() => void commitScrub()}
+        onKeyUp={() => void commitScrub()}
+        onBlur={() => void commitScrub()}
         disabled={!active || !source || duration <= 0}
         className="mt-4 w-full accent-emerald-300 disabled:opacity-35"
         aria-label="DAW transport location"
@@ -301,10 +334,14 @@ export default function ProjectDawTransport({
           if (transport?.tick) {
             const restored = timelineTickToSeconds(transport.tick, BPM, PPQ);
             audio.currentTime = Math.min(restored, Number.isFinite(audio.duration) ? audio.duration : restored);
+            scrubSecondsRef.current = audio.currentTime;
             setElapsed(audio.currentTime);
           }
         }}
-        onTimeUpdate={(event) => setElapsed(event.currentTarget.currentTime)}
+        onTimeUpdate={(event) => {
+          scrubSecondsRef.current = event.currentTarget.currentTime;
+          setElapsed(event.currentTarget.currentTime);
+        }}
         onEnded={() => {
           setElapsed(0);
           if (transport?.playbackState === "playing") void stop();

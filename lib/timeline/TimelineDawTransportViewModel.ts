@@ -30,6 +30,16 @@ export function shouldCheckpointTransport(
   return Math.abs(currentTick - lastCheckpointTick) >= ppq;
 }
 
+export class TimelineDawTransportCommandQueue {
+  private tail: Promise<void> = Promise.resolve();
+
+  enqueue<T>(operation: () => Promise<T>): Promise<T> {
+    const result = this.tail.then(operation);
+    this.tail = result.then(() => undefined, () => undefined);
+    return result;
+  }
+}
+
 export function timelineTickToPosition(
   tick: number,
   ppq: number,

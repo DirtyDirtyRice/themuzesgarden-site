@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   secondsToTimelineTick,
   shouldCheckpointTransport,
+  TimelineDawTransportCommandQueue,
   timelineTickToSeconds,
   timelineTickToPosition,
 } from "../../lib/timeline/TimelineDawTransportViewModel";
@@ -24,6 +25,27 @@ describe("TimelineDawTransportViewModel", () => {
     expect(shouldCheckpointTransport(960, 0, 960)).toBe(true);
     expect(shouldCheckpointTransport(1_920, 2_880, 960)).toBe(true);
     expect(() => shouldCheckpointTransport(-1, 0, 960)).toThrow(/whole numbers/i);
+  });
+
+  it("serializes transport commands and continues after a rejected command", async () => {
+    const queue = new TimelineDawTransportCommandQueue();
+    const order: string[] = [];
+    const first = queue.enqueue(async () => {
+      await Promise.resolve();
+      order.push("first");
+    });
+    const rejected = queue.enqueue(async () => {
+      order.push("rejected");
+      throw new Error("expected");
+    });
+    const third = queue.enqueue(async () => {
+      order.push("third");
+    });
+
+    await first;
+    await expect(rejected).rejects.toThrow("expected");
+    await third;
+    expect(order).toEqual(["first", "rejected", "third"]);
   });
 
   it("rejects invalid transport measurements", () => {
