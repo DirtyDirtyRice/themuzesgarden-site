@@ -12,6 +12,7 @@ import {
   timelineTempoAtTick,
   timelineCountInSchedule,
   timelineMetronomeBeatAtOrAfterTick,
+  timelineBarNavigationTick,
   timelineTickToSeconds,
   timelineTickToTempoMappedSeconds,
   timelineTickToPosition,
@@ -86,6 +87,19 @@ describe("TimelineDawTransportViewModel", () => {
     });
   });
 
+  it("navigates musical bar boundaries across signature changes", () => {
+    const signatures = [
+      { tick: 0, numerator: 4, denominator: 4 },
+      { tick: 3_840, numerator: 3, denominator: 4 },
+    ];
+    expect(timelineBarNavigationTick(2_000, "previous", 960, signatures)).toBe(0);
+    expect(timelineBarNavigationTick(2_000, "next", 960, signatures)).toBe(3_840);
+    expect(timelineBarNavigationTick(3_840, "previous", 960, signatures)).toBe(0);
+    expect(timelineBarNavigationTick(3_840, "next", 960, signatures)).toBe(6_720);
+    expect(timelineBarNavigationTick(7_000, "previous", 960, signatures)).toBe(6_720);
+    expect(timelineBarNavigationTick(0, "previous", 960, signatures)).toBe(0);
+  });
+
   it("checkpoints only after playback advances by at least one quarter note", () => {
     expect(shouldCheckpointTransport(959, 0, 960)).toBe(false);
     expect(shouldCheckpointTransport(960, 0, 960)).toBe(true);
@@ -109,6 +123,17 @@ describe("TimelineDawTransportViewModel", () => {
     };
     expect(resolveTimelineDawTransportShortcut({ ...base, key: " " })).toBe("toggle-playback");
     expect(resolveTimelineDawTransportShortcut({ ...base, key: "Escape" })).toBe("stop");
+    expect(resolveTimelineDawTransportShortcut({
+      ...base,
+      key: "ArrowLeft",
+      shiftKey: true,
+    })).toBe("previous-bar");
+    expect(resolveTimelineDawTransportShortcut({
+      ...base,
+      key: "ArrowRight",
+      shiftKey: true,
+    })).toBe("next-bar");
+    expect(resolveTimelineDawTransportShortcut({ ...base, key: "Home" })).toBe("return-to-start");
     expect(resolveTimelineDawTransportShortcut({
       ...base,
       key: " ",

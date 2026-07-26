@@ -125,20 +125,30 @@ export function shouldIssueTransportPlay(playbackState: string): boolean {
   return !["playing", "counting-in"].includes(playbackState);
 }
 
-export type TimelineDawTransportShortcut = "toggle-playback" | "stop";
+export type TimelineDawTransportShortcut =
+  | "toggle-playback"
+  | "stop"
+  | "previous-bar"
+  | "next-bar"
+  | "return-to-start";
 
 export function resolveTimelineDawTransportShortcut(input: {
   key: string;
   repeat: boolean;
   defaultPrevented: boolean;
   hasModifier: boolean;
+  shiftKey?: boolean;
   editableTarget: boolean;
 }): TimelineDawTransportShortcut | null {
   if (input.repeat || input.defaultPrevented || input.hasModifier || input.editableTarget) {
     return null;
   }
+  if (input.shiftKey && input.key === "ArrowLeft") return "previous-bar";
+  if (input.shiftKey && input.key === "ArrowRight") return "next-bar";
+  if (input.shiftKey) return null;
   if (input.key === " " || input.key === "Spacebar") return "toggle-playback";
   if (input.key === "Escape") return "stop";
+  if (input.key === "Home") return "return-to-start";
   return null;
 }
 
@@ -309,4 +319,36 @@ export function timelineMetronomeBeatAtOrAfterTick(
     tick: beatTick,
     accent: timelineTickToMappedPosition(beatTick, ppq, points).beat === 1,
   };
+}
+
+export function timelineBarNavigationTick(
+  tick: number,
+  direction: "previous" | "next",
+  ppq: number,
+  signatureMap: TimelineDawSignaturePoint[],
+): number {
+  timelineTickToMappedPosition(tick, ppq, signatureMap);
+  const points = [...signatureMap].sort((left, right) => left.tick - right.tick);
+  const activeIndex = points.findLastIndex((point) => point.tick <= tick);
+  const active = points[activeIndex]!;
+  const ticksPerBar = (ppq * 4 / active.denominator) * active.numerator;
+  const segmentOffset = tick - active.tick;
+  const currentBarStart = active.tick + Math.floor(segmentOffset / ticksPerBar) * ticksPerBar;
+
+  if (direction === "next") {
+    const candidate = currentBarStart + ticksPerBar;
+    const nextSignatureTick = points[activeIndex + 1]?.tick;
+    return nextSignatureTick !== undefined && candidate > nextSignatureTick
+      ? nextSignatureTick
+      : candidate;
+  }
+  if (currentBarStart < tick) return currentBarStart;
+  if (currentBarStart > active.tick) return currentBarStart - ticksPerBar;
+  if (activeIndex === 0) return 0;
+  const previous = points[activeIndex - 1]!;
+  const previousTicksPerBar = (ppq * 4 / previous.denominator) * previous.numerator;
+  const previousSegmentLength = active.tick - previous.tick;
+  return previous.tick
+    + Math.floor(Math.max(previousSegmentLength - 1, 0) / previousTicksPerBar)
+      * previousTicksPerBar;
 }

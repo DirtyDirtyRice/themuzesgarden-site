@@ -16,6 +16,7 @@ import {
   TimelineDawTransportCommandQueue,
   tempoMappedSecondsToTimelineTick,
   timelineCountInSchedule,
+  timelineBarNavigationTick,
   timelineMetronomeBeatAtOrAfterTick,
   timelineTempoAtTick,
   timelineTickToTempoMappedSeconds,
@@ -64,7 +65,14 @@ export default function ProjectDawTransport({
   const lastCheckpointTickRef = useRef(0);
   const checkpointRef = useRef<() => Promise<void>>(async () => undefined);
   const finalizePlaybackRef = useRef<() => Promise<void>>(async () => undefined);
-  const shortcutRef = useRef<(action: "toggle-playback" | "stop") => Promise<void>>(
+  const shortcutRef = useRef<(
+    action:
+      | "toggle-playback"
+      | "stop"
+      | "previous-bar"
+      | "next-bar"
+      | "return-to-start"
+  ) => Promise<void>>(
     async () => undefined,
   );
   const mediaSeekRef = useRef<(seconds: number) => Promise<void>>(async () => undefined);
@@ -363,6 +371,28 @@ export default function ProjectDawTransport({
     }
   }
 
+  async function navigateToBar(direction: "previous" | "next") {
+    const audio = audioRef.current;
+    const current = transportRef.current;
+    if (!active || !audio || !current) return;
+    const currentTick = tempoMappedSecondsToTimelineTick(
+      audio.currentTime,
+      current.ppq,
+      current.tempoMap,
+    );
+    const targetTick = timelineBarNavigationTick(
+      currentTick,
+      direction,
+      current.ppq,
+      current.timeSignatureMap,
+    );
+    await locate(timelineTickToTempoMappedSeconds(
+      targetTick,
+      current.ppq,
+      current.tempoMap,
+    ));
+  }
+
   function previewLocate(nextSeconds: number) {
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
@@ -465,11 +495,24 @@ export default function ProjectDawTransport({
   }
   finalizePlaybackRef.current = finalizePlayback;
 
-  async function runShortcut(action: "toggle-playback" | "stop") {
+  async function runShortcut(
+    action:
+      | "toggle-playback"
+      | "stop"
+      | "previous-bar"
+      | "next-bar"
+      | "return-to-start",
+  ) {
     const audio = audioRef.current;
     if (!active || !source || !audio || !transportRef.current) return;
     if (action === "stop") {
       await stop();
+    } else if (action === "previous-bar") {
+      await navigateToBar("previous");
+    } else if (action === "next-bar") {
+      await navigateToBar("next");
+    } else if (action === "return-to-start") {
+      await locate(0);
     } else if (audio.paused) {
       await play();
     } else {
@@ -630,7 +673,8 @@ export default function ProjectDawTransport({
         key: event.key,
         repeat: event.repeat,
         defaultPrevented: event.defaultPrevented,
-        hasModifier: event.altKey || event.ctrlKey || event.metaKey || event.shiftKey,
+        hasModifier: event.altKey || event.ctrlKey || event.metaKey,
+        shiftKey: event.shiftKey,
         editableTarget: Boolean(target?.closest(
           "input, textarea, select, button, a, [contenteditable='true'], [role='textbox']",
         )),
@@ -671,6 +715,15 @@ export default function ProjectDawTransport({
         <button type="button" onClick={() => void stop()} disabled={!active || !source} aria-keyshortcuts="Escape" className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
           Stop
         </button>
+        <button type="button" onClick={() => void navigateToBar("previous")} disabled={!active || !source} aria-keyshortcuts="Shift+ArrowLeft" className="rounded-xl border border-white/25 px-4 py-3 text-sm font-black disabled:opacity-35">
+          Previous Bar
+        </button>
+        <button type="button" onClick={() => void navigateToBar("next")} disabled={!active || !source} aria-keyshortcuts="Shift+ArrowRight" className="rounded-xl border border-white/25 px-4 py-3 text-sm font-black disabled:opacity-35">
+          Next Bar
+        </button>
+        <button type="button" onClick={() => void locate(0)} disabled={!active || !source} aria-keyshortcuts="Home" className="rounded-xl border border-white/25 px-4 py-3 text-sm font-black disabled:opacity-35">
+          Start
+        </button>
         <span className="ml-auto font-mono text-sm text-white/65">
           {clock(elapsed)} / {clock(duration)}
         </span>
@@ -691,7 +744,7 @@ export default function ProjectDawTransport({
         aria-label="DAW transport location"
       />
       <p className="mt-2 text-xs text-white/35">
-        Keyboard: Space toggles playback · Escape stops · Media keys supported
+        Keyboard: Space plays/pauses · Escape stops · Shift+←/→ moves by bar · Home returns to start
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-white/[0.04] px-3 py-2">
