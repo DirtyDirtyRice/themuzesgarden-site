@@ -17,7 +17,7 @@ import {
   tempoMappedSecondsToTimelineTick,
   timelineTempoAtTick,
   timelineTickToTempoMappedSeconds,
-  timelineTickToPosition,
+  timelineTickToMappedPosition,
 } from "../../../../lib/timeline/TimelineDawTransportViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
 import {
@@ -37,6 +37,7 @@ type Track = {
 
 const FALLBACK_PPQ = 960;
 const FALLBACK_TEMPO_MAP = [{ tick: 0, bpm: 120 }];
+const FALLBACK_SIGNATURE_MAP = [{ tick: 0, numerator: 4, denominator: 4 }];
 const MONITOR_LEVEL_KEY = "muzes-daw-monitor-level";
 
 function clock(seconds: number) {
@@ -149,14 +150,11 @@ export default function ProjectDawTransport({
   const activePpq = activeTransport?.ppq ?? FALLBACK_PPQ;
   const activeTempoMap = activeTransport?.tempoMap ?? FALLBACK_TEMPO_MAP;
   const activeTick = tempoMappedSecondsToTimelineTick(elapsed, activePpq, activeTempoMap);
-  const activeSignature = [...(activeTransport?.timeSignatureMap ?? [])]
-    .reverse()
-    .find((point) => point.tick <= activeTick) ?? { numerator: 4, denominator: 4 };
-  const position = timelineTickToPosition(
+  const activeSignatureMap = activeTransport?.timeSignatureMap ?? FALLBACK_SIGNATURE_MAP;
+  const position = timelineTickToMappedPosition(
     activeTick,
     activePpq,
-    activeSignature.numerator,
-    activeSignature.denominator,
+    activeSignatureMap,
   );
   const activeBpm = timelineTempoAtTick(activeTick, activeTempoMap);
 
@@ -508,7 +506,7 @@ export default function ProjectDawTransport({
         <div className="text-right">
           <p className="font-mono text-2xl font-black">{position.label}</p>
           <p className="text-xs text-white/45">
-            {activeBpm} BPM · {activeSignature.numerator}/{activeSignature.denominator} · 48 kHz
+            {activeBpm} BPM · {position.numerator}/{position.denominator} · 48 kHz
           </p>
         </div>
       </div>
@@ -589,9 +587,9 @@ export default function ProjectDawTransport({
             Disable Loop
           </button>
           <span className="ml-auto font-mono text-xs text-white/55">
-            {timelineTickToPosition(loopStartTick, activePpq, activeSignature.numerator, activeSignature.denominator).label}
+            {timelineTickToMappedPosition(loopStartTick, activePpq, activeSignatureMap).label}
             {" → "}
-            {timelineTickToPosition(loopEndTick, activePpq, activeSignature.numerator, activeSignature.denominator).label}
+            {timelineTickToMappedPosition(loopEndTick, activePpq, activeSignatureMap).label}
           </span>
         </div>
         <p className="mt-2 text-xs text-white/35">

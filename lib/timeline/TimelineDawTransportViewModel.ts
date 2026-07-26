@@ -199,3 +199,69 @@ export function timelineTickToPosition(
   const remainder = withinBar % ticksPerBeat;
   return { bar, beat, tick: remainder, label: `${bar}:${beat}:${remainder}` };
 }
+
+type TimelineDawSignaturePoint = {
+  tick: number;
+  numerator: number;
+  denominator: number;
+};
+
+export function timelineTickToMappedPosition(
+  tick: number,
+  ppq: number,
+  signatureMap: TimelineDawSignaturePoint[],
+): {
+  bar: number;
+  beat: number;
+  tick: number;
+  label: string;
+  numerator: number;
+  denominator: number;
+} {
+  const points = [...signatureMap].sort((left, right) => left.tick - right.tick);
+  if (!Number.isInteger(tick)
+    || tick < 0
+    || !Number.isInteger(ppq)
+    || ppq <= 0
+    || points.length === 0
+    || points[0]?.tick !== 0
+    || points.some((point, index) => !Number.isInteger(point.tick)
+      || point.tick < 0
+      || (index > 0 && point.tick <= points[index - 1]!.tick)
+      || !Number.isInteger(point.numerator)
+      || point.numerator <= 0
+      || !Number.isInteger(point.denominator)
+      || point.denominator <= 0
+      || (ppq * 4) % point.denominator !== 0)) {
+    throw new Error("Signature map and PPQ must define a valid tick-zero signature.");
+  }
+
+  let completedBars = 0;
+  let active = points[0]!;
+  for (let index = 0; index < points.length; index += 1) {
+    const point = points[index]!;
+    const next = points[index + 1];
+    if (!next || tick < next.tick) {
+      active = point;
+      break;
+    }
+    const ticksPerBar = (ppq * 4 / point.denominator) * point.numerator;
+    completedBars += Math.ceil((next.tick - point.tick) / ticksPerBar);
+  }
+
+  const ticksPerBeat = ppq * 4 / active.denominator;
+  const ticksPerBar = ticksPerBeat * active.numerator;
+  const withinSegment = tick - active.tick;
+  const bar = completedBars + Math.floor(withinSegment / ticksPerBar) + 1;
+  const withinBar = withinSegment % ticksPerBar;
+  const beat = Math.floor(withinBar / ticksPerBeat) + 1;
+  const remainder = withinBar % ticksPerBeat;
+  return {
+    bar,
+    beat,
+    tick: remainder,
+    label: `${bar}:${beat}:${remainder}`,
+    numerator: active.numerator,
+    denominator: active.denominator,
+  };
+}

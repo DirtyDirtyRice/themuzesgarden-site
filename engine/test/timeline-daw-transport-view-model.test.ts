@@ -13,6 +13,7 @@ import {
   timelineTickToSeconds,
   timelineTickToTempoMappedSeconds,
   timelineTickToPosition,
+  timelineTickToMappedPosition,
 } from "../../lib/timeline/TimelineDawTransportViewModel";
 
 describe("TimelineDawTransportViewModel", () => {
@@ -38,6 +39,19 @@ describe("TimelineDawTransportViewModel", () => {
     expect(tempoMappedSecondsToTimelineTick(2, 960, tempoMap)).toBe(2_880);
     expect(timelineTempoAtTick(1_919, tempoMap)).toBe(120);
     expect(timelineTempoAtTick(1_920, tempoMap)).toBe(60);
+  });
+
+  it("keeps bar numbering continuous across persisted signature changes", () => {
+    const signatures = [
+      { tick: 0, numerator: 4, denominator: 4 },
+      { tick: 3_840, numerator: 3, denominator: 4 },
+    ];
+    expect(timelineTickToMappedPosition(3_840, 960, signatures)).toMatchObject({
+      label: "2:1:0",
+      numerator: 3,
+      denominator: 4,
+    });
+    expect(timelineTickToMappedPosition(6_720, 960, signatures).label).toBe("3:1:0");
   });
 
   it("checkpoints only after playback advances by at least one quarter note", () => {
