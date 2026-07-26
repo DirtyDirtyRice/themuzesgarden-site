@@ -16,6 +16,20 @@ export function timelineTickToSeconds(tick: number, bpm: number, ppq: number): n
   return tick / ((bpm / 60) * ppq);
 }
 
+export function shouldCheckpointTransport(
+  currentTick: number,
+  lastCheckpointTick: number,
+  ppq: number,
+): boolean {
+  if (![currentTick, lastCheckpointTick, ppq].every(Number.isInteger)
+    || currentTick < 0
+    || lastCheckpointTick < 0
+    || ppq <= 0) {
+    throw new Error("Checkpoint ticks and PPQ must be valid whole numbers.");
+  }
+  return Math.abs(currentTick - lastCheckpointTick) >= ppq;
+}
+
 export function timelineTickToPosition(
   tick: number,
   ppq: number,

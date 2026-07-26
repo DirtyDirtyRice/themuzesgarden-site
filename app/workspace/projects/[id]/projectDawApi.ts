@@ -77,6 +77,7 @@ export function changeDawTransport(input: {
 }): Promise<{ receipt: DawTransportSnapshot }> {
   return request("/api/timeline/daw-transports", {
     method: "POST",
+    keepalive: true,
     body: JSON.stringify(input),
   });
 }

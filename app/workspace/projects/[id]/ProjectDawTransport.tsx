@@ -8,6 +8,7 @@ import {
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
 import {
   secondsToTimelineTick,
+  shouldCheckpointTransport,
   timelineTickToSeconds,
   timelineTickToPosition,
 } from "../../../../lib/timeline/TimelineDawTransportViewModel";
@@ -42,6 +43,11 @@ export default function ProjectDawTransport({
   onWorkspaceRevision: (revision: number) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const transportRef = useRef<TimelineTransportSynchronization | null>(null);
+  const workspaceRevisionRef = useRef(workspaceRevision);
+  const checkpointPendingRef = useRef(false);
+  const lastCheckpointTickRef = useRef(0);
+  const checkpointRef = useRef<() => Promise<void>>(async () => undefined);
   const [transport, setTransport] = useState<TimelineTransportSynchronization | null>(null);
   const [events, setEvents] = useState<TimelineTransportEvent[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
@@ -65,10 +71,13 @@ export default function ProjectDawTransport({
         }
         if (!current) return;
         setTransport(next.transport);
+        transportRef.current = next.transport;
         setEvents(next.events);
         if (next.transport) {
+          lastCheckpointTickRef.current = next.transport.tick;
           setElapsed(timelineTickToSeconds(next.transport.tick, BPM, PPQ));
         }
+        workspaceRevisionRef.current = next.workspaceRevision;
         onWorkspaceRevision(next.workspaceRevision);
       } catch (cause) {
         if (current) {
@@ -105,20 +114,27 @@ export default function ProjectDawTransport({
     [elapsed],
   );
   const active = session.state === "active";
+  useEffect(() => {
+    workspaceRevisionRef.current = workspaceRevision;
+  }, [workspaceRevision]);
+
   async function update(
     action: "play" | "pause" | "stop" | "locate",
     extras: { returnToTick?: number; tick?: number } = {},
   ) {
-    if (!transport) return null;
+    const currentTransport = transportRef.current;
+    if (!currentTransport) return null;
     const result = await changeDawTransport({
       action,
       sessionId: session.id,
-      expectedTransportHead: transport.head,
-      expectedWorkspaceRevision: workspaceRevision,
+      expectedTransportHead: currentTransport.head,
+      expectedWorkspaceRevision: workspaceRevisionRef.current,
       ...extras,
     });
     setTransport(result.receipt.transport);
+    transportRef.current = result.receipt.transport;
     setEvents(result.receipt.events);
+    workspaceRevisionRef.current = result.receipt.workspaceRevision;
     onWorkspaceRevision(result.receipt.workspaceRevision);
     return result.receipt.transport;
   }
@@ -140,7 +156,9 @@ export default function ProjectDawTransport({
     if (!active || !audio || !transport) return;
     audio.pause();
     try {
-      await update("pause", { tick: secondsToTimelineTick(audio.currentTime, BPM, PPQ) });
+      const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
+      await update("pause", { tick });
+      lastCheckpointTickRef.current = tick;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Pause could not be saved.");
     }
@@ -152,6 +170,7 @@ export default function ProjectDawTransport({
     audio.pause();
     audio.currentTime = 0;
     setElapsed(0);
+    lastCheckpointTickRef.current = 0;
     try { await update("stop", { returnToTick: 0 }); } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Stop could not be saved.");
     }
@@ -163,11 +182,45 @@ export default function ProjectDawTransport({
     audio.currentTime = nextSeconds;
     setElapsed(nextSeconds);
     try {
-      await update("locate", { tick: secondsToTimelineTick(nextSeconds, BPM, PPQ) });
+      const tick = secondsToTimelineTick(nextSeconds, BPM, PPQ);
+      await update("locate", { tick });
+      lastCheckpointTickRef.current = tick;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Transport location could not be saved.");
     }
   }
+
+  async function checkpoint() {
+    const audio = audioRef.current;
+    if (!active || !audio || audio.paused || checkpointPendingRef.current) return;
+    const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
+    if (!shouldCheckpointTransport(tick, lastCheckpointTickRef.current, PPQ)) return;
+    checkpointPendingRef.current = true;
+    try {
+      await update("locate", { tick });
+      lastCheckpointTickRef.current = tick;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Playback checkpoint could not be saved.");
+    } finally {
+      checkpointPendingRef.current = false;
+    }
+  }
+  checkpointRef.current = checkpoint;
+
+  useEffect(() => {
+    const interval = window.setInterval(() => void checkpointRef.current(), 10_000);
+    const saveWhenHidden = () => {
+      if (document.visibilityState === "hidden") void checkpointRef.current();
+    };
+    const saveWhenLeaving = () => void checkpointRef.current();
+    document.addEventListener("visibilitychange", saveWhenHidden);
+    window.addEventListener("pagehide", saveWhenLeaving);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", saveWhenHidden);
+      window.removeEventListener("pagehide", saveWhenLeaving);
+    };
+  }, []);
 
   return (
     <section className="rounded-3xl border border-white/15 bg-black p-5">
