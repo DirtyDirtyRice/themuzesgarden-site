@@ -1001,6 +1001,13 @@ export default function ProjectDawTransport({
         onLoadedMetadata={(event) => {
           const audio = event.currentTarget;
           setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+          window.dispatchEvent(new CustomEvent("muzes:daw-playhead", {
+            detail: {
+              sessionId: session.id,
+              elapsed: audio.currentTime,
+              duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+            },
+          }));
           if (transport?.tick) {
             const restored = tickToSeconds(transport.tick);
             audio.currentTime = Math.min(restored, Number.isFinite(audio.duration) ? audio.duration : restored);
@@ -1024,6 +1031,13 @@ export default function ProjectDawTransport({
           }
           scrubSecondsRef.current = audio.currentTime;
           setElapsed(audio.currentTime);
+          window.dispatchEvent(new CustomEvent("muzes:daw-playhead", {
+            detail: {
+              sessionId: session.id,
+              elapsed: audio.currentTime,
+              duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+            },
+          }));
           if ("mediaSession" in navigator && Number.isFinite(audio.duration) && audio.duration > 0) {
             try {
               navigator.mediaSession.setPositionState({
