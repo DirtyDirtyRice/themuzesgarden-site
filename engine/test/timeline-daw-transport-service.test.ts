@@ -92,6 +92,15 @@ describe("TimelineDawTransportService", () => {
       tick: 3_840,
     });
     expect(countCompleted.events.at(-1)?.action).toBe("count-in-completed");
+    const metronome = await service.execute({
+      action: "set-metronome",
+      sessionId: activated.session.id,
+      expectedTransportHead: countCompleted.transport!.head,
+      expectedWorkspaceRevision: countCompleted.workspaceRevision,
+      enabled: true,
+    }, "owner-1");
+    expect(metronome.transport?.metronomeEnabled).toBe(true);
+    expect(metronome.events.at(-1)?.action).toBe("metronome-updated");
   });
 
   it("rejects stale workspace and transport revisions", async () => {

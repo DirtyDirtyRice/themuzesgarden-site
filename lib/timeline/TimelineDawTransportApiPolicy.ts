@@ -9,6 +9,7 @@ const actions = new Set([
   "set-loop",
   "set-count-in",
   "complete-count-in",
+  "set-metronome",
 ]);
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 const whole = (value: unknown) =>
@@ -83,6 +84,18 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
       sessionId,
       expectedTransportHead,
       expectedWorkspaceRevision,
+    };
+  }
+  if (value.action === "set-metronome") {
+    if (typeof value.enabled !== "boolean") {
+      throw new Error("Metronome requires an enabled setting.");
+    }
+    return {
+      action: "set-metronome",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
+      enabled: value.enabled,
     };
   }
   if (value.action === "stop") {

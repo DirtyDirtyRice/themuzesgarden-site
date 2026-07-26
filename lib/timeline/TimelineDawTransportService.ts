@@ -67,6 +67,13 @@ export type TimelineDawTransportCommand =
       sessionId: TimelineId;
       expectedTransportHead: number;
       expectedWorkspaceRevision: number;
+    }
+  | {
+      action: "set-metronome";
+      sessionId: TimelineId;
+      expectedTransportHead: number;
+      expectedWorkspaceRevision: number;
+      enabled: boolean;
     };
 
 export type TimelineDawTransportSnapshot = {
@@ -206,10 +213,16 @@ export class TimelineDawTransportService {
           bars: command.bars,
           editedBy: actorId,
         });
-      } else {
+      } else if (command.action === "complete-count-in") {
         transport = engine.completeCountIn({
           ...common,
           completedBy: actorId,
+        });
+      } else {
+        transport = engine.setMetronome({
+          ...common,
+          enabled: command.enabled,
+          editedBy: actorId,
         });
       }
     }

@@ -85,7 +85,8 @@ export function changeDawTransport(input: {
     | "locate"
     | "set-loop"
     | "set-count-in"
-    | "complete-count-in";
+    | "complete-count-in"
+    | "set-metronome";
   sessionId: string;
   expectedWorkspaceRevision: number;
   expectedTransportHead?: number;

@@ -288,3 +288,25 @@ export function timelineTickToMappedPosition(
     denominator: active.denominator,
   };
 }
+
+export function timelineMetronomeBeatAtOrAfterTick(
+  tick: number,
+  ppq: number,
+  signatureMap: TimelineDawSignaturePoint[],
+): { tick: number; accent: boolean } {
+  timelineTickToMappedPosition(tick, ppq, signatureMap);
+  const points = [...signatureMap].sort((left, right) => left.tick - right.tick);
+  const activeIndex = points.findLastIndex((point) => point.tick <= tick);
+  const active = points[activeIndex]!;
+  const ticksPerBeat = ppq * 4 / active.denominator;
+  const segmentOffset = tick - active.tick;
+  let beatTick = active.tick + Math.ceil(segmentOffset / ticksPerBeat) * ticksPerBeat;
+  const nextSignatureTick = points[activeIndex + 1]?.tick;
+  if (nextSignatureTick !== undefined && beatTick > nextSignatureTick) {
+    beatTick = nextSignatureTick;
+  }
+  return {
+    tick: beatTick,
+    accent: timelineTickToMappedPosition(beatTick, ppq, points).beat === 1,
+  };
+}

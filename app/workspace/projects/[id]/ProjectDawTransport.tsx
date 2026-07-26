@@ -16,6 +16,7 @@ import {
   TimelineDawTransportCommandQueue,
   tempoMappedSecondsToTimelineTick,
   timelineCountInSchedule,
+  timelineMetronomeBeatAtOrAfterTick,
   timelineTempoAtTick,
   timelineTickToTempoMappedSeconds,
   timelineTickToMappedPosition,
@@ -74,6 +75,7 @@ export default function ProjectDawTransport({
   const scrubDirtyRef = useRef(false);
   const countInTokenRef = useRef(0);
   const countInAudioRef = useRef<AudioContext | null>(null);
+  const metronomeAudioRef = useRef<AudioContext | null>(null);
   const [transport, setTransport] = useState<TimelineTransportSynchronization | null>(null);
   const [events, setEvents] = useState<TimelineTransportEvent[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
@@ -216,7 +218,8 @@ export default function ProjectDawTransport({
       | "locate"
       | "set-loop"
       | "set-count-in"
-      | "complete-count-in",
+      | "complete-count-in"
+      | "set-metronome",
     extras: {
       returnToTick?: number;
       tick?: number;
@@ -419,6 +422,15 @@ export default function ProjectDawTransport({
     }
   }
 
+  async function saveMetronome(enabled: boolean) {
+    setError(null);
+    try {
+      await update("set-metronome", { enabled });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Metronome could not be saved.");
+    }
+  }
+
   async function checkpoint() {
     const audio = audioRef.current;
     if (!active || !audio || audio.paused || checkpointPendingRef.current) return;
@@ -535,6 +547,83 @@ export default function ProjectDawTransport({
   }, [session.name, track?.artist, track?.title]);
 
   useEffect(() => {
+    if (!transport?.metronomeEnabled || transport.playbackState !== "playing") {
+      void metronomeAudioRef.current?.close();
+      metronomeAudioRef.current = null;
+      return;
+    }
+    const context = new AudioContext();
+    metronomeAudioRef.current = context;
+    let nextBeatTick: number | null = null;
+    let lastAudioSeconds = -1;
+    const schedule = () => {
+      const audio = audioRef.current;
+      const current = transportRef.current;
+      if (!audio || !current || audio.paused) return;
+      const audioSeconds = audio.currentTime;
+      const currentTick = tempoMappedSecondsToTimelineTick(
+        audioSeconds,
+        current.ppq,
+        current.tempoMap,
+      );
+      if (nextBeatTick === null || audioSeconds + 0.05 < lastAudioSeconds) {
+        nextBeatTick = timelineMetronomeBeatAtOrAfterTick(
+          currentTick,
+          current.ppq,
+          current.timeSignatureMap,
+        ).tick;
+      }
+      lastAudioSeconds = audioSeconds;
+      while (nextBeatTick !== null) {
+        const beat = timelineMetronomeBeatAtOrAfterTick(
+          nextBeatTick,
+          current.ppq,
+          current.timeSignatureMap,
+        );
+        const beatSeconds = timelineTickToTempoMappedSeconds(
+          beat.tick,
+          current.ppq,
+          current.tempoMap,
+        );
+        if (beatSeconds > audioSeconds + 0.12) break;
+        if (beatSeconds < audioSeconds - 0.5) {
+          nextBeatTick = timelineMetronomeBeatAtOrAfterTick(
+            currentTick,
+            current.ppq,
+            current.timeSignatureMap,
+          ).tick;
+          continue;
+        }
+        if (beatSeconds >= audioSeconds - 0.03) {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          const start = Math.max(context.currentTime, context.currentTime + beatSeconds - audioSeconds);
+          const peak = muted ? 0.0001 : Math.max(0.0001, volume * 0.16);
+          oscillator.frequency.value = beat.accent ? 1_320 : 880;
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(peak, start + 0.004);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.05);
+          oscillator.connect(gain).connect(context.destination);
+          oscillator.start(start);
+          oscillator.stop(start + 0.055);
+        }
+        nextBeatTick = timelineMetronomeBeatAtOrAfterTick(
+          beat.tick + 1,
+          current.ppq,
+          current.timeSignatureMap,
+        ).tick;
+      }
+    };
+    const interval = window.setInterval(schedule, 25);
+    schedule();
+    return () => {
+      window.clearInterval(interval);
+      if (metronomeAudioRef.current === context) metronomeAudioRef.current = null;
+      void context.close();
+    };
+  }, [muted, transport?.metronomeEnabled, transport?.playbackState, volume]);
+
+  useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       const action = resolveTimelineDawTransportShortcut({
@@ -621,6 +710,19 @@ export default function ProjectDawTransport({
           <option value={2}>2 bars</option>
           <option value={4}>4 bars</option>
         </select>
+        <button
+          type="button"
+          onClick={() => void saveMetronome(!transport?.metronomeEnabled)}
+          disabled={!active || !transport}
+          aria-pressed={transport?.metronomeEnabled ?? false}
+          className={`rounded-lg border px-3 py-2 text-xs font-black disabled:opacity-35 ${
+            transport?.metronomeEnabled
+              ? "border-emerald-300 bg-emerald-300 text-black"
+              : "border-white/15"
+          }`}
+        >
+          Metronome {transport?.metronomeEnabled ? "On" : "Off"}
+        </button>
         <span className="text-xs text-white/35">
           {transport?.playbackState === "counting-in"
             ? "Counting in…"

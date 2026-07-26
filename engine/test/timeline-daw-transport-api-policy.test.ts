@@ -35,6 +35,13 @@ describe("TimelineDawTransportApiPolicy", () => {
       expectedWorkspaceRevision: 6,
       bars: 2,
     })).toMatchObject({ action: "set-count-in", bars: 2 });
+    expect(parseTimelineDawTransportCommand({
+      action: "set-metronome",
+      sessionId: "session-1",
+      expectedTransportHead: 6,
+      expectedWorkspaceRevision: 7,
+      enabled: true,
+    })).toMatchObject({ action: "set-metronome", enabled: true });
   });
 
   it("rejects invented actions and missing revision guards", () => {
@@ -60,5 +67,12 @@ describe("TimelineDawTransportApiPolicy", () => {
       expectedWorkspaceRevision: 1,
       bars: 17,
     })).toThrow(/0 to 16/i);
+    expect(() => parseTimelineDawTransportCommand({
+      action: "set-metronome",
+      sessionId: "session-1",
+      expectedTransportHead: 1,
+      expectedWorkspaceRevision: 1,
+      enabled: "yes",
+    })).toThrow(/enabled/i);
   });
 });

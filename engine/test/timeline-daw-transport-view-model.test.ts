@@ -11,6 +11,7 @@ import {
   tempoMappedSecondsToTimelineTick,
   timelineTempoAtTick,
   timelineCountInSchedule,
+  timelineMetronomeBeatAtOrAfterTick,
   timelineTickToSeconds,
   timelineTickToTempoMappedSeconds,
   timelineTickToPosition,
@@ -63,6 +64,25 @@ describe("TimelineDawTransportViewModel", () => {
     expect(timelineCountInSchedule({ bars: 0, bpm: 120, numerator: 4 })).toEqual({
       beatOffsetsMs: [],
       durationMs: 0,
+    });
+  });
+
+  it("finds metronome beats and downbeat accents across signature changes", () => {
+    const signatures = [
+      { tick: 0, numerator: 4, denominator: 4 },
+      { tick: 3_840, numerator: 3, denominator: 4 },
+    ];
+    expect(timelineMetronomeBeatAtOrAfterTick(1, 960, signatures)).toEqual({
+      tick: 960,
+      accent: false,
+    });
+    expect(timelineMetronomeBeatAtOrAfterTick(3_840, 960, signatures)).toEqual({
+      tick: 3_840,
+      accent: true,
+    });
+    expect(timelineMetronomeBeatAtOrAfterTick(4_801, 960, signatures)).toEqual({
+      tick: 5_760,
+      accent: false,
     });
   });
 

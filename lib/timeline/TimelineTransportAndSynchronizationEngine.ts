@@ -70,6 +70,7 @@ export type TimelineTransportSynchronization = {
   sample: number;
   countInBars: number;
   countInRemainingTicks: number;
+  metronomeEnabled: boolean;
   tempoMap: TimelineTempoPoint[];
   timeSignatureMap: TimelineTimeSignaturePoint[];
   loop: TimelineTransportLoop;
@@ -91,6 +92,7 @@ export type TimelineTransportEvent = {
     | "loop-updated"
     | "count-in-updated"
     | "count-in-completed"
+    | "metronome-updated"
     | "validated"
     | "held"
     | "activated"
@@ -178,6 +180,7 @@ export class TimelineTransportAndSynchronizationEngine {
       sample: 0,
       countInBars: integer(input.countInBars ?? 0, 0, 16, "Count-in bars"),
       countInRemainingTicks: 0,
+      metronomeEnabled: false,
       tempoMap: [
         {
           id: `timeline-tempo-point-${++this.tempoSequence}`,
@@ -304,6 +307,23 @@ export class TimelineTransportAndSynchronizationEngine {
     transport.countInRemainingTicks = 0;
     const next = this.save(transport, input.editedBy);
     this.record(next, "count-in-updated", "Transport count-in updated.", input.editedBy);
+    return next;
+  }
+
+  setMetronome(input: {
+    transportId: TimelineId;
+    expectedHead: number;
+    enabled: boolean;
+    editedBy: TimelineUserId;
+  }): TimelineTransportSynchronization {
+    const transport = this.getRequired(input.transportId);
+    this.head(transport, input.expectedHead);
+    if (transport.status === "archived") {
+      throw new Error("Archived transports cannot be edited.");
+    }
+    transport.metronomeEnabled = input.enabled;
+    const next = this.save(transport, input.editedBy);
+    this.record(next, "metronome-updated", "Transport metronome updated.", input.editedBy);
     return next;
   }
 
@@ -595,7 +615,11 @@ export class TimelineTransportAndSynchronizationEngine {
     this.signatureSequence = 0;
     this.eventSequence = 0;
     archive.transports.forEach((transport) => {
-      this.transports.set(transport.id, clone(transport));
+      const compatible = {
+        ...transport,
+        metronomeEnabled: transport.metronomeEnabled === true,
+      };
+      this.transports.set(transport.id, clone(compatible));
       this.transportSequence = Math.max(this.transportSequence, this.sequence(transport.id));
       transport.tempoMap.forEach((point) => {
         this.tempoSequence = Math.max(this.tempoSequence, this.sequence(point.id));

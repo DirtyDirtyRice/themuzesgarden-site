@@ -197,4 +197,19 @@ describe("TimelineTransportAndSynchronizationEngine", () => {
       events: archive.events,
     })).toThrow(/duplicate/i);
   });
+
+  it("restores pre-metronome archives with the safe default disabled", () => {
+    const source = new TimelineTransportAndSynchronizationEngine();
+    const archive = source.exportArchive();
+    const created = create(source);
+    const legacyArchive = source.exportArchive() as unknown as {
+      transports: Array<Record<string, unknown>>;
+      events: ReturnType<TimelineTransportAndSynchronizationEngine["listEvents"]>;
+    };
+    delete legacyArchive.transports[0]!.metronomeEnabled;
+    const restored = new TimelineTransportAndSynchronizationEngine();
+    restored.restoreArchive(legacyArchive as never);
+    expect(restored.getTransport(created.id)?.metronomeEnabled).toBe(false);
+    expect(archive.transports).toEqual([]);
+  });
 });
