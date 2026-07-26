@@ -34,6 +34,23 @@ export function shouldIssueTransportPlay(playbackState: string): boolean {
   return !["playing", "counting-in"].includes(playbackState);
 }
 
+export type TimelineDawTransportShortcut = "toggle-playback" | "stop";
+
+export function resolveTimelineDawTransportShortcut(input: {
+  key: string;
+  repeat: boolean;
+  defaultPrevented: boolean;
+  hasModifier: boolean;
+  editableTarget: boolean;
+}): TimelineDawTransportShortcut | null {
+  if (input.repeat || input.defaultPrevented || input.hasModifier || input.editableTarget) {
+    return null;
+  }
+  if (input.key === " " || input.key === "Spacebar") return "toggle-playback";
+  if (input.key === "Escape") return "stop";
+  return null;
+}
+
 export class TimelineDawTransportCommandQueue {
   private tail: Promise<void> = Promise.resolve();
 

@@ -9,6 +9,7 @@ import {
 import {
   secondsToTimelineTick,
   retryTimelineDawTransportConflict,
+  resolveTimelineDawTransportShortcut,
   shouldCheckpointTransport,
   shouldIssueTransportPlay,
   TimelineDawTransportCommandQueue,
@@ -56,6 +57,9 @@ export default function ProjectDawTransport({
   const lastCheckpointTickRef = useRef(0);
   const checkpointRef = useRef<() => Promise<void>>(async () => undefined);
   const finalizePlaybackRef = useRef<() => Promise<void>>(async () => undefined);
+  const shortcutRef = useRef<(action: "toggle-playback" | "stop") => Promise<void>>(
+    async () => undefined,
+  );
   const commandQueueRef = useRef(new TimelineDawTransportCommandQueue());
   const scrubSecondsRef = useRef(0);
   const scrubDirtyRef = useRef(false);
@@ -275,6 +279,19 @@ export default function ProjectDawTransport({
   }
   finalizePlaybackRef.current = finalizePlayback;
 
+  async function runShortcut(action: "toggle-playback" | "stop") {
+    const audio = audioRef.current;
+    if (!active || !source || !audio || !transportRef.current) return;
+    if (action === "stop") {
+      await stop();
+    } else if (audio.paused) {
+      await play();
+    } else {
+      await pause();
+    }
+  }
+  shortcutRef.current = runShortcut;
+
   useEffect(() => {
     const interval = window.setInterval(() => void checkpointRef.current(), 10_000);
     const saveWhenHidden = () => {
@@ -288,6 +305,26 @@ export default function ProjectDawTransport({
       document.removeEventListener("visibilitychange", saveWhenHidden);
       window.removeEventListener("pagehide", saveWhenLeaving);
     };
+  }, []);
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const action = resolveTimelineDawTransportShortcut({
+        key: event.key,
+        repeat: event.repeat,
+        defaultPrevented: event.defaultPrevented,
+        hasModifier: event.altKey || event.ctrlKey || event.metaKey || event.shiftKey,
+        editableTarget: Boolean(target?.closest(
+          "input, textarea, select, button, a, [contenteditable='true'], [role='textbox']",
+        )),
+      });
+      if (!action) return;
+      event.preventDefault();
+      void shortcutRef.current(action);
+    };
+    document.addEventListener("keydown", handleShortcut);
+    return () => document.removeEventListener("keydown", handleShortcut);
   }, []);
 
   return (
@@ -307,13 +344,13 @@ export default function ProjectDawTransport({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => void play()} disabled={!active || !source} className="rounded-xl bg-emerald-300 px-5 py-3 font-black text-black disabled:opacity-35">
+        <button type="button" onClick={() => void play()} disabled={!active || !source} aria-keyshortcuts="Space" className="rounded-xl bg-emerald-300 px-5 py-3 font-black text-black disabled:opacity-35">
           Play
         </button>
-        <button type="button" onClick={() => void pause()} disabled={!active || !source} className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
+        <button type="button" onClick={() => void pause()} disabled={!active || !source} aria-keyshortcuts="Space" className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
           Pause
         </button>
-        <button type="button" onClick={() => void stop()} disabled={!active || !source} className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
+        <button type="button" onClick={() => void stop()} disabled={!active || !source} aria-keyshortcuts="Escape" className="rounded-xl border border-white/25 px-5 py-3 font-black disabled:opacity-35">
           Stop
         </button>
         <span className="ml-auto font-mono text-sm text-white/65">
@@ -335,6 +372,9 @@ export default function ProjectDawTransport({
         className="mt-4 w-full accent-emerald-300 disabled:opacity-35"
         aria-label="DAW transport location"
       />
+      <p className="mt-2 text-xs text-white/35">
+        Keyboard: Space toggles playback · Escape stops
+      </p>
 
       {!active ? (
         <p className="mt-3 text-sm text-amber-200">

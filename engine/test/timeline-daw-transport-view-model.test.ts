@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  resolveTimelineDawTransportShortcut,
   retryTimelineDawTransportConflict,
   secondsToTimelineTick,
   shouldCheckpointTransport,
@@ -34,6 +35,28 @@ describe("TimelineDawTransportViewModel", () => {
     expect(shouldIssueTransportPlay("paused")).toBe(true);
     expect(shouldIssueTransportPlay("playing")).toBe(false);
     expect(shouldIssueTransportPlay("counting-in")).toBe(false);
+  });
+
+  it("maps safe global keyboard shortcuts without stealing editable controls", () => {
+    const base = {
+      repeat: false,
+      defaultPrevented: false,
+      hasModifier: false,
+      editableTarget: false,
+    };
+    expect(resolveTimelineDawTransportShortcut({ ...base, key: " " })).toBe("toggle-playback");
+    expect(resolveTimelineDawTransportShortcut({ ...base, key: "Escape" })).toBe("stop");
+    expect(resolveTimelineDawTransportShortcut({
+      ...base,
+      key: " ",
+      editableTarget: true,
+    })).toBeNull();
+    expect(resolveTimelineDawTransportShortcut({
+      ...base,
+      key: "Escape",
+      hasModifier: true,
+    })).toBeNull();
+    expect(resolveTimelineDawTransportShortcut({ ...base, key: "Enter" })).toBeNull();
   });
 
   it("serializes transport commands and continues after a rejected command", async () => {
