@@ -30,6 +30,7 @@ export type TimelineDawTransportCommand =
       sessionId: TimelineId;
       expectedTransportHead: number;
       expectedWorkspaceRevision: number;
+      tick?: number;
     }
   | {
       action: "stop";
@@ -152,6 +153,14 @@ export class TimelineDawTransportService {
       if (command.action === "play") {
         transport = engine.play({ ...common, playedBy: actorId });
       } else if (command.action === "pause") {
+        if (command.tick !== undefined) {
+          transport = engine.locate({
+            ...common,
+            tick: command.tick,
+            locatedBy: actorId,
+          });
+          common.expectedHead = transport.head;
+        }
         transport = engine.pause({ ...common, pausedBy: actorId });
       } else if (command.action === "stop") {
         transport = engine.stop({

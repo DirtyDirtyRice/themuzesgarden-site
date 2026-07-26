@@ -9,6 +9,13 @@ export function secondsToTimelineTick(
   return Math.round(seconds * (bpm / 60) * ppq);
 }
 
+export function timelineTickToSeconds(tick: number, bpm: number, ppq: number): number {
+  if (![tick, bpm, ppq].every(Number.isFinite) || tick < 0 || bpm <= 0 || ppq <= 0) {
+    throw new Error("Transport tick, tempo, and PPQ must be valid positive values.");
+  }
+  return tick / ((bpm / 60) * ppq);
+}
+
 export function timelineTickToPosition(
   tick: number,
   ppq: number,

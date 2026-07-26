@@ -47,8 +47,19 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
       returnToTick,
     };
   }
+  if (value.action === "pause") {
+    const tick = value.tick === undefined ? undefined : whole(value.tick);
+    if (tick === null) throw new Error("Pause checkpoint tick must be non-negative.");
+    return {
+      action: "pause",
+      sessionId,
+      expectedTransportHead,
+      expectedWorkspaceRevision,
+      tick,
+    };
+  }
   return {
-    action: value.action as "play" | "pause",
+    action: "play",
     sessionId,
     expectedTransportHead,
     expectedWorkspaceRevision,

@@ -45,6 +45,15 @@ describe("TimelineDawTransportService", () => {
     const restored = await new TimelineDawTransportService(store).snapshot("owner-1", activated.session.id);
     expect(restored.transport).toEqual(played.transport);
     expect(restored.events.at(-1)?.action).toBe("played");
+    const paused = await service.execute({
+      action: "pause",
+      sessionId: activated.session.id,
+      expectedTransportHead: played.transport!.head,
+      expectedWorkspaceRevision: played.workspaceRevision,
+      tick: 3_840,
+    }, "owner-1");
+    expect(paused.transport).toMatchObject({ playbackState: "paused", tick: 3_840 });
+    expect(paused.events.slice(-2).map((event) => event.action)).toEqual(["located", "paused"]);
   });
 
   it("rejects stale workspace and transport revisions", async () => {

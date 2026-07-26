@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   secondsToTimelineTick,
+  timelineTickToSeconds,
   timelineTickToPosition,
 } from "../../lib/timeline/TimelineDawTransportViewModel";
 
 describe("TimelineDawTransportViewModel", () => {
   it("maps browser audio time onto the musical transport grid", () => {
     expect(secondsToTimelineTick(2, 120, 960)).toBe(3_840);
+    expect(timelineTickToSeconds(3_840, 120, 960)).toBe(2);
     expect(timelineTickToPosition(3_840, 960)).toEqual({
       bar: 2,
       beat: 1,

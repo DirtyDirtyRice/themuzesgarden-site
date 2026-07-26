@@ -8,6 +8,7 @@ import {
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
 import {
   secondsToTimelineTick,
+  timelineTickToSeconds,
   timelineTickToPosition,
 } from "../../../../lib/timeline/TimelineDawTransportViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
@@ -65,6 +66,9 @@ export default function ProjectDawTransport({
         if (!current) return;
         setTransport(next.transport);
         setEvents(next.events);
+        if (next.transport) {
+          setElapsed(timelineTickToSeconds(next.transport.tick, BPM, PPQ));
+        }
         onWorkspaceRevision(next.workspaceRevision);
       } catch (cause) {
         if (current) {
@@ -135,7 +139,9 @@ export default function ProjectDawTransport({
     const audio = audioRef.current;
     if (!active || !audio || !transport) return;
     audio.pause();
-    try { await update("pause"); } catch (cause) {
+    try {
+      await update("pause", { tick: secondsToTimelineTick(audio.currentTime, BPM, PPQ) });
+    } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Pause could not be saved.");
     }
   }
@@ -236,7 +242,15 @@ export default function ProjectDawTransport({
       <audio
         ref={audioRef}
         src={source || undefined}
-        onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
+        onLoadedMetadata={(event) => {
+          const audio = event.currentTarget;
+          setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+          if (transport?.tick) {
+            const restored = timelineTickToSeconds(transport.tick, BPM, PPQ);
+            audio.currentTime = Math.min(restored, Number.isFinite(audio.duration) ? audio.duration : restored);
+            setElapsed(audio.currentTime);
+          }
+        }}
         onTimeUpdate={(event) => setElapsed(event.currentTarget.currentTime)}
         onEnded={() => {
           setElapsed(0);
