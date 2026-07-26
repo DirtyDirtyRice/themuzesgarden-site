@@ -100,6 +100,7 @@ export const TIMELINE_ENGINE_CATALOG: TimelineEngineDescriptor[] = [
   descriptor("slice-playback", "TimelineSlicePlaybackEngine", "audio", ["slice-map"]),
   descriptor("loop-sequencing", "TimelineLoopSequencingEngine", "audio", ["slice-map", "groove-mapping"]),
   descriptor("slice-transformation", "TimelineSliceTransformationEngine", "audio", ["slice-map"]),
+  descriptor("intelligent-loop-variation", "TimelineIntelligentLoopVariationEngine", "audio", ["loop-sequencing", "slice-transformation"]),
   descriptor("audio-integrity", "TimelineAudioArtifactIntegrityEngine", "audio", ["audio-artifacts"]),
   descriptor("audio-processing", "TimelineAudioProcessingQueueEngine", "audio", ["audio-integrity"]),
   descriptor("performance-capture", "TimelinePerformanceCaptureEngine", "audio", ["audio-artifacts"]),
