@@ -3,6 +3,7 @@ import {
   retryTimelineDawTransportConflict,
   secondsToTimelineTick,
   shouldCheckpointTransport,
+  shouldIssueTransportPlay,
   TimelineDawTransportCommandQueue,
   timelineTickToSeconds,
   timelineTickToPosition,
@@ -26,6 +27,13 @@ describe("TimelineDawTransportViewModel", () => {
     expect(shouldCheckpointTransport(960, 0, 960)).toBe(true);
     expect(shouldCheckpointTransport(1_920, 2_880, 960)).toBe(true);
     expect(() => shouldCheckpointTransport(-1, 0, 960)).toThrow(/whole numbers/i);
+  });
+
+  it("resumes an orphaned playing receipt without duplicating its play command", () => {
+    expect(shouldIssueTransportPlay("stopped")).toBe(true);
+    expect(shouldIssueTransportPlay("paused")).toBe(true);
+    expect(shouldIssueTransportPlay("playing")).toBe(false);
+    expect(shouldIssueTransportPlay("counting-in")).toBe(false);
   });
 
   it("serializes transport commands and continues after a rejected command", async () => {

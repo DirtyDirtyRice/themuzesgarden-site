@@ -10,6 +10,7 @@ import {
   secondsToTimelineTick,
   retryTimelineDawTransportConflict,
   shouldCheckpointTransport,
+  shouldIssueTransportPlay,
   TimelineDawTransportCommandQueue,
   timelineTickToSeconds,
   timelineTickToPosition,
@@ -54,6 +55,7 @@ export default function ProjectDawTransport({
   const checkpointPendingRef = useRef(false);
   const lastCheckpointTickRef = useRef(0);
   const checkpointRef = useRef<() => Promise<void>>(async () => undefined);
+  const finalizePlaybackRef = useRef<() => Promise<void>>(async () => undefined);
   const commandQueueRef = useRef(new TimelineDawTransportCommandQueue());
   const scrubSecondsRef = useRef(0);
   const scrubDirtyRef = useRef(false);
@@ -173,7 +175,9 @@ export default function ProjectDawTransport({
     if (!active || !audio || !source || !transport) return;
     setError(null);
     try {
-      await update("play");
+      if (shouldIssueTransportPlay(transportRef.current?.playbackState ?? "stopped")) {
+        await update("play");
+      }
       await audio.play();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Playback could not start.");
@@ -258,12 +262,25 @@ export default function ProjectDawTransport({
   }
   checkpointRef.current = checkpoint;
 
+  async function finalizePlayback() {
+    const audio = audioRef.current;
+    const currentTransport = transportRef.current;
+    if (!audio || !currentTransport || !["playing", "counting-in"].includes(currentTransport.playbackState)) {
+      return;
+    }
+    audio.pause();
+    const tick = secondsToTimelineTick(audio.currentTime, BPM, PPQ);
+    await update("pause", { tick });
+    lastCheckpointTickRef.current = tick;
+  }
+  finalizePlaybackRef.current = finalizePlayback;
+
   useEffect(() => {
     const interval = window.setInterval(() => void checkpointRef.current(), 10_000);
     const saveWhenHidden = () => {
       if (document.visibilityState === "hidden") void checkpointRef.current();
     };
-    const saveWhenLeaving = () => void checkpointRef.current();
+    const saveWhenLeaving = () => void finalizePlaybackRef.current().catch(() => undefined);
     document.addEventListener("visibilitychange", saveWhenHidden);
     window.addEventListener("pagehide", saveWhenLeaving);
     return () => {

@@ -30,6 +30,10 @@ export function shouldCheckpointTransport(
   return Math.abs(currentTick - lastCheckpointTick) >= ppq;
 }
 
+export function shouldIssueTransportPlay(playbackState: string): boolean {
+  return !["playing", "counting-in"].includes(playbackState);
+}
+
 export class TimelineDawTransportCommandQueue {
   private tail: Promise<void> = Promise.resolve();
 
