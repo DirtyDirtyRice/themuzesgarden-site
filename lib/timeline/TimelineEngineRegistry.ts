@@ -110,6 +110,7 @@ export const TIMELINE_ENGINE_CATALOG: TimelineEngineDescriptor[] = [
   descriptor("instrument-sampler", "TimelineInstrumentAndSamplerEngine", "audio", ["midi-performance", "slice-playback", "audio-integrity"]),
   descriptor("mixer-routing", "TimelineMixerAndRoutingEngine", "audio", ["multi-track-session", "real-time-audio-graph", "mix-session"]),
   descriptor("plugin-device-chain", "TimelinePluginAndDeviceChainEngine", "audio", ["mixer-routing", "instrument-sampler", "real-time-audio-graph"]),
+  descriptor("automation-execution", "TimelineAutomationExecutionEngine", "audio", ["plugin-device-chain", "mix-automation", "transport-synchronization"]),
   descriptor("audio-integrity", "TimelineAudioArtifactIntegrityEngine", "audio", ["audio-artifacts"]),
   descriptor("audio-processing", "TimelineAudioProcessingQueueEngine", "audio", ["audio-integrity"]),
   descriptor("performance-capture", "TimelinePerformanceCaptureEngine", "audio", ["audio-artifacts"]),
