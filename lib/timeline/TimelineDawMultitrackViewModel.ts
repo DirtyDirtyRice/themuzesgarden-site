@@ -12,6 +12,17 @@ export type TimelineDawRulerMark = {
   leftPercent: number;
 };
 
+export type TimelineDawClipState = {
+  id: string;
+  trackId: string;
+  timelineStartSeconds: number;
+  timelineEndSeconds: number;
+  sourceStartSeconds: number;
+  sourceEndSeconds: number;
+  selected: boolean;
+  parentClipId: string | null;
+};
+
 export function clampTimelineZoom(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.min(8, Math.max(0.5, Math.round(value * 4) / 4));
@@ -135,4 +146,147 @@ export function moveTimelineLane(
   const next = lanes.map((lane) => ({ ...lane }));
   [next[index], next[target]] = [next[target], next[index]];
   return next;
+}
+
+const clipPrecision = (value: number) => Math.round(value * 100) / 100;
+
+export function reconcileTimelineClips(
+  raw: string | null,
+  trackIds: string[],
+  durationSeconds: number,
+): TimelineDawClipState[] {
+  const duration = Number.isFinite(durationSeconds) && durationSeconds > 0
+    ? durationSeconds
+    : 180;
+  let saved: TimelineDawClipState[] = [];
+  try {
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) saved = parsed;
+  } catch {}
+  const validTracks = new Set(trackIds);
+  const valid = saved.filter((clip) =>
+    validTracks.has(clip.trackId)
+    && clip.timelineStartSeconds >= 0
+    && clip.timelineEndSeconds > clip.timelineStartSeconds
+    && clip.sourceStartSeconds >= 0
+    && clip.sourceEndSeconds > clip.sourceStartSeconds);
+  const tracksWithClips = new Set(valid.map((clip) => clip.trackId));
+  for (const trackId of trackIds) {
+    if (tracksWithClips.has(trackId)) continue;
+    valid.push({
+      id: `clip:${trackId}:1`,
+      trackId,
+      timelineStartSeconds: 0,
+      timelineEndSeconds: duration,
+      sourceStartSeconds: 0,
+      sourceEndSeconds: duration,
+      selected: valid.length === 0,
+      parentClipId: null,
+    });
+  }
+  return valid.map((clip, index) => ({
+    ...clip,
+    selected: valid.some((item) => item.selected) ? clip.selected : index === 0,
+  }));
+}
+
+export function selectTimelineClip(
+  clips: TimelineDawClipState[],
+  clipId: string,
+): TimelineDawClipState[] {
+  return clips.map((clip) => ({ ...clip, selected: clip.id === clipId }));
+}
+
+export function moveTimelineClip(
+  clips: TimelineDawClipState[],
+  clipId: string,
+  deltaSeconds: number,
+): TimelineDawClipState[] {
+  return clips.map((clip) => {
+    if (clip.id !== clipId || !Number.isFinite(deltaSeconds)) return { ...clip };
+    const duration = clip.timelineEndSeconds - clip.timelineStartSeconds;
+    const start = Math.max(0, clipPrecision(clip.timelineStartSeconds + deltaSeconds));
+    return {
+      ...clip,
+      timelineStartSeconds: start,
+      timelineEndSeconds: clipPrecision(start + duration),
+    };
+  });
+}
+
+export function trimTimelineClip(
+  clips: TimelineDawClipState[],
+  clipId: string,
+  edge: "start" | "end",
+  deltaSeconds: number,
+): TimelineDawClipState[] {
+  return clips.map((clip) => {
+    if (clip.id !== clipId || !Number.isFinite(deltaSeconds)) return { ...clip };
+    if (edge === "start") {
+      const nextStart = Math.min(
+        clip.timelineEndSeconds - 0.25,
+        Math.max(0, clipPrecision(clip.timelineStartSeconds + deltaSeconds)),
+      );
+      const applied = nextStart - clip.timelineStartSeconds;
+      return {
+        ...clip,
+        timelineStartSeconds: nextStart,
+        sourceStartSeconds: Math.max(0, clipPrecision(clip.sourceStartSeconds + applied)),
+      };
+    }
+    const nextEnd = Math.max(
+      clip.timelineStartSeconds + 0.25,
+      clipPrecision(clip.timelineEndSeconds + deltaSeconds),
+    );
+    const applied = nextEnd - clip.timelineEndSeconds;
+    return {
+      ...clip,
+      timelineEndSeconds: nextEnd,
+      sourceEndSeconds: Math.max(
+        clip.sourceStartSeconds + 0.25,
+        clipPrecision(clip.sourceEndSeconds + applied),
+      ),
+    };
+  });
+}
+
+export function splitTimelineClip(
+  clips: TimelineDawClipState[],
+  clipId: string,
+  splitSeconds: number,
+): TimelineDawClipState[] {
+  const index = clips.findIndex((clip) => clip.id === clipId);
+  if (index < 0) return clips.map((clip) => ({ ...clip }));
+  const original = clips[index];
+  if (
+    !Number.isFinite(splitSeconds)
+    || splitSeconds <= original.timelineStartSeconds + 0.24
+    || splitSeconds >= original.timelineEndSeconds - 0.24
+  ) return clips.map((clip) => ({ ...clip }));
+  const split = clipPrecision(splitSeconds);
+  const sourceSplit = clipPrecision(
+    original.sourceStartSeconds + (split - original.timelineStartSeconds),
+  );
+  const left: TimelineDawClipState = {
+    ...original,
+    id: `${original.id}:L${split}`,
+    timelineEndSeconds: split,
+    sourceEndSeconds: sourceSplit,
+    selected: true,
+    parentClipId: original.id,
+  };
+  const right: TimelineDawClipState = {
+    ...original,
+    id: `${original.id}:R${split}`,
+    timelineStartSeconds: split,
+    sourceStartSeconds: sourceSplit,
+    selected: false,
+    parentClipId: original.id,
+  };
+  return [
+    ...clips.slice(0, index).map((clip) => ({ ...clip, selected: false })),
+    left,
+    right,
+    ...clips.slice(index + 1).map((clip) => ({ ...clip, selected: false })),
+  ];
 }

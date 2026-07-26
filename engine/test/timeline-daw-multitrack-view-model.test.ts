@@ -3,11 +3,16 @@ import {
   clampTimelineZoom,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
+  moveTimelineClip,
   moveTimelineLane,
   parseTimelineLaneState,
   reconcileTimelineLanes,
+  reconcileTimelineClips,
+  selectTimelineClip,
+  splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
+  trimTimelineClip,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
 
 describe("TimelineDawMultitrackViewModel", () => {
@@ -70,5 +75,67 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(moved.map((lane) => lane.trackId)).toEqual(["song-1", "stem-2", "stem-1"]);
     expect(lanes.map((lane) => lane.trackId)).toEqual(["song-1", "stem-1", "stem-2"]);
     expect(moveTimelineLane(lanes, "song-1", -1)).toEqual(lanes);
+  });
+
+  it("creates one source-preserving clip for every current lane", () => {
+    expect(reconcileTimelineClips(null, ["song-1", "stem-1"], 120)).toEqual([
+      {
+        id: "clip:song-1:1", trackId: "song-1",
+        timelineStartSeconds: 0, timelineEndSeconds: 120,
+        sourceStartSeconds: 0, sourceEndSeconds: 120,
+        selected: true, parentClipId: null,
+      },
+      {
+        id: "clip:stem-1:1", trackId: "stem-1",
+        timelineStartSeconds: 0, timelineEndSeconds: 120,
+        sourceStartSeconds: 0, sourceEndSeconds: 120,
+        selected: false, parentClipId: null,
+      },
+    ]);
+  });
+
+  it("moves and trims clips without changing their source identity", () => {
+    const clips = reconcileTimelineClips(null, ["song-1"], 120);
+    expect(moveTimelineClip(clips, clips[0].id, 5)[0]).toMatchObject({
+      timelineStartSeconds: 5,
+      timelineEndSeconds: 125,
+      sourceStartSeconds: 0,
+      sourceEndSeconds: 120,
+    });
+    expect(trimTimelineClip(clips, clips[0].id, "start", 10)[0]).toMatchObject({
+      timelineStartSeconds: 10,
+      sourceStartSeconds: 10,
+      timelineEndSeconds: 120,
+      sourceEndSeconds: 120,
+    });
+    expect(trimTimelineClip(clips, clips[0].id, "end", -10)[0]).toMatchObject({
+      timelineEndSeconds: 110,
+      sourceEndSeconds: 110,
+    });
+  });
+
+  it("splits a selected clip into source-linked children", () => {
+    const clips = selectTimelineClip(
+      reconcileTimelineClips(null, ["song-1"], 120),
+      "clip:song-1:1",
+    );
+    const split = splitTimelineClip(clips, "clip:song-1:1", 45);
+    expect(split).toHaveLength(2);
+    expect(split[0]).toMatchObject({
+      timelineStartSeconds: 0,
+      timelineEndSeconds: 45,
+      sourceStartSeconds: 0,
+      sourceEndSeconds: 45,
+      selected: true,
+      parentClipId: "clip:song-1:1",
+    });
+    expect(split[1]).toMatchObject({
+      timelineStartSeconds: 45,
+      timelineEndSeconds: 120,
+      sourceStartSeconds: 45,
+      sourceEndSeconds: 120,
+      selected: false,
+      parentClipId: "clip:song-1:1",
+    });
   });
 });
