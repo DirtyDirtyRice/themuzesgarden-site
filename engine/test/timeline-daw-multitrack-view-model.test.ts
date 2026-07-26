@@ -3,7 +3,9 @@ import {
   clampTimelineZoom,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
+  moveTimelineLane,
   parseTimelineLaneState,
+  reconcileTimelineLanes,
   timelineCanvasWidth,
   timelinePlayheadPercent,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
@@ -47,5 +49,26 @@ describe("TimelineDawMultitrackViewModel", () => {
       JSON.stringify({ trackId: "other", muted: true, soloed: true }),
       "song-1",
     )).toEqual({ trackId: "song-1", selected: true, muted: false, soloed: false });
+  });
+
+  it("reconciles saved lane order with current project tracks", () => {
+    const saved = JSON.stringify([
+      { trackId: "stem-2", selected: true, muted: true, soloed: false },
+      { trackId: "song-1", selected: false, muted: false, soloed: false },
+      { trackId: "removed", selected: false, muted: false, soloed: true },
+    ]);
+    expect(reconcileTimelineLanes(saved, ["stem-1", "stem-2"], "song-1")).toEqual([
+      { trackId: "stem-2", selected: true, muted: true, soloed: false },
+      { trackId: "song-1", selected: false, muted: false, soloed: false },
+      { trackId: "stem-1", selected: false, muted: false, soloed: false },
+    ]);
+  });
+
+  it("moves lanes without mutating the current order", () => {
+    const lanes = reconcileTimelineLanes(null, ["stem-1", "stem-2"], "song-1");
+    const moved = moveTimelineLane(lanes, "stem-2", -1);
+    expect(moved.map((lane) => lane.trackId)).toEqual(["song-1", "stem-2", "stem-1"]);
+    expect(lanes.map((lane) => lane.trackId)).toEqual(["song-1", "stem-1", "stem-2"]);
+    expect(moveTimelineLane(lanes, "song-1", -1)).toEqual(lanes);
   });
 });

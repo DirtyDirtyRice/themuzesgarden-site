@@ -94,3 +94,45 @@ export function parseTimelineLaneState(
     return fallback;
   }
 }
+
+export function reconcileTimelineLanes(
+  raw: string | null,
+  trackIds: string[],
+  primaryTrackId: string,
+): TimelineDawLaneState[] {
+  const unique = Array.from(new Set(
+    [primaryTrackId, ...trackIds].map((trackId) => trackId.trim()).filter(Boolean),
+  ));
+  let saved: TimelineDawLaneState[] = [];
+  try {
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) saved = parsed;
+  } catch {}
+  const savedById = new Map(saved.map((lane) => [lane.trackId, lane]));
+  const savedOrder = saved
+    .map((lane) => lane.trackId)
+    .filter((trackId) => unique.includes(trackId));
+  const order = [...savedOrder, ...unique.filter((trackId) => !savedOrder.includes(trackId))];
+  return order.map((trackId, index) => {
+    const previous = savedById.get(trackId);
+    return {
+      trackId,
+      selected: previous?.selected ?? index === 0,
+      muted: previous?.muted === true,
+      soloed: previous?.soloed === true,
+    };
+  });
+}
+
+export function moveTimelineLane(
+  lanes: TimelineDawLaneState[],
+  trackId: string,
+  direction: -1 | 1,
+): TimelineDawLaneState[] {
+  const index = lanes.findIndex((lane) => lane.trackId === trackId);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= lanes.length) return lanes.map((lane) => ({ ...lane }));
+  const next = lanes.map((lane) => ({ ...lane }));
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
