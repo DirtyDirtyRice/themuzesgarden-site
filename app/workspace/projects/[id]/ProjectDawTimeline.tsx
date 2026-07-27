@@ -84,6 +84,7 @@ type AutomationDrag = {
 };
 type TimelineGroupBus = { volume: number; muted: boolean };
 type TimelineGroupBuses = Record<Exclude<TimelineDawGroupId, "none">, TimelineGroupBus>;
+type MasterOverload = { id: string; seconds: number; peakDb: number };
 
 const defaultGroupBuses: TimelineGroupBuses = {
   vocals: { volume: 1, muted: false },
@@ -100,6 +101,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const clipDragRef = useRef<ClipDrag | null>(null);
   const automationDragRef = useRef<AutomationDrag | null>(null);
+  const overloadActiveRef = useRef(false);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
@@ -117,6 +119,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [limiterEnabled, setLimiterEnabled] = useState(true);
   const [limiterCeiling, setLimiterCeiling] = useState(0.95);
   const [masterReady, setMasterReady] = useState(false);
+  const [masterOverloads, setMasterOverloads] = useState<MasterOverload[]>([]);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -149,8 +152,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const selectedEffect = lanes
     .flatMap((lane) => lane.effects.map((effect) => ({ lane, effect })))
     .find(({ effect }) => effect.id === selectedEffectId) ?? null;
-  const masterLevel = timelineMasterOutputLevel(
-    lanes.map((lane) => {
+  const masterLaneLevels = lanes.map((lane) => {
       const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
       const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
       return timelineLaneMeterLevel(
@@ -159,7 +161,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         lane.volume * (groupBus?.volume ?? 1),
         audible,
       );
-    }),
+    });
+  const masterInputLevel = timelineMasterOutputLevel(
+    masterLaneLevels,
+    masterGain,
+    false,
+    limiterCeiling,
+  );
+  const masterLevel = timelineMasterOutputLevel(
+    masterLaneLevels,
     masterGain,
     limiterEnabled,
     limiterCeiling,
@@ -267,6 +277,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       if (Number.isFinite(saved.limiterCeiling)) {
         setLimiterCeiling(Math.min(1, Math.max(0.5, saved.limiterCeiling)));
       }
+      if (Array.isArray(saved.overloads)) {
+        setMasterOverloads(saved.overloads
+          .filter((entry: MasterOverload) =>
+            typeof entry?.id === "string"
+            && Number.isFinite(entry.seconds)
+            && Number.isFinite(entry.peakDb))
+          .slice(-12));
+      }
     } catch {} finally {
       setMasterReady(true);
     }
@@ -275,10 +293,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   useEffect(() => {
     if (masterReady) {
       localStorage.setItem(masterStorageKey, JSON.stringify({
-        masterGain, limiterEnabled, limiterCeiling,
+        masterGain, limiterEnabled, limiterCeiling, overloads: masterOverloads,
       }));
     }
-  }, [limiterCeiling, limiterEnabled, masterGain, masterReady, masterStorageKey]);
+  }, [
+    limiterCeiling, limiterEnabled, masterGain, masterOverloads, masterReady, masterStorageKey,
+  ]);
+
+  useEffect(() => {
+    const overloaded = masterInputLevel > limiterCeiling;
+    if (overloaded && !overloadActiveRef.current) {
+      setMasterOverloads((current) => [...current, {
+        id: `${Date.now()}:${elapsed.toFixed(2)}`,
+        seconds: elapsed,
+        peakDb: 20 * Math.log10(masterInputLevel),
+      }].slice(-12));
+    }
+    overloadActiveRef.current = overloaded;
+  }, [elapsed, limiterCeiling, masterInputLevel]);
 
   useEffect(() => {
     if (clips.length) localStorage.setItem(clipStorageKey, JSON.stringify(clips));
@@ -891,6 +923,34 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
       <div className="flex flex-wrap items-center gap-4 border-b border-amber-300/15 bg-amber-300/[0.035] px-5 py-3">
         <span className="text-xs font-black uppercase tracking-wider text-amber-200/80">Master Output</span>
+        <select
+          value={
+            masterGain === 0.9 && limiterEnabled && limiterCeiling === 0.89
+              ? "streaming"
+              : masterGain === 1 && limiterEnabled && limiterCeiling === 0.95
+                ? "balanced"
+                : masterGain === 1.15 && limiterEnabled && limiterCeiling === 0.98
+                  ? "loud"
+                  : "custom"
+          }
+          onChange={(event) => {
+            const preset = event.target.value;
+            if (preset === "streaming") {
+              setMasterGain(0.9); setLimiterEnabled(true); setLimiterCeiling(0.89);
+            } else if (preset === "balanced") {
+              setMasterGain(1); setLimiterEnabled(true); setLimiterCeiling(0.95);
+            } else if (preset === "loud") {
+              setMasterGain(1.15); setLimiterEnabled(true); setLimiterCeiling(0.98);
+            }
+          }}
+          className="rounded-lg border border-amber-300/20 bg-black px-3 py-2 text-[10px] font-black uppercase text-amber-100"
+          aria-label="Master output preset"
+        >
+          <option value="streaming">Streaming Safe</option>
+          <option value="balanced">Balanced</option>
+          <option value="loud">Loud Preview</option>
+          <option value="custom" disabled>Custom</option>
+        </select>
         <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
           GAIN
           <input
@@ -944,6 +1004,32 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span className="font-mono text-[10px] font-black text-amber-100">
           {masterLoudness.toFixed(1)} LUFS
         </span>
+      </div>
+
+      <div className="flex min-h-10 flex-wrap items-center gap-2 border-b border-rose-300/10 bg-rose-300/[0.025] px-5 py-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-rose-200/65">
+          Overload History
+        </span>
+        {masterOverloads.length ? masterOverloads.slice(-6).map((entry) => (
+          <span
+            key={entry.id}
+            className="rounded border border-rose-300/20 bg-rose-300/10 px-2 py-1 font-mono text-[9px] text-rose-100"
+            title={`Limiter input reached ${entry.peakDb.toFixed(1)} dB at ${clock(entry.seconds)}`}
+          >
+            {clock(entry.seconds)} · {entry.peakDb.toFixed(1)} dB
+          </span>
+        )) : (
+          <span className="text-[10px] text-white/30">No ceiling crossings recorded</span>
+        )}
+        {masterOverloads.length ? (
+          <button
+            type="button"
+            onClick={() => setMasterOverloads([])}
+            className="ml-auto rounded border border-white/10 px-2 py-1 text-[9px] font-black text-white/45"
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-4 border-b border-cyan-300/15 bg-cyan-300/[0.035] px-5 py-3">
