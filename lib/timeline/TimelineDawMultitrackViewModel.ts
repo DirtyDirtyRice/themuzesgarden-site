@@ -469,6 +469,18 @@ export function timelineStereoMasterState(
   };
 }
 
+export function timelineReferenceMatchGain(
+  mixLevel: number,
+  referenceLevel: number,
+  enabled: boolean,
+): number {
+  if (!enabled) return 1;
+  const mix = Math.max(0, Number.isFinite(mixLevel) ? mixLevel : 0);
+  const reference = Math.max(0, Number.isFinite(referenceLevel) ? referenceLevel : 0);
+  if (mix === 0 || reference === 0) return 1;
+  return Math.min(4, Math.max(0.25, mix / reference));
+}
+
 export function parseTimelineLaneState(
   raw: string | null,
   trackId: string,

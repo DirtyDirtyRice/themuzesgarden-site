@@ -46,6 +46,7 @@ import {
   timelineLaneMeterLevel,
   timelineMasterOutputLevel,
   timelineStereoMasterState,
+  timelineReferenceMatchGain,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
   toggleTimelineClipSelection,
@@ -123,6 +124,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [masterOverloads, setMasterOverloads] = useState<MasterOverload[]>([]);
   const [masterBalance, setMasterBalance] = useState(0);
   const [monoCheck, setMonoCheck] = useState(false);
+  const [referenceTrackId, setReferenceTrackId] = useState("");
+  const [comparisonMode, setComparisonMode] = useState<"mix" | "reference">("mix");
+  const [referenceMatch, setReferenceMatch] = useState(true);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -185,6 +189,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const stereoMaster = timelineStereoMasterState(
     masterLevel, masterBalance, monoCheck, stereoSpread,
   );
+  const referenceLane = lanes.find((lane) => lane.trackId === referenceTrackId) ?? null;
+  const referenceGroup = referenceLane?.groupId && referenceLane.groupId !== "none"
+    ? groupBuses[referenceLane.groupId]
+    : null;
+  const referenceLevel = referenceLane
+    ? timelineLaneMeterLevel(
+        referenceLane.trackId,
+        elapsed,
+        referenceLane.volume * (referenceGroup?.volume ?? 1),
+        !referenceLane.muted && !referenceGroup?.muted,
+      )
+    : 0;
+  const referenceGain = timelineReferenceMatchGain(masterLevel, referenceLevel, referenceMatch);
+  const matchedReferenceLevel = Math.min(1, referenceLevel * referenceGain);
   const effectPresets: Record<TimelineDawEffectKind, string[]> = {
     eq: ["Balanced", "Vocal Presence", "Bass Cleanup", "Air"],
     compressor: ["Vocal Glue", "Punch", "Gentle Bus", "Limiter"],
@@ -290,6 +308,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         setMasterBalance(Math.min(1, Math.max(-1, saved.masterBalance)));
       }
       if (typeof saved.monoCheck === "boolean") setMonoCheck(saved.monoCheck);
+      if (typeof saved.referenceTrackId === "string") setReferenceTrackId(saved.referenceTrackId);
+      if (saved.comparisonMode === "mix" || saved.comparisonMode === "reference") {
+        setComparisonMode(saved.comparisonMode);
+      }
+      if (typeof saved.referenceMatch === "boolean") setReferenceMatch(saved.referenceMatch);
       if (Array.isArray(saved.overloads)) {
         setMasterOverloads(saved.overloads
           .filter((entry: MasterOverload) =>
@@ -307,12 +330,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     if (masterReady) {
       localStorage.setItem(masterStorageKey, JSON.stringify({
         masterGain, limiterEnabled, limiterCeiling, overloads: masterOverloads,
-        masterBalance, monoCheck,
+        masterBalance, monoCheck, referenceTrackId, comparisonMode, referenceMatch,
       }));
     }
   }, [
     limiterCeiling, limiterEnabled, masterBalance, masterGain, masterOverloads, masterReady,
-    masterStorageKey, monoCheck,
+    masterStorageKey, monoCheck, referenceTrackId, comparisonMode, referenceMatch,
   ]);
 
   useEffect(() => {
@@ -382,40 +405,48 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
   useEffect(() => {
     const primaryLane = lanes.find((lane) => lane.trackId === session.songId);
-    const primaryGroup = primaryLane?.groupId && primaryLane.groupId !== "none"
-      ? groupBuses[primaryLane.groupId]
+    const comparisonLane = comparisonMode === "reference" && referenceLane
+      ? referenceLane
+      : primaryLane;
+    const comparisonGroup = comparisonLane?.groupId && comparisonLane.groupId !== "none"
+      ? groupBuses[comparisonLane.groupId]
       : null;
-    const audible = primaryLane
-      ? !primaryLane.muted && !primaryGroup?.muted && (!anySoloed || primaryLane.soloed)
+    const audible = comparisonLane
+      ? !comparisonLane.muted
+        && !comparisonGroup?.muted
+        && (!anySoloed || comparisonLane.soloed)
       : true;
     const automatedVolume = timelineAutomationValueAt(
-      automation, session.songId, "volume", elapsed,
+      automation, comparisonLane?.trackId ?? session.songId, "volume", elapsed,
     );
     const automatedPan = timelineAutomationValueAt(
-      automation, session.songId, "pan", elapsed,
+      automation, comparisonLane?.trackId ?? session.songId, "pan", elapsed,
     );
     const rawVolume =
-      (primaryLane?.volume ?? 1)
-      * (primaryGroup?.volume ?? 1)
+      (comparisonLane?.volume ?? 1)
+      * (comparisonGroup?.volume ?? 1)
       * (automatedVolume ?? 1)
-      * masterGain;
+      * masterGain
+      * (comparisonMode === "reference" ? referenceGain : 1);
     const outputVolume = limiterEnabled ? Math.min(rawVolume, limiterCeiling) : rawVolume;
     window.dispatchEvent(new CustomEvent("muzes:daw-automation-frame", {
       detail: {
         sessionId: session.id,
         trackId: session.songId,
+        sourceTrackId: comparisonLane?.trackId ?? session.songId,
         volume: audible ? outputVolume : 0,
         pan: monoCheck
           ? 0
           : Math.min(1, Math.max(
               -1,
-              (primaryLane?.pan ?? 0) + (automatedPan ?? 0) + masterBalance,
+              (comparisonLane?.pan ?? 0) + (automatedPan ?? 0) + masterBalance,
             )),
       },
     }));
   }, [
-    anySoloed, automation, elapsed, groupBuses, lanes, limiterCeiling, limiterEnabled,
-    masterBalance, masterGain, monoCheck, session.id, session.songId,
+    anySoloed, automation, comparisonMode, elapsed, groupBuses, lanes, limiterCeiling,
+    limiterEnabled, masterBalance, masterGain, monoCheck, referenceGain, referenceLane,
+    session.id, session.songId,
   ]);
 
   function updateLane(trackId: string, patch: Partial<TimelineDawLaneState>) {
@@ -1084,6 +1115,76 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             {stereoMaster.correlation.toFixed(2)}
           </span>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 border-b border-fuchsia-300/10 bg-fuchsia-300/[0.025] px-5 py-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-fuchsia-200/70">
+          Reference A/B
+        </span>
+        <select
+          value={referenceTrackId}
+          onChange={(event) => {
+            setReferenceTrackId(event.target.value);
+            if (!event.target.value) setComparisonMode("mix");
+          }}
+          className="max-w-52 rounded border border-fuchsia-300/20 bg-black px-3 py-1.5 text-[10px] font-black text-fuchsia-100"
+          aria-label="Reference track"
+        >
+          <option value="">Choose linked track</option>
+          {lanes.filter((lane) => lane.trackId !== session.songId).map((lane) => (
+            <option key={lane.trackId} value={lane.trackId}>
+              {trackById.get(lane.trackId)?.title || lane.trackId}
+            </option>
+          ))}
+        </select>
+        <div className="flex overflow-hidden rounded-lg border border-white/10">
+          <button
+            type="button"
+            onClick={() => setComparisonMode("mix")}
+            className={`px-3 py-1.5 text-[10px] font-black ${
+              comparisonMode === "mix" ? "bg-cyan-300 text-black" : "bg-black text-white/50"
+            }`}
+          >
+            A · MIX
+          </button>
+          <button
+            type="button"
+            disabled={!referenceTrackId}
+            onClick={() => setComparisonMode("reference")}
+            className={`px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
+              comparisonMode === "reference"
+                ? "bg-fuchsia-300 text-black"
+                : "bg-black text-white/50"
+            }`}
+          >
+            B · REF
+          </button>
+        </div>
+        <button
+          type="button"
+          aria-pressed={referenceMatch}
+          onClick={() => setReferenceMatch((enabled) => !enabled)}
+          className={`rounded px-3 py-1.5 text-[10px] font-black ${
+            referenceMatch ? "bg-fuchsia-300/20 text-fuchsia-100" : "border border-white/10 text-white/45"
+          }`}
+        >
+          MATCH {referenceMatch ? "ON" : "OFF"}
+        </button>
+        <div className="flex min-w-40 flex-1 items-center gap-2">
+          <span className="font-mono text-[9px] text-cyan-200/60">A</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/70">
+            <div className="h-full rounded-full bg-cyan-300" style={{ width: `${masterLevel * 100}%` }} />
+          </div>
+          <span className="font-mono text-[9px] text-fuchsia-200/60">B</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/70">
+            <div className="h-full rounded-full bg-fuchsia-300" style={{ width: `${matchedReferenceLevel * 100}%` }} />
+          </div>
+        </div>
+        <span className="font-mono text-[9px] text-white/40">
+          {referenceTrackId
+            ? `${referenceGain >= 1 ? "+" : ""}${(20 * Math.log10(referenceGain)).toFixed(1)} dB match`
+            : "Select a reference"}
+        </span>
       </div>
 
       <div className="flex min-h-10 flex-wrap items-center gap-2 border-b border-rose-300/10 bg-rose-300/[0.025] px-5 py-2">

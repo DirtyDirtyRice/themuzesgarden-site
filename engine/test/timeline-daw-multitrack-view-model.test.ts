@@ -43,6 +43,7 @@ import {
   timelineLaneMeterLevel,
   timelineMasterOutputLevel,
   timelineStereoMasterState,
+  timelineReferenceMatchGain,
   toggleTimelineClipSelection,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
@@ -229,6 +230,13 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(timelineStereoMasterState(2, 2, false, 2)).toEqual({
       left: 0, right: 1, correlation: -1,
     });
+  });
+
+  it("matches reference loudness with bounded comparison gain", () => {
+    expect(timelineReferenceMatchGain(0.8, 0.4, true)).toBe(2);
+    expect(timelineReferenceMatchGain(0.1, 1, true)).toBe(0.25);
+    expect(timelineReferenceMatchGain(0.8, 0.4, false)).toBe(1);
+    expect(timelineReferenceMatchGain(0, 0.4, true)).toBe(1);
   });
 
   it("adds, bypasses, and removes persistent lane effects", () => {

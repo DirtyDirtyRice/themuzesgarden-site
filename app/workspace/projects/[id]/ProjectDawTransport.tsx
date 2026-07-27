@@ -41,6 +41,7 @@ type Track = {
 type AutomationFrameDetail = {
   sessionId: string;
   trackId: string;
+  sourceTrackId?: string;
   volume: number | null;
   pan: number | null;
 };
@@ -96,6 +97,10 @@ export default function ProjectDawTransport({
   const mediaPannerRef = useRef<StereoPannerNode | null>(null);
   const automationVolumeRef = useRef<number | null>(null);
   const automationPanRef = useRef<number | null>(null);
+  const availableTracksRef = useRef<Track[]>([]);
+  const activeSourceTrackIdRef = useRef(session.songId);
+  const sourceSwitchSeekRef = useRef<number | null>(null);
+  const sourceSwitchPlayingRef = useRef(false);
   const [transport, setTransport] = useState<TimelineTransportSynchronization | null>(null);
   const [events, setEvents] = useState<TimelineTransportEvent[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
@@ -157,6 +162,8 @@ export default function ProjectDawTransport({
         const all = [...(Array.isArray(remote) ? remote : []), ...getUploadedTracks()];
         const match = all.find((item: Track) => String(item.id) === session.songId) ?? null;
         if (!current) return;
+        availableTracksRef.current = all as Track[];
+        activeSourceTrackIdRef.current = session.songId;
         setTrack(match);
         setSource(getPlayableTrackUrl(match));
       } catch (cause) {
@@ -234,6 +241,21 @@ export default function ProjectDawTransport({
     const updateAutomation = (event: Event) => {
       const detail = (event as CustomEvent<AutomationFrameDetail>).detail;
       if (!detail || detail.sessionId !== session.id || detail.trackId !== session.songId) return;
+      if (
+        detail.sourceTrackId
+        && detail.sourceTrackId !== activeSourceTrackIdRef.current
+      ) {
+        const nextTrack = availableTracksRef.current.find(
+          (item) => String(item.id) === detail.sourceTrackId,
+        ) ?? null;
+        if (nextTrack) {
+          sourceSwitchSeekRef.current = audioRef.current?.currentTime ?? elapsed;
+          sourceSwitchPlayingRef.current = audioRef.current ? !audioRef.current.paused : false;
+          activeSourceTrackIdRef.current = detail.sourceTrackId;
+          setTrack(nextTrack);
+          setSource(getPlayableTrackUrl(nextTrack));
+        }
+      }
       automationVolumeRef.current = detail.volume;
       automationPanRef.current = detail.pan;
       const audio = audioRef.current;
@@ -246,7 +268,7 @@ export default function ProjectDawTransport({
     };
     window.addEventListener("muzes:daw-automation-frame", updateAutomation);
     return () => window.removeEventListener("muzes:daw-automation-frame", updateAutomation);
-  }, [session.id, session.songId, volume]);
+  }, [elapsed, session.id, session.songId, volume]);
 
   async function ensureMediaPanner() {
     const audio = audioRef.current;
@@ -1089,6 +1111,16 @@ export default function ProjectDawTransport({
         onLoadedMetadata={(event) => {
           const audio = event.currentTarget;
           setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+          const switchedSource = sourceSwitchSeekRef.current !== null;
+          if (switchedSource) {
+            audio.currentTime = Math.min(
+              sourceSwitchSeekRef.current!,
+              Number.isFinite(audio.duration) ? audio.duration : sourceSwitchSeekRef.current!,
+            );
+            sourceSwitchSeekRef.current = null;
+            if (sourceSwitchPlayingRef.current) void audio.play().catch(() => undefined);
+            sourceSwitchPlayingRef.current = false;
+          }
           window.dispatchEvent(new CustomEvent("muzes:daw-playhead", {
             detail: {
               sessionId: session.id,
@@ -1096,7 +1128,7 @@ export default function ProjectDawTransport({
               duration: Number.isFinite(audio.duration) ? audio.duration : 0,
             },
           }));
-          if (transport?.tick) {
+          if (!switchedSource && transport?.tick) {
             const restored = tickToSeconds(transport.tick);
             audio.currentTime = Math.min(restored, Number.isFinite(audio.duration) ? audio.duration : restored);
             scrubSecondsRef.current = audio.currentTime;
