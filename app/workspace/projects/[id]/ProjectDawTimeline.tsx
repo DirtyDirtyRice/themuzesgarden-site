@@ -1065,7 +1065,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function duplicateMixSnapshot() {
-    if (!selectedMixSnapshot) return;
+    if (!selectedMixSnapshot || comparingSnapshot || comparedMixerCheckpointId) return;
     const duplicate: MixSnapshot = {
       ...selectedMixSnapshot,
       id: `mix:${Date.now()}`,
@@ -1081,6 +1081,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     };
     setMixSnapshots((current) => [...current, duplicate].slice(-12));
     setSelectedSnapshotId(duplicate.id);
+  }
+
+  function deleteMixSnapshot() {
+    if (!selectedMixSnapshot || comparingSnapshot || comparedMixerCheckpointId) return;
+    setMixSnapshots((current) =>
+      current.filter((snapshot) => snapshot.id !== selectedMixSnapshot.id));
+    setSelectedSnapshotId("");
   }
 
   function recallMixSnapshot() {
@@ -3430,7 +3437,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </button>
         <button
           type="button"
-          disabled={!selectedSnapshotId || comparingSnapshot}
+          disabled={
+            !selectedMixSnapshot
+            || comparingSnapshot
+            || Boolean(comparedMixerCheckpointId)
+          }
           onClick={duplicateMixSnapshot}
           className="rounded border border-cyan-300/15 px-2 py-1.5 text-[9px] font-black text-cyan-100 disabled:opacity-30"
         >
@@ -3438,12 +3449,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </button>
         <button
           type="button"
-          disabled={!selectedSnapshotId || comparingSnapshot}
-          onClick={() => {
-            setMixSnapshots((current) =>
-              current.filter((snapshot) => snapshot.id !== selectedSnapshotId));
-            setSelectedSnapshotId("");
-          }}
+          disabled={
+            !selectedMixSnapshot
+            || comparingSnapshot
+            || Boolean(comparedMixerCheckpointId)
+          }
+          onClick={deleteMixSnapshot}
           className="rounded border border-rose-300/15 px-2 py-1.5 text-[9px] font-black text-rose-200 disabled:opacity-30"
         >
           Delete
