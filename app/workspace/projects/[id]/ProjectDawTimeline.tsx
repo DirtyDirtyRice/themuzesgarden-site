@@ -104,6 +104,7 @@ type MixSnapshotState = {
 type MixSnapshot = MixSnapshotState & {
   id: string;
   name: string;
+  notes: string;
   createdAt: string;
 };
 
@@ -149,6 +150,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [referenceMatch, setReferenceMatch] = useState(true);
   const [mixSnapshots, setMixSnapshots] = useState<MixSnapshot[]>([]);
   const [snapshotName, setSnapshotName] = useState("");
+  const [snapshotEditName, setSnapshotEditName] = useState("");
+  const [snapshotNotes, setSnapshotNotes] = useState("");
   const [selectedSnapshotId, setSelectedSnapshotId] = useState("");
   const [snapshotReady, setSnapshotReady] = useState(false);
   const [comparingSnapshot, setComparingSnapshot] = useState(false);
@@ -185,6 +188,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const selectedEffect = lanes
     .flatMap((lane) => lane.effects.map((effect) => ({ lane, effect })))
     .find(({ effect }) => effect.id === selectedEffectId) ?? null;
+  const selectedMixSnapshot =
+    mixSnapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ?? null;
   const masterLaneLevels = lanes.map((lane) => {
       const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
       const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
@@ -373,7 +378,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           && typeof snapshot.name === "string"
           && Array.isArray(snapshot.lanes)
           && snapshot.groupBuses
-          && typeof snapshot.groupBuses === "object").slice(-12));
+          && typeof snapshot.groupBuses === "object")
+          .map((snapshot: MixSnapshot) => ({
+            ...snapshot,
+            notes: typeof snapshot.notes === "string" ? snapshot.notes : "",
+          }))
+          .slice(-12));
       }
     } catch {} finally {
       setSnapshotReady(true);
@@ -385,6 +395,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       localStorage.setItem(snapshotStorageKey, JSON.stringify(mixSnapshots));
     }
   }, [mixSnapshots, snapshotReady, snapshotStorageKey]);
+
+  useEffect(() => {
+    setSnapshotEditName(selectedMixSnapshot?.name ?? "");
+    setSnapshotNotes(selectedMixSnapshot?.notes ?? "");
+  }, [selectedMixSnapshot]);
 
   useEffect(() => {
     const overloaded = masterInputLevel > limiterCeiling;
@@ -550,12 +565,79 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const snapshot: MixSnapshot = {
       id: `mix:${Date.now()}`,
       name,
+      notes: "",
       createdAt: new Date().toISOString(),
       ...captureMixState(),
     };
     setMixSnapshots((current) => [...current, snapshot].slice(-12));
     setSelectedSnapshotId(snapshot.id);
     setSnapshotName("");
+  }
+
+  function duplicateMixSnapshot() {
+    if (!selectedMixSnapshot) return;
+    const duplicate: MixSnapshot = {
+      ...selectedMixSnapshot,
+      id: `mix:${Date.now()}`,
+      name: `${selectedMixSnapshot.name} Copy`,
+      createdAt: new Date().toISOString(),
+      lanes: selectedMixSnapshot.lanes.map((lane) => ({
+        ...lane,
+        effects: lane.effects.map((effect) => ({ ...effect })),
+      })),
+      groupBuses: Object.fromEntries(
+        Object.entries(selectedMixSnapshot.groupBuses).map(([id, bus]) => [id, { ...bus }]),
+      ) as TimelineGroupBuses,
+    };
+    setMixSnapshots((current) => [...current, duplicate].slice(-12));
+    setSelectedSnapshotId(duplicate.id);
+  }
+
+  function updateSnapshotDetails() {
+    if (!selectedMixSnapshot) return;
+    const name = snapshotEditName.trim() || selectedMixSnapshot.name;
+    setMixSnapshots((current) => current.map((snapshot) =>
+      snapshot.id === selectedMixSnapshot.id
+        ? { ...snapshot, name, notes: snapshotNotes.trim() }
+        : snapshot));
+  }
+
+  function summarizeSnapshotDifference(snapshot: MixSnapshot): string {
+    const currentById = new Map(lanes.map((lane) => [lane.trackId, lane]));
+    const changedLanes = snapshot.lanes.filter((savedLane) => {
+      const current = currentById.get(savedLane.trackId);
+      if (!current) return true;
+      return current.volume !== savedLane.volume
+        || current.pan !== savedLane.pan
+        || current.muted !== savedLane.muted
+        || current.soloed !== savedLane.soloed
+        || current.groupId !== savedLane.groupId
+        || current.reverbSend !== savedLane.reverbSend
+        || current.delaySend !== savedLane.delaySend
+        || JSON.stringify(current.effects) !== JSON.stringify(savedLane.effects);
+    }).length + lanes.filter(
+      (lane) => !snapshot.lanes.some((savedLane) => savedLane.trackId === lane.trackId),
+    ).length;
+    const masterChanges = [
+      snapshot.masterGain !== masterGain,
+      snapshot.limiterEnabled !== limiterEnabled,
+      snapshot.limiterCeiling !== limiterCeiling,
+      snapshot.masterBalance !== masterBalance,
+      snapshot.monoCheck !== monoCheck,
+      snapshot.referenceTrackId !== referenceTrackId,
+      snapshot.comparisonMode !== comparisonMode,
+      snapshot.referenceMatch !== referenceMatch,
+    ].filter(Boolean).length;
+    const busesChanged =
+      snapshot.reverbReturn !== reverbReturn
+      || snapshot.delayReturn !== delayReturn
+      || JSON.stringify(snapshot.groupBuses) !== JSON.stringify(groupBuses);
+    if (!changedLanes && !masterChanges && !busesChanged) return "Matches current mixer";
+    return [
+      changedLanes ? `${changedLanes} lane${changedLanes === 1 ? "" : "s"}` : "",
+      masterChanges ? `${masterChanges} master setting${masterChanges === 1 ? "" : "s"}` : "",
+      busesChanged ? "buses changed" : "",
+    ].filter(Boolean).join(" · ");
   }
 
   function toggleSnapshotComparison() {
@@ -1367,6 +1449,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <button
           type="button"
           disabled={!selectedSnapshotId || comparingSnapshot}
+          onClick={duplicateMixSnapshot}
+          className="rounded border border-cyan-300/15 px-2 py-1.5 text-[9px] font-black text-cyan-100 disabled:opacity-30"
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          disabled={!selectedSnapshotId || comparingSnapshot}
           onClick={() => {
             setMixSnapshots((current) =>
               current.filter((snapshot) => snapshot.id !== selectedSnapshotId));
@@ -1380,6 +1470,38 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           {mixSnapshots.length}/12 saved
         </span>
       </div>
+
+      {selectedMixSnapshot ? (
+        <div className="flex flex-wrap items-center gap-3 border-b border-emerald-300/10 bg-emerald-300/[0.015] px-5 py-2">
+          <input
+            value={snapshotEditName}
+            onChange={(event) => setSnapshotEditName(event.target.value)}
+            className="w-36 rounded border border-white/10 bg-black px-2 py-1.5 text-[10px] text-white"
+            aria-label="Rename selected mix snapshot"
+          />
+          <input
+            value={snapshotNotes}
+            onChange={(event) => setSnapshotNotes(event.target.value)}
+            placeholder="Mix notes"
+            className="min-w-48 flex-1 rounded border border-white/10 bg-black px-2 py-1.5 text-[10px] text-white placeholder:text-white/25"
+            aria-label="Selected mix snapshot notes"
+          />
+          <button
+            type="button"
+            onClick={updateSnapshotDetails}
+            className="rounded bg-white/10 px-3 py-1.5 text-[9px] font-black text-white/70"
+          >
+            Save Details
+          </button>
+          <span className={`font-mono text-[9px] ${
+            summarizeSnapshotDifference(selectedMixSnapshot) === "Matches current mixer"
+              ? "text-emerald-200"
+              : "text-amber-200"
+          }`}>
+            {summarizeSnapshotDifference(selectedMixSnapshot)}
+          </span>
+        </div>
+      ) : null}
 
       <div className="flex min-h-10 flex-wrap items-center gap-2 border-b border-rose-300/10 bg-rose-300/[0.025] px-5 py-2">
         <span className="text-[10px] font-black uppercase tracking-wider text-rose-200/65">
