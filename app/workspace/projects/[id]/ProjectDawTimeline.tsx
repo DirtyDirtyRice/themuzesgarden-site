@@ -490,6 +490,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       mixerLastStateRef.current = current;
       return;
     }
+    if (comparingSnapshot || comparedMixerCheckpointId) {
+      mixerLastStateRef.current = current;
+      return;
+    }
     if (JSON.stringify(previous) === JSON.stringify(current)) return;
     setMixerUndoHistory((history) => [...history, {
       state: previous,
@@ -499,9 +503,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setMixerRedoHistory([]);
     mixerLastStateRef.current = current;
   }, [
-    comparisonMode, delayReturn, groupBuses, groupBusesReady, lanes, limiterCeiling,
-    limiterEnabled, masterBalance, masterGain, masterReady, monoCheck, referenceMatch,
-    referenceTrackId, reverbReturn,
+    comparedMixerCheckpointId, comparingSnapshot, comparisonMode, delayReturn, groupBuses,
+    groupBusesReady, lanes, limiterCeiling, limiterEnabled, masterBalance, masterGain,
+    masterReady, monoCheck, referenceMatch, referenceTrackId, reverbReturn,
   ]);
 
   useEffect(() => {
