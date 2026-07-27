@@ -2391,9 +2391,18 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 ...searches,
                                 [checkpoint.id]: event.target.value,
                               }))}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Escape") return;
+                                event.preventDefault();
+                                setCheckpointLaneSearches((searches) => ({
+                                  ...searches,
+                                  [checkpoint.id]: "",
+                                }));
+                              }}
                               placeholder="Filter checkpoint lanes"
                               className="min-w-48 flex-1 basis-48 rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/60 outline-none placeholder:text-white/20 focus:border-indigo-300/25"
                               aria-label={`Filter lanes in ${checkpoint.name}`}
+                              title="Press Escape to clear this search"
                             />
                             <span className="whitespace-nowrap text-[8px] text-white/30">
                               {matchingCheckpointLanes(checkpoint).length} matches
