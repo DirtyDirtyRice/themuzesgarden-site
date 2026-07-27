@@ -915,7 +915,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         : snapshot));
   }
 
-  function summarizeSnapshotDifference(snapshot: MixSnapshot): string {
+  function summarizeSnapshotDifference(snapshot: MixSnapshotState): string {
     const currentById = new Map(lanes.map((lane) => [lane.trackId, lane]));
     const changedLanes = snapshot.lanes.filter((savedLane) => {
       const current = currentById.get(savedLane.trackId);
@@ -1919,6 +1919,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       className="w-full rounded border border-white/5 bg-black/25 px-2 py-1 text-[8px] text-white/55 outline-none placeholder:text-white/20 focus:border-amber-300/20"
                       aria-label={`Notes for ${checkpoint.name}`}
                     />
+                    <span className={`px-2 font-mono text-[8px] ${
+                      summarizeSnapshotDifference(checkpoint.state) === "Matches current mixer"
+                        ? "text-emerald-200/70"
+                        : "text-amber-200/55"
+                    }`}>
+                      {summarizeSnapshotDifference(checkpoint.state)}
+                    </span>
                   </div>
                 ))}
               </div>
