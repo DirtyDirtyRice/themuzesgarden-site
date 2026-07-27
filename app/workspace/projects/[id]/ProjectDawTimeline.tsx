@@ -186,6 +186,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [checkpointMultiLaneSelections, setCheckpointMultiLaneSelections] =
     useState<Record<string, string[]>>({});
   const [checkpointLaneSearches, setCheckpointLaneSearches] = useState<Record<string, string>>({});
+  const [checkpointSelectedOnlyFilters, setCheckpointSelectedOnlyFilters] =
+    useState<Record<string, boolean>>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -1166,8 +1168,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
   function matchingCheckpointLanes(checkpoint: MixerCheckpoint): TimelineDawLaneState[] {
     const query = (checkpointLaneSearches[checkpoint.id] ?? "").trim().toLowerCase();
+    const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
     return checkpoint.state.lanes.filter((savedLane) => {
       if (!lanes.some((lane) => lane.trackId === savedLane.trackId)) return false;
+      if (checkpointSelectedOnlyFilters[checkpoint.id] && !selectedIds.has(savedLane.trackId)) {
+        return false;
+      }
       if (!query) return true;
       const laneName = trackById.get(savedLane.trackId)?.title ?? "";
       return laneName.toLowerCase().includes(query)
@@ -2290,11 +2296,35 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </span>
                             <button
                               type="button"
-                              disabled={!checkpointLaneSearches[checkpoint.id]}
-                              onClick={() => setCheckpointLaneSearches((searches) => ({
-                                ...searches,
-                                [checkpoint.id]: "",
+                              aria-pressed={Boolean(checkpointSelectedOnlyFilters[checkpoint.id])}
+                              onClick={() => setCheckpointSelectedOnlyFilters((filters) => ({
+                                ...filters,
+                                [checkpoint.id]: !filters[checkpoint.id],
                               }))}
+                              className={`rounded border px-2 py-1 text-[8px] ${
+                                checkpointSelectedOnlyFilters[checkpoint.id]
+                                  ? "border-indigo-300/30 bg-indigo-300/10 text-indigo-100"
+                                  : "border-white/10 text-white/45 hover:text-white/80"
+                              }`}
+                            >
+                              Selected Only
+                            </button>
+                            <button
+                              type="button"
+                              disabled={
+                                !checkpointLaneSearches[checkpoint.id]
+                                && !checkpointSelectedOnlyFilters[checkpoint.id]
+                              }
+                              onClick={() => {
+                                setCheckpointLaneSearches((searches) => ({
+                                  ...searches,
+                                  [checkpoint.id]: "",
+                                }));
+                                setCheckpointSelectedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: false,
+                                }));
+                              }}
                               className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/45 hover:text-white/80 disabled:opacity-30"
                             >
                               Clear Filter
