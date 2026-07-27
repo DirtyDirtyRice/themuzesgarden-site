@@ -2318,8 +2318,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       />
                       <button
                         type="button"
+                        disabled={
+                          comparingSnapshot
+                          || (
+                            !comparedMixerCheckpointId
+                            && summarizeSnapshotDifference(checkpoint.state)
+                              === "Matches current mixer"
+                          )
+                        }
                         onClick={() => restoreMixerCheckpoint(checkpoint)}
-                        className="rounded bg-amber-300/15 px-2 py-1 text-[8px] font-black text-amber-100 hover:bg-amber-300/25"
+                        className="rounded bg-amber-300/15 px-2 py-1 text-[8px] font-black text-amber-100 hover:bg-amber-300/25 disabled:opacity-30"
                         title={`Restore ${checkpoint.name}`}
                       >
                         Restore
