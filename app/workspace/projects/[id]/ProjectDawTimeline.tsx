@@ -3656,15 +3656,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
           A · REVERB
           <input type="range" min={0} max={1} step={0.01} value={reverbReturn}
-            onChange={(event) => setReverbReturn(Number(event.target.value))}
-            className="w-32 accent-cyan-300" />
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onChange={(event) => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setReverbReturn(Number(event.target.value));
+            }}
+            className="w-32 accent-cyan-300 disabled:opacity-30" />
           {Math.round(reverbReturn * 100)}%
         </label>
         <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
           B · DELAY
           <input type="range" min={0} max={1} step={0.01} value={delayReturn}
-            onChange={(event) => setDelayReturn(Number(event.target.value))}
-            className="w-32 accent-violet-300" />
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onChange={(event) => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setDelayReturn(Number(event.target.value));
+            }}
+            className="w-32 accent-violet-300 disabled:opacity-30" />
           {Math.round(delayReturn * 100)}%
         </label>
         <span className="ml-auto text-[10px] text-white/30">Shared post-fader buses</span>
