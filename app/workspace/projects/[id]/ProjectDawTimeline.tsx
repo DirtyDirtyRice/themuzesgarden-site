@@ -810,16 +810,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     applyMixState(checkpoint.state);
   }
 
-  function recallMixerCheckpointSection(
+  function buildMixerCheckpointSectionState(
     checkpoint: MixerCheckpoint,
     section: "lanes" | "master" | "buses",
-  ) {
-    if (comparedMixerCheckpointId || comparingSnapshot) return;
-    const current = captureMixState();
+    current: MixSnapshotState,
+  ): MixSnapshotState {
     const sourceByTrackId = new Map(
       checkpoint.state.lanes.map((lane) => [lane.trackId, lane]),
     );
-    const recalled: MixSnapshotState = section === "lanes"
+    return section === "lanes"
       ? {
           ...current,
           lanes: current.lanes.map((lane) => sourceByTrackId.get(lane.trackId) ?? lane),
@@ -842,6 +841,27 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             reverbReturn: checkpoint.state.reverbReturn,
             delayReturn: checkpoint.state.delayReturn,
           };
+  }
+
+  function mixerCheckpointSectionHasChanges(
+    checkpoint: MixerCheckpoint,
+    section: "lanes" | "master" | "buses",
+  ): boolean {
+    const current = captureMixState();
+    return JSON.stringify(buildMixerCheckpointSectionState(
+      checkpoint,
+      section,
+      current,
+    )) !== JSON.stringify(current);
+  }
+
+  function recallMixerCheckpointSection(
+    checkpoint: MixerCheckpoint,
+    section: "lanes" | "master" | "buses",
+  ) {
+    if (comparedMixerCheckpointId || comparingSnapshot) return;
+    const current = captureMixState();
+    const recalled = buildMixerCheckpointSectionState(checkpoint, section, current);
     if (JSON.stringify(recalled) === JSON.stringify(current)) return;
     setMixerUndoHistory((history) => [...history, {
       state: current,
@@ -3235,7 +3255,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             <button
                               key={section}
                               type="button"
-                              disabled={Boolean(comparedMixerCheckpointId) || comparingSnapshot}
+                              disabled={
+                                Boolean(comparedMixerCheckpointId)
+                                || comparingSnapshot
+                                || !mixerCheckpointSectionHasChanges(checkpoint, section)
+                              }
                               onClick={() => recallMixerCheckpointSection(checkpoint, section)}
                               className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] font-black capitalize text-cyan-100/70 hover:bg-cyan-300/10 disabled:opacity-30"
                             >
