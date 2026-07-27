@@ -435,6 +435,24 @@ export function createTimelineWaveformBars(seed: string, count = 160): number[] 
   });
 }
 
+export function timelineMasterOutputLevel(
+  laneLevels: number[],
+  masterGain: number,
+  limiterEnabled: boolean,
+  limiterCeiling: number,
+): number {
+  const active = laneLevels
+    .filter(Number.isFinite)
+    .map((level) => Math.min(1, Math.max(0, level)));
+  const combined = active.length
+    ? Math.sqrt(active.reduce((sum, level) => sum + level * level, 0) / active.length)
+    : 0;
+  const amplified = combined * Math.min(1.25, Math.max(0, masterGain));
+  return Math.min(1, limiterEnabled
+    ? Math.min(amplified, Math.min(1, Math.max(0.5, limiterCeiling)))
+    : amplified);
+}
+
 export function parseTimelineLaneState(
   raw: string | null,
   trackId: string,

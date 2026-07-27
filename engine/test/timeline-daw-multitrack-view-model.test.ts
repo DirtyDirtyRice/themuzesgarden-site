@@ -41,6 +41,7 @@ import {
   timelineSecondsFromPixels,
   timelineAutomationValueAt,
   timelineLaneMeterLevel,
+  timelineMasterOutputLevel,
   toggleTimelineClipSelection,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
@@ -207,6 +208,14 @@ describe("TimelineDawMultitrackViewModel", () => {
       .toBe(timelineLaneMeterLevel("song-1", 4, 0.8, true));
     expect(timelineLaneMeterLevel("song-1", 4, 2, true)).toBeLessThanOrEqual(1);
     expect(timelineLaneMeterLevel("song-1", 4, 0.8, false)).toBe(0);
+  });
+
+  it("combines master output levels and applies limiter ceiling", () => {
+    expect(timelineMasterOutputLevel([0.6, 0.8], 1, false, 0.95)).toBeCloseTo(
+      Math.sqrt(0.5),
+    );
+    expect(timelineMasterOutputLevel([1, 0.9], 1.25, true, 0.82)).toBe(0.82);
+    expect(timelineMasterOutputLevel([], 1, true, 0.95)).toBe(0);
   });
 
   it("adds, bypasses, and removes persistent lane effects", () => {

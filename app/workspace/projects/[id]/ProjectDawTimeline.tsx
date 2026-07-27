@@ -44,6 +44,7 @@ import {
   timelineSecondsFromPixels,
   timelineAutomationValueAt,
   timelineLaneMeterLevel,
+  timelineMasterOutputLevel,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
   toggleTimelineClipSelection,
@@ -112,6 +113,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [delayReturn, setDelayReturn] = useState(0.3);
   const [groupBuses, setGroupBuses] = useState<TimelineGroupBuses>(defaultGroupBuses);
   const [groupBusesReady, setGroupBusesReady] = useState(false);
+  const [masterGain, setMasterGain] = useState(1);
+  const [limiterEnabled, setLimiterEnabled] = useState(true);
+  const [limiterCeiling, setLimiterCeiling] = useState(0.95);
+  const [masterReady, setMasterReady] = useState(false);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -133,6 +138,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const automationStorageKey = `muzes:daw-timeline-automation:v1:${session.id}`;
   const busStorageKey = `muzes:daw-timeline-buses:v1:${session.id}`;
   const groupStorageKey = `muzes:daw-timeline-groups:v1:${session.id}`;
+  const masterStorageKey = `muzes:daw-timeline-master:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
@@ -143,6 +149,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const selectedEffect = lanes
     .flatMap((lane) => lane.effects.map((effect) => ({ lane, effect })))
     .find(({ effect }) => effect.id === selectedEffectId) ?? null;
+  const masterLevel = timelineMasterOutputLevel(
+    lanes.map((lane) => {
+      const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
+      const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
+      return timelineLaneMeterLevel(
+        lane.trackId,
+        elapsed,
+        lane.volume * (groupBus?.volume ?? 1),
+        audible,
+      );
+    }),
+    masterGain,
+    limiterEnabled,
+    limiterCeiling,
+  );
+  const masterPeakDb = masterLevel > 0 ? 20 * Math.log10(masterLevel) : -60;
+  const masterLoudness = Math.max(-60, masterPeakDb - 3);
   const effectPresets: Record<TimelineDawEffectKind, string[]> = {
     eq: ["Balanced", "Vocal Presence", "Bass Cleanup", "Air"],
     compressor: ["Vocal Glue", "Punch", "Gentle Bus", "Limiter"],
@@ -235,6 +258,29 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [groupBuses, groupBusesReady, groupStorageKey]);
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(masterStorageKey) ?? "{}");
+      if (Number.isFinite(saved.masterGain)) {
+        setMasterGain(Math.min(1.25, Math.max(0, saved.masterGain)));
+      }
+      if (typeof saved.limiterEnabled === "boolean") setLimiterEnabled(saved.limiterEnabled);
+      if (Number.isFinite(saved.limiterCeiling)) {
+        setLimiterCeiling(Math.min(1, Math.max(0.5, saved.limiterCeiling)));
+      }
+    } catch {} finally {
+      setMasterReady(true);
+    }
+  }, [masterStorageKey]);
+
+  useEffect(() => {
+    if (masterReady) {
+      localStorage.setItem(masterStorageKey, JSON.stringify({
+        masterGain, limiterEnabled, limiterCeiling,
+      }));
+    }
+  }, [limiterCeiling, limiterEnabled, masterGain, masterReady, masterStorageKey]);
+
+  useEffect(() => {
     if (clips.length) localStorage.setItem(clipStorageKey, JSON.stringify(clips));
   }, [clipStorageKey, clips]);
 
@@ -301,17 +347,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const automatedPan = timelineAutomationValueAt(
       automation, session.songId, "pan", elapsed,
     );
+    const rawVolume =
+      (primaryLane?.volume ?? 1)
+      * (primaryGroup?.volume ?? 1)
+      * (automatedVolume ?? 1)
+      * masterGain;
+    const outputVolume = limiterEnabled ? Math.min(rawVolume, limiterCeiling) : rawVolume;
     window.dispatchEvent(new CustomEvent("muzes:daw-automation-frame", {
       detail: {
         sessionId: session.id,
         trackId: session.songId,
-        volume: audible
-          ? (primaryLane?.volume ?? 1) * (primaryGroup?.volume ?? 1) * (automatedVolume ?? 1)
-          : 0,
+        volume: audible ? outputVolume : 0,
         pan: Math.min(1, Math.max(-1, (primaryLane?.pan ?? 0) + (automatedPan ?? 0))),
       },
     }));
-  }, [anySoloed, automation, elapsed, groupBuses, lanes, session.id, session.songId]);
+  }, [
+    anySoloed, automation, elapsed, groupBuses, lanes, limiterCeiling, limiterEnabled,
+    masterGain, session.id, session.songId,
+  ]);
 
   function updateLane(trackId: string, patch: Partial<TimelineDawLaneState>) {
     setLanes((current) => current.map((lane) => lane.trackId === trackId
@@ -833,6 +886,63 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         ) : null}
         <span className="ml-auto text-xs text-white/35">
           {automation.filter((point) => !point.archived).length} active points
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4 border-b border-amber-300/15 bg-amber-300/[0.035] px-5 py-3">
+        <span className="text-xs font-black uppercase tracking-wider text-amber-200/80">Master Output</span>
+        <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
+          GAIN
+          <input
+            type="range"
+            min={0}
+            max={1.25}
+            step={0.01}
+            value={masterGain}
+            onChange={(event) => setMasterGain(Number(event.target.value))}
+            className="w-28 accent-amber-300"
+          />
+          {Math.round(masterGain * 100)}%
+        </label>
+        <button
+          type="button"
+          aria-pressed={limiterEnabled}
+          onClick={() => setLimiterEnabled((enabled) => !enabled)}
+          className={`rounded-lg px-3 py-2 text-[10px] font-black ${
+            limiterEnabled ? "bg-amber-300 text-black" : "border border-white/15 text-white/55"
+          }`}
+        >
+          LIMITER {limiterEnabled ? "ON" : "OFF"}
+        </button>
+        <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
+          CEILING
+          <input
+            type="range"
+            min={0.5}
+            max={1}
+            step={0.01}
+            value={limiterCeiling}
+            onChange={(event) => setLimiterCeiling(Number(event.target.value))}
+            className="w-24 accent-rose-300"
+            disabled={!limiterEnabled}
+          />
+          {(20 * Math.log10(limiterCeiling)).toFixed(1)} dB
+        </label>
+        <div className="flex min-w-44 flex-1 items-center gap-2">
+          <div className="h-3 flex-1 overflow-hidden rounded-full bg-black/70">
+            <div
+              className={`h-full rounded-full transition-[width] duration-100 ${
+                masterPeakDb > -1 ? "bg-rose-400" : masterPeakDb > -6 ? "bg-amber-300" : "bg-emerald-400"
+              }`}
+              style={{ width: `${masterLevel * 100}%` }}
+            />
+          </div>
+          <span className="w-16 font-mono text-[10px] text-white/65">
+            {masterPeakDb.toFixed(1)} dB
+          </span>
+        </div>
+        <span className="font-mono text-[10px] font-black text-amber-100">
+          {masterLoudness.toFixed(1)} LUFS
         </span>
       </div>
 
