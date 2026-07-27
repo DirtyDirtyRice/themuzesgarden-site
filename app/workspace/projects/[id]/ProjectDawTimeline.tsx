@@ -1297,6 +1297,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       && !lanes.some((lane) => lane.trackId === savedLane.trackId)).length;
   }
 
+  function selectedAvailableCheckpointLaneCount(checkpoint: MixerCheckpoint): number {
+    const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
+    return checkpoint.state.lanes.filter((savedLane) =>
+      selectedIds.has(savedLane.trackId)
+      && lanes.some((lane) => lane.trackId === savedLane.trackId)).length;
+  }
+
   function selectedCheckpointLaneChangeCount(
     checkpoint: MixerCheckpoint,
     changed: boolean,
@@ -2432,7 +2439,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                   disabled={
                                     Boolean(comparedMixerCheckpointId)
                                     || comparingSnapshot
-                                    || !(checkpointMultiLaneSelections[checkpoint.id]?.length)
+                                    || !selectedAvailableCheckpointLaneCount(checkpoint)
                                   }
                                   onClick={() => recallMixerCheckpointLanes(
                                     checkpoint,
