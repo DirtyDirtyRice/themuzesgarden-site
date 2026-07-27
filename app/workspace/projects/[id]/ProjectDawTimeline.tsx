@@ -2813,6 +2813,19 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </button>
                             <button
                               type="button"
+                              disabled={!selectedUnavailableCheckpointLaneCount(checkpoint)}
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: (selections[checkpoint.id] ?? [])
+                                  .filter((trackId) =>
+                                    lanes.some((lane) => lane.trackId === trackId)),
+                              }))}
+                              className="rounded border border-rose-300/15 px-2 py-1 text-[8px] text-rose-100/60 hover:text-rose-100 disabled:opacity-30"
+                            >
+                              Remove Unavailable
+                            </button>
+                            <button
+                              type="button"
                               disabled={!matchingCheckpointLanes(checkpoint).length}
                               onClick={() => {
                                 const visibleLanes = matchingCheckpointLanes(checkpoint);
