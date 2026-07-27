@@ -44,6 +44,8 @@ import {
   timelineMasterOutputLevel,
   timelineStereoMasterState,
   timelineReferenceMatchGain,
+  parseTimelineMixSnapshotBundle,
+  serializeTimelineMixSnapshotBundle,
   toggleTimelineClipSelection,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
@@ -237,6 +239,14 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(timelineReferenceMatchGain(0.1, 1, true)).toBe(0.25);
     expect(timelineReferenceMatchGain(0.8, 0.4, false)).toBe(1);
     expect(timelineReferenceMatchGain(0, 0.4, true)).toBe(1);
+  });
+
+  it("exports and validates portable mix snapshot bundles", () => {
+    const snapshot = { name: "Mix A", lanes: [], groupBuses: {} };
+    const encoded = serializeTimelineMixSnapshotBundle("Song Session", [snapshot]);
+    expect(parseTimelineMixSnapshotBundle(encoded)).toEqual([snapshot]);
+    expect(() => parseTimelineMixSnapshotBundle("{}")).toThrow("not supported");
+    expect(() => parseTimelineMixSnapshotBundle("not json")).toThrow("not valid JSON");
   });
 
   it("adds, bypasses, and removes persistent lane effects", () => {

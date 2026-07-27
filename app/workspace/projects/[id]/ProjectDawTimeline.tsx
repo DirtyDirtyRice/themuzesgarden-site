@@ -47,6 +47,8 @@ import {
   timelineMasterOutputLevel,
   timelineStereoMasterState,
   timelineReferenceMatchGain,
+  parseTimelineMixSnapshotBundle,
+  serializeTimelineMixSnapshotBundle,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
   toggleTimelineClipSelection,
@@ -125,6 +127,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const automationDragRef = useRef<AutomationDrag | null>(null);
   const overloadActiveRef = useRef(false);
   const snapshotCompareRef = useRef<MixSnapshotState | null>(null);
+  const snapshotFileRef = useRef<HTMLInputElement | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
@@ -155,6 +158,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [selectedSnapshotId, setSelectedSnapshotId] = useState("");
   const [snapshotReady, setSnapshotReady] = useState(false);
   const [comparingSnapshot, setComparingSnapshot] = useState(false);
+  const [snapshotTransferStatus, setSnapshotTransferStatus] = useState("");
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -638,6 +642,58 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       masterChanges ? `${masterChanges} master setting${masterChanges === 1 ? "" : "s"}` : "",
       busesChanged ? "buses changed" : "",
     ].filter(Boolean).join(" · ");
+  }
+
+  function exportMixSnapshots() {
+    if (!mixSnapshots.length) return;
+    const blob = new Blob(
+      [serializeTimelineMixSnapshotBundle(session.name, mixSnapshots)],
+      { type: "application/json" },
+    );
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${session.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "daw"}-mix-snapshots.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setSnapshotTransferStatus(`${mixSnapshots.length} snapshot${mixSnapshots.length === 1 ? "" : "s"} exported`);
+  }
+
+  async function importMixSnapshots(file: File) {
+    try {
+      const imported = parseTimelineMixSnapshotBundle(await file.text()) as MixSnapshot[];
+      const stamp = Date.now();
+      const normalized = imported.map((snapshot, snapshotIndex): MixSnapshot => ({
+        ...snapshot,
+        id: `mix:${stamp}:import:${snapshotIndex + 1}`,
+        name: snapshot.name.trim() || `Imported Mix ${snapshotIndex + 1}`,
+        notes: typeof snapshot.notes === "string" ? snapshot.notes : "",
+        createdAt: new Date().toISOString(),
+        lanes: lanes.map((currentLane, laneIndex) => {
+          const sourceLane =
+            snapshot.lanes.find((lane) => lane.trackId === currentLane.trackId)
+            ?? snapshot.lanes[laneIndex]
+            ?? currentLane;
+          return {
+            ...sourceLane,
+            trackId: currentLane.trackId,
+            effects: (sourceLane.effects ?? []).map((effect, effectIndex) => ({
+              ...effect,
+              id: `${currentLane.trackId}:fx:${effectIndex + 1}`,
+            })),
+          };
+        }),
+      }));
+      setMixSnapshots((current) => [...current, ...normalized].slice(-12));
+      if (normalized.length) setSelectedSnapshotId(normalized.at(-1)!.id);
+      setSnapshotTransferStatus(
+        `${normalized.length} snapshot${normalized.length === 1 ? "" : "s"} imported`,
+      );
+    } catch (cause) {
+      setSnapshotTransferStatus(cause instanceof Error ? cause.message : "Import failed");
+    } finally {
+      if (snapshotFileRef.current) snapshotFileRef.current.value = "";
+    }
   }
 
   function toggleSnapshotComparison() {
@@ -1466,7 +1522,34 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         >
           Delete
         </button>
+        <button
+          type="button"
+          disabled={!mixSnapshots.length}
+          onClick={exportMixSnapshots}
+          className="rounded border border-sky-300/15 px-2 py-1.5 text-[9px] font-black text-sky-100 disabled:opacity-30"
+        >
+          Export
+        </button>
+        <button
+          type="button"
+          onClick={() => snapshotFileRef.current?.click()}
+          className="rounded border border-violet-300/15 px-2 py-1.5 text-[9px] font-black text-violet-100"
+        >
+          Import
+        </button>
+        <input
+          ref={snapshotFileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void importMixSnapshots(file);
+          }}
+          aria-label="Import mix snapshot file"
+        />
         <span className="ml-auto text-[9px] text-white/30">
+          {snapshotTransferStatus ? `${snapshotTransferStatus} · ` : ""}
           {mixSnapshots.length}/12 saved
         </span>
       </div>

@@ -481,6 +481,50 @@ export function timelineReferenceMatchGain(
   return Math.min(4, Math.max(0.25, mix / reference));
 }
 
+export function serializeTimelineMixSnapshotBundle(
+  sessionName: string,
+  snapshots: unknown[],
+): string {
+  return JSON.stringify({
+    format: "muzes-daw-mix-snapshots",
+    version: 1,
+    sessionName: sessionName.trim() || "DAW Session",
+    exportedAt: new Date().toISOString(),
+    snapshots: snapshots.slice(-12),
+  }, null, 2);
+}
+
+export function parseTimelineMixSnapshotBundle(raw: string): unknown[] {
+  if (raw.length > 1_000_000) throw new Error("Snapshot file is too large.");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Snapshot file is not valid JSON.");
+  }
+  if (
+    !parsed
+    || typeof parsed !== "object"
+    || (parsed as { format?: unknown }).format !== "muzes-daw-mix-snapshots"
+    || (parsed as { version?: unknown }).version !== 1
+    || !Array.isArray((parsed as { snapshots?: unknown }).snapshots)
+  ) {
+    throw new Error("Snapshot file format is not supported.");
+  }
+  const snapshots = (parsed as { snapshots: unknown[] }).snapshots;
+  if (snapshots.length > 12) throw new Error("Snapshot file contains too many mixes.");
+  if (snapshots.some((snapshot) => (
+    !snapshot
+    || typeof snapshot !== "object"
+    || typeof (snapshot as { name?: unknown }).name !== "string"
+    || !Array.isArray((snapshot as { lanes?: unknown }).lanes)
+    || !(snapshot as { groupBuses?: unknown }).groupBuses
+  ))) {
+    throw new Error("Snapshot file contains an invalid mix.");
+  }
+  return snapshots;
+}
+
 export function parseTimelineLaneState(
   raw: string | null,
   trackId: string,
