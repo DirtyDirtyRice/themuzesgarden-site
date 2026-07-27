@@ -185,6 +185,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [checkpointLaneSelections, setCheckpointLaneSelections] = useState<Record<string, string>>({});
   const [checkpointMultiLaneSelections, setCheckpointMultiLaneSelections] =
     useState<Record<string, string[]>>({});
+  const [checkpointLaneSearches, setCheckpointLaneSearches] = useState<Record<string, string>>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -1160,6 +1161,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             ? effectsChanged
             : mixChanged || routingChanged || effectsChanged;
       return changed ? [savedLane.trackId] : [];
+    });
+  }
+
+  function matchingCheckpointLanes(checkpoint: MixerCheckpoint): TimelineDawLaneState[] {
+    const query = (checkpointLaneSearches[checkpoint.id] ?? "").trim().toLowerCase();
+    return checkpoint.state.lanes.filter((savedLane) => {
+      if (!lanes.some((lane) => lane.trackId === savedLane.trackId)) return false;
+      if (!query) return true;
+      const laneName = trackById.get(savedLane.trackId)?.title ?? "";
+      return laneName.toLowerCase().includes(query)
+        || savedLane.trackId.toLowerCase().includes(query);
     });
   }
 
@@ -2239,6 +2251,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               ))}
                             </div>
                           </div>
+                          <input
+                            value={checkpointLaneSearches[checkpoint.id] ?? ""}
+                            onChange={(event) => setCheckpointLaneSearches((searches) => ({
+                              ...searches,
+                              [checkpoint.id]: event.target.value,
+                            }))}
+                            placeholder="Filter checkpoint lanes"
+                            className="w-full rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/60 outline-none placeholder:text-white/20 focus:border-indigo-300/25"
+                            aria-label={`Filter lanes in ${checkpoint.name}`}
+                          />
                           <div className="flex gap-1">
                             <button
                               type="button"
@@ -2252,6 +2274,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/50 hover:text-white/80"
                             >
                               Select All
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!matchingCheckpointLanes(checkpoint).length}
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: Array.from(new Set([
+                                  ...(selections[checkpoint.id] ?? []),
+                                  ...matchingCheckpointLanes(checkpoint).map((lane) => lane.trackId),
+                                ])),
+                              }))}
+                              className="rounded border border-indigo-300/15 px-2 py-1 text-[8px] text-indigo-100/60 hover:text-indigo-100 disabled:opacity-30"
+                            >
+                              Select Visible
                             </button>
                             {([
                               ["all", "Changed"],
@@ -2286,9 +2322,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </button>
                           </div>
                           <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto">
-                            {checkpoint.state.lanes
-                              .filter((savedLane) =>
-                                lanes.some((lane) => lane.trackId === savedLane.trackId))
+                            {matchingCheckpointLanes(checkpoint)
                               .map((savedLane) => {
                                 const selected =
                                   checkpointMultiLaneSelections[checkpoint.id]?.includes(
@@ -2322,6 +2356,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 );
                               })}
                           </div>
+                          {!matchingCheckpointLanes(checkpoint).length ? (
+                            <span className="py-1 text-center text-[8px] text-white/25">
+                              No checkpoint lanes match this filter
+                            </span>
+                          ) : null}
                         </div>
                         <div className="flex flex-wrap gap-1 border-t border-white/5 pt-2">
                           {(["lanes", "master", "buses"] as const).map((section) => (
