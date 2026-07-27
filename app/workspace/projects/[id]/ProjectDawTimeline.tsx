@@ -2607,7 +2607,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               Keeps saved selection
                             </span>
                           </div>
-                          <div className="flex gap-1">
+                          <div className="flex flex-wrap gap-1">
                             <button
                               type="button"
                               onClick={() => setCheckpointMultiLaneSelections((selections) => ({
