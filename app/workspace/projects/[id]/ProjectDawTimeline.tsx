@@ -109,6 +109,11 @@ type MixSnapshot = MixSnapshotState & {
   notes: string;
   createdAt: string;
 };
+type MixerHistoryEntry = {
+  state: MixSnapshotState;
+  label: string;
+  createdAt: number;
+};
 
 const defaultGroupBuses: TimelineGroupBuses = {
   vocals: { volume: 1, muted: false },
@@ -161,8 +166,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [snapshotReady, setSnapshotReady] = useState(false);
   const [comparingSnapshot, setComparingSnapshot] = useState(false);
   const [snapshotTransferStatus, setSnapshotTransferStatus] = useState("");
-  const [mixerUndoHistory, setMixerUndoHistory] = useState<MixSnapshotState[]>([]);
-  const [mixerRedoHistory, setMixerRedoHistory] = useState<MixSnapshotState[]>([]);
+  const [mixerUndoHistory, setMixerUndoHistory] = useState<MixerHistoryEntry[]>([]);
+  const [mixerRedoHistory, setMixerRedoHistory] = useState<MixerHistoryEntry[]>([]);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -423,7 +428,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       return;
     }
     if (JSON.stringify(previous) === JSON.stringify(current)) return;
-    setMixerUndoHistory((history) => [...history, previous].slice(-50));
+    setMixerUndoHistory((history) => [...history, {
+      state: previous,
+      label: describeMixerChange(previous, current),
+      createdAt: Date.now(),
+    }].slice(-50));
     setMixerRedoHistory([]);
     mixerLastStateRef.current = current;
   }, [
@@ -607,14 +616,58 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setReferenceMatch(snapshot.referenceMatch);
   }
 
+  function describeMixerChange(previous: MixSnapshotState, current: MixSnapshotState): string {
+    for (const lane of current.lanes) {
+      const before = previous.lanes.find((entry) => entry.trackId === lane.trackId);
+      const name = trackById.get(lane.trackId)?.title || lane.trackId;
+      if (!before) return `${name}: lane added`;
+      if (before.volume !== lane.volume) {
+        return `${name}: volume ${Math.round(before.volume * 100)} → ${Math.round(lane.volume * 100)}`;
+      }
+      if (before.pan !== lane.pan) return `${name}: pan changed`;
+      if (before.muted !== lane.muted) return `${name}: ${lane.muted ? "muted" : "unmuted"}`;
+      if (before.soloed !== lane.soloed) return `${name}: solo ${lane.soloed ? "on" : "off"}`;
+      if (before.groupId !== lane.groupId) return `${name}: group → ${lane.groupId}`;
+      if (before.reverbSend !== lane.reverbSend) return `${name}: reverb send changed`;
+      if (before.delaySend !== lane.delaySend) return `${name}: delay send changed`;
+      if (JSON.stringify(before.effects) !== JSON.stringify(lane.effects)) {
+        return `${name}: effect rack changed`;
+      }
+    }
+    if (JSON.stringify(previous.groupBuses) !== JSON.stringify(current.groupBuses)) {
+      return "Group bus changed";
+    }
+    if (previous.reverbReturn !== current.reverbReturn) return "Reverb return changed";
+    if (previous.delayReturn !== current.delayReturn) return "Delay return changed";
+    if (previous.masterGain !== current.masterGain) return "Master gain changed";
+    if (previous.limiterEnabled !== current.limiterEnabled) {
+      return `Limiter ${current.limiterEnabled ? "enabled" : "disabled"}`;
+    }
+    if (previous.limiterCeiling !== current.limiterCeiling) return "Limiter ceiling changed";
+    if (previous.masterBalance !== current.masterBalance) return "Master balance changed";
+    if (previous.monoCheck !== current.monoCheck) {
+      return `Mono check ${current.monoCheck ? "enabled" : "disabled"}`;
+    }
+    if (previous.referenceTrackId !== current.referenceTrackId) return "Reference track changed";
+    if (previous.comparisonMode !== current.comparisonMode) {
+      return `A/B switched to ${current.comparisonMode}`;
+    }
+    if (previous.referenceMatch !== current.referenceMatch) return "Reference matching changed";
+    return "Mixer state changed";
+  }
+
   function undoMixerChange() {
     const target = mixerUndoHistory.at(-1);
     if (!target) return;
     const current = captureMixState();
     setMixerUndoHistory((history) => history.slice(0, -1));
-    setMixerRedoHistory((history) => [...history, current].slice(-50));
+    setMixerRedoHistory((history) => [...history, {
+      state: current,
+      label: target.label,
+      createdAt: Date.now(),
+    }].slice(-50));
     mixerApplyingHistoryRef.current = true;
-    applyMixState(target);
+    applyMixState(target.state);
   }
 
   function redoMixerChange() {
@@ -622,9 +675,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     if (!target) return;
     const current = captureMixState();
     setMixerRedoHistory((history) => history.slice(0, -1));
-    setMixerUndoHistory((history) => [...history, current].slice(-50));
+    setMixerUndoHistory((history) => [...history, {
+      state: current,
+      label: target.label,
+      createdAt: Date.now(),
+    }].slice(-50));
     mixerApplyingHistoryRef.current = true;
-    applyMixState(target);
+    applyMixState(target.state);
   }
 
   function saveMixSnapshot() {
@@ -1519,7 +1576,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           onClick={undoMixerChange}
           className="rounded border border-indigo-300/20 px-3 py-1.5 text-[10px] font-black text-indigo-100 disabled:opacity-30"
         >
-          Undo
+          Undo{mixerUndoHistory.length ? `: ${mixerUndoHistory.at(-1)!.label}` : ""}
         </button>
         <button
           type="button"
@@ -1527,7 +1584,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           onClick={redoMixerChange}
           className="rounded border border-indigo-300/20 px-3 py-1.5 text-[10px] font-black text-indigo-100 disabled:opacity-30"
         >
-          Redo
+          Redo{mixerRedoHistory.length ? `: ${mixerRedoHistory.at(-1)!.label}` : ""}
         </button>
         <span className="font-mono text-[9px] text-white/35">
           {mixerUndoHistory.length} undo · {mixerRedoHistory.length} redo
@@ -1536,6 +1593,29 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           Ctrl+Z · Ctrl+Shift+Z · 50 changes
         </span>
       </div>
+
+      {mixerUndoHistory.length ? (
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-indigo-300/10 bg-indigo-300/[0.015] px-5 py-2">
+          <span className="shrink-0 text-[9px] font-black uppercase text-indigo-200/45">
+            Recent
+          </span>
+          {mixerUndoHistory.slice(-6).map((entry, index, recent) => (
+            <div key={`${entry.createdAt}:${index}`} className="flex shrink-0 items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-300/70" />
+              <span
+                className={`max-w-48 truncate rounded border px-2 py-1 text-[9px] ${
+                  index === recent.length - 1
+                    ? "border-indigo-300/30 bg-indigo-300/10 text-indigo-100"
+                    : "border-white/10 text-white/40"
+                }`}
+                title={`${entry.label} · ${new Date(entry.createdAt).toLocaleTimeString()}`}
+              >
+                {entry.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3 border-b border-emerald-300/10 bg-emerald-300/[0.025] px-5 py-2">
         <span className="text-[10px] font-black uppercase tracking-wider text-emerald-200/70">
