@@ -1185,6 +1185,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       .map((lane) => lane.trackId);
   }
 
+  function selectedMatchingCheckpointLaneCount(checkpoint: MixerCheckpoint): number {
+    const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
+    return matchingCheckpointLanes(checkpoint)
+      .filter((lane) => selectedIds.has(lane.trackId)).length;
+  }
+
   function exportMixSnapshots() {
     if (!mixSnapshots.length) return;
     const blob = new Blob(
@@ -2234,7 +2240,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             <span className="text-[8px] font-black uppercase text-white/35">
                               Multi-lane recall · {checkpointMultiLaneSelections[checkpoint.id]?.length ?? 0} selected
                             </span>
-                            <div className="flex gap-1">
+                            <div className="flex items-center gap-1">
+                              <span
+                                className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/40"
+                                title="Selected lanes shown by the current filter"
+                              >
+                                {selectedMatchingCheckpointLaneCount(checkpoint)}/
+                                {matchingCheckpointLanes(checkpoint).length} visible
+                              </span>
                               {([
                                 ["all", "All"],
                                 ["mix", "Level/Pan"],
