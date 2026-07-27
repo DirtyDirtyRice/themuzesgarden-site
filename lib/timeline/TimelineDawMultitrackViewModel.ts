@@ -375,6 +375,62 @@ export function addTimelineClip(
   ];
 }
 
+export function copySelectedTimelineClips(
+  clips: TimelineDawClipState[],
+): TimelineDawClipState[] {
+  return clips
+    .filter((clip) => clip.selected && !clip.archived)
+    .sort((left, right) => left.timelineStartSeconds - right.timelineStartSeconds)
+    .map((clip) => ({ ...clip }));
+}
+
+export function pasteTimelineClips(
+  clips: TimelineDawClipState[],
+  copiedClips: TimelineDawClipState[],
+  timelineStartSeconds: number,
+): TimelineDawClipState[] {
+  if (!copiedClips.length || !Number.isFinite(timelineStartSeconds)) {
+    return clips.map((clip) => ({ ...clip }));
+  }
+  const targetStart = Math.max(0, clipPrecision(timelineStartSeconds));
+  const copiedStart = Math.min(...copiedClips.map((clip) => clip.timelineStartSeconds));
+  let sequence = clips.reduce((highest, clip) => {
+    const match = clip.id.match(/:copy:(\d+)$/);
+    return Math.max(highest, Number(match?.[1] ?? 0));
+  }, 0);
+  const copies = copiedClips.map((clip) => {
+    sequence += 1;
+    const offset = clip.timelineStartSeconds - copiedStart;
+    const duration = clip.timelineEndSeconds - clip.timelineStartSeconds;
+    const start = clipPrecision(targetStart + offset);
+    return {
+      ...clip,
+      id: `clip:${clip.trackId}:copy:${sequence}`,
+      timelineStartSeconds: start,
+      timelineEndSeconds: clipPrecision(start + duration),
+      selected: true,
+      parentClipId: clip.id,
+      archived: false,
+    };
+  });
+  return [
+    ...clips.map((clip) => ({ ...clip, selected: false })),
+    ...copies,
+  ];
+}
+
+export function duplicateSelectedTimelineClips(
+  clips: TimelineDawClipState[],
+  offsetSeconds: number,
+): TimelineDawClipState[] {
+  const selected = copySelectedTimelineClips(clips);
+  if (!selected.length || !Number.isFinite(offsetSeconds)) {
+    return clips.map((clip) => ({ ...clip }));
+  }
+  const earliest = Math.min(...selected.map((clip) => clip.timelineStartSeconds));
+  return pasteTimelineClips(clips, selected, Math.max(0, earliest + offsetSeconds));
+}
+
 export function archiveTimelineClip(
   clips: TimelineDawClipState[],
   clipId: string,

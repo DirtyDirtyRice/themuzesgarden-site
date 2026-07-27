@@ -7,10 +7,13 @@ import {
   addTimelineClip,
   archiveSelectedTimelineClips,
   clampTimelineZoom,
+  copySelectedTimelineClips,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
+  duplicateSelectedTimelineClips,
   moveSelectedTimelineClips,
   moveTimelineLane,
+  pasteTimelineClips,
   reconcileTimelineClips,
   reconcileTimelineLanes,
   restoreTimelineClip,
@@ -49,6 +52,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
   const [clipHistory, setClipHistory] = useState<TimelineDawClipState[][]>([]);
+  const [clipClipboard, setClipClipboard] = useState<TimelineDawClipState[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(180);
   const [zoom, setZoom] = useState(1);
@@ -180,6 +184,25 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     });
   }
 
+  function copyClips() {
+    const copied = copySelectedTimelineClips(clips);
+    if (copied.length) setClipClipboard(copied);
+  }
+
+  function pasteClips() {
+    if (!clipClipboard.length) return;
+    applyClipEdit((value) => pasteTimelineClips(
+      value,
+      clipClipboard,
+      snapTimelineSeconds(elapsed, snapSeconds),
+    ));
+  }
+
+  function duplicateClips() {
+    if (!selectedClips.length) return;
+    applyClipEdit((value) => duplicateSelectedTimelineClips(value, editStep));
+  }
+
   function startClipDrag(
     event: ReactPointerEvent<HTMLDivElement>,
     clipId: string,
@@ -249,12 +272,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         || target?.tagName === "TEXTAREA"
         || target?.tagName === "SELECT"
       ) return;
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        undoClipEdit();
+      if (event.ctrlKey || event.metaKey) {
+        const key = event.key.toLowerCase();
+        if (key === "z") {
+          event.preventDefault();
+          undoClipEdit();
+        } else if (key === "c" && selectedClip) {
+          event.preventDefault();
+          copyClips();
+        } else if (key === "v" && clipClipboard.length) {
+          event.preventDefault();
+          pasteClips();
+        } else if (key === "d" && selectedClip) {
+          event.preventDefault();
+          duplicateClips();
+        }
         return;
       }
-      if (event.ctrlKey || event.metaKey) return;
       if (!selectedClip) return;
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         event.preventDefault();
@@ -351,6 +385,18 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <button type="button" onClick={addClip}
           className="rounded-lg bg-cyan-300 px-3 py-2 text-xs font-black text-black">
           Add Clip
+        </button>
+        <button type="button" disabled={!selectedClip} onClick={duplicateClips}
+          className="rounded-lg border border-cyan-300/35 px-3 py-2 text-xs font-black text-cyan-100 disabled:opacity-30">
+          Duplicate{selectedClips.length > 1 ? ` ${selectedClips.length}` : ""}
+        </button>
+        <button type="button" disabled={!selectedClip} onClick={copyClips}
+          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-30">
+          Copy
+        </button>
+        <button type="button" disabled={!clipClipboard.length} onClick={pasteClips}
+          className="rounded-lg border border-violet-300/35 px-3 py-2 text-xs font-black text-violet-100 disabled:opacity-30">
+          Paste{clipClipboard.length ? ` ${clipClipboard.length}` : ""}
         </button>
         <button type="button" disabled={!selectedClip} onClick={() => applyClipEdit(archiveSelectedTimelineClips)}
           className="rounded-lg border border-amber-300/40 px-3 py-2 text-xs font-black text-amber-200 disabled:opacity-30">
@@ -498,6 +544,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span>Alt + Arrow: trim start</span>
         <span>S: split</span>
         <span>Delete: archive</span>
+        <span>Ctrl/Cmd + C/V: copy/paste</span>
+        <span>Ctrl/Cmd + D: duplicate</span>
         <span>Ctrl/Cmd + Z: undo</span>
       </div>
       {archivedClips.length ? (

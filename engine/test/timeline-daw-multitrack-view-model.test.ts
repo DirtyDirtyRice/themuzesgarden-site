@@ -4,11 +4,14 @@ import {
   archiveSelectedTimelineClips,
   archiveTimelineClip,
   clampTimelineZoom,
+  copySelectedTimelineClips,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
+  duplicateSelectedTimelineClips,
   moveTimelineClip,
   moveSelectedTimelineClips,
   moveTimelineLane,
+  pasteTimelineClips,
   parseTimelineLaneState,
   reconcileTimelineLanes,
   restoreTimelineClip,
@@ -148,6 +151,30 @@ describe("TimelineDawMultitrackViewModel", () => {
     const archived = archiveSelectedTimelineClips(moved);
     expect(archived.every((clip) => clip.archived)).toBe(true);
     expect(archived.every((clip) => !clip.selected)).toBe(true);
+  });
+
+  it("copies, pastes, and duplicates selected clips with stable offsets", () => {
+    const clips = toggleTimelineClipSelection(
+      reconcileTimelineClips(null, ["song-1", "stem-1"], 120),
+      "clip:stem-1:1",
+    );
+    const copied = copySelectedTimelineClips(clips);
+    const pasted = pasteTimelineClips(clips, copied, 30);
+    expect(pasted.slice(-2).map((clip) => ({
+      id: clip.id,
+      start: clip.timelineStartSeconds,
+      selected: clip.selected,
+      parent: clip.parentClipId,
+    }))).toEqual([
+      { id: "clip:song-1:copy:1", start: 30, selected: true, parent: "clip:song-1:1" },
+      { id: "clip:stem-1:copy:2", start: 30, selected: true, parent: "clip:stem-1:1" },
+    ]);
+    const duplicated = duplicateSelectedTimelineClips(pasted, 5);
+    expect(duplicated.slice(-2).map((clip) => clip.timelineStartSeconds)).toEqual([35, 35]);
+    expect(duplicated.slice(-2).map((clip) => clip.id)).toEqual([
+      "clip:song-1:copy:3",
+      "clip:stem-1:copy:4",
+    ]);
   });
 
   it("splits a selected clip into source-linked children", () => {
