@@ -10,6 +10,7 @@ import {
   clampTimelineZoom,
   copySelectedTimelineClips,
   createTimelineRulerMarks,
+  createTimelineCrossfades,
   createTimelineSections,
   createTimelineWaveformBars,
   duplicateSelectedTimelineClips,
@@ -29,6 +30,7 @@ import {
   reconcileTimelineClips,
   selectTimelineClip,
   snapTimelineSeconds,
+  setTimelineClipFade,
   splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
@@ -194,14 +196,14 @@ describe("TimelineDawMultitrackViewModel", () => {
         timelineStartSeconds: 0, timelineEndSeconds: 120,
         sourceStartSeconds: 0, sourceEndSeconds: 120,
         selected: true, parentClipId: null,
-        archived: false,
+        archived: false, fadeInSeconds: 0, fadeOutSeconds: 0,
       },
       {
         id: "clip:stem-1:1", trackId: "stem-1",
         timelineStartSeconds: 0, timelineEndSeconds: 120,
         sourceStartSeconds: 0, sourceEndSeconds: 120,
         selected: false, parentClipId: null,
-        archived: false,
+        archived: false, fadeInSeconds: 0, fadeOutSeconds: 0,
       },
     ]);
   });
@@ -312,5 +314,25 @@ describe("TimelineDawMultitrackViewModel", () => {
     const restored = restoreTimelineClip(archived, added[1].id);
     expect(restored[1]).toMatchObject({ archived: false, selected: true });
     expect(restored[0].selected).toBe(false);
+  });
+
+  it("sets bounded clip fades and discovers same-lane overlap crossfades", () => {
+    const base = reconcileTimelineClips(null, ["song-1"], 30);
+    const faded = setTimelineClipFade(
+      setTimelineClipFade(base, base[0].id, "in", 4),
+      base[0].id,
+      "out",
+      99,
+    );
+    expect(faded[0]).toMatchObject({ fadeInSeconds: 4, fadeOutSeconds: 30 });
+    const overlap = addTimelineClip(faded, {
+      trackId: "song-1", timelineStartSeconds: 25, durationSeconds: 10,
+    });
+    expect(createTimelineCrossfades(overlap)).toEqual([{
+      leftClipId: "clip:song-1:1",
+      rightClipId: "clip:song-1:added:1",
+      startSeconds: 25,
+      endSeconds: 30,
+    }]);
   });
 });

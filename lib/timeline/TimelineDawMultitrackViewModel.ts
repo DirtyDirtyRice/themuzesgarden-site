@@ -22,6 +22,15 @@ export type TimelineDawClipState = {
   selected: boolean;
   parentClipId: string | null;
   archived: boolean;
+  fadeInSeconds: number;
+  fadeOutSeconds: number;
+};
+
+export type TimelineDawCrossfade = {
+  leftClipId: string;
+  rightClipId: string;
+  startSeconds: number;
+  endSeconds: number;
 };
 
 export type TimelineDawLoopRegion = {
@@ -513,10 +522,20 @@ export function reconcileTimelineClips(
       selected: valid.length === 0,
       parentClipId: null,
       archived: false,
+      fadeInSeconds: 0,
+      fadeOutSeconds: 0,
     });
   }
   return valid.map((clip, index) => ({
     ...clip,
+    fadeInSeconds: Math.min(
+      clip.timelineEndSeconds - clip.timelineStartSeconds,
+      Math.max(0, Number.isFinite(clip.fadeInSeconds) ? clip.fadeInSeconds : 0),
+    ),
+    fadeOutSeconds: Math.min(
+      clip.timelineEndSeconds - clip.timelineStartSeconds,
+      Math.max(0, Number.isFinite(clip.fadeOutSeconds) ? clip.fadeOutSeconds : 0),
+    ),
     archived: clip.archived === true,
     selected: valid.some((item) => item.selected) ? clip.selected : index === 0,
   }));
@@ -610,6 +629,46 @@ export function trimTimelineClip(
   });
 }
 
+export function setTimelineClipFade(
+  clips: TimelineDawClipState[],
+  clipId: string,
+  edge: "in" | "out",
+  seconds: number,
+): TimelineDawClipState[] {
+  return clips.map((clip) => {
+    if (clip.id !== clipId || !Number.isFinite(seconds)) return { ...clip };
+    const duration = clip.timelineEndSeconds - clip.timelineStartSeconds;
+    const value = clipPrecision(Math.min(duration, Math.max(0, seconds)));
+    return edge === "in"
+      ? { ...clip, fadeInSeconds: value }
+      : { ...clip, fadeOutSeconds: value };
+  });
+}
+
+export function createTimelineCrossfades(
+  clips: TimelineDawClipState[],
+): TimelineDawCrossfade[] {
+  const active = clips
+    .filter((clip) => !clip.archived)
+    .sort((left, right) => left.timelineStartSeconds - right.timelineStartSeconds);
+  const crossfades: TimelineDawCrossfade[] = [];
+  for (let index = 0; index < active.length - 1; index += 1) {
+    const left = active[index];
+    const right = active[index + 1];
+    if (left.trackId !== right.trackId) continue;
+    const startSeconds = Math.max(left.timelineStartSeconds, right.timelineStartSeconds);
+    const endSeconds = Math.min(left.timelineEndSeconds, right.timelineEndSeconds);
+    if (endSeconds <= startSeconds) continue;
+    crossfades.push({
+      leftClipId: left.id,
+      rightClipId: right.id,
+      startSeconds,
+      endSeconds,
+    });
+  }
+  return crossfades;
+}
+
 export function splitTimelineClip(
   clips: TimelineDawClipState[],
   clipId: string,
@@ -679,6 +738,8 @@ export function addTimelineClip(
       selected: true,
       parentClipId: null,
       archived: false,
+      fadeInSeconds: 0,
+      fadeOutSeconds: 0,
     },
   ];
 }

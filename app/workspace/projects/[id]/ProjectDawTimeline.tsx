@@ -14,6 +14,7 @@ import {
   copySelectedTimelineClips,
   createTimelineRulerMarks,
   createTimelineSections,
+  createTimelineCrossfades,
   createTimelineWaveformBars,
   duplicateSelectedTimelineClips,
   moveSelectedTimelineClips,
@@ -32,6 +33,7 @@ import {
   selectTimelineMarker,
   selectTimelineAutomationPoint,
   snapTimelineSeconds,
+  setTimelineClipFade,
   splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
@@ -58,7 +60,7 @@ type LoopDetail = {
 };
 type ClipDrag = {
   clipId: string;
-  mode: "move" | "trim-start" | "trim-end";
+  mode: "move" | "trim-start" | "trim-end" | "fade-in" | "fade-out";
   originX: number;
   originClips: TimelineDawClipState[];
 };
@@ -365,12 +367,29 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const originClip = drag.originClips.find((clip) => clip.id === drag.clipId);
     const anchor = drag.mode === "trim-end"
       ? originClip?.timelineEndSeconds
+      : drag.mode === "fade-in"
+        ? originClip?.fadeInSeconds
+        : drag.mode === "fade-out"
+          ? originClip?.fadeOutSeconds
       : originClip?.timelineStartSeconds;
     const deltaSeconds = anchor === undefined
       ? rawDelta
       : snapTimelineSeconds(anchor + rawDelta, snapSeconds) - anchor;
     if (drag.mode === "move") {
       setClips(moveSelectedTimelineClips(drag.originClips, deltaSeconds));
+    } else if (drag.mode === "fade-in" || drag.mode === "fade-out") {
+      const originFade = drag.mode === "fade-in"
+        ? originClip?.fadeInSeconds ?? 0
+        : originClip?.fadeOutSeconds ?? 0;
+      const nextFade = drag.mode === "fade-in"
+        ? originFade + rawDelta
+        : originFade - rawDelta;
+      setClips(setTimelineClipFade(
+        drag.originClips,
+        drag.clipId,
+        drag.mode === "fade-in" ? "in" : "out",
+        nextFade,
+      ));
     } else {
       setClips(trimTimelineClip(
         drag.originClips,
@@ -801,6 +820,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               const track = trackById.get(lane.trackId);
               const audible = !lane.muted && (!anySoloed || lane.soloed);
               const laneClips = clips.filter((clip) => clip.trackId === lane.trackId && !clip.archived);
+              const crossfades = createTimelineCrossfades(laneClips);
               const laneAutomation = automation
                 .filter((point) =>
                   point.trackId === lane.trackId
@@ -812,6 +832,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 : 52 - value * 36;
               return (
                 <div key={lane.trackId} className={`relative h-28 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
+                  {crossfades.map((crossfade) => (
+                    <div
+                      key={`${crossfade.leftClipId}:${crossfade.rightClipId}`}
+                      className="pointer-events-none absolute inset-y-3 z-[9] overflow-hidden border-x border-fuchsia-200/60 bg-fuchsia-300/15"
+                      style={{
+                        left: `${timelinePlayheadPercent(crossfade.startSeconds, duration)}%`,
+                        width: `${timelinePlayheadPercent(crossfade.endSeconds - crossfade.startSeconds, duration)}%`,
+                      }}
+                      title={`Crossfade ${clock(crossfade.startSeconds)}–${clock(crossfade.endSeconds)}`}
+                    >
+                      <span className="absolute inset-0 bg-[linear-gradient(to_bottom_right,transparent_48%,rgba(245,208,254,.75)_49%,rgba(245,208,254,.75)_51%,transparent_52%)]" />
+                      <span className="absolute inset-0 bg-[linear-gradient(to_top_right,transparent_48%,rgba(245,208,254,.75)_49%,rgba(245,208,254,.75)_51%,transparent_52%)]" />
+                    </div>
+                  ))}
                   {laneClips.map((clip) => {
                     const bars = createTimelineWaveformBars(`${session.id}:${clip.id}`, 80);
                     const left = timelinePlayheadPercent(clip.timelineStartSeconds, duration);
@@ -845,6 +879,38 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                         }}
                         aria-label={`Select ${track?.title || lane.trackId} clip from ${clock(clip.timelineStartSeconds)} to ${clock(clip.timelineEndSeconds)}`}
                       >
+                        <div
+                          className="pointer-events-none absolute inset-y-0 left-0 z-[13] border-r border-cyan-100/70 bg-gradient-to-r from-black/75 to-transparent"
+                          style={{ width: `${Math.min(100, (clip.fadeInSeconds / Math.max(0.25, clip.timelineEndSeconds - clip.timelineStartSeconds)) * 100)}%` }}
+                        />
+                        <div
+                          className="pointer-events-none absolute inset-y-0 right-0 z-[13] border-l border-cyan-100/70 bg-gradient-to-l from-black/75 to-transparent"
+                          style={{ width: `${Math.min(100, (clip.fadeOutSeconds / Math.max(0.25, clip.timelineEndSeconds - clip.timelineStartSeconds)) * 100)}%` }}
+                        />
+                        <div
+                          className="absolute left-3 top-0 z-30 h-4 w-4 -translate-x-1/2 cursor-ew-resize touch-none rounded-b bg-cyan-200 text-center text-[9px] font-black text-black"
+                          style={{ left: `${(clip.fadeInSeconds / Math.max(0.25, clip.timelineEndSeconds - clip.timelineStartSeconds)) * 100}%` }}
+                          onPointerDown={(event) => {
+                            event.stopPropagation();
+                            startClipDrag(event, clip.id, "fade-in", lane.trackId);
+                          }}
+                          onPointerMove={continueClipDrag}
+                          onPointerUp={finishClipDrag}
+                          onPointerCancel={finishClipDrag}
+                          title={`Fade in ${clip.fadeInSeconds.toFixed(2)}s`}
+                        >F</div>
+                        <div
+                          className="absolute right-3 top-0 z-30 h-4 w-4 translate-x-1/2 cursor-ew-resize touch-none rounded-b bg-violet-200 text-center text-[9px] font-black text-black"
+                          style={{ right: `${(clip.fadeOutSeconds / Math.max(0.25, clip.timelineEndSeconds - clip.timelineStartSeconds)) * 100}%` }}
+                          onPointerDown={(event) => {
+                            event.stopPropagation();
+                            startClipDrag(event, clip.id, "fade-out", lane.trackId);
+                          }}
+                          onPointerMove={continueClipDrag}
+                          onPointerUp={finishClipDrag}
+                          onPointerCancel={finishClipDrag}
+                          title={`Fade out ${clip.fadeOutSeconds.toFixed(2)}s`}
+                        >F</div>
                         <div
                           className="absolute inset-y-0 left-0 z-20 w-3 cursor-ew-resize border-r border-white/30 bg-black/25 hover:bg-rose-300/40"
                           onPointerDown={(event) => {
