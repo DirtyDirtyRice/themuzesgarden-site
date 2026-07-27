@@ -128,6 +128,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const overloadActiveRef = useRef(false);
   const snapshotCompareRef = useRef<MixSnapshotState | null>(null);
   const snapshotFileRef = useRef<HTMLInputElement | null>(null);
+  const mixerLastStateRef = useRef<MixSnapshotState | null>(null);
+  const mixerApplyingHistoryRef = useRef(false);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
@@ -159,6 +161,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [snapshotReady, setSnapshotReady] = useState(false);
   const [comparingSnapshot, setComparingSnapshot] = useState(false);
   const [snapshotTransferStatus, setSnapshotTransferStatus] = useState("");
+  const [mixerUndoHistory, setMixerUndoHistory] = useState<MixSnapshotState[]>([]);
+  const [mixerRedoHistory, setMixerRedoHistory] = useState<MixSnapshotState[]>([]);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -406,6 +410,45 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [selectedMixSnapshot]);
 
   useEffect(() => {
+    if (!lanes.length || !masterReady || !groupBusesReady) return;
+    const current = captureMixState();
+    const previous = mixerLastStateRef.current;
+    if (!previous) {
+      mixerLastStateRef.current = current;
+      return;
+    }
+    if (mixerApplyingHistoryRef.current) {
+      mixerApplyingHistoryRef.current = false;
+      mixerLastStateRef.current = current;
+      return;
+    }
+    if (JSON.stringify(previous) === JSON.stringify(current)) return;
+    setMixerUndoHistory((history) => [...history, previous].slice(-50));
+    setMixerRedoHistory([]);
+    mixerLastStateRef.current = current;
+  }, [
+    comparisonMode, delayReturn, groupBuses, groupBusesReady, lanes, limiterCeiling,
+    limiterEnabled, masterBalance, masterGain, masterReady, monoCheck, referenceMatch,
+    referenceTrackId, reverbReturn,
+  ]);
+
+  useEffect(() => {
+    const handleMixerHistory = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z") return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.isContentEditable
+        || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "")
+      ) return;
+      event.preventDefault();
+      if (event.shiftKey) redoMixerChange();
+      else undoMixerChange();
+    };
+    window.addEventListener("keydown", handleMixerHistory);
+    return () => window.removeEventListener("keydown", handleMixerHistory);
+  }, [mixerRedoHistory, mixerUndoHistory]);
+
+  useEffect(() => {
     const overloaded = masterInputLevel > limiterCeiling;
     if (overloaded && !overloadActiveRef.current) {
       setMasterOverloads((current) => [...current, {
@@ -564,6 +607,26 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setReferenceMatch(snapshot.referenceMatch);
   }
 
+  function undoMixerChange() {
+    const target = mixerUndoHistory.at(-1);
+    if (!target) return;
+    const current = captureMixState();
+    setMixerUndoHistory((history) => history.slice(0, -1));
+    setMixerRedoHistory((history) => [...history, current].slice(-50));
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(target);
+  }
+
+  function redoMixerChange() {
+    const target = mixerRedoHistory.at(-1);
+    if (!target) return;
+    const current = captureMixState();
+    setMixerRedoHistory((history) => history.slice(0, -1));
+    setMixerUndoHistory((history) => [...history, current].slice(-50));
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(target);
+  }
+
   function saveMixSnapshot() {
     const name = snapshotName.trim() || `Mix ${mixSnapshots.length + 1}`;
     const snapshot: MixSnapshot = {
@@ -700,12 +763,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const snapshot = mixSnapshots.find((entry) => entry.id === selectedSnapshotId);
     if (!snapshot) return;
     if (comparingSnapshot) {
-      if (snapshotCompareRef.current) applyMixState(snapshotCompareRef.current);
+      if (snapshotCompareRef.current) {
+        mixerApplyingHistoryRef.current = true;
+        applyMixState(snapshotCompareRef.current);
+      }
       snapshotCompareRef.current = null;
       setComparingSnapshot(false);
       return;
     }
     snapshotCompareRef.current = captureMixState();
+    mixerApplyingHistoryRef.current = true;
     applyMixState(snapshot);
     setComparingSnapshot(true);
   }
@@ -1442,6 +1509,34 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 border-b border-indigo-300/10 bg-indigo-300/[0.025] px-5 py-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-200/70">
+          Mixer History
+        </span>
+        <button
+          type="button"
+          disabled={!mixerUndoHistory.length}
+          onClick={undoMixerChange}
+          className="rounded border border-indigo-300/20 px-3 py-1.5 text-[10px] font-black text-indigo-100 disabled:opacity-30"
+        >
+          Undo
+        </button>
+        <button
+          type="button"
+          disabled={!mixerRedoHistory.length}
+          onClick={redoMixerChange}
+          className="rounded border border-indigo-300/20 px-3 py-1.5 text-[10px] font-black text-indigo-100 disabled:opacity-30"
+        >
+          Redo
+        </button>
+        <span className="font-mono text-[9px] text-white/35">
+          {mixerUndoHistory.length} undo · {mixerRedoHistory.length} redo
+        </span>
+        <span className="ml-auto text-[9px] text-white/25">
+          Ctrl+Z · Ctrl+Shift+Z · 50 changes
+        </span>
+      </div>
+
       <div className="flex flex-wrap items-center gap-3 border-b border-emerald-300/10 bg-emerald-300/[0.025] px-5 py-2">
         <span className="text-[10px] font-black uppercase tracking-wider text-emerald-200/70">
           Mix Snapshots
@@ -1467,6 +1562,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           value={selectedSnapshotId}
           onChange={(event) => {
             if (comparingSnapshot && snapshotCompareRef.current) {
+              mixerApplyingHistoryRef.current = true;
               applyMixState(snapshotCompareRef.current);
               snapshotCompareRef.current = null;
               setComparingSnapshot(false);
