@@ -195,7 +195,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [checkpointChangeSectionFilters, setCheckpointChangeSectionFilters] =
     useState<Record<string, LaneRecallSection>>({});
   const [checkpointLaneOrders, setCheckpointLaneOrders] =
-    useState<Record<string, "checkpoint" | "name" | "selected" | "changed">>({});
+    useState<Record<string, "checkpoint" | "name" | "selected" | "changed" | "unchanged">>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -1228,6 +1228,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       return matching.sort((left, right) =>
         Number(orderedChangedIds.has(right.trackId))
         - Number(orderedChangedIds.has(left.trackId)));
+    }
+    if (order === "unchanged") {
+      const orderedChangedIds = new Set(changedCheckpointLaneIds(
+        checkpoint.state,
+        checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+      ));
+      return matching.sort((left, right) =>
+        Number(orderedChangedIds.has(left.trackId))
+        - Number(orderedChangedIds.has(right.trackId)));
     }
     return matching;
   }
@@ -2353,7 +2362,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                   | "checkpoint"
                                   | "name"
                                   | "selected"
-                                  | "changed",
+                                  | "changed"
+                                  | "unchanged",
                               }))}
                               className="rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/55 outline-none"
                               aria-label={`Order lanes in ${checkpoint.name}`}
@@ -2362,6 +2372,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               <option value="name">Name A-Z</option>
                               <option value="selected">Selected First</option>
                               <option value="changed">Changed First</option>
+                              <option value="unchanged">Unchanged First</option>
                             </select>
                             <button
                               type="button"
