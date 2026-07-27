@@ -1050,6 +1050,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function saveMixSnapshot() {
+    if (comparingSnapshot || comparedMixerCheckpointId) return;
     const name = snapshotName.trim() || `Mix ${mixSnapshots.length + 1}`;
     const snapshot: MixSnapshot = {
       id: `mix:${Date.now()}`,
@@ -3357,18 +3358,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
         <input
           value={snapshotName}
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
           onChange={(event) => setSnapshotName(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") saveMixSnapshot();
           }}
           placeholder={`Mix ${mixSnapshots.length + 1}`}
-          className="w-32 rounded border border-emerald-300/15 bg-black px-2 py-1.5 text-[10px] text-white outline-none placeholder:text-white/25"
+          className="w-32 rounded border border-emerald-300/15 bg-black px-2 py-1.5 text-[10px] text-white outline-none placeholder:text-white/25 disabled:opacity-30"
           aria-label="Mix snapshot name"
         />
         <button
           type="button"
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
           onClick={saveMixSnapshot}
-          className="rounded bg-emerald-300 px-3 py-1.5 text-[10px] font-black text-black"
+          className="rounded bg-emerald-300 px-3 py-1.5 text-[10px] font-black text-black disabled:opacity-30"
         >
           Save Current
         </button>
