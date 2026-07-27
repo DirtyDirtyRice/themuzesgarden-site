@@ -138,6 +138,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const overloadActiveRef = useRef(false);
   const snapshotCompareRef = useRef<MixSnapshotState | null>(null);
   const snapshotFileRef = useRef<HTMLInputElement | null>(null);
+  const mixerCheckpointFileRef = useRef<HTMLInputElement | null>(null);
   const mixerLastStateRef = useRef<MixSnapshotState | null>(null);
   const mixerApplyingHistoryRef = useRef(false);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -177,6 +178,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [showMixerHistory, setShowMixerHistory] = useState(false);
   const [mixerCheckpoints, setMixerCheckpoints] = useState<MixerCheckpoint[]>([]);
   const [mixerCheckpointsReady, setMixerCheckpointsReady] = useState(false);
+  const [mixerCheckpointTransferStatus, setMixerCheckpointTransferStatus] = useState("");
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -780,6 +782,65 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setMixerRedoHistory([]);
     mixerApplyingHistoryRef.current = true;
     applyMixState(checkpoint.state);
+  }
+
+  function exportMixerCheckpoints() {
+    if (!mixerCheckpoints.length) return;
+    const bundle = JSON.stringify({
+      format: "muzes-daw-mixer-checkpoints",
+      version: 1,
+      sessionName: session.name,
+      exportedAt: new Date().toISOString(),
+      checkpoints: mixerCheckpoints,
+    }, null, 2);
+    const url = URL.createObjectURL(new Blob([bundle], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${session.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "daw"}-mixer-checkpoints.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setMixerCheckpointTransferStatus(
+      `${mixerCheckpoints.length} checkpoint${mixerCheckpoints.length === 1 ? "" : "s"} exported`,
+    );
+  }
+
+  async function importMixerCheckpoints(file: File) {
+    try {
+      const bundle = JSON.parse(await file.text()) as {
+        format?: string;
+        checkpoints?: Array<Partial<MixerCheckpoint>>;
+      };
+      if (bundle.format !== "muzes-daw-mixer-checkpoints" || !Array.isArray(bundle.checkpoints)) {
+        throw new Error("Choose a Muzes mixer checkpoint file");
+      }
+      const stamp = Date.now();
+      const imported = bundle.checkpoints.flatMap((checkpoint, index): MixerCheckpoint[] => {
+        const state = checkpoint.state as MixSnapshotState | undefined;
+        if (!state || !Array.isArray(state.lanes) || !state.groupBuses) return [];
+        const label = typeof checkpoint.label === "string"
+          ? checkpoint.label
+          : `Imported checkpoint ${index + 1}`;
+        return [{
+          id: `checkpoint:${stamp}:import:${index + 1}`,
+          name: typeof checkpoint.name === "string" && checkpoint.name.trim()
+            ? checkpoint.name.trim()
+            : label,
+          notes: typeof checkpoint.notes === "string" ? checkpoint.notes : "",
+          label,
+          createdAt: typeof checkpoint.createdAt === "number" ? checkpoint.createdAt : stamp,
+          state,
+        }];
+      });
+      if (!imported.length) throw new Error("No valid mixer checkpoints found");
+      setMixerCheckpoints((checkpoints) => [...checkpoints, ...imported].slice(-12));
+      setMixerCheckpointTransferStatus(
+        `${imported.length} checkpoint${imported.length === 1 ? "" : "s"} imported`,
+      );
+    } catch (cause) {
+      setMixerCheckpointTransferStatus(cause instanceof Error ? cause.message : "Import failed");
+    } finally {
+      if (mixerCheckpointFileRef.current) mixerCheckpointFileRef.current.value = "";
+    }
   }
 
   function saveMixSnapshot() {
@@ -1704,6 +1765,37 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         >
           {showMixerHistory ? "Close Browser" : "Browse All"}
         </button>
+        <button
+          type="button"
+          disabled={!mixerCheckpoints.length}
+          onClick={exportMixerCheckpoints}
+          className="rounded border border-amber-300/15 px-2 py-1.5 text-[9px] font-black text-amber-100 disabled:opacity-30"
+        >
+          Export Pins
+        </button>
+        <button
+          type="button"
+          onClick={() => mixerCheckpointFileRef.current?.click()}
+          className="rounded border border-violet-300/15 px-2 py-1.5 text-[9px] font-black text-violet-100"
+        >
+          Import Pins
+        </button>
+        <input
+          ref={mixerCheckpointFileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void importMixerCheckpoints(file);
+          }}
+          aria-label="Import mixer checkpoint file"
+        />
+        {mixerCheckpointTransferStatus ? (
+          <span className="text-[9px] text-amber-100/45">
+            {mixerCheckpointTransferStatus}
+          </span>
+        ) : null}
         <span className="ml-auto text-[9px] text-white/25">
           Ctrl+Z · Ctrl+Shift+Z · 50 changes
         </span>
