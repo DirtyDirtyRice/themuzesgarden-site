@@ -182,6 +182,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [mixerCheckpointTransferStatus, setMixerCheckpointTransferStatus] = useState("");
   const [comparedMixerCheckpointId, setComparedMixerCheckpointId] = useState("");
   const [expandedMixerCheckpointId, setExpandedMixerCheckpointId] = useState("");
+  const [checkpointLaneSelections, setCheckpointLaneSelections] = useState<Record<string, string>>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -827,6 +828,26 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setMixerUndoHistory((history) => [...history, {
       state: current,
       label: `Recall ${section} from ${checkpoint.name}`,
+      createdAt: Date.now(),
+    }].slice(-50));
+    setMixerRedoHistory([]);
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(recalled);
+  }
+
+  function recallMixerCheckpointLane(checkpoint: MixerCheckpoint, trackId: string) {
+    if (comparedMixerCheckpointId || comparingSnapshot || !trackId) return;
+    const current = captureMixState();
+    const savedLane = checkpoint.state.lanes.find((lane) => lane.trackId === trackId);
+    if (!savedLane || !current.lanes.some((lane) => lane.trackId === trackId)) return;
+    const recalled: MixSnapshotState = {
+      ...current,
+      lanes: current.lanes.map((lane) => lane.trackId === trackId ? savedLane : lane),
+    };
+    const laneName = trackById.get(trackId)?.title ?? trackId;
+    setMixerUndoHistory((history) => [...history, {
+      state: current,
+      label: `Recall ${laneName} from ${checkpoint.name}`,
       createdAt: Date.now(),
     }].slice(-50));
     setMixerRedoHistory([]);
@@ -2032,6 +2053,48 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </li>
                           ))}
                         </ul>
+                        <div className="flex items-center gap-1 border-t border-white/5 pt-2">
+                          <select
+                            value={checkpointLaneSelections[checkpoint.id]
+                              ?? checkpoint.state.lanes.find((savedLane) =>
+                                lanes.some((lane) => lane.trackId === savedLane.trackId))?.trackId
+                              ?? ""}
+                            onChange={(event) => setCheckpointLaneSelections((selections) => ({
+                              ...selections,
+                              [checkpoint.id]: event.target.value,
+                            }))}
+                            className="min-w-0 flex-1 rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-cyan-50/70"
+                            aria-label={`Lane to recall from ${checkpoint.name}`}
+                          >
+                            {checkpoint.state.lanes
+                              .filter((savedLane) =>
+                                lanes.some((lane) => lane.trackId === savedLane.trackId))
+                              .map((savedLane) => (
+                                <option key={savedLane.trackId} value={savedLane.trackId}>
+                                  {trackById.get(savedLane.trackId)?.title ?? savedLane.trackId}
+                                </option>
+                              ))}
+                          </select>
+                          <button
+                            type="button"
+                            disabled={
+                              Boolean(comparedMixerCheckpointId)
+                              || comparingSnapshot
+                              || !checkpoint.state.lanes.some((savedLane) =>
+                                lanes.some((lane) => lane.trackId === savedLane.trackId))
+                            }
+                            onClick={() => recallMixerCheckpointLane(
+                              checkpoint,
+                              checkpointLaneSelections[checkpoint.id]
+                                ?? checkpoint.state.lanes.find((savedLane) =>
+                                  lanes.some((lane) => lane.trackId === savedLane.trackId))?.trackId
+                                ?? "",
+                            )}
+                            className="rounded bg-cyan-300/15 px-2 py-1 text-[8px] font-black text-cyan-100 hover:bg-cyan-300/25 disabled:opacity-30"
+                          >
+                            Recall Lane
+                          </button>
+                        </div>
                         <div className="flex flex-wrap gap-1 border-t border-white/5 pt-2">
                           {(["lanes", "master", "buses"] as const).map((section) => (
                             <button
