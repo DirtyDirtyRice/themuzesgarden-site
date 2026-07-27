@@ -2334,11 +2334,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           ))}
                         </div>
                         <div className="grid gap-1 border-t border-white/5 pt-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap items-center justify-between gap-1">
                             <span className="text-[8px] font-black uppercase text-white/35">
                               Multi-lane recall · {checkpointMultiLaneSelections[checkpoint.id]?.length ?? 0} selected
                             </span>
-                            <div className="flex items-center gap-1">
+                            <div className="flex flex-wrap items-center justify-end gap-1">
                               <span
                                 className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/40"
                                 title="Selected lanes shown by the current filter"
