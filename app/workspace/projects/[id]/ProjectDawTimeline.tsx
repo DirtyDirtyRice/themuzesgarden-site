@@ -168,6 +168,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [snapshotTransferStatus, setSnapshotTransferStatus] = useState("");
   const [mixerUndoHistory, setMixerUndoHistory] = useState<MixerHistoryEntry[]>([]);
   const [mixerRedoHistory, setMixerRedoHistory] = useState<MixerHistoryEntry[]>([]);
+  const [mixerHistorySearch, setMixerHistorySearch] = useState("");
+  const [showMixerHistory, setShowMixerHistory] = useState(false);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -203,6 +205,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     .find(({ effect }) => effect.id === selectedEffectId) ?? null;
   const selectedMixSnapshot =
     mixSnapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ?? null;
+  const filteredMixerHistory = mixerUndoHistory
+    .map((entry, index) => ({ entry, index }))
+    .filter(({ entry }) =>
+      entry.label.toLowerCase().includes(mixerHistorySearch.trim().toLowerCase()));
   const masterLaneLevels = lanes.map((lane) => {
       const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
       const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
@@ -680,6 +686,28 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       label: target.label,
       createdAt: Date.now(),
     }].slice(-50));
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(target.state);
+  }
+
+  function jumpToMixerHistory(index: number) {
+    const target = mixerUndoHistory[index];
+    if (!target) return;
+    const current = captureMixState();
+    const chronologicalFuture: MixerHistoryEntry[] = [
+      ...mixerUndoHistory.slice(index + 1).map((entry, futureIndex) => ({
+        state: entry.state,
+        label: mixerUndoHistory[index + futureIndex]?.label ?? entry.label,
+        createdAt: Date.now() + futureIndex,
+      })),
+      {
+        state: current,
+        label: mixerUndoHistory.at(-1)?.label ?? "Return to latest mix",
+        createdAt: Date.now() + mixerUndoHistory.length,
+      },
+    ];
+    setMixerUndoHistory(mixerUndoHistory.slice(0, index));
+    setMixerRedoHistory(chronologicalFuture.reverse().slice(-50));
     mixerApplyingHistoryRef.current = true;
     applyMixState(target.state);
   }
@@ -1589,6 +1617,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span className="font-mono text-[9px] text-white/35">
           {mixerUndoHistory.length} undo · {mixerRedoHistory.length} redo
         </span>
+        <input
+          value={mixerHistorySearch}
+          onChange={(event) => {
+            setMixerHistorySearch(event.target.value);
+            if (event.target.value) setShowMixerHistory(true);
+          }}
+          placeholder="Search history"
+          className="w-32 rounded border border-indigo-300/15 bg-black px-2 py-1.5 text-[9px] text-white placeholder:text-white/25"
+          aria-label="Search mixer history"
+        />
+        <button
+          type="button"
+          onClick={() => setShowMixerHistory((visible) => !visible)}
+          className="rounded border border-white/10 px-2 py-1.5 text-[9px] font-black text-white/55"
+        >
+          {showMixerHistory ? "Close Browser" : "Browse All"}
+        </button>
         <span className="ml-auto text-[9px] text-white/25">
           Ctrl+Z · Ctrl+Shift+Z · 50 changes
         </span>
@@ -1614,6 +1659,42 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               </span>
             </div>
           ))}
+        </div>
+      ) : null}
+
+      {showMixerHistory ? (
+        <div className="border-b border-indigo-300/10 bg-black/35 px-5 py-3">
+          <div className="mb-2 flex items-center justify-between text-[9px] text-white/30">
+            <span>{filteredMixerHistory.length} matching changes</span>
+            <span>Choose any point to restore it; later states move to Redo</span>
+          </div>
+          <div className="grid max-h-40 gap-1 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+            {[...filteredMixerHistory].reverse().map(({ entry, index }) => (
+              <button
+                key={`${entry.createdAt}:${index}`}
+                type="button"
+                onClick={() => jumpToMixerHistory(index)}
+                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-left hover:border-indigo-300/30 hover:bg-indigo-300/[0.06]"
+              >
+                <span className="rounded bg-indigo-300/10 px-1.5 py-1 font-mono text-[8px] text-indigo-200">
+                  {index + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[9px] font-black text-white/65">
+                  {entry.label}
+                </span>
+                <span className="font-mono text-[8px] text-white/25">
+                  {new Date(entry.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit", minute: "2-digit",
+                  })}
+                </span>
+              </button>
+            ))}
+          </div>
+          {!filteredMixerHistory.length ? (
+            <p className="py-3 text-center text-[10px] text-white/30">
+              No mixer changes match “{mixerHistorySearch}”.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
