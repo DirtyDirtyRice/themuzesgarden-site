@@ -116,6 +116,8 @@ type MixerHistoryEntry = {
 };
 type MixerCheckpoint = MixerHistoryEntry & {
   id: string;
+  name: string;
+  notes: string;
 };
 
 const defaultGroupBuses: TimelineGroupBuses = {
@@ -215,8 +217,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     .map((entry, index) => ({ entry, index }))
     .filter(({ entry }) =>
       entry.label.toLowerCase().includes(mixerHistorySearch.trim().toLowerCase()));
-  const filteredMixerCheckpoints = mixerCheckpoints.filter((entry) =>
-    entry.label.toLowerCase().includes(mixerHistorySearch.trim().toLowerCase()));
+  const filteredMixerCheckpoints = mixerCheckpoints.filter((entry) => {
+    const query = mixerHistorySearch.trim().toLowerCase();
+    return entry.name.toLowerCase().includes(query)
+      || entry.notes.toLowerCase().includes(query)
+      || entry.label.toLowerCase().includes(query);
+  });
   const masterLaneLevels = lanes.map((lane) => {
       const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
       const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
@@ -426,7 +432,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem(mixerCheckpointStorageKey) ?? "[]");
-      if (Array.isArray(stored)) setMixerCheckpoints(stored.slice(-12));
+      if (Array.isArray(stored)) {
+        setMixerCheckpoints(stored.map((checkpoint: MixerCheckpoint) => ({
+          ...checkpoint,
+          name: typeof checkpoint.name === "string" ? checkpoint.name : checkpoint.label,
+          notes: typeof checkpoint.notes === "string" ? checkpoint.notes : "",
+        })).slice(-12));
+      }
     } catch {} finally {
       setMixerCheckpointsReady(true);
     }
@@ -744,15 +756,25 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       return [...checkpoints, {
         ...entry,
         id: `checkpoint:${Date.now()}`,
+        name: entry.label,
+        notes: "",
       }].slice(-12);
     });
+  }
+
+  function updateMixerCheckpoint(
+    id: string,
+    updates: Partial<Pick<MixerCheckpoint, "name" | "notes">>,
+  ) {
+    setMixerCheckpoints((checkpoints) => checkpoints.map((checkpoint) =>
+      checkpoint.id === id ? { ...checkpoint, ...updates } : checkpoint));
   }
 
   function restoreMixerCheckpoint(checkpoint: MixerCheckpoint) {
     const current = captureMixState();
     setMixerUndoHistory((history) => [...history, {
       state: current,
-      label: `Restore checkpoint: ${checkpoint.label}`,
+      label: `Restore checkpoint: ${checkpoint.name}`,
       createdAt: Date.now(),
     }].slice(-50));
     setMixerRedoHistory([]);
@@ -1722,25 +1744,45 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 {[...filteredMixerCheckpoints].reverse().map((checkpoint) => (
                   <div
                     key={checkpoint.id}
-                    className="flex items-center gap-1 rounded-lg border border-amber-300/20 bg-amber-300/[0.04] p-1"
+                    className="grid gap-1 rounded-lg border border-amber-300/20 bg-amber-300/[0.04] p-2"
                   >
-                    <button
-                      type="button"
-                      onClick={() => restoreMixerCheckpoint(checkpoint)}
-                      className="min-w-0 flex-1 truncate px-2 py-1.5 text-left text-[9px] font-black text-amber-100"
-                      title={`Restore ${checkpoint.label}`}
-                    >
-                      ★ {checkpoint.label}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMixerCheckpoints((checkpoints) =>
-                        checkpoints.filter((entry) => entry.id !== checkpoint.id))}
-                      className="rounded px-2 py-1 text-[9px] text-white/35 hover:bg-white/5 hover:text-white/70"
-                      aria-label={`Unpin ${checkpoint.label}`}
-                    >
-                      Unpin
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-amber-200">★</span>
+                      <input
+                        value={checkpoint.name}
+                        onChange={(event) => updateMixerCheckpoint(checkpoint.id, {
+                          name: event.target.value,
+                        })}
+                        className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-1 text-[9px] font-black text-amber-100 outline-none focus:border-amber-300/25"
+                        aria-label={`Checkpoint name for ${checkpoint.label}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => restoreMixerCheckpoint(checkpoint)}
+                        className="rounded bg-amber-300/15 px-2 py-1 text-[8px] font-black text-amber-100 hover:bg-amber-300/25"
+                        title={`Restore ${checkpoint.name}`}
+                      >
+                        Restore
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMixerCheckpoints((checkpoints) =>
+                          checkpoints.filter((entry) => entry.id !== checkpoint.id))}
+                        className="rounded px-1.5 py-1 text-[8px] text-white/35 hover:bg-white/5 hover:text-white/70"
+                        aria-label={`Unpin ${checkpoint.name}`}
+                      >
+                        Unpin
+                      </button>
+                    </div>
+                    <input
+                      value={checkpoint.notes}
+                      onChange={(event) => updateMixerCheckpoint(checkpoint.id, {
+                        notes: event.target.value,
+                      })}
+                      placeholder="Add checkpoint notes"
+                      className="w-full rounded border border-white/5 bg-black/25 px-2 py-1 text-[8px] text-white/55 outline-none placeholder:text-white/20 focus:border-amber-300/20"
+                      aria-label={`Notes for ${checkpoint.name}`}
+                    />
                   </div>
                 ))}
               </div>
