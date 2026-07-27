@@ -190,6 +190,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     useState<Record<string, boolean>>({});
   const [checkpointChangedOnlyFilters, setCheckpointChangedOnlyFilters] =
     useState<Record<string, boolean>>({});
+  const [checkpointChangeSectionFilters, setCheckpointChangeSectionFilters] =
+    useState<Record<string, LaneRecallSection>>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -1172,7 +1174,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const query = (checkpointLaneSearches[checkpoint.id] ?? "").trim().toLowerCase();
     const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
     const changedIds = checkpointChangedOnlyFilters[checkpoint.id]
-      ? new Set(changedCheckpointLaneIds(checkpoint.state))
+      ? new Set(changedCheckpointLaneIds(
+        checkpoint.state,
+        checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+      ))
       : null;
     return checkpoint.state.lanes.filter((savedLane) => {
       if (!lanes.some((lane) => lane.trackId === savedLane.trackId)) return false;
@@ -2330,6 +2335,21 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             >
                               Changed Only
                             </button>
+                            <select
+                              value={checkpointChangeSectionFilters[checkpoint.id] ?? "all"}
+                              disabled={!checkpointChangedOnlyFilters[checkpoint.id]}
+                              onChange={(event) => setCheckpointChangeSectionFilters((filters) => ({
+                                ...filters,
+                                [checkpoint.id]: event.target.value as LaneRecallSection,
+                              }))}
+                              className="rounded border border-amber-300/15 bg-black px-2 py-1 text-[8px] text-amber-100/70 outline-none disabled:opacity-30"
+                              aria-label={`Changed lane section in ${checkpoint.name}`}
+                            >
+                              <option value="all">All Changes</option>
+                              <option value="mix">Level/Pan</option>
+                              <option value="routing">Sends</option>
+                              <option value="effects">FX</option>
+                            </select>
                             <button
                               type="button"
                               disabled={
@@ -2349,6 +2369,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 setCheckpointChangedOnlyFilters((filters) => ({
                                   ...filters,
                                   [checkpoint.id]: false,
+                                }));
+                                setCheckpointChangeSectionFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: "all",
                                 }));
                               }}
                               className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/45 hover:text-white/80 disabled:opacity-30"
