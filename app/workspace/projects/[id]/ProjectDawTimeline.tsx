@@ -2807,6 +2807,38 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </button>
                             <button
                               type="button"
+                              disabled={availableCheckpointLaneCount(checkpoint)
+                                <= matchingCheckpointLanes(checkpoint).length}
+                              onClick={() => {
+                                const visibleIds = new Set(
+                                  matchingCheckpointLanes(checkpoint).map((lane) => lane.trackId),
+                                );
+                                const hiddenLanes = checkpoint.state.lanes.filter((savedLane) =>
+                                  lanes.some((lane) => lane.trackId === savedLane.trackId)
+                                  && !visibleIds.has(savedLane.trackId));
+                                const hiddenIds = new Set(
+                                  hiddenLanes.map((lane) => lane.trackId),
+                                );
+                                setCheckpointMultiLaneSelections((selections) => {
+                                  const current = selections[checkpoint.id] ?? [];
+                                  const selectedIds = new Set(current);
+                                  return {
+                                    ...selections,
+                                    [checkpoint.id]: [
+                                      ...current.filter((id) => !hiddenIds.has(id)),
+                                      ...hiddenLanes
+                                        .filter((lane) => !selectedIds.has(lane.trackId))
+                                        .map((lane) => lane.trackId),
+                                    ],
+                                  };
+                                });
+                              }}
+                              className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] text-cyan-100/60 hover:text-cyan-100 disabled:opacity-30"
+                            >
+                              Invert Hidden
+                            </button>
+                            <button
+                              type="button"
                               disabled={!changedMatchingCheckpointLaneIds(
                                 checkpoint,
                                 checkpointChangeSectionFilters[checkpoint.id] ?? "all",
