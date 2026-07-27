@@ -453,6 +453,22 @@ export function timelineMasterOutputLevel(
     : amplified);
 }
 
+export function timelineStereoMasterState(
+  masterLevel: number,
+  balance: number,
+  mono: boolean,
+  stereoSpread: number,
+): { left: number; right: number; correlation: number } {
+  const level = Math.min(1, Math.max(0, masterLevel));
+  const safeBalance = Math.min(1, Math.max(-1, balance));
+  if (mono) return { left: level, right: level, correlation: 1 };
+  return {
+    left: level * (safeBalance > 0 ? 1 - safeBalance : 1),
+    right: level * (safeBalance < 0 ? 1 + safeBalance : 1),
+    correlation: Math.min(1, Math.max(-1, 1 - Math.min(1.6, Math.max(0, stereoSpread)) * 1.25)),
+  };
+}
+
 export function parseTimelineLaneState(
   raw: string | null,
   trackId: string,

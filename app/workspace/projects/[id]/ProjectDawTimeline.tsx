@@ -45,6 +45,7 @@ import {
   timelineAutomationValueAt,
   timelineLaneMeterLevel,
   timelineMasterOutputLevel,
+  timelineStereoMasterState,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
   toggleTimelineClipSelection,
@@ -120,6 +121,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [limiterCeiling, setLimiterCeiling] = useState(0.95);
   const [masterReady, setMasterReady] = useState(false);
   const [masterOverloads, setMasterOverloads] = useState<MasterOverload[]>([]);
+  const [masterBalance, setMasterBalance] = useState(0);
+  const [monoCheck, setMonoCheck] = useState(false);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -176,6 +179,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   );
   const masterPeakDb = masterLevel > 0 ? 20 * Math.log10(masterLevel) : -60;
   const masterLoudness = Math.max(-60, masterPeakDb - 3);
+  const stereoSpread = lanes.length
+    ? lanes.reduce((sum, lane) => sum + Math.abs(lane.pan), 0) / lanes.length
+    : 0;
+  const stereoMaster = timelineStereoMasterState(
+    masterLevel, masterBalance, monoCheck, stereoSpread,
+  );
   const effectPresets: Record<TimelineDawEffectKind, string[]> = {
     eq: ["Balanced", "Vocal Presence", "Bass Cleanup", "Air"],
     compressor: ["Vocal Glue", "Punch", "Gentle Bus", "Limiter"],
@@ -277,6 +286,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       if (Number.isFinite(saved.limiterCeiling)) {
         setLimiterCeiling(Math.min(1, Math.max(0.5, saved.limiterCeiling)));
       }
+      if (Number.isFinite(saved.masterBalance)) {
+        setMasterBalance(Math.min(1, Math.max(-1, saved.masterBalance)));
+      }
+      if (typeof saved.monoCheck === "boolean") setMonoCheck(saved.monoCheck);
       if (Array.isArray(saved.overloads)) {
         setMasterOverloads(saved.overloads
           .filter((entry: MasterOverload) =>
@@ -294,10 +307,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     if (masterReady) {
       localStorage.setItem(masterStorageKey, JSON.stringify({
         masterGain, limiterEnabled, limiterCeiling, overloads: masterOverloads,
+        masterBalance, monoCheck,
       }));
     }
   }, [
-    limiterCeiling, limiterEnabled, masterGain, masterOverloads, masterReady, masterStorageKey,
+    limiterCeiling, limiterEnabled, masterBalance, masterGain, masterOverloads, masterReady,
+    masterStorageKey, monoCheck,
   ]);
 
   useEffect(() => {
@@ -390,12 +405,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         sessionId: session.id,
         trackId: session.songId,
         volume: audible ? outputVolume : 0,
-        pan: Math.min(1, Math.max(-1, (primaryLane?.pan ?? 0) + (automatedPan ?? 0))),
+        pan: monoCheck
+          ? 0
+          : Math.min(1, Math.max(
+              -1,
+              (primaryLane?.pan ?? 0) + (automatedPan ?? 0) + masterBalance,
+            )),
       },
     }));
   }, [
     anySoloed, automation, elapsed, groupBuses, lanes, limiterCeiling, limiterEnabled,
-    masterGain, session.id, session.songId,
+    masterBalance, masterGain, monoCheck, session.id, session.songId,
   ]);
 
   function updateLane(trackId: string, patch: Partial<TimelineDawLaneState>) {
@@ -1004,6 +1024,66 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span className="font-mono text-[10px] font-black text-amber-100">
           {masterLoudness.toFixed(1)} LUFS
         </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4 border-b border-sky-300/10 bg-sky-300/[0.025] px-5 py-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-sky-200/70">
+          Stereo Image
+        </span>
+        <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
+          BALANCE
+          <input
+            type="range"
+            min={-1}
+            max={1}
+            step={0.01}
+            value={masterBalance}
+            onChange={(event) => setMasterBalance(Number(event.target.value))}
+            className="w-28 accent-sky-300"
+            disabled={monoCheck}
+          />
+          <span className="w-8 font-mono text-[9px]">
+            {masterBalance === 0
+              ? "C"
+              : `${masterBalance < 0 ? "L" : "R"}${Math.round(Math.abs(masterBalance) * 100)}`}
+          </span>
+        </label>
+        <button
+          type="button"
+          aria-pressed={monoCheck}
+          onClick={() => setMonoCheck((enabled) => !enabled)}
+          className={`rounded px-3 py-1.5 text-[10px] font-black ${
+            monoCheck ? "bg-sky-300 text-black" : "border border-sky-300/20 text-sky-100"
+          }`}
+        >
+          MONO {monoCheck ? "ON" : "CHECK"}
+        </button>
+        <div className="grid min-w-44 flex-1 grid-cols-[10px_1fr_38px] items-center gap-x-2 gap-y-1">
+          <span className="font-mono text-[9px] text-white/35">L</span>
+          <div className="h-1.5 overflow-hidden rounded-full bg-black/70">
+            <div className="h-full rounded-full bg-sky-300" style={{ width: `${stereoMaster.left * 100}%` }} />
+          </div>
+          <span className="font-mono text-[9px] text-white/45">{Math.round(stereoMaster.left * 100)}</span>
+          <span className="font-mono text-[9px] text-white/35">R</span>
+          <div className="h-1.5 overflow-hidden rounded-full bg-black/70">
+            <div className="h-full rounded-full bg-violet-300" style={{ width: `${stereoMaster.right * 100}%` }} />
+          </div>
+          <span className="font-mono text-[9px] text-white/45">{Math.round(stereoMaster.right * 100)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-black text-white/35">PHASE</span>
+          <div className="relative h-2 w-24 overflow-hidden rounded-full bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400">
+            <span
+              className="absolute top-[-2px] h-3 w-1 rounded bg-white shadow"
+              style={{ left: `${((stereoMaster.correlation + 1) / 2) * 100}%` }}
+            />
+          </div>
+          <span className={`w-8 font-mono text-[9px] ${
+            stereoMaster.correlation < 0 ? "text-rose-300" : "text-emerald-200"
+          }`}>
+            {stereoMaster.correlation.toFixed(2)}
+          </span>
+        </div>
       </div>
 
       <div className="flex min-h-10 flex-wrap items-center gap-2 border-b border-rose-300/10 bg-rose-300/[0.025] px-5 py-2">

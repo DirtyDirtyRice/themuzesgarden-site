@@ -42,6 +42,7 @@ import {
   timelineAutomationValueAt,
   timelineLaneMeterLevel,
   timelineMasterOutputLevel,
+  timelineStereoMasterState,
   toggleTimelineClipSelection,
   toggleTimelineLaneEffectBypass,
   updateTimelineLaneEffect,
@@ -216,6 +217,18 @@ describe("TimelineDawMultitrackViewModel", () => {
     );
     expect(timelineMasterOutputLevel([1, 0.9], 1.25, true, 0.82)).toBe(0.82);
     expect(timelineMasterOutputLevel([], 1, true, 0.95)).toBe(0);
+  });
+
+  it("balances stereo master channels and reports mono-safe correlation", () => {
+    expect(timelineStereoMasterState(0.8, -0.25, false, 0.4)).toEqual({
+      left: 0.8, right: 0.6000000000000001, correlation: 0.5,
+    });
+    expect(timelineStereoMasterState(0.8, 0.6, true, 1.5)).toEqual({
+      left: 0.8, right: 0.8, correlation: 1,
+    });
+    expect(timelineStereoMasterState(2, 2, false, 2)).toEqual({
+      left: 0, right: 1, correlation: -1,
+    });
   });
 
   it("adds, bypasses, and removes persistent lane effects", () => {
