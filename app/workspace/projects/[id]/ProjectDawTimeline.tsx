@@ -2763,6 +2763,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               disabled={!unchangedMatchingCheckpointLaneIds(
                                 checkpoint,
                                 checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+                              ).length}
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: unchangedMatchingCheckpointLaneIds(
+                                  checkpoint,
+                                  checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+                                ),
+                              }))}
+                              className="rounded border border-emerald-300/15 bg-emerald-300/5 px-2 py-1 text-[8px] font-black text-emerald-100/70 hover:bg-emerald-300/10 disabled:opacity-30"
+                            >
+                              Only Unchanged Visible
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!unchangedMatchingCheckpointLaneIds(
+                                checkpoint,
+                                checkpointChangeSectionFilters[checkpoint.id] ?? "all",
                               ).some((trackId) =>
                                 checkpointMultiLaneSelections[checkpoint.id]?.includes(trackId))}
                               onClick={() => {
