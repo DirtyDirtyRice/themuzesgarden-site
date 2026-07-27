@@ -773,6 +773,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function pinMixerHistory(entry: MixerHistoryEntry) {
+    if (comparingSnapshot || comparedMixerCheckpointId) return;
     setMixerCheckpoints((checkpoints) => {
       if (checkpoints.some((checkpoint) =>
         checkpoint.createdAt === entry.createdAt && checkpoint.label === entry.label)) {
@@ -785,6 +786,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         notes: "",
       }].slice(-12);
     });
+  }
+
+  function unpinMixerCheckpoint(id: string) {
+    if (comparingSnapshot || comparedMixerCheckpointId) return;
+    setMixerCheckpoints((checkpoints) =>
+      checkpoints.filter((checkpoint) => checkpoint.id !== id));
   }
 
   function updateMixerCheckpoint(
@@ -2391,9 +2398,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       </button>
                       <button
                         type="button"
-                        disabled={comparedMixerCheckpointId === checkpoint.id}
-                        onClick={() => setMixerCheckpoints((checkpoints) =>
-                          checkpoints.filter((entry) => entry.id !== checkpoint.id))}
+                        disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+                        onClick={() => unpinMixerCheckpoint(checkpoint.id)}
                         className="rounded px-1.5 py-1 text-[8px] text-white/35 hover:bg-white/5 hover:text-white/70 disabled:opacity-25"
                         aria-label={`Unpin ${checkpoint.name}`}
                       >
@@ -3360,8 +3366,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 </span>
                 <button
                   type="button"
+                  disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                   onClick={() => pinMixerHistory(entry)}
-                  className="rounded px-1.5 py-1 text-[10px] text-amber-200/50 hover:bg-amber-300/10 hover:text-amber-100"
+                  className="rounded px-1.5 py-1 text-[10px] text-amber-200/50 hover:bg-amber-300/10 hover:text-amber-100 disabled:opacity-30"
                   aria-label={`Pin ${entry.label}`}
                   title="Pin checkpoint"
                 >
