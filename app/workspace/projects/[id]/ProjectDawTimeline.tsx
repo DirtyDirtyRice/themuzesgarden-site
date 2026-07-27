@@ -1248,6 +1248,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     return matching;
   }
 
+  function availableCheckpointLaneCount(checkpoint: MixerCheckpoint): number {
+    return checkpoint.state.lanes.filter((savedLane) =>
+      lanes.some((lane) => lane.trackId === savedLane.trackId)).length;
+  }
+
   function changedMatchingCheckpointLaneIds(
     checkpoint: MixerCheckpoint,
     section: LaneRecallSection = "all",
@@ -2431,8 +2436,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               aria-label={`Filter lanes in ${checkpoint.name}`}
                               title="Press Escape to clear this search"
                             />
-                            <span className="whitespace-nowrap text-[8px] text-white/30">
-                              {matchingCheckpointLanes(checkpoint).length} matches
+                            <span
+                              className="whitespace-nowrap text-[8px] text-white/30"
+                              title="Checkpoint lanes visible in the current view"
+                            >
+                              {matchingCheckpointLanes(checkpoint).length}/
+                              {availableCheckpointLaneCount(checkpoint)} lanes
                             </span>
                             <button
                               type="button"
