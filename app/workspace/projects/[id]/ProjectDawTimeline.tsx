@@ -2496,6 +2496,46 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             >
                               Clear Filter
                             </button>
+                            <button
+                              type="button"
+                              disabled={
+                                !checkpointLaneSearches[checkpoint.id]
+                                && !checkpointSelectedOnlyFilters[checkpoint.id]
+                                && !checkpointChangedOnlyFilters[checkpoint.id]
+                                && !checkpointUnchangedOnlyFilters[checkpoint.id]
+                                && (checkpointLaneOrders[checkpoint.id] ?? "checkpoint")
+                                  === "checkpoint"
+                              }
+                              onClick={() => {
+                                setCheckpointLaneSearches((searches) => ({
+                                  ...searches,
+                                  [checkpoint.id]: "",
+                                }));
+                                setCheckpointSelectedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: false,
+                                }));
+                                setCheckpointChangedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: false,
+                                }));
+                                setCheckpointUnchangedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: false,
+                                }));
+                                setCheckpointChangeSectionFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: "all",
+                                }));
+                                setCheckpointLaneOrders((orders) => ({
+                                  ...orders,
+                                  [checkpoint.id]: "checkpoint",
+                                }));
+                              }}
+                              className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] text-cyan-100/55 hover:text-cyan-100 disabled:opacity-30"
+                            >
+                              Reset View
+                            </button>
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="mr-1 text-[8px] font-black uppercase text-cyan-100/45">
