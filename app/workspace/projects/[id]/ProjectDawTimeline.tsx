@@ -1473,6 +1473,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       setComparingSnapshot(false);
       return;
     }
+    if (summarizeSnapshotDifference(snapshot) === "Matches current mixer") return;
     snapshotCompareRef.current = captureMixState();
     mixerApplyingHistoryRef.current = true;
     applyMixState(snapshot);
@@ -3405,7 +3406,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </button>
         <button
           type="button"
-          disabled={!selectedSnapshotId || Boolean(comparedMixerCheckpointId)}
+          disabled={
+            !selectedMixSnapshot
+            || Boolean(comparedMixerCheckpointId)
+            || (
+              !comparingSnapshot
+              && summarizeSnapshotDifference(selectedMixSnapshot) === "Matches current mixer"
+            )
+          }
           onClick={toggleSnapshotComparison}
           className={`rounded px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
             comparingSnapshot ? "bg-amber-300 text-black" : "border border-amber-300/20 text-amber-100"
