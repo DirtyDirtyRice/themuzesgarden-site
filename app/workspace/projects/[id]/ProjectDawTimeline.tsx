@@ -195,7 +195,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [checkpointChangeSectionFilters, setCheckpointChangeSectionFilters] =
     useState<Record<string, LaneRecallSection>>({});
   const [checkpointLaneOrders, setCheckpointLaneOrders] =
-    useState<Record<string, "checkpoint" | "name" | "selected" | "changed" | "unchanged">>({});
+    useState<Record<
+      string,
+      "checkpoint" | "name" | "selected" | "unselected" | "changed" | "unchanged"
+    >>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -1219,6 +1222,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     if (order === "selected") {
       return matching.sort((left, right) =>
         Number(selectedIds.has(right.trackId)) - Number(selectedIds.has(left.trackId)));
+    }
+    if (order === "unselected") {
+      return matching.sort((left, right) =>
+        Number(selectedIds.has(left.trackId)) - Number(selectedIds.has(right.trackId)));
     }
     if (order === "changed") {
       const orderedChangedIds = new Set(changedCheckpointLaneIds(
@@ -2362,6 +2369,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                   | "checkpoint"
                                   | "name"
                                   | "selected"
+                                  | "unselected"
                                   | "changed"
                                   | "unchanged",
                               }))}
@@ -2371,6 +2379,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               <option value="checkpoint">Checkpoint Order</option>
                               <option value="name">Name A-Z</option>
                               <option value="selected">Selected First</option>
+                              <option value="unselected">Unselected First</option>
                               <option value="changed">Changed First</option>
                               <option value="unchanged">Unchanged First</option>
                             </select>
