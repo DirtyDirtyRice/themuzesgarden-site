@@ -87,6 +87,25 @@ type AutomationDrag = {
 type TimelineGroupBus = { volume: number; muted: boolean };
 type TimelineGroupBuses = Record<Exclude<TimelineDawGroupId, "none">, TimelineGroupBus>;
 type MasterOverload = { id: string; seconds: number; peakDb: number };
+type MixSnapshotState = {
+  lanes: TimelineDawLaneState[];
+  groupBuses: TimelineGroupBuses;
+  reverbReturn: number;
+  delayReturn: number;
+  masterGain: number;
+  limiterEnabled: boolean;
+  limiterCeiling: number;
+  masterBalance: number;
+  monoCheck: boolean;
+  referenceTrackId: string;
+  comparisonMode: "mix" | "reference";
+  referenceMatch: boolean;
+};
+type MixSnapshot = MixSnapshotState & {
+  id: string;
+  name: string;
+  createdAt: string;
+};
 
 const defaultGroupBuses: TimelineGroupBuses = {
   vocals: { volume: 1, muted: false },
@@ -104,6 +123,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const clipDragRef = useRef<ClipDrag | null>(null);
   const automationDragRef = useRef<AutomationDrag | null>(null);
   const overloadActiveRef = useRef(false);
+  const snapshotCompareRef = useRef<MixSnapshotState | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
@@ -127,6 +147,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [referenceTrackId, setReferenceTrackId] = useState("");
   const [comparisonMode, setComparisonMode] = useState<"mix" | "reference">("mix");
   const [referenceMatch, setReferenceMatch] = useState(true);
+  const [mixSnapshots, setMixSnapshots] = useState<MixSnapshot[]>([]);
+  const [snapshotName, setSnapshotName] = useState("");
+  const [selectedSnapshotId, setSelectedSnapshotId] = useState("");
+  const [snapshotReady, setSnapshotReady] = useState(false);
+  const [comparingSnapshot, setComparingSnapshot] = useState(false);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -149,6 +174,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const busStorageKey = `muzes:daw-timeline-buses:v1:${session.id}`;
   const groupStorageKey = `muzes:daw-timeline-groups:v1:${session.id}`;
   const masterStorageKey = `muzes:daw-timeline-master:v1:${session.id}`;
+  const snapshotStorageKey = `muzes:daw-timeline-snapshots:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
@@ -339,6 +365,28 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   ]);
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(snapshotStorageKey) ?? "[]");
+      if (Array.isArray(saved)) {
+        setMixSnapshots(saved.filter((snapshot: MixSnapshot) =>
+          typeof snapshot?.id === "string"
+          && typeof snapshot.name === "string"
+          && Array.isArray(snapshot.lanes)
+          && snapshot.groupBuses
+          && typeof snapshot.groupBuses === "object").slice(-12));
+      }
+    } catch {} finally {
+      setSnapshotReady(true);
+    }
+  }, [snapshotStorageKey]);
+
+  useEffect(() => {
+    if (snapshotReady) {
+      localStorage.setItem(snapshotStorageKey, JSON.stringify(mixSnapshots));
+    }
+  }, [mixSnapshots, snapshotReady, snapshotStorageKey]);
+
+  useEffect(() => {
     const overloaded = masterInputLevel > limiterCeiling;
     if (overloaded && !overloadActiveRef.current) {
       setMasterOverloads((current) => [...current, {
@@ -453,6 +501,75 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setLanes((current) => current.map((lane) => lane.trackId === trackId
       ? { ...lane, ...patch }
       : patch.selected ? { ...lane, selected: false } : lane));
+  }
+
+  function captureMixState(): MixSnapshotState {
+    return {
+      lanes: lanes.map((lane) => ({
+        ...lane,
+        effects: lane.effects.map((effect) => ({ ...effect })),
+      })),
+      groupBuses: Object.fromEntries(
+        Object.entries(groupBuses).map(([id, bus]) => [id, { ...bus }]),
+      ) as TimelineGroupBuses,
+      reverbReturn,
+      delayReturn,
+      masterGain,
+      limiterEnabled,
+      limiterCeiling,
+      masterBalance,
+      monoCheck,
+      referenceTrackId,
+      comparisonMode,
+      referenceMatch,
+    };
+  }
+
+  function applyMixState(snapshot: MixSnapshotState) {
+    setLanes(snapshot.lanes.map((lane) => ({
+      ...lane,
+      effects: lane.effects.map((effect) => ({ ...effect })),
+    })));
+    setGroupBuses(Object.fromEntries(
+      Object.entries(snapshot.groupBuses).map(([id, bus]) => [id, { ...bus }]),
+    ) as TimelineGroupBuses);
+    setReverbReturn(snapshot.reverbReturn);
+    setDelayReturn(snapshot.delayReturn);
+    setMasterGain(snapshot.masterGain);
+    setLimiterEnabled(snapshot.limiterEnabled);
+    setLimiterCeiling(snapshot.limiterCeiling);
+    setMasterBalance(snapshot.masterBalance);
+    setMonoCheck(snapshot.monoCheck);
+    setReferenceTrackId(snapshot.referenceTrackId);
+    setComparisonMode(snapshot.comparisonMode);
+    setReferenceMatch(snapshot.referenceMatch);
+  }
+
+  function saveMixSnapshot() {
+    const name = snapshotName.trim() || `Mix ${mixSnapshots.length + 1}`;
+    const snapshot: MixSnapshot = {
+      id: `mix:${Date.now()}`,
+      name,
+      createdAt: new Date().toISOString(),
+      ...captureMixState(),
+    };
+    setMixSnapshots((current) => [...current, snapshot].slice(-12));
+    setSelectedSnapshotId(snapshot.id);
+    setSnapshotName("");
+  }
+
+  function toggleSnapshotComparison() {
+    const snapshot = mixSnapshots.find((entry) => entry.id === selectedSnapshotId);
+    if (!snapshot) return;
+    if (comparingSnapshot) {
+      if (snapshotCompareRef.current) applyMixState(snapshotCompareRef.current);
+      snapshotCompareRef.current = null;
+      setComparingSnapshot(false);
+      return;
+    }
+    snapshotCompareRef.current = captureMixState();
+    applyMixState(snapshot);
+    setComparingSnapshot(true);
   }
 
   const selectedClips = clips.filter((clip) => clip.selected && !clip.archived);
@@ -1184,6 +1301,83 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           {referenceTrackId
             ? `${referenceGain >= 1 ? "+" : ""}${(20 * Math.log10(referenceGain)).toFixed(1)} dB match`
             : "Select a reference"}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 border-b border-emerald-300/10 bg-emerald-300/[0.025] px-5 py-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-200/70">
+          Mix Snapshots
+        </span>
+        <input
+          value={snapshotName}
+          onChange={(event) => setSnapshotName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") saveMixSnapshot();
+          }}
+          placeholder={`Mix ${mixSnapshots.length + 1}`}
+          className="w-32 rounded border border-emerald-300/15 bg-black px-2 py-1.5 text-[10px] text-white outline-none placeholder:text-white/25"
+          aria-label="Mix snapshot name"
+        />
+        <button
+          type="button"
+          onClick={saveMixSnapshot}
+          className="rounded bg-emerald-300 px-3 py-1.5 text-[10px] font-black text-black"
+        >
+          Save Current
+        </button>
+        <select
+          value={selectedSnapshotId}
+          onChange={(event) => {
+            if (comparingSnapshot && snapshotCompareRef.current) {
+              applyMixState(snapshotCompareRef.current);
+              snapshotCompareRef.current = null;
+              setComparingSnapshot(false);
+            }
+            setSelectedSnapshotId(event.target.value);
+          }}
+          className="max-w-44 rounded border border-white/10 bg-black px-3 py-1.5 text-[10px] font-black text-emerald-100"
+          aria-label="Saved mix snapshot"
+        >
+          <option value="">Choose snapshot</option>
+          {mixSnapshots.map((snapshot) => (
+            <option key={snapshot.id} value={snapshot.id}>{snapshot.name}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={!selectedSnapshotId || comparingSnapshot}
+          onClick={() => {
+            const snapshot = mixSnapshots.find((entry) => entry.id === selectedSnapshotId);
+            if (snapshot) applyMixState(snapshot);
+          }}
+          className="rounded border border-emerald-300/20 px-3 py-1.5 text-[10px] font-black text-emerald-100 disabled:opacity-30"
+        >
+          Recall
+        </button>
+        <button
+          type="button"
+          disabled={!selectedSnapshotId}
+          onClick={toggleSnapshotComparison}
+          className={`rounded px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
+            comparingSnapshot ? "bg-amber-300 text-black" : "border border-amber-300/20 text-amber-100"
+          }`}
+        >
+          {comparingSnapshot ? "Return to Current" : "Compare"}
+        </button>
+        <button
+          type="button"
+          disabled={!selectedSnapshotId || comparingSnapshot}
+          onClick={() => {
+            setMixSnapshots((current) =>
+              current.filter((snapshot) => snapshot.id !== selectedSnapshotId));
+            setSelectedSnapshotId("");
+          }}
+          className="rounded border border-rose-300/15 px-2 py-1.5 text-[9px] font-black text-rose-200 disabled:opacity-30"
+        >
+          Delete
+        </button>
+        <span className="ml-auto text-[9px] text-white/30">
+          {mixSnapshots.length}/12 saved
         </span>
       </div>
 
