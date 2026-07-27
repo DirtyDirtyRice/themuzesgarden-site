@@ -2384,7 +2384,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               ))}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex flex-wrap items-center gap-1">
                             <input
                               value={checkpointLaneSearches[checkpoint.id] ?? ""}
                               onChange={(event) => setCheckpointLaneSearches((searches) => ({
@@ -2392,7 +2392,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 [checkpoint.id]: event.target.value,
                               }))}
                               placeholder="Filter checkpoint lanes"
-                              className="min-w-0 flex-1 rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/60 outline-none placeholder:text-white/20 focus:border-indigo-300/25"
+                              className="min-w-48 flex-1 basis-48 rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/60 outline-none placeholder:text-white/20 focus:border-indigo-300/25"
                               aria-label={`Filter lanes in ${checkpoint.name}`}
                             />
                             <span className="whitespace-nowrap text-[8px] text-white/30">
