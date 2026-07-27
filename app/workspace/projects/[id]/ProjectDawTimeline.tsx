@@ -2654,6 +2654,25 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </button>
                             <button
                               type="button"
+                              disabled={!availableCheckpointLaneCount(checkpoint)}
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => {
+                                const selectedIds = new Set(selections[checkpoint.id] ?? []);
+                                return {
+                                  ...selections,
+                                  [checkpoint.id]: checkpoint.state.lanes
+                                    .filter((savedLane) =>
+                                      lanes.some((lane) =>
+                                        lane.trackId === savedLane.trackId)
+                                      && !selectedIds.has(savedLane.trackId))
+                                    .map((lane) => lane.trackId),
+                                };
+                              })}
+                              className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] text-cyan-100/60 hover:text-cyan-100 disabled:opacity-30"
+                            >
+                              Invert All
+                            </button>
+                            <button
+                              type="button"
                               disabled={!matchingCheckpointLanes(checkpoint).length}
                               onClick={() => setCheckpointMultiLaneSelections((selections) => ({
                                 ...selections,
