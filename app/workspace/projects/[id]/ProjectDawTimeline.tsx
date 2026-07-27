@@ -3735,13 +3735,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           </span>
           <select
             value={selectedEffect.effect.preset}
-            onChange={(event) => setLanes((value) => updateTimelineLaneEffect(
-              value,
-              selectedEffect.lane.trackId,
-              selectedEffect.effect.id,
-              { preset: event.target.value },
-            ))}
-            className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black text-violet-100"
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onChange={(event) => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setLanes((value) => updateTimelineLaneEffect(
+                value,
+                selectedEffect.lane.trackId,
+                selectedEffect.effect.id,
+                { preset: event.target.value },
+              ));
+            }}
+            className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black text-violet-100 disabled:opacity-30"
             aria-label="Effect preset"
           >
             {effectPresets[selectedEffect.effect.kind].map((preset) => (
@@ -3756,13 +3760,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               max={1}
               step={0.01}
               value={selectedEffect.effect.amount}
-              onChange={(event) => setLanes((value) => updateTimelineLaneEffect(
-                value,
-                selectedEffect.lane.trackId,
-                selectedEffect.effect.id,
-                { amount: Number(event.target.value) },
-              ))}
-              className="w-28 accent-violet-300"
+              disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+              onChange={(event) => {
+                if (comparingSnapshot || comparedMixerCheckpointId) return;
+                setLanes((value) => updateTimelineLaneEffect(
+                  value,
+                  selectedEffect.lane.trackId,
+                  selectedEffect.effect.id,
+                  { amount: Number(event.target.value) },
+                ));
+              }}
+              className="w-28 accent-violet-300 disabled:opacity-30"
             />
             {Math.round(selectedEffect.effect.amount * 100)}%
           </label>
@@ -3774,24 +3782,32 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               max={1}
               step={0.01}
               value={selectedEffect.effect.mix}
-              onChange={(event) => setLanes((value) => updateTimelineLaneEffect(
-                value,
-                selectedEffect.lane.trackId,
-                selectedEffect.effect.id,
-                { mix: Number(event.target.value) },
-              ))}
-              className="w-28 accent-cyan-300"
+              disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+              onChange={(event) => {
+                if (comparingSnapshot || comparedMixerCheckpointId) return;
+                setLanes((value) => updateTimelineLaneEffect(
+                  value,
+                  selectedEffect.lane.trackId,
+                  selectedEffect.effect.id,
+                  { mix: Number(event.target.value) },
+                ));
+              }}
+              className="w-28 accent-cyan-300 disabled:opacity-30"
             />
             {Math.round(selectedEffect.effect.mix * 100)}%
           </label>
           <button
             type="button"
-            onClick={() => setLanes((value) => toggleTimelineLaneEffectBypass(
-              value,
-              selectedEffect.lane.trackId,
-              selectedEffect.effect.id,
-            ))}
-            className={`rounded-lg px-3 py-2 text-xs font-black ${
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onClick={() => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setLanes((value) => toggleTimelineLaneEffectBypass(
+                value,
+                selectedEffect.lane.trackId,
+                selectedEffect.effect.id,
+              ));
+            }}
+            className={`rounded-lg px-3 py-2 text-xs font-black disabled:opacity-30 ${
               selectedEffect.effect.bypassed
                 ? "bg-amber-300 text-black"
                 : "border border-white/15 text-white/65"
@@ -3801,18 +3817,32 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           </button>
           <button
             type="button"
-            disabled={selectedEffect.lane.effects[0]?.id === selectedEffect.effect.id}
-            onClick={() => setLanes((value) => moveTimelineLaneEffect(
-              value, selectedEffect.lane.trackId, selectedEffect.effect.id, -1,
-            ))}
+            disabled={
+              selectedEffect.lane.effects[0]?.id === selectedEffect.effect.id
+              || comparingSnapshot
+              || Boolean(comparedMixerCheckpointId)
+            }
+            onClick={() => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setLanes((value) => moveTimelineLaneEffect(
+                value, selectedEffect.lane.trackId, selectedEffect.effect.id, -1,
+              ));
+            }}
             className="rounded-lg bg-white/10 px-3 py-2 text-xs font-black disabled:opacity-25"
           >Move Left</button>
           <button
             type="button"
-            disabled={selectedEffect.lane.effects.at(-1)?.id === selectedEffect.effect.id}
-            onClick={() => setLanes((value) => moveTimelineLaneEffect(
-              value, selectedEffect.lane.trackId, selectedEffect.effect.id, 1,
-            ))}
+            disabled={
+              selectedEffect.lane.effects.at(-1)?.id === selectedEffect.effect.id
+              || comparingSnapshot
+              || Boolean(comparedMixerCheckpointId)
+            }
+            onClick={() => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setLanes((value) => moveTimelineLaneEffect(
+                value, selectedEffect.lane.trackId, selectedEffect.effect.id, 1,
+              ));
+            }}
             className="rounded-lg bg-white/10 px-3 py-2 text-xs font-black disabled:opacity-25"
           >Move Right</button>
           <button
