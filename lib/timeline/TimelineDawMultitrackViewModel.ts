@@ -1,4 +1,5 @@
 export type TimelineDawEffectKind = "eq" | "compressor" | "reverb" | "delay";
+export type TimelineDawGroupId = "none" | "vocals" | "music" | "drums";
 
 export type TimelineDawLaneEffect = {
   id: string;
@@ -28,6 +29,7 @@ export type TimelineDawLaneState = {
   soloed: boolean;
   volume: number;
   pan: number;
+  groupId: TimelineDawGroupId;
   reverbSend: number;
   delaySend: number;
   effects: TimelineDawLaneEffect[];
@@ -439,7 +441,7 @@ export function parseTimelineLaneState(
 ): TimelineDawLaneState {
   const fallback = {
     trackId, selected: true, muted: false, soloed: false, volume: 1, pan: 0,
-    reverbSend: 0, delaySend: 0, effects: [],
+    groupId: "none" as TimelineDawGroupId, reverbSend: 0, delaySend: 0, effects: [],
   };
   if (!raw) return fallback;
   try {
@@ -455,6 +457,10 @@ export function parseTimelineLaneState(
       pan: value.trackId === trackId && Number.isFinite(value.pan)
         ? Math.min(1, Math.max(-1, value.pan!))
         : 0,
+      groupId: value.trackId === trackId
+        && ["none", "vocals", "music", "drums"].includes(value.groupId ?? "")
+        ? value.groupId!
+        : "none",
       reverbSend: value.trackId === trackId && Number.isFinite(value.reverbSend)
         ? Math.min(1, Math.max(0, value.reverbSend!))
         : 0,
@@ -517,6 +523,9 @@ export function reconcileTimelineLanes(
       pan: Number.isFinite(previous?.pan)
         ? Math.min(1, Math.max(-1, previous!.pan))
         : 0,
+      groupId: ["none", "vocals", "music", "drums"].includes(previous?.groupId ?? "")
+        ? previous!.groupId
+        : "none",
       reverbSend: Number.isFinite(previous?.reverbSend)
         ? Math.min(1, Math.max(0, previous!.reverbSend))
         : 0,

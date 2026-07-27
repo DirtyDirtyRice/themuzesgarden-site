@@ -170,14 +170,14 @@ describe("TimelineDawMultitrackViewModel", () => {
       "song-1",
     )).toEqual({
       trackId: "song-1", selected: false, muted: true, soloed: true, volume: 1, pan: 0,
-      reverbSend: 0, delaySend: 0, effects: [],
+      groupId: "none", reverbSend: 0, delaySend: 0, effects: [],
     });
     expect(parseTimelineLaneState(
       JSON.stringify({ trackId: "other", muted: true, soloed: true }),
       "song-1",
     )).toEqual({
       trackId: "song-1", selected: true, muted: false, soloed: false, volume: 1, pan: 0,
-      reverbSend: 0, delaySend: 0, effects: [],
+      groupId: "none", reverbSend: 0, delaySend: 0, effects: [],
     });
   });
 
@@ -188,9 +188,9 @@ describe("TimelineDawMultitrackViewModel", () => {
       { trackId: "removed", selected: false, muted: false, soloed: true },
     ]);
     expect(reconcileTimelineLanes(saved, ["stem-1", "stem-2"], "song-1")).toEqual([
-      { trackId: "stem-2", selected: true, muted: true, soloed: false, volume: 1, pan: 0, reverbSend: 0, delaySend: 0, effects: [] },
-      { trackId: "song-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0, reverbSend: 0, delaySend: 0, effects: [] },
-      { trackId: "stem-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0, reverbSend: 0, delaySend: 0, effects: [] },
+      { trackId: "stem-2", selected: true, muted: true, soloed: false, volume: 1, pan: 0, groupId: "none", reverbSend: 0, delaySend: 0, effects: [] },
+      { trackId: "song-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0, groupId: "none", reverbSend: 0, delaySend: 0, effects: [] },
+      { trackId: "stem-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0, groupId: "none", reverbSend: 0, delaySend: 0, effects: [] },
     ]);
   });
 

@@ -50,6 +50,7 @@ import {
   trimTimelineClip,
   type TimelineDawClipState,
   type TimelineDawLaneState,
+  type TimelineDawGroupId,
   type TimelineDawEffectKind,
   type TimelineDawLaneEffect,
   type TimelineDawMarkerState,
@@ -80,6 +81,14 @@ type AutomationDrag = {
   originPoint: TimelineDawAutomationPoint;
   originPoints: TimelineDawAutomationPoint[];
 };
+type TimelineGroupBus = { volume: number; muted: boolean };
+type TimelineGroupBuses = Record<Exclude<TimelineDawGroupId, "none">, TimelineGroupBus>;
+
+const defaultGroupBuses: TimelineGroupBuses = {
+  vocals: { volume: 1, muted: false },
+  music: { volume: 1, muted: false },
+  drums: { volume: 1, muted: false },
+};
 
 function clock(seconds: number) {
   const safe = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
@@ -101,6 +110,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [effectClipboard, setEffectClipboard] = useState<TimelineDawLaneEffect[]>([]);
   const [reverbReturn, setReverbReturn] = useState(0.35);
   const [delayReturn, setDelayReturn] = useState(0.3);
+  const [groupBuses, setGroupBuses] = useState<TimelineGroupBuses>(defaultGroupBuses);
+  const [groupBusesReady, setGroupBusesReady] = useState(false);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -121,6 +132,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const markerStorageKey = `muzes:daw-timeline-markers:v1:${session.id}`;
   const automationStorageKey = `muzes:daw-timeline-automation:v1:${session.id}`;
   const busStorageKey = `muzes:daw-timeline-buses:v1:${session.id}`;
+  const groupStorageKey = `muzes:daw-timeline-groups:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
@@ -198,6 +210,31 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [busStorageKey, delayReturn, reverbReturn]);
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(groupStorageKey) ?? "{}");
+      setGroupBuses(Object.fromEntries(
+        (["vocals", "music", "drums"] as const).map((groupId) => [
+          groupId,
+          {
+            volume: Number.isFinite(saved[groupId]?.volume)
+              ? Math.min(1, Math.max(0, saved[groupId].volume))
+              : 1,
+            muted: saved[groupId]?.muted === true,
+          },
+        ]),
+      ) as TimelineGroupBuses);
+    } catch {
+      setGroupBuses(defaultGroupBuses);
+    } finally {
+      setGroupBusesReady(true);
+    }
+  }, [groupStorageKey]);
+
+  useEffect(() => {
+    if (groupBusesReady) localStorage.setItem(groupStorageKey, JSON.stringify(groupBuses));
+  }, [groupBuses, groupBusesReady, groupStorageKey]);
+
+  useEffect(() => {
     if (clips.length) localStorage.setItem(clipStorageKey, JSON.stringify(clips));
   }, [clipStorageKey, clips]);
 
@@ -252,8 +289,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
   useEffect(() => {
     const primaryLane = lanes.find((lane) => lane.trackId === session.songId);
+    const primaryGroup = primaryLane?.groupId && primaryLane.groupId !== "none"
+      ? groupBuses[primaryLane.groupId]
+      : null;
     const audible = primaryLane
-      ? !primaryLane.muted && (!anySoloed || primaryLane.soloed)
+      ? !primaryLane.muted && !primaryGroup?.muted && (!anySoloed || primaryLane.soloed)
       : true;
     const automatedVolume = timelineAutomationValueAt(
       automation, session.songId, "volume", elapsed,
@@ -265,11 +305,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       detail: {
         sessionId: session.id,
         trackId: session.songId,
-        volume: audible ? (primaryLane?.volume ?? 1) * (automatedVolume ?? 1) : 0,
+        volume: audible
+          ? (primaryLane?.volume ?? 1) * (primaryGroup?.volume ?? 1) * (automatedVolume ?? 1)
+          : 0,
         pan: Math.min(1, Math.max(-1, (primaryLane?.pan ?? 0) + (automatedPan ?? 0))),
       },
     }));
-  }, [anySoloed, automation, elapsed, lanes, session.id, session.songId]);
+  }, [anySoloed, automation, elapsed, groupBuses, lanes, session.id, session.songId]);
 
   function updateLane(trackId: string, patch: Partial<TimelineDawLaneState>) {
     setLanes((current) => current.map((lane) => lane.trackId === trackId
@@ -813,6 +855,45 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span className="ml-auto text-[10px] text-white/30">Shared post-fader buses</span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-4 border-b border-emerald-300/15 bg-emerald-300/[0.035] px-5 py-3">
+        <span className="text-xs font-black uppercase tracking-wider text-emerald-200/75">Groups</span>
+        {(["vocals", "music", "drums"] as const).map((groupId) => (
+          <div key={groupId} className="flex items-center gap-2">
+            <span className="w-12 text-[10px] font-black uppercase text-white/45">{groupId}</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={groupBuses[groupId].volume}
+              onChange={(event) => setGroupBuses((current) => ({
+                ...current,
+                [groupId]: { ...current[groupId], volume: Number(event.target.value) },
+              }))}
+              className="w-20 accent-emerald-300"
+              aria-label={`${groupId} group volume`}
+            />
+            <span className="w-7 font-mono text-[9px] text-white/40">
+              {Math.round(groupBuses[groupId].volume * 100)}
+            </span>
+            <button
+              type="button"
+              aria-pressed={groupBuses[groupId].muted}
+              onClick={() => setGroupBuses((current) => ({
+                ...current,
+                [groupId]: { ...current[groupId], muted: !current[groupId].muted },
+              }))}
+              className={`rounded px-2 py-1 text-[9px] font-black ${
+                groupBuses[groupId].muted ? "bg-amber-300 text-black" : "bg-white/10"
+              }`}
+            >
+              M
+            </button>
+          </div>
+        ))}
+        <span className="ml-auto text-[10px] text-white/30">Shared subgroup gain and mute</span>
+      </div>
+
       {selectedEffect ? (
         <div className="flex flex-wrap items-center gap-3 border-b border-violet-300/15 bg-violet-300/[0.05] px-5 py-3">
           <span className="text-xs font-black uppercase tracking-wider text-violet-200">
@@ -920,21 +1001,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           <div className="h-12 border-b border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-white/35">Tracks</div>
           {lanes.map((lane, index) => {
             const track = trackById.get(lane.trackId);
+            const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
             const automatedValue = timelineAutomationValueAt(
               automation,
               lane.trackId,
               automationParameter,
               elapsed,
             );
-            const audible = !lane.muted && (!anySoloed || lane.soloed);
+            const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
             const meterLevel = timelineLaneMeterLevel(
               lane.trackId,
               elapsed,
-              lane.volume,
+              lane.volume * (groupBus?.volume ?? 1),
               audible,
             );
             return (
-              <div key={lane.trackId} className={`relative h-48 border-b border-white/10 p-3 pr-6 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
+              <div key={lane.trackId} className={`relative h-56 border-b border-white/10 p-3 pr-6 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
                 <div className="absolute bottom-3 right-2 top-3 w-2 overflow-hidden rounded-full bg-black/70" aria-label={`${Math.round(meterLevel * 100)} percent level`}>
                   <div
                     className="absolute inset-x-0 bottom-0 rounded-full bg-gradient-to-t from-emerald-400 via-amber-300 to-rose-400 transition-[height] duration-100"
@@ -1001,6 +1083,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     className="w-14 accent-violet-300"
                     aria-label={`${track?.title || lane.trackId} delay send`} />
                   <span className="font-mono text-[9px] text-white/35">{Math.round(lane.delaySend * 100)}</span>
+                </div>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="font-mono text-[9px] text-emerald-200/60">GROUP</span>
+                  <select
+                    value={lane.groupId}
+                    onChange={(event) => updateLane(lane.trackId, {
+                      groupId: event.target.value as TimelineDawGroupId,
+                    })}
+                    className="min-w-0 flex-1 rounded border border-emerald-300/15 bg-black px-1 py-1 text-[9px] font-black uppercase text-emerald-100"
+                    aria-label={`${track?.title || lane.trackId} group`}
+                  >
+                    <option value="none">None</option>
+                    <option value="vocals">Vocals</option>
+                    <option value="music">Music</option>
+                    <option value="drums">Drums</option>
+                  </select>
                 </div>
                 <div className="mt-1 flex items-center gap-1">
                   <select
@@ -1104,7 +1202,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             </div>
             {lanes.map((lane, laneIndex) => {
               const track = trackById.get(lane.trackId);
-              const audible = !lane.muted && (!anySoloed || lane.soloed);
+              const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
+              const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
               const laneClips = clips.filter((clip) => clip.trackId === lane.trackId && !clip.archived);
               const crossfades = createTimelineCrossfades(laneClips);
               const laneAutomation = automation
@@ -1117,7 +1216,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 ? 88 - value * 72
                 : 52 - value * 36;
               return (
-                <div key={lane.trackId} className={`relative h-48 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
+                <div key={lane.trackId} className={`relative h-56 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
                   {crossfades.map((crossfade) => (
                     <div
                       key={`${crossfade.leftClipId}:${crossfade.rightClipId}`}
