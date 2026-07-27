@@ -537,6 +537,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
   useEffect(() => {
     const overloaded = masterInputLevel > limiterCeiling;
+    if (comparingSnapshot || comparedMixerCheckpointId) {
+      overloadActiveRef.current = overloaded;
+      return;
+    }
     if (overloaded && !overloadActiveRef.current) {
       setMasterOverloads((current) => [...current, {
         id: `${Date.now()}:${elapsed.toFixed(2)}`,
@@ -545,7 +549,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       }].slice(-12));
     }
     overloadActiveRef.current = overloaded;
-  }, [elapsed, limiterCeiling, masterInputLevel]);
+  }, [
+    comparedMixerCheckpointId, comparingSnapshot, elapsed, limiterCeiling, masterInputLevel,
+  ]);
 
   useEffect(() => {
     if (clips.length) localStorage.setItem(clipStorageKey, JSON.stringify(clips));
