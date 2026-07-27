@@ -3,6 +3,8 @@ export type TimelineDawLaneState = {
   selected: boolean;
   muted: boolean;
   soloed: boolean;
+  volume: number;
+  pan: number;
 };
 
 export type TimelineDawRulerMark = {
@@ -409,7 +411,9 @@ export function parseTimelineLaneState(
   raw: string | null,
   trackId: string,
 ): TimelineDawLaneState {
-  const fallback = { trackId, selected: true, muted: false, soloed: false };
+  const fallback = {
+    trackId, selected: true, muted: false, soloed: false, volume: 1, pan: 0,
+  };
   if (!raw) return fallback;
   try {
     const value = JSON.parse(raw) as Partial<TimelineDawLaneState>;
@@ -418,6 +422,12 @@ export function parseTimelineLaneState(
       selected: value.trackId === trackId ? value.selected !== false : true,
       muted: value.trackId === trackId && value.muted === true,
       soloed: value.trackId === trackId && value.soloed === true,
+      volume: value.trackId === trackId && Number.isFinite(value.volume)
+        ? Math.min(1, Math.max(0, value.volume!))
+        : 1,
+      pan: value.trackId === trackId && Number.isFinite(value.pan)
+        ? Math.min(1, Math.max(-1, value.pan!))
+        : 0,
     };
   } catch {
     return fallback;
@@ -449,6 +459,12 @@ export function reconcileTimelineLanes(
       selected: previous?.selected ?? index === 0,
       muted: previous?.muted === true,
       soloed: previous?.soloed === true,
+      volume: Number.isFinite(previous?.volume)
+        ? Math.min(1, Math.max(0, previous!.volume))
+        : 1,
+      pan: Number.isFinite(previous?.pan)
+        ? Math.min(1, Math.max(-1, previous!.pan))
+        : 0,
     };
   });
 }
@@ -464,6 +480,19 @@ export function moveTimelineLane(
   const next = lanes.map((lane) => ({ ...lane }));
   [next[index], next[target]] = [next[target], next[index]];
   return next;
+}
+
+export function timelineLaneMeterLevel(
+  trackId: string,
+  seconds: number,
+  volume: number,
+  audible: boolean,
+): number {
+  if (!audible || !Number.isFinite(seconds) || !Number.isFinite(volume)) return 0;
+  let seed = 0;
+  for (const character of trackId) seed = (seed * 31 + character.charCodeAt(0)) % 997;
+  const movement = 0.48 + Math.abs(Math.sin(seconds * 5.7 + seed)) * 0.52;
+  return clipPrecision(Math.min(1, Math.max(0, volume)) * movement);
 }
 
 const clipPrecision = (value: number) => Math.round(value * 100) / 100;

@@ -36,6 +36,7 @@ import {
   timelinePlayheadPercent,
   timelineSecondsFromPixels,
   timelineAutomationValueAt,
+  timelineLaneMeterLevel,
   toggleTimelineClipSelection,
   trimTimelineClip,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
@@ -161,11 +162,15 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(parseTimelineLaneState(
       JSON.stringify({ trackId: "song-1", selected: false, muted: true, soloed: true }),
       "song-1",
-    )).toEqual({ trackId: "song-1", selected: false, muted: true, soloed: true });
+    )).toEqual({
+      trackId: "song-1", selected: false, muted: true, soloed: true, volume: 1, pan: 0,
+    });
     expect(parseTimelineLaneState(
       JSON.stringify({ trackId: "other", muted: true, soloed: true }),
       "song-1",
-    )).toEqual({ trackId: "song-1", selected: true, muted: false, soloed: false });
+    )).toEqual({
+      trackId: "song-1", selected: true, muted: false, soloed: false, volume: 1, pan: 0,
+    });
   });
 
   it("reconciles saved lane order with current project tracks", () => {
@@ -175,9 +180,9 @@ describe("TimelineDawMultitrackViewModel", () => {
       { trackId: "removed", selected: false, muted: false, soloed: true },
     ]);
     expect(reconcileTimelineLanes(saved, ["stem-1", "stem-2"], "song-1")).toEqual([
-      { trackId: "stem-2", selected: true, muted: true, soloed: false },
-      { trackId: "song-1", selected: false, muted: false, soloed: false },
-      { trackId: "stem-1", selected: false, muted: false, soloed: false },
+      { trackId: "stem-2", selected: true, muted: true, soloed: false, volume: 1, pan: 0 },
+      { trackId: "song-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0 },
+      { trackId: "stem-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0 },
     ]);
   });
 
@@ -187,6 +192,13 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(moved.map((lane) => lane.trackId)).toEqual(["song-1", "stem-2", "stem-1"]);
     expect(lanes.map((lane) => lane.trackId)).toEqual(["song-1", "stem-1", "stem-2"]);
     expect(moveTimelineLane(lanes, "song-1", -1)).toEqual(lanes);
+  });
+
+  it("creates bounded deterministic mixer meter levels", () => {
+    expect(timelineLaneMeterLevel("song-1", 4, 0.8, true))
+      .toBe(timelineLaneMeterLevel("song-1", 4, 0.8, true));
+    expect(timelineLaneMeterLevel("song-1", 4, 2, true)).toBeLessThanOrEqual(1);
+    expect(timelineLaneMeterLevel("song-1", 4, 0.8, false)).toBe(0);
   });
 
   it("creates one source-preserving clip for every current lane", () => {

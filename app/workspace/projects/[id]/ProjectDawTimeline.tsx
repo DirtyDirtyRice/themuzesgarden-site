@@ -39,6 +39,7 @@ import {
   timelinePlayheadPercent,
   timelineSecondsFromPixels,
   timelineAutomationValueAt,
+  timelineLaneMeterLevel,
   toggleTimelineClipSelection,
   trimTimelineClip,
   type TimelineDawClipState,
@@ -212,15 +213,25 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [follow, playhead]);
 
   useEffect(() => {
+    const primaryLane = lanes.find((lane) => lane.trackId === session.songId);
+    const audible = primaryLane
+      ? !primaryLane.muted && (!anySoloed || primaryLane.soloed)
+      : true;
+    const automatedVolume = timelineAutomationValueAt(
+      automation, session.songId, "volume", elapsed,
+    );
+    const automatedPan = timelineAutomationValueAt(
+      automation, session.songId, "pan", elapsed,
+    );
     window.dispatchEvent(new CustomEvent("muzes:daw-automation-frame", {
       detail: {
         sessionId: session.id,
         trackId: session.songId,
-        volume: timelineAutomationValueAt(automation, session.songId, "volume", elapsed),
-        pan: timelineAutomationValueAt(automation, session.songId, "pan", elapsed),
+        volume: audible ? (primaryLane?.volume ?? 1) * (automatedVolume ?? 1) : 0,
+        pan: Math.min(1, Math.max(-1, (primaryLane?.pan ?? 0) + (automatedPan ?? 0))),
       },
     }));
-  }, [automation, elapsed, session.id, session.songId]);
+  }, [anySoloed, automation, elapsed, lanes, session.id, session.songId]);
 
   function updateLane(trackId: string, patch: Partial<TimelineDawLaneState>) {
     setLanes((current) => current.map((lane) => lane.trackId === trackId
@@ -756,8 +767,21 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               automationParameter,
               elapsed,
             );
+            const audible = !lane.muted && (!anySoloed || lane.soloed);
+            const meterLevel = timelineLaneMeterLevel(
+              lane.trackId,
+              elapsed,
+              lane.volume,
+              audible,
+            );
             return (
-              <div key={lane.trackId} className={`h-28 border-b border-white/10 p-3 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
+              <div key={lane.trackId} className={`relative h-28 border-b border-white/10 p-3 pr-6 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
+                <div className="absolute bottom-3 right-2 top-3 w-2 overflow-hidden rounded-full bg-black/70" aria-label={`${Math.round(meterLevel * 100)} percent level`}>
+                  <div
+                    className="absolute inset-x-0 bottom-0 rounded-full bg-gradient-to-t from-emerald-400 via-amber-300 to-rose-400 transition-[height] duration-100"
+                    style={{ height: `${meterLevel * 100}%` }}
+                  />
+                </div>
                 <button type="button" onClick={() => updateLane(lane.trackId, { selected: true })}
                   className="block w-full truncate text-left text-sm font-black">
                   {track?.title || lane.trackId}
@@ -770,7 +794,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       : `PAN ${automatedValue === 0 ? "C" : `${automatedValue < 0 ? "L" : "R"}${Math.round(Math.abs(automatedValue) * 100)}`}`}
                   </p>
                 ) : null}
-                <div className={`${automatedValue === null ? "mt-3" : "mt-1"} flex items-center gap-1.5`}>
+                <div className={`${automatedValue === null ? "mt-1" : "mt-0.5"} flex items-center gap-1.5`}>
                   <button type="button" aria-pressed={lane.muted} onClick={() => updateLane(lane.trackId, { muted: !lane.muted })}
                     className={`rounded px-2 py-1 text-[10px] font-black ${lane.muted ? "bg-amber-300 text-black" : "bg-white/10"}`}>M</button>
                   <button type="button" aria-pressed={lane.soloed} onClick={() => updateLane(lane.trackId, { soloed: !lane.soloed })}
@@ -779,6 +803,31 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     className="ml-auto rounded bg-white/10 px-2 py-1 text-[10px] font-black disabled:opacity-25" aria-label={`Move ${track?.title || lane.trackId} up`}>↑</button>
                   <button type="button" disabled={index === lanes.length - 1} onClick={() => setLanes((value) => moveTimelineLane(value, lane.trackId, 1))}
                     className="rounded bg-white/10 px-2 py-1 text-[10px] font-black disabled:opacity-25" aria-label={`Move ${track?.title || lane.trackId} down`}>↓</button>
+                </div>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="w-7 font-mono text-[9px] text-white/35">VOL</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={lane.volume}
+                    onChange={(event) => updateLane(lane.trackId, { volume: Number(event.target.value) })}
+                    className="w-16 accent-cyan-300"
+                    aria-label={`${track?.title || lane.trackId} mixer volume`}
+                  />
+                  <span className="w-7 font-mono text-[9px] text-white/45">{Math.round(lane.volume * 100)}</span>
+                  <span className="font-mono text-[9px] text-white/35">PAN</span>
+                  <input
+                    type="range"
+                    min={-1}
+                    max={1}
+                    step={0.01}
+                    value={lane.pan}
+                    onChange={(event) => updateLane(lane.trackId, { pan: Number(event.target.value) })}
+                    className="w-12 accent-violet-300"
+                    aria-label={`${track?.title || lane.trackId} mixer pan`}
+                  />
                 </div>
               </div>
             );
