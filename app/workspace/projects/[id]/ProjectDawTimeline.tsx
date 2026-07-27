@@ -1317,11 +1317,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       && !lanes.some((lane) => lane.trackId === savedLane.trackId)).length;
   }
 
-  function selectedAvailableCheckpointLaneCount(checkpoint: MixerCheckpoint): number {
+  function changedSelectedCheckpointLaneIds(
+    checkpoint: MixerCheckpoint,
+    section: LaneRecallSection = "all",
+  ): string[] {
     const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
-    return checkpoint.state.lanes.filter((savedLane) =>
-      selectedIds.has(savedLane.trackId)
-      && lanes.some((lane) => lane.trackId === savedLane.trackId)).length;
+    return changedCheckpointLaneIds(checkpoint.state, section)
+      .filter((trackId) => selectedIds.has(trackId));
   }
 
   function selectedCheckpointLaneChangeCount(
@@ -2452,25 +2454,31 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 ["mix", "Level/Pan"],
                                 ["routing", "Sends"],
                                 ["effects", "FX"],
-                              ] as const).map(([section, label]) => (
-                                <button
-                                  key={section}
-                                  type="button"
-                                  disabled={
-                                    Boolean(comparedMixerCheckpointId)
-                                    || comparingSnapshot
-                                    || !selectedAvailableCheckpointLaneCount(checkpoint)
-                                  }
-                                  onClick={() => recallMixerCheckpointLanes(
-                                    checkpoint,
-                                    checkpointMultiLaneSelections[checkpoint.id] ?? [],
-                                    section,
-                                  )}
-                                  className="rounded bg-indigo-300/15 px-2 py-1 text-[8px] font-black text-indigo-100 hover:bg-indigo-300/25 disabled:opacity-30"
-                                >
-                                  {label}
-                                </button>
-                              ))}
+                              ] as const).map(([section, label]) => {
+                                const changedIds = changedSelectedCheckpointLaneIds(
+                                  checkpoint,
+                                  section,
+                                );
+                                return (
+                                  <button
+                                    key={section}
+                                    type="button"
+                                    disabled={
+                                      Boolean(comparedMixerCheckpointId)
+                                      || comparingSnapshot
+                                      || !changedIds.length
+                                    }
+                                    onClick={() => recallMixerCheckpointLanes(
+                                      checkpoint,
+                                      changedIds,
+                                      section,
+                                    )}
+                                    className="rounded bg-indigo-300/15 px-2 py-1 text-[8px] font-black text-indigo-100 hover:bg-indigo-300/25 disabled:opacity-30"
+                                  >
+                                    {label} ({changedIds.length})
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                           <div className="flex flex-wrap items-center gap-1">
