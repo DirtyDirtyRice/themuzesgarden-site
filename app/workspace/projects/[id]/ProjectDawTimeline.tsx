@@ -799,6 +799,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const current = mixerCheckpointCompareRef.current ?? captureMixState();
     mixerCheckpointCompareRef.current = null;
     setComparedMixerCheckpointId("");
+    if (JSON.stringify(current) === JSON.stringify(checkpoint.state)) return;
     setMixerUndoHistory((history) => [...history, {
       state: current,
       label: `Restore checkpoint: ${checkpoint.name}`,
@@ -841,6 +842,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             reverbReturn: checkpoint.state.reverbReturn,
             delayReturn: checkpoint.state.delayReturn,
           };
+    if (JSON.stringify(recalled) === JSON.stringify(current)) return;
     setMixerUndoHistory((history) => [...history, {
       state: current,
       label: `Recall ${section} from ${checkpoint.name}`,
