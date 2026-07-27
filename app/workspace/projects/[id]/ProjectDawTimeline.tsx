@@ -181,6 +181,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [mixerCheckpointsReady, setMixerCheckpointsReady] = useState(false);
   const [mixerCheckpointTransferStatus, setMixerCheckpointTransferStatus] = useState("");
   const [comparedMixerCheckpointId, setComparedMixerCheckpointId] = useState("");
+  const [expandedMixerCheckpointId, setExpandedMixerCheckpointId] = useState("");
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -951,6 +952,49 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       masterChanges ? `${masterChanges} master setting${masterChanges === 1 ? "" : "s"}` : "",
       busesChanged ? "buses changed" : "",
     ].filter(Boolean).join(" · ");
+  }
+
+  function listSnapshotDifferences(snapshot: MixSnapshotState): string[] {
+    const currentById = new Map(lanes.map((lane) => [lane.trackId, lane]));
+    const details = snapshot.lanes.flatMap((savedLane) => {
+      const current = currentById.get(savedLane.trackId);
+      const laneName = trackById.get(savedLane.trackId)?.title ?? savedLane.trackId;
+      if (!current) return [`${laneName}: lane is not in the current mix`];
+      const changes = [
+        current.volume !== savedLane.volume ? "volume" : "",
+        current.pan !== savedLane.pan ? "pan" : "",
+        current.muted !== savedLane.muted ? "mute" : "",
+        current.soloed !== savedLane.soloed ? "solo" : "",
+        current.groupId !== savedLane.groupId ? "group" : "",
+        current.reverbSend !== savedLane.reverbSend ? "reverb send" : "",
+        current.delaySend !== savedLane.delaySend ? "delay send" : "",
+        JSON.stringify(current.effects) !== JSON.stringify(savedLane.effects) ? "effects" : "",
+      ].filter(Boolean);
+      return changes.length ? [`${laneName}: ${changes.join(", ")}`] : [];
+    });
+    lanes.forEach((lane) => {
+      if (!snapshot.lanes.some((savedLane) => savedLane.trackId === lane.trackId)) {
+        details.push(`${trackById.get(lane.trackId)?.title ?? lane.trackId}: not in checkpoint`);
+      }
+    });
+    const masterChanges = [
+      snapshot.masterGain !== masterGain ? "gain" : "",
+      snapshot.limiterEnabled !== limiterEnabled ? "limiter" : "",
+      snapshot.limiterCeiling !== limiterCeiling ? "limiter ceiling" : "",
+      snapshot.masterBalance !== masterBalance ? "balance" : "",
+      snapshot.monoCheck !== monoCheck ? "mono check" : "",
+      snapshot.referenceTrackId !== referenceTrackId ? "reference track" : "",
+      snapshot.comparisonMode !== comparisonMode ? "A/B source" : "",
+      snapshot.referenceMatch !== referenceMatch ? "reference match" : "",
+    ].filter(Boolean);
+    if (masterChanges.length) details.push(`Master: ${masterChanges.join(", ")}`);
+    const busChanges = [
+      snapshot.reverbReturn !== reverbReturn ? "reverb return" : "",
+      snapshot.delayReturn !== delayReturn ? "delay return" : "",
+      JSON.stringify(snapshot.groupBuses) !== JSON.stringify(groupBuses) ? "group buses" : "",
+    ].filter(Boolean);
+    if (busChanges.length) details.push(`Buses: ${busChanges.join(", ")}`);
+    return details.length ? details : ["No differences from the current mixer"];
   }
 
   function exportMixSnapshots() {
@@ -1919,13 +1963,33 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       className="w-full rounded border border-white/5 bg-black/25 px-2 py-1 text-[8px] text-white/55 outline-none placeholder:text-white/20 focus:border-amber-300/20"
                       aria-label={`Notes for ${checkpoint.name}`}
                     />
-                    <span className={`px-2 font-mono text-[8px] ${
-                      summarizeSnapshotDifference(checkpoint.state) === "Matches current mixer"
-                        ? "text-emerald-200/70"
-                        : "text-amber-200/55"
-                    }`}>
-                      {summarizeSnapshotDifference(checkpoint.state)}
-                    </span>
+                    <div className="flex items-center justify-between gap-2 px-2">
+                      <span className={`font-mono text-[8px] ${
+                        summarizeSnapshotDifference(checkpoint.state) === "Matches current mixer"
+                          ? "text-emerald-200/70"
+                          : "text-amber-200/55"
+                      }`}>
+                        {summarizeSnapshotDifference(checkpoint.state)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedMixerCheckpointId((current) =>
+                          current === checkpoint.id ? "" : checkpoint.id)}
+                        className="text-[8px] font-black text-cyan-100/55 hover:text-cyan-100"
+                        aria-expanded={expandedMixerCheckpointId === checkpoint.id}
+                      >
+                        {expandedMixerCheckpointId === checkpoint.id ? "Hide Details" : "Details"}
+                      </button>
+                    </div>
+                    {expandedMixerCheckpointId === checkpoint.id ? (
+                      <ul className="grid gap-1 rounded border border-cyan-300/10 bg-black/25 px-3 py-2">
+                        {listSnapshotDifferences(checkpoint.state).map((detail) => (
+                          <li key={detail} className="text-[8px] text-cyan-50/55">
+                            <span className="mr-1 text-cyan-300/50">•</span>{detail}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 ))}
               </div>
