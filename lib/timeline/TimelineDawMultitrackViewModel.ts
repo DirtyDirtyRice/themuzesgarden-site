@@ -309,6 +309,28 @@ export function selectTimelineAutomationPoint(
   return points.map((point) => ({ ...point, selected: point.id === pointId }));
 }
 
+export function moveTimelineAutomationPoint(
+  points: TimelineDawAutomationPoint[],
+  pointId: string,
+  input: {
+    seconds: number;
+    value: number;
+    durationSeconds: number;
+  },
+): TimelineDawAutomationPoint[] {
+  const duration = Number.isFinite(input.durationSeconds) && input.durationSeconds > 0
+    ? input.durationSeconds
+    : 180;
+  return points.map((point) => point.id === pointId
+    ? {
+        ...point,
+        seconds: Math.max(0, Math.min(duration, clipPrecision(input.seconds))),
+        value: clampAutomationValue(point.parameter, input.value),
+        selected: true,
+      }
+    : { ...point, selected: false });
+}
+
 export function timelineAutomationValueAt(
   points: TimelineDawAutomationPoint[],
   trackId: string,

@@ -38,6 +38,12 @@ type Track = {
   artist?: string | null;
   [key: string]: unknown;
 };
+type AutomationFrameDetail = {
+  sessionId: string;
+  trackId: string;
+  volume: number | null;
+  pan: number | null;
+};
 
 const FALLBACK_PPQ = 960;
 const FALLBACK_TEMPO_MAP = [{ tick: 0, bpm: 120 }];
@@ -85,6 +91,11 @@ export default function ProjectDawTransport({
   const countInTokenRef = useRef(0);
   const countInAudioRef = useRef<AudioContext | null>(null);
   const metronomeAudioRef = useRef<AudioContext | null>(null);
+  const mediaAudioContextRef = useRef<AudioContext | null>(null);
+  const mediaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const mediaPannerRef = useRef<StereoPannerNode | null>(null);
+  const automationVolumeRef = useRef<number | null>(null);
+  const automationPanRef = useRef<number | null>(null);
   const [transport, setTransport] = useState<TimelineTransportSynchronization | null>(null);
   const [events, setEvents] = useState<TimelineTransportEvent[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
@@ -209,7 +220,7 @@ export default function ProjectDawTransport({
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-      audio.volume = volume;
+      audio.volume = Math.min(1, Math.max(0, volume * (automationVolumeRef.current ?? 1)));
       audio.muted = muted;
     }
     if (monitorReady) {
@@ -218,6 +229,46 @@ export default function ProjectDawTransport({
       } catch {}
     }
   }, [monitorReady, muted, volume]);
+
+  useEffect(() => {
+    const updateAutomation = (event: Event) => {
+      const detail = (event as CustomEvent<AutomationFrameDetail>).detail;
+      if (!detail || detail.sessionId !== session.id || detail.trackId !== session.songId) return;
+      automationVolumeRef.current = detail.volume;
+      automationPanRef.current = detail.pan;
+      const audio = audioRef.current;
+      if (audio) {
+        audio.volume = Math.min(1, Math.max(0, volume * (detail.volume ?? 1)));
+      }
+      if (mediaPannerRef.current) {
+        mediaPannerRef.current.pan.value = Math.min(1, Math.max(-1, detail.pan ?? 0));
+      }
+    };
+    window.addEventListener("muzes:daw-automation-frame", updateAutomation);
+    return () => window.removeEventListener("muzes:daw-automation-frame", updateAutomation);
+  }, [session.id, session.songId, volume]);
+
+  async function ensureMediaPanner() {
+    const audio = audioRef.current;
+    if (!audio || typeof AudioContext === "undefined") return;
+    if (!mediaAudioContextRef.current) {
+      const context = new AudioContext();
+      const sourceNode = context.createMediaElementSource(audio);
+      const panner = context.createStereoPanner();
+      sourceNode.connect(panner).connect(context.destination);
+      mediaAudioContextRef.current = context;
+      mediaSourceRef.current = sourceNode;
+      mediaPannerRef.current = panner;
+    }
+    const context = mediaAudioContextRef.current;
+    if (context.state === "suspended") await context.resume();
+    if (mediaPannerRef.current) {
+      mediaPannerRef.current.pan.value = Math.min(
+        1,
+        Math.max(-1, automationPanRef.current ?? 0),
+      );
+    }
+  }
 
   async function update(
     action:
@@ -322,6 +373,7 @@ export default function ProjectDawTransport({
         nextTransport = await update("complete-count-in");
         if (nextTransport?.playbackState !== "playing") return;
       }
+      await ensureMediaPanner();
       await audio.play();
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
     } catch (cause) {

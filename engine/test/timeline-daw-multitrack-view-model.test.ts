@@ -14,6 +14,7 @@ import {
   createTimelineWaveformBars,
   duplicateSelectedTimelineClips,
   moveTimelineClip,
+  moveTimelineAutomationPoint,
   moveSelectedTimelineClips,
   moveTimelineLane,
   normalizeTimelineLoopRegion,
@@ -108,6 +109,21 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(replaced[1].value).toBe(1);
     expect(reconcileTimelineAutomation(JSON.stringify(replaced), ["song-1"], 5)[1].seconds).toBe(5);
     expect(archiveTimelineAutomationPoint(replaced, replaced[1].id)[1].archived).toBe(true);
+  });
+
+  it("drags automation points within timeline and parameter bounds", () => {
+    const volume = addTimelineAutomationPoint([], {
+      trackId: "song-1", parameter: "volume", seconds: 10, value: 0.5, durationSeconds: 120,
+    });
+    expect(moveTimelineAutomationPoint(volume, volume[0].id, {
+      seconds: 150, value: 2, durationSeconds: 120,
+    })[0]).toMatchObject({ seconds: 120, value: 1, selected: true });
+    const pan = addTimelineAutomationPoint(volume, {
+      trackId: "song-1", parameter: "pan", seconds: 20, value: 0, durationSeconds: 120,
+    });
+    expect(moveTimelineAutomationPoint(pan, pan[1].id, {
+      seconds: -5, value: -2, durationSeconds: 120,
+    })[1]).toMatchObject({ seconds: 0, value: -1, selected: true });
   });
 
   it("converts pointer movement into timeline seconds", () => {

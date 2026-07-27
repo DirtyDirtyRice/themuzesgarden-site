@@ -17,6 +17,7 @@ import {
   createTimelineWaveformBars,
   duplicateSelectedTimelineClips,
   moveSelectedTimelineClips,
+  moveTimelineAutomationPoint,
   moveTimelineLane,
   normalizeTimelineLoopRegion,
   pasteTimelineClips,
@@ -61,6 +62,13 @@ type ClipDrag = {
   originX: number;
   originClips: TimelineDawClipState[];
 };
+type AutomationDrag = {
+  pointId: string;
+  originX: number;
+  originY: number;
+  originPoint: TimelineDawAutomationPoint;
+  originPoints: TimelineDawAutomationPoint[];
+};
 
 function clock(seconds: number) {
   const safe = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
@@ -70,6 +78,7 @@ function clock(seconds: number) {
 export default function ProjectDawTimeline({ session }: { session: DawSession }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const clipDragRef = useRef<ClipDrag | null>(null);
+  const automationDragRef = useRef<AutomationDrag | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
@@ -199,6 +208,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const target = (playhead / 100) * scroller.scrollWidth - scroller.clientWidth * 0.35;
     scroller.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
   }, [follow, playhead]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("muzes:daw-automation-frame", {
+      detail: {
+        sessionId: session.id,
+        trackId: session.songId,
+        volume: timelineAutomationValueAt(automation, session.songId, "volume", elapsed),
+        pan: timelineAutomationValueAt(automation, session.songId, "pan", elapsed),
+      },
+    }));
+  }, [automation, elapsed, session.id, session.songId]);
 
   function updateLane(trackId: string, patch: Partial<TimelineDawLaneState>) {
     setLanes((current) => current.map((lane) => lane.trackId === trackId
@@ -367,6 +387,58 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     clipDragRef.current = null;
+  }
+
+  function startAutomationDrag(
+    event: ReactPointerEvent<HTMLButtonElement>,
+    point: TimelineDawAutomationPoint,
+  ) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const originPoints = selectTimelineAutomationPoint(automation, point.id);
+    automationDragRef.current = {
+      pointId: point.id,
+      originX: event.clientX,
+      originY: event.clientY,
+      originPoint: { ...point },
+      originPoints,
+    };
+    setAutomation(originPoints);
+    setAutomationValue(point.value);
+    updateLane(point.trackId, { selected: true });
+    setFollow(false);
+  }
+
+  function continueAutomationDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    const drag = automationDragRef.current;
+    if (!drag) return;
+    const seconds = snapTimelineSeconds(
+      drag.originPoint.seconds + timelineSecondsFromPixels(
+        event.clientX - drag.originX,
+        canvasWidth,
+        duration,
+      ),
+      snapSeconds,
+    );
+    const valueScale = drag.originPoint.parameter === "volume" ? 72 : 36;
+    const value = drag.originPoint.value - (event.clientY - drag.originY) / valueScale;
+    const next = moveTimelineAutomationPoint(drag.originPoints, drag.pointId, {
+      seconds,
+      value,
+      durationSeconds: duration,
+    });
+    setAutomation(next);
+    setAutomationValue(next.find((point) => point.id === drag.pointId)?.value ?? value);
+  }
+
+  function finishAutomationDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!automationDragRef.current) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    automationDragRef.current = null;
   }
 
   useEffect(() => {
@@ -834,12 +906,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                         ) : null}
                         <button
                           type="button"
-                          onClick={() => {
-                            setAutomation((value) => selectTimelineAutomationPoint(value, point.id));
-                            setAutomationValue(point.value);
-                            updateLane(lane.trackId, { selected: true });
-                          }}
-                          className={`absolute z-[12] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border ${
+                          onPointerDown={(event) => startAutomationDrag(event, point)}
+                          onPointerMove={continueAutomationDrag}
+                          onPointerUp={finishAutomationDrag}
+                          onPointerCancel={finishAutomationDrag}
+                          className={`absolute z-[12] h-3 w-3 touch-none -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full border ${
                             point.selected
                               ? "border-white bg-emerald-300 ring-2 ring-emerald-300/30"
                               : "border-emerald-100 bg-emerald-500"
