@@ -31,6 +31,23 @@ export type TimelineDawLoopRegion = {
   widthPercent: number;
 };
 
+export type TimelineDawMarkerState = {
+  id: string;
+  label: string;
+  seconds: number;
+  selected: boolean;
+  archived: boolean;
+};
+
+export type TimelineDawSection = {
+  markerId: string;
+  label: string;
+  startSeconds: number;
+  endSeconds: number;
+  startPercent: number;
+  widthPercent: number;
+};
+
 export function clampTimelineZoom(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.min(8, Math.max(0.5, Math.round(value * 4) / 4));
@@ -72,6 +89,114 @@ export function normalizeTimelineLoopRegion(
     startPercent: clipPrecision((start / durationSeconds) * 100),
     widthPercent: clipPrecision(((end - start) / durationSeconds) * 100),
   };
+}
+
+export function reconcileTimelineMarkers(
+  raw: string | null,
+  durationSeconds: number,
+): TimelineDawMarkerState[] {
+  const duration = Number.isFinite(durationSeconds) && durationSeconds > 0
+    ? durationSeconds
+    : 180;
+  try {
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((marker) =>
+        typeof marker?.id === "string"
+        && typeof marker?.label === "string"
+        && marker.label.trim()
+        && Number.isFinite(marker.seconds))
+      .map((marker) => ({
+        id: marker.id,
+        label: marker.label.trim(),
+        seconds: Math.max(0, Math.min(duration, clipPrecision(marker.seconds))),
+        selected: marker.selected === true,
+        archived: marker.archived === true,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export function addTimelineMarker(
+  markers: TimelineDawMarkerState[],
+  seconds: number,
+  durationSeconds: number,
+): TimelineDawMarkerState[] {
+  const duration = Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : 180;
+  const sequence = markers.reduce((highest, marker) => {
+    const match = marker.id.match(/^marker:(\d+)$/);
+    return Math.max(highest, Number(match?.[1] ?? 0));
+  }, 0) + 1;
+  return [
+    ...markers.map((marker) => ({ ...marker, selected: false })),
+    {
+      id: `marker:${sequence}`,
+      label: `Section ${sequence}`,
+      seconds: Math.max(0, Math.min(duration, clipPrecision(seconds))),
+      selected: true,
+      archived: false,
+    },
+  ];
+}
+
+export function renameTimelineMarker(
+  markers: TimelineDawMarkerState[],
+  markerId: string,
+  label: string,
+): TimelineDawMarkerState[] {
+  const nextLabel = label.trim();
+  if (!nextLabel) return markers.map((marker) => ({ ...marker }));
+  return markers.map((marker) => marker.id === markerId
+    ? { ...marker, label: nextLabel }
+    : { ...marker });
+}
+
+export function selectTimelineMarker(
+  markers: TimelineDawMarkerState[],
+  markerId: string,
+): TimelineDawMarkerState[] {
+  return markers.map((marker) => ({ ...marker, selected: marker.id === markerId }));
+}
+
+export function archiveTimelineMarker(
+  markers: TimelineDawMarkerState[],
+  markerId: string,
+): TimelineDawMarkerState[] {
+  return markers.map((marker) => marker.id === markerId
+    ? { ...marker, archived: true, selected: false }
+    : { ...marker });
+}
+
+export function restoreTimelineMarker(
+  markers: TimelineDawMarkerState[],
+  markerId: string,
+): TimelineDawMarkerState[] {
+  return markers.map((marker) => marker.id === markerId
+    ? { ...marker, archived: false, selected: true }
+    : { ...marker, selected: false });
+}
+
+export function createTimelineSections(
+  markers: TimelineDawMarkerState[],
+  durationSeconds: number,
+): TimelineDawSection[] {
+  const duration = Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : 180;
+  const active = markers
+    .filter((marker) => !marker.archived && marker.seconds < duration)
+    .sort((left, right) => left.seconds - right.seconds);
+  return active.map((marker, index) => {
+    const end = active[index + 1]?.seconds ?? duration;
+    return {
+      markerId: marker.id,
+      label: marker.label,
+      startSeconds: marker.seconds,
+      endSeconds: end,
+      startPercent: clipPrecision((marker.seconds / duration) * 100),
+      widthPercent: clipPrecision((Math.max(0, end - marker.seconds) / duration) * 100),
+    };
+  }).filter((section) => section.endSeconds > section.startSeconds);
 }
 
 export function createTimelineRulerMarks(

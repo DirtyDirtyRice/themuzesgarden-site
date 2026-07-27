@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   addTimelineClip,
+  addTimelineMarker,
+  archiveTimelineMarker,
   archiveSelectedTimelineClips,
   archiveTimelineClip,
   clampTimelineZoom,
   copySelectedTimelineClips,
   createTimelineRulerMarks,
+  createTimelineSections,
   createTimelineWaveformBars,
   duplicateSelectedTimelineClips,
   moveTimelineClip,
@@ -15,7 +18,10 @@ import {
   pasteTimelineClips,
   parseTimelineLaneState,
   reconcileTimelineLanes,
+  reconcileTimelineMarkers,
   restoreTimelineClip,
+  restoreTimelineMarker,
+  renameTimelineMarker,
   reconcileTimelineClips,
   selectTimelineClip,
   snapTimelineSeconds,
@@ -55,6 +61,32 @@ describe("TimelineDawMultitrackViewModel", () => {
       widthPercent: 100,
     });
     expect(normalizeTimelineLoopRegion(90, 30, 120)).toBeNull();
+  });
+
+  it("creates named arrangement sections from persistent markers", () => {
+    const first = addTimelineMarker([], 0, 120);
+    const second = addTimelineMarker(first, 30, 120);
+    const named = renameTimelineMarker(
+      renameTimelineMarker(second, first[0].id, "Intro"),
+      second[1].id,
+      "Verse",
+    );
+    expect(createTimelineSections(named, 120)).toEqual([
+      {
+        markerId: "marker:1", label: "Intro",
+        startSeconds: 0, endSeconds: 30, startPercent: 0, widthPercent: 25,
+      },
+      {
+        markerId: "marker:2", label: "Verse",
+        startSeconds: 30, endSeconds: 120, startPercent: 25, widthPercent: 75,
+      },
+    ]);
+    expect(reconcileTimelineMarkers(JSON.stringify(named), 20).map((marker) => marker.seconds))
+      .toEqual([0, 20]);
+    expect(restoreTimelineMarker(
+      archiveTimelineMarker(named, "marker:1"),
+      "marker:1",
+    )[0]).toMatchObject({ archived: false, selected: true });
   });
 
   it("converts pointer movement into timeline seconds", () => {

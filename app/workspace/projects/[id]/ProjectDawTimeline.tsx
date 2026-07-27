@@ -5,10 +5,13 @@ import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { listLinkedProjectTrackIds } from "../../../../lib/projectTracksApi";
 import {
   addTimelineClip,
+  addTimelineMarker,
+  archiveTimelineMarker,
   archiveSelectedTimelineClips,
   clampTimelineZoom,
   copySelectedTimelineClips,
   createTimelineRulerMarks,
+  createTimelineSections,
   createTimelineWaveformBars,
   duplicateSelectedTimelineClips,
   moveSelectedTimelineClips,
@@ -17,8 +20,12 @@ import {
   pasteTimelineClips,
   reconcileTimelineClips,
   reconcileTimelineLanes,
+  reconcileTimelineMarkers,
   restoreTimelineClip,
+  restoreTimelineMarker,
+  renameTimelineMarker,
   selectTimelineClip,
+  selectTimelineMarker,
   snapTimelineSeconds,
   splitTimelineClip,
   timelineCanvasWidth,
@@ -28,6 +35,7 @@ import {
   trimTimelineClip,
   type TimelineDawClipState,
   type TimelineDawLaneState,
+  type TimelineDawMarkerState,
 } from "../../../../lib/timeline/TimelineDawMultitrackViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
 import type { DawSession } from "./projectDawTypes";
@@ -60,6 +68,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
   const [clipHistory, setClipHistory] = useState<TimelineDawClipState[][]>([]);
   const [clipClipboard, setClipClipboard] = useState<TimelineDawClipState[]>([]);
+  const [markers, setMarkers] = useState<TimelineDawMarkerState[]>([]);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(180);
   const [zoom, setZoom] = useState(1);
@@ -74,10 +83,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const storageKey = `muzes:daw-timeline-lanes:v2:${session.id}`;
   const clipStorageKey = `muzes:daw-timeline-clips:v1:${session.id}`;
   const snapStorageKey = `muzes:daw-timeline-snap:v1:${session.id}`;
+  const markerStorageKey = `muzes:daw-timeline-markers:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
   const loopRegion = normalizeTimelineLoopRegion(loop.startSeconds, loop.endSeconds, duration);
+  const sections = createTimelineSections(markers, duration);
   const trackById = useMemo(() => new Map(tracks.map((track) => [String(track.id), track])), [tracks]);
   const anySoloed = lanes.some((lane) => lane.soloed);
 
@@ -102,9 +113,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         linkedIds,
         duration,
       ));
+      setMarkers(reconcileTimelineMarkers(localStorage.getItem(markerStorageKey), duration));
     })();
     return () => { current = false; };
-  }, [clipStorageKey, duration, session.projectId, session.songId, storageKey]);
+  }, [clipStorageKey, duration, markerStorageKey, session.projectId, session.songId, storageKey]);
 
   useEffect(() => {
     if (lanes.length) localStorage.setItem(storageKey, JSON.stringify(lanes));
@@ -113,6 +125,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   useEffect(() => {
     if (clips.length) localStorage.setItem(clipStorageKey, JSON.stringify(clips));
   }, [clipStorageKey, clips]);
+
+  useEffect(() => {
+    if (markers.length) localStorage.setItem(markerStorageKey, JSON.stringify(markers));
+  }, [markerStorageKey, markers]);
 
   useEffect(() => {
     const raw = localStorage.getItem(snapStorageKey);
@@ -162,6 +178,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const selectedClips = clips.filter((clip) => clip.selected && !clip.archived);
   const selectedClip = selectedClips[0] ?? null;
   const archivedClips = clips.filter((clip) => clip.archived);
+  const selectedMarker = markers.find((marker) => marker.selected && !marker.archived) ?? null;
+  const archivedMarkers = markers.filter((marker) => marker.archived);
   const editStep = snapSeconds || (zoom >= 4 ? 0.25 : zoom >= 2 ? 0.5 : 1);
 
   function applyClipEdit(
@@ -230,6 +248,21 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   function sendLoopCommand(action: "set-start" | "set-end" | "toggle") {
     window.dispatchEvent(new CustomEvent("muzes:daw-loop-command", {
       detail: { sessionId: session.id, action },
+    }));
+  }
+
+  function addMarker() {
+    setMarkers((value) => addTimelineMarker(
+      value,
+      snapTimelineSeconds(elapsed, snapSeconds),
+      duration,
+    ));
+  }
+
+  function locateMarker(marker: TimelineDawMarkerState) {
+    setMarkers((value) => selectTimelineMarker(value, marker.id));
+    window.dispatchEvent(new CustomEvent("muzes:daw-locate-command", {
+      detail: { sessionId: session.id, seconds: marker.seconds },
     }));
   }
 
@@ -472,6 +505,56 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 bg-violet-300/[0.035] px-5 py-3">
+        <span className="mr-1 text-xs font-black uppercase tracking-wider text-violet-200/70">
+          Arrangement
+        </span>
+        <button
+          type="button"
+          onClick={addMarker}
+          className="rounded-lg bg-violet-300 px-3 py-2 text-xs font-black text-black"
+        >
+          Add Marker
+        </button>
+        {selectedMarker ? (
+          <>
+            <input
+              key={selectedMarker.id}
+              defaultValue={selectedMarker.label}
+              onBlur={(event) => setMarkers((value) => renameTimelineMarker(
+                value,
+                selectedMarker.id,
+                event.target.value,
+              ))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+              }}
+              aria-label="Selected arrangement section name"
+              className="w-36 rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-bold text-white outline-none focus:border-violet-300"
+            />
+            <button
+              type="button"
+              onClick={() => locateMarker(selectedMarker)}
+              className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black"
+            >
+              Go to {clock(selectedMarker.seconds)}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMarkers((value) => archiveTimelineMarker(value, selectedMarker.id))}
+              className="rounded-lg border border-amber-300/35 px-3 py-2 text-xs font-black text-amber-100"
+            >
+              Archive Marker
+            </button>
+          </>
+        ) : (
+          <span className="text-xs text-white/35">Add or select a section marker</span>
+        )}
+        <span className="ml-auto text-xs text-white/35">
+          {sections.length} named {sections.length === 1 ? "section" : "sections"}
+        </span>
+      </div>
+
       <div className="grid grid-cols-[220px_minmax(0,1fr)]">
         <div className="border-r border-white/10 bg-[#0a0a0a]">
           <div className="h-12 border-b border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-white/35">Tracks</div>
@@ -506,6 +589,28 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 <div key={mark.seconds} className="absolute inset-y-0 border-l border-white/15" style={{ left: `${mark.leftPercent}%` }}>
                   <span className={`ml-1 font-mono text-[10px] ${mark.major ? "text-cyan-200" : "text-white/35"}`}>{mark.label}</span>
                 </div>
+              ))}
+              {sections.map((section, index) => (
+                <button
+                  key={section.markerId}
+                  type="button"
+                  onClick={() => {
+                    const marker = markers.find((value) => value.id === section.markerId);
+                    if (marker) locateMarker(marker);
+                  }}
+                  className={`absolute bottom-0 h-5 overflow-hidden border-x px-1 text-left text-[9px] font-black ${
+                    index % 2
+                      ? "border-fuchsia-200/30 bg-fuchsia-300/15 text-fuchsia-100"
+                      : "border-violet-200/30 bg-violet-300/15 text-violet-100"
+                  }`}
+                  style={{
+                    left: `${section.startPercent}%`,
+                    width: `${section.widthPercent}%`,
+                  }}
+                  title={`${section.label}: ${clock(section.startSeconds)}–${clock(section.endSeconds)}`}
+                >
+                  <span className="block truncate">{section.label}</span>
+                </button>
               ))}
             </div>
             {lanes.map((lane, laneIndex) => {
@@ -601,6 +706,26 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 </span>
               </div>
             ) : null}
+            {markers.filter((marker) => !marker.archived).map((marker) => (
+              <div
+                key={marker.id}
+                className="pointer-events-none absolute bottom-0 top-12 z-[6] border-l border-amber-300/70"
+                style={{ left: `${timelinePlayheadPercent(marker.seconds, duration)}%` }}
+              >
+                <button
+                  type="button"
+                  onClick={() => locateMarker(marker)}
+                  className={`pointer-events-auto absolute left-1 top-7 max-w-28 truncate rounded px-1.5 py-1 text-[9px] font-black ${
+                    marker.selected
+                      ? "bg-amber-300 text-black"
+                      : "border border-amber-300/40 bg-black/85 text-amber-100"
+                  }`}
+                  title={`Go to ${marker.label} at ${clock(marker.seconds)}`}
+                >
+                  {marker.label}
+                </button>
+              </div>
+            ))}
             <div className="pointer-events-none absolute bottom-0 top-0 z-20 w-px bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.9)]" style={{ left: `${playhead}%` }}>
               <span className="absolute -left-6 top-1 rounded bg-rose-400 px-1.5 py-0.5 font-mono text-[9px] font-black text-black">{clock(elapsed)}</span>
             </div>
@@ -635,6 +760,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               className="rounded-lg border border-amber-300/25 px-3 py-1.5 text-xs font-bold text-amber-100"
             >
               Restore {trackById.get(clip.trackId)?.title || clip.trackId} {clock(clip.timelineStartSeconds)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {archivedMarkers.length ? (
+        <div className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-violet-300/[0.035] px-5 py-3">
+          <span className="text-xs font-black uppercase tracking-wider text-violet-200">
+            Marker archive
+          </span>
+          {archivedMarkers.map((marker) => (
+            <button
+              key={marker.id}
+              type="button"
+              onClick={() => setMarkers((value) => restoreTimelineMarker(value, marker.id))}
+              className="rounded-lg border border-violet-300/25 px-3 py-1.5 text-xs font-bold text-violet-100"
+            >
+              Restore {marker.label} {clock(marker.seconds)}
             </button>
           ))}
         </div>

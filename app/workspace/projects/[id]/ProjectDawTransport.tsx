@@ -503,6 +503,16 @@ export default function ProjectDawTransport({
     return () => window.removeEventListener("muzes:daw-loop-command", handleLoopCommand);
   });
 
+  useEffect(() => {
+    const handleLocateCommand = (event: Event) => {
+      const detail = (event as CustomEvent<{ sessionId: string; seconds: number }>).detail;
+      if (!detail || detail.sessionId !== session.id || !Number.isFinite(detail.seconds)) return;
+      void locate(detail.seconds);
+    };
+    window.addEventListener("muzes:daw-locate-command", handleLocateCommand);
+    return () => window.removeEventListener("muzes:daw-locate-command", handleLocateCommand);
+  });
+
   async function saveCountIn(bars: number) {
     setError(null);
     try {
