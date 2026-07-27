@@ -792,6 +792,48 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     applyMixState(checkpoint.state);
   }
 
+  function recallMixerCheckpointSection(
+    checkpoint: MixerCheckpoint,
+    section: "lanes" | "master" | "buses",
+  ) {
+    if (comparedMixerCheckpointId || comparingSnapshot) return;
+    const current = captureMixState();
+    const sourceByTrackId = new Map(
+      checkpoint.state.lanes.map((lane) => [lane.trackId, lane]),
+    );
+    const recalled: MixSnapshotState = section === "lanes"
+      ? {
+          ...current,
+          lanes: current.lanes.map((lane) => sourceByTrackId.get(lane.trackId) ?? lane),
+        }
+      : section === "master"
+        ? {
+            ...current,
+            masterGain: checkpoint.state.masterGain,
+            limiterEnabled: checkpoint.state.limiterEnabled,
+            limiterCeiling: checkpoint.state.limiterCeiling,
+            masterBalance: checkpoint.state.masterBalance,
+            monoCheck: checkpoint.state.monoCheck,
+            referenceTrackId: checkpoint.state.referenceTrackId,
+            comparisonMode: checkpoint.state.comparisonMode,
+            referenceMatch: checkpoint.state.referenceMatch,
+          }
+        : {
+            ...current,
+            groupBuses: checkpoint.state.groupBuses,
+            reverbReturn: checkpoint.state.reverbReturn,
+            delayReturn: checkpoint.state.delayReturn,
+          };
+    setMixerUndoHistory((history) => [...history, {
+      state: current,
+      label: `Recall ${section} from ${checkpoint.name}`,
+      createdAt: Date.now(),
+    }].slice(-50));
+    setMixerRedoHistory([]);
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(recalled);
+  }
+
   function toggleMixerCheckpointComparison(checkpoint: MixerCheckpoint) {
     if (comparedMixerCheckpointId) {
       if (comparedMixerCheckpointId !== checkpoint.id) {
@@ -1982,13 +2024,31 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       </button>
                     </div>
                     {expandedMixerCheckpointId === checkpoint.id ? (
-                      <ul className="grid gap-1 rounded border border-cyan-300/10 bg-black/25 px-3 py-2">
-                        {listSnapshotDifferences(checkpoint.state).map((detail) => (
-                          <li key={detail} className="text-[8px] text-cyan-50/55">
-                            <span className="mr-1 text-cyan-300/50">•</span>{detail}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="grid gap-2 rounded border border-cyan-300/10 bg-black/25 px-3 py-2">
+                        <ul className="grid gap-1">
+                          {listSnapshotDifferences(checkpoint.state).map((detail) => (
+                            <li key={detail} className="text-[8px] text-cyan-50/55">
+                              <span className="mr-1 text-cyan-300/50">•</span>{detail}
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="flex flex-wrap gap-1 border-t border-white/5 pt-2">
+                          {(["lanes", "master", "buses"] as const).map((section) => (
+                            <button
+                              key={section}
+                              type="button"
+                              disabled={Boolean(comparedMixerCheckpointId) || comparingSnapshot}
+                              onClick={() => recallMixerCheckpointSection(checkpoint, section)}
+                              className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] font-black capitalize text-cyan-100/70 hover:bg-cyan-300/10 disabled:opacity-30"
+                            >
+                              Recall {section}
+                            </button>
+                          ))}
+                          <span className="ml-auto self-center text-[8px] text-white/25">
+                            Selective recall is undoable
+                          </span>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 ))}
