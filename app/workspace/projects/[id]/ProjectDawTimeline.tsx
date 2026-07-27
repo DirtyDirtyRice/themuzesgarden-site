@@ -1272,6 +1272,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       .map((lane) => lane.trackId);
   }
 
+  function changedHiddenCheckpointLaneIds(
+    checkpoint: MixerCheckpoint,
+    section: LaneRecallSection = "all",
+  ): string[] {
+    const changedIds = new Set(changedCheckpointLaneIds(checkpoint.state, section));
+    return hiddenCheckpointLanes(checkpoint)
+      .filter((lane) => changedIds.has(lane.trackId))
+      .map((lane) => lane.trackId);
+  }
+
   function unchangedMatchingCheckpointLaneIds(
     checkpoint: MixerCheckpoint,
     section: LaneRecallSection = "all",
@@ -2753,6 +2763,44 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             ))}
                             <span className="ml-auto whitespace-nowrap text-[8px] text-white/25">
                               {hiddenCheckpointLanes(checkpoint).length} available
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span className="mr-1 text-[8px] font-black uppercase text-violet-100/45">
+                              Recall changed hidden
+                            </span>
+                            {([
+                              ["all", "All"],
+                              ["mix", "Level/Pan"],
+                              ["routing", "Sends"],
+                              ["effects", "FX"],
+                            ] as const).map(([section, label]) => {
+                              const changedIds = changedHiddenCheckpointLaneIds(
+                                checkpoint,
+                                section,
+                              );
+                              return (
+                                <button
+                                  key={section}
+                                  type="button"
+                                  disabled={
+                                    Boolean(comparedMixerCheckpointId)
+                                    || comparingSnapshot
+                                    || !changedIds.length
+                                  }
+                                  onClick={() => recallMixerCheckpointLanes(
+                                    checkpoint,
+                                    changedIds,
+                                    section,
+                                  )}
+                                  className="rounded bg-violet-300/10 px-2 py-1 text-[8px] font-black text-violet-100/70 hover:bg-violet-300/20 disabled:opacity-30"
+                                >
+                                  {label} ({changedIds.length})
+                                </button>
+                              );
+                            })}
+                            <span className="ml-auto whitespace-nowrap text-[8px] text-white/25">
+                              Hidden changes only
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-1">
