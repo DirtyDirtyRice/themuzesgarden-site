@@ -824,6 +824,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     id: string,
     updates: Partial<Pick<MixerCheckpoint, "name" | "notes">>,
   ) {
+    if (comparingSnapshot || comparedMixerCheckpointId) return;
     setMixerCheckpoints((checkpoints) => checkpoints.map((checkpoint) =>
       checkpoint.id === id ? { ...checkpoint, ...updates } : checkpoint));
   }
@@ -2388,10 +2389,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       <span className="text-[10px] text-amber-200">★</span>
                       <input
                         value={checkpoint.name}
+                        disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                         onChange={(event) => updateMixerCheckpoint(checkpoint.id, {
                           name: event.target.value,
                         })}
-                        className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-1 text-[9px] font-black text-amber-100 outline-none focus:border-amber-300/25"
+                        className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-1 text-[9px] font-black text-amber-100 outline-none focus:border-amber-300/25 disabled:opacity-30"
                         aria-label={`Checkpoint name for ${checkpoint.label}`}
                       />
                       <button
@@ -2434,11 +2436,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     </div>
                     <input
                       value={checkpoint.notes}
+                      disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                       onChange={(event) => updateMixerCheckpoint(checkpoint.id, {
                         notes: event.target.value,
                       })}
                       placeholder="Add checkpoint notes"
-                      className="w-full rounded border border-white/5 bg-black/25 px-2 py-1 text-[8px] text-white/55 outline-none placeholder:text-white/20 focus:border-amber-300/20"
+                      className="w-full rounded border border-white/5 bg-black/25 px-2 py-1 text-[8px] text-white/55 outline-none placeholder:text-white/20 focus:border-amber-300/20 disabled:opacity-30"
                       aria-label={`Notes for ${checkpoint.name}`}
                     />
                     <div className="flex items-center justify-between gap-2 px-2">
