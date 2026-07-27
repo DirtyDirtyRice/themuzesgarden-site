@@ -1279,6 +1279,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       .filter((lane) => selectedIds.has(lane.trackId)).length;
   }
 
+  function selectedHiddenCheckpointLaneCount(checkpoint: MixerCheckpoint): number {
+    const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
+    const visibleIds = new Set(
+      matchingCheckpointLanes(checkpoint).map((lane) => lane.trackId),
+    );
+    return checkpoint.state.lanes.filter((savedLane) =>
+      lanes.some((lane) => lane.trackId === savedLane.trackId)
+      && selectedIds.has(savedLane.trackId)
+      && !visibleIds.has(savedLane.trackId)).length;
+  }
+
   function selectedCheckpointLaneChangeCount(
     checkpoint: MixerCheckpoint,
     changed: boolean,
@@ -2377,6 +2388,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               >
                                 {selectedMatchingCheckpointLaneCount(checkpoint)}/
                                 {matchingCheckpointLanes(checkpoint).length} visible
+                              </span>
+                              <span
+                                className="rounded border border-indigo-300/15 px-2 py-1 text-[8px] text-indigo-100/55"
+                                title="Selected available lanes hidden by the current filter"
+                              >
+                                {selectedHiddenCheckpointLaneCount(checkpoint)} hidden
                               </span>
                               <span
                                 className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-white/40"
