@@ -5,11 +5,11 @@ import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { listLinkedProjectTrackIds } from "../../../../lib/projectTracksApi";
 import {
   addTimelineClip,
-  archiveTimelineClip,
+  archiveSelectedTimelineClips,
   clampTimelineZoom,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
-  moveTimelineClip,
+  moveSelectedTimelineClips,
   moveTimelineLane,
   reconcileTimelineClips,
   reconcileTimelineLanes,
@@ -20,6 +20,7 @@ import {
   timelineCanvasWidth,
   timelinePlayheadPercent,
   timelineSecondsFromPixels,
+  toggleTimelineClipSelection,
   trimTimelineClip,
   type TimelineDawClipState,
   type TimelineDawLaneState,
@@ -130,7 +131,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       : patch.selected ? { ...lane, selected: false } : lane));
   }
 
-  const selectedClip = clips.find((clip) => clip.selected && !clip.archived) ?? null;
+  const selectedClips = clips.filter((clip) => clip.selected && !clip.archived);
+  const selectedClip = selectedClips[0] ?? null;
   const archivedClips = clips.filter((clip) => clip.archived);
   const editStep = snapSeconds || (zoom >= 4 ? 0.25 : zoom >= 2 ? 0.5 : 1);
 
@@ -145,9 +147,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   function editSelected(action: "move-left" | "move-right" | "trim-start" | "trim-end" | "split") {
     if (!selectedClip) return;
     if (action === "move-left") {
-      applyClipEdit((value) => moveTimelineClip(value, selectedClip.id, -editStep));
+      applyClipEdit((value) => moveSelectedTimelineClips(value, -editStep));
     } else if (action === "move-right") {
-      applyClipEdit((value) => moveTimelineClip(value, selectedClip.id, editStep));
+      applyClipEdit((value) => moveSelectedTimelineClips(value, editStep));
     } else if (action === "trim-start") {
       applyClipEdit((value) => trimTimelineClip(value, selectedClip.id, "start", editStep));
     } else if (action === "trim-end") {
@@ -186,8 +188,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   ) {
     if (event.button !== 0) return;
     event.preventDefault();
+    if (mode === "move" && (event.ctrlKey || event.metaKey)) {
+      setClips((value) => toggleTimelineClipSelection(value, clipId));
+      updateLane(trackId, { selected: true });
+      return;
+    }
     event.currentTarget.setPointerCapture(event.pointerId);
-    const originClips = selectTimelineClip(clips, clipId);
+    const clickedClip = clips.find((clip) => clip.id === clipId);
+    const originClips = clickedClip?.selected
+      ? clips.map((clip) => ({ ...clip }))
+      : selectTimelineClip(clips, clipId);
     clipDragRef.current = { clipId, mode, originX: event.clientX, originClips };
     setClipHistory((history) => [...history.slice(-19), originClips]);
     setClips(originClips);
@@ -211,7 +221,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       ? rawDelta
       : snapTimelineSeconds(anchor + rawDelta, snapSeconds) - anchor;
     if (drag.mode === "move") {
-      setClips(moveTimelineClip(drag.originClips, drag.clipId, deltaSeconds));
+      setClips(moveSelectedTimelineClips(drag.originClips, deltaSeconds));
     } else {
       setClips(trimTimelineClip(
         drag.originClips,
@@ -264,18 +274,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             direction * editStep,
           ));
         } else {
-          applyClipEdit((value) => moveTimelineClip(
-            value,
-            selectedClip.id,
-            direction * editStep,
-          ));
+          applyClipEdit((value) => moveSelectedTimelineClips(value, direction * editStep));
         }
       } else if (event.key.toLowerCase() === "s") {
         event.preventDefault();
         editSelected("split");
       } else if (event.key === "Delete" || event.key === "Backspace") {
         event.preventDefault();
-        applyClipEdit((value) => archiveTimelineClip(value, selectedClip.id));
+        applyClipEdit(archiveSelectedTimelineClips);
       }
     }
     window.addEventListener("keydown", handleShortcut);
@@ -346,11 +352,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           className="rounded-lg bg-cyan-300 px-3 py-2 text-xs font-black text-black">
           Add Clip
         </button>
-        <button type="button" disabled={!selectedClip} onClick={() => {
-          if (selectedClip) applyClipEdit((value) => archiveTimelineClip(value, selectedClip.id));
-        }}
+        <button type="button" disabled={!selectedClip} onClick={() => applyClipEdit(archiveSelectedTimelineClips)}
           className="rounded-lg border border-amber-300/40 px-3 py-2 text-xs font-black text-amber-200 disabled:opacity-30">
-          Archive
+          Archive{selectedClips.length > 1 ? ` ${selectedClips.length}` : ""}
         </button>
         <button type="button" disabled={!clipHistory.length} onClick={undoClipEdit}
           className="rounded-lg border border-white/15 px-3 py-2 text-xs font-black disabled:opacity-30">
@@ -358,7 +362,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </button>
         <span className="ml-auto font-mono text-xs text-white/40">
           {selectedClip
-            ? `${clock(selectedClip.timelineStartSeconds)}–${clock(selectedClip.timelineEndSeconds)} · source preserved`
+            ? selectedClips.length > 1
+              ? `${selectedClips.length} clips selected · grouped movement`
+              : `${clock(selectedClip.timelineStartSeconds)}–${clock(selectedClip.timelineEndSeconds)} · source preserved`
             : "Select a clip"}
         </span>
       </div>
@@ -486,6 +492,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span className="font-mono">{clock(elapsed)} / {clock(duration)}</span>
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 bg-white/[0.02] px-5 py-2 text-[10px] font-bold uppercase tracking-wide text-white/30">
+        <span>Ctrl/Cmd + click: multiselect</span>
         <span>Arrow: move</span>
         <span>Shift + Arrow: trim end</span>
         <span>Alt + Arrow: trim start</span>

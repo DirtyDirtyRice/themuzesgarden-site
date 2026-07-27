@@ -221,6 +221,15 @@ export function selectTimelineClip(
   return clips.map((clip) => ({ ...clip, selected: clip.id === clipId }));
 }
 
+export function toggleTimelineClipSelection(
+  clips: TimelineDawClipState[],
+  clipId: string,
+): TimelineDawClipState[] {
+  return clips.map((clip) => clip.id === clipId && !clip.archived
+    ? { ...clip, selected: !clip.selected }
+    : { ...clip });
+}
+
 export function moveTimelineClip(
   clips: TimelineDawClipState[],
   clipId: string,
@@ -236,6 +245,25 @@ export function moveTimelineClip(
       timelineEndSeconds: clipPrecision(start + duration),
     };
   });
+}
+
+export function moveSelectedTimelineClips(
+  clips: TimelineDawClipState[],
+  deltaSeconds: number,
+): TimelineDawClipState[] {
+  const selected = clips.filter((clip) => clip.selected && !clip.archived);
+  if (!selected.length || !Number.isFinite(deltaSeconds)) {
+    return clips.map((clip) => ({ ...clip }));
+  }
+  const earliestStart = Math.min(...selected.map((clip) => clip.timelineStartSeconds));
+  const appliedDelta = clipPrecision(Math.max(deltaSeconds, -earliestStart));
+  return clips.map((clip) => clip.selected && !clip.archived
+    ? {
+        ...clip,
+        timelineStartSeconds: clipPrecision(clip.timelineStartSeconds + appliedDelta),
+        timelineEndSeconds: clipPrecision(clip.timelineEndSeconds + appliedDelta),
+      }
+    : { ...clip });
 }
 
 export function trimTimelineClip(
@@ -352,6 +380,19 @@ export function archiveTimelineClip(
   clipId: string,
 ): TimelineDawClipState[] {
   const next = clips.map((clip) => clip.id === clipId
+    ? { ...clip, archived: true, selected: false }
+    : { ...clip });
+  if (!next.some((clip) => clip.selected && !clip.archived)) {
+    const firstActive = next.find((clip) => !clip.archived);
+    if (firstActive) firstActive.selected = true;
+  }
+  return next;
+}
+
+export function archiveSelectedTimelineClips(
+  clips: TimelineDawClipState[],
+): TimelineDawClipState[] {
+  const next = clips.map((clip) => clip.selected && !clip.archived
     ? { ...clip, archived: true, selected: false }
     : { ...clip });
   if (!next.some((clip) => clip.selected && !clip.archived)) {

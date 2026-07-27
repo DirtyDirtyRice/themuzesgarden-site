@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   addTimelineClip,
+  archiveSelectedTimelineClips,
   archiveTimelineClip,
   clampTimelineZoom,
   createTimelineRulerMarks,
   createTimelineWaveformBars,
   moveTimelineClip,
+  moveSelectedTimelineClips,
   moveTimelineLane,
   parseTimelineLaneState,
   reconcileTimelineLanes,
@@ -17,6 +19,7 @@ import {
   timelineCanvasWidth,
   timelinePlayheadPercent,
   timelineSecondsFromPixels,
+  toggleTimelineClipSelection,
   trimTimelineClip,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
 
@@ -132,6 +135,19 @@ describe("TimelineDawMultitrackViewModel", () => {
       timelineEndSeconds: 110,
       sourceEndSeconds: 110,
     });
+  });
+
+  it("toggles multiselect and moves selected clips as a bounded group", () => {
+    const clips = reconcileTimelineClips(null, ["song-1", "stem-1"], 120);
+    const selected = toggleTimelineClipSelection(clips, clips[1].id);
+    expect(selected.map((clip) => clip.selected)).toEqual([true, true]);
+    const moved = moveSelectedTimelineClips(selected, 8);
+    expect(moved.map((clip) => clip.timelineStartSeconds)).toEqual([8, 8]);
+    expect(moveSelectedTimelineClips(moved, -20).map((clip) => clip.timelineStartSeconds))
+      .toEqual([0, 0]);
+    const archived = archiveSelectedTimelineClips(moved);
+    expect(archived.every((clip) => clip.archived)).toBe(true);
+    expect(archived.every((clip) => !clip.selected)).toBe(true);
   });
 
   it("splits a selected clip into source-linked children", () => {
