@@ -837,37 +837,45 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     applyMixState(recalled);
   }
 
+  type LaneRecallSection = "all" | "mix" | "routing" | "effects";
+
+  function mergeCheckpointLaneSection(
+    currentLane: TimelineDawLaneState,
+    savedLane: TimelineDawLaneState,
+    section: LaneRecallSection,
+  ): TimelineDawLaneState {
+    if (section === "all") return savedLane;
+    if (section === "mix") {
+      return {
+        ...currentLane,
+        volume: savedLane.volume,
+        pan: savedLane.pan,
+        muted: savedLane.muted,
+        soloed: savedLane.soloed,
+      };
+    }
+    if (section === "routing") {
+      return {
+        ...currentLane,
+        groupId: savedLane.groupId,
+        reverbSend: savedLane.reverbSend,
+        delaySend: savedLane.delaySend,
+      };
+    }
+    return { ...currentLane, effects: savedLane.effects };
+  }
+
   function recallMixerCheckpointLane(
     checkpoint: MixerCheckpoint,
     trackId: string,
-    section: "all" | "mix" | "routing" | "effects",
+    section: LaneRecallSection,
   ) {
     if (comparedMixerCheckpointId || comparingSnapshot || !trackId) return;
     const current = captureMixState();
     const savedLane = checkpoint.state.lanes.find((lane) => lane.trackId === trackId);
     if (!savedLane || !current.lanes.some((lane) => lane.trackId === trackId)) return;
     const currentLane = current.lanes.find((lane) => lane.trackId === trackId)!;
-    const recalledLane: TimelineDawLaneState = section === "all"
-      ? savedLane
-      : section === "mix"
-        ? {
-            ...currentLane,
-            volume: savedLane.volume,
-            pan: savedLane.pan,
-            muted: savedLane.muted,
-            soloed: savedLane.soloed,
-          }
-        : section === "routing"
-          ? {
-              ...currentLane,
-              groupId: savedLane.groupId,
-              reverbSend: savedLane.reverbSend,
-              delaySend: savedLane.delaySend,
-            }
-          : {
-              ...currentLane,
-              effects: savedLane.effects,
-            };
+    const recalledLane = mergeCheckpointLaneSection(currentLane, savedLane, section);
     const recalled: MixSnapshotState = {
       ...current,
       lanes: current.lanes.map((lane) => lane.trackId === trackId ? recalledLane : lane),
@@ -889,7 +897,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     applyMixState(recalled);
   }
 
-  function recallMixerCheckpointLanes(checkpoint: MixerCheckpoint, trackIds: string[]) {
+  function recallMixerCheckpointLanes(
+    checkpoint: MixerCheckpoint,
+    trackIds: string[],
+    section: LaneRecallSection,
+  ) {
     if (comparedMixerCheckpointId || comparingSnapshot || !trackIds.length) return;
     const current = captureMixState();
     const selectedIds = new Set(trackIds);
@@ -898,15 +910,19 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     );
     const recalled: MixSnapshotState = {
       ...current,
-      lanes: current.lanes.map((lane) =>
-        selectedIds.has(lane.trackId) ? savedByTrackId.get(lane.trackId) ?? lane : lane),
+      lanes: current.lanes.map((lane) => {
+        const savedLane = savedByTrackId.get(lane.trackId);
+        return selectedIds.has(lane.trackId) && savedLane
+          ? mergeCheckpointLaneSection(lane, savedLane, section)
+          : lane;
+      }),
     };
     const recalledCount = current.lanes.filter((lane) =>
       selectedIds.has(lane.trackId) && savedByTrackId.has(lane.trackId)).length;
     if (!recalledCount) return;
     setMixerUndoHistory((history) => [...history, {
       state: current,
-      label: `Recall ${recalledCount} lanes from ${checkpoint.name}`,
+      label: `Recall ${recalledCount} lanes ${section} from ${checkpoint.name}`,
       createdAt: Date.now(),
     }].slice(-50));
     setMixerRedoHistory([]);
@@ -2168,21 +2184,32 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             <span className="text-[8px] font-black uppercase text-white/35">
                               Multi-lane recall
                             </span>
-                            <button
-                              type="button"
-                              disabled={
-                                Boolean(comparedMixerCheckpointId)
-                                || comparingSnapshot
-                                || !(checkpointMultiLaneSelections[checkpoint.id]?.length)
-                              }
-                              onClick={() => recallMixerCheckpointLanes(
-                                checkpoint,
-                                checkpointMultiLaneSelections[checkpoint.id] ?? [],
-                              )}
-                              className="rounded bg-indigo-300/15 px-2 py-1 text-[8px] font-black text-indigo-100 hover:bg-indigo-300/25 disabled:opacity-30"
-                            >
-                              Recall Selected
-                            </button>
+                            <div className="flex gap-1">
+                              {([
+                                ["all", "All"],
+                                ["mix", "Level/Pan"],
+                                ["routing", "Sends"],
+                                ["effects", "FX"],
+                              ] as const).map(([section, label]) => (
+                                <button
+                                  key={section}
+                                  type="button"
+                                  disabled={
+                                    Boolean(comparedMixerCheckpointId)
+                                    || comparingSnapshot
+                                    || !(checkpointMultiLaneSelections[checkpoint.id]?.length)
+                                  }
+                                  onClick={() => recallMixerCheckpointLanes(
+                                    checkpoint,
+                                    checkpointMultiLaneSelections[checkpoint.id] ?? [],
+                                    section,
+                                  )}
+                                  className="rounded bg-indigo-300/15 px-2 py-1 text-[8px] font-black text-indigo-100 hover:bg-indigo-300/25 disabled:opacity-30"
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                           <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto">
                             {checkpoint.state.lanes
