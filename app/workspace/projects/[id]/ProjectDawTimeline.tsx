@@ -2274,16 +2274,32 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               ))}
                             </div>
                           </div>
-                          <input
-                            value={checkpointLaneSearches[checkpoint.id] ?? ""}
-                            onChange={(event) => setCheckpointLaneSearches((searches) => ({
-                              ...searches,
-                              [checkpoint.id]: event.target.value,
-                            }))}
-                            placeholder="Filter checkpoint lanes"
-                            className="w-full rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/60 outline-none placeholder:text-white/20 focus:border-indigo-300/25"
-                            aria-label={`Filter lanes in ${checkpoint.name}`}
-                          />
+                          <div className="flex items-center gap-1">
+                            <input
+                              value={checkpointLaneSearches[checkpoint.id] ?? ""}
+                              onChange={(event) => setCheckpointLaneSearches((searches) => ({
+                                ...searches,
+                                [checkpoint.id]: event.target.value,
+                              }))}
+                              placeholder="Filter checkpoint lanes"
+                              className="min-w-0 flex-1 rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/60 outline-none placeholder:text-white/20 focus:border-indigo-300/25"
+                              aria-label={`Filter lanes in ${checkpoint.name}`}
+                            />
+                            <span className="whitespace-nowrap text-[8px] text-white/30">
+                              {matchingCheckpointLanes(checkpoint).length} matches
+                            </span>
+                            <button
+                              type="button"
+                              disabled={!checkpointLaneSearches[checkpoint.id]}
+                              onClick={() => setCheckpointLaneSearches((searches) => ({
+                                ...searches,
+                                [checkpoint.id]: "",
+                              }))}
+                              className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/45 hover:text-white/80 disabled:opacity-30"
+                            >
+                              Clear Filter
+                            </button>
+                          </div>
                           <div className="flex gap-1">
                             <button
                               type="button"
