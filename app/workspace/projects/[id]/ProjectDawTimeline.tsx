@@ -2380,6 +2380,39 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               Clear Filter
                             </button>
                           </div>
+                          <div className="flex items-center gap-1">
+                            <span className="mr-1 text-[8px] font-black uppercase text-cyan-100/45">
+                              Recall visible
+                            </span>
+                            {([
+                              ["all", "All"],
+                              ["mix", "Level/Pan"],
+                              ["routing", "Sends"],
+                              ["effects", "FX"],
+                            ] as const).map(([section, label]) => (
+                              <button
+                                key={section}
+                                type="button"
+                                disabled={
+                                  Boolean(comparedMixerCheckpointId)
+                                  || comparingSnapshot
+                                  || !matchingCheckpointLanes(checkpoint).length
+                                }
+                                onClick={() => recallMixerCheckpointLanes(
+                                  checkpoint,
+                                  matchingCheckpointLanes(checkpoint)
+                                    .map((lane) => lane.trackId),
+                                  section,
+                                )}
+                                className="rounded bg-cyan-300/10 px-2 py-1 text-[8px] font-black text-cyan-100/70 hover:bg-cyan-300/20 disabled:opacity-30"
+                              >
+                                {label}
+                              </button>
+                            ))}
+                            <span className="ml-auto text-[8px] text-white/25">
+                              Keeps saved selection
+                            </span>
+                          </div>
                           <div className="flex gap-1">
                             <button
                               type="button"
