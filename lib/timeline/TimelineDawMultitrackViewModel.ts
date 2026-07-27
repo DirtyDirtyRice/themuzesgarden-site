@@ -48,6 +48,18 @@ export type TimelineDawSection = {
   widthPercent: number;
 };
 
+export type TimelineDawAutomationParameter = "volume" | "pan";
+
+export type TimelineDawAutomationPoint = {
+  id: string;
+  trackId: string;
+  parameter: TimelineDawAutomationParameter;
+  seconds: number;
+  value: number;
+  selected: boolean;
+  archived: boolean;
+};
+
 export function clampTimelineZoom(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.min(8, Math.max(0.5, Math.round(value * 4) / 4));
@@ -197,6 +209,126 @@ export function createTimelineSections(
       widthPercent: clipPrecision((Math.max(0, end - marker.seconds) / duration) * 100),
     };
   }).filter((section) => section.endSeconds > section.startSeconds);
+}
+
+const clampAutomationValue = (
+  parameter: TimelineDawAutomationParameter,
+  value: number,
+) => clipPrecision(parameter === "volume"
+  ? Math.min(1, Math.max(0, value))
+  : Math.min(1, Math.max(-1, value)));
+
+export function reconcileTimelineAutomation(
+  raw: string | null,
+  trackIds: string[],
+  durationSeconds: number,
+): TimelineDawAutomationPoint[] {
+  const duration = Number.isFinite(durationSeconds) && durationSeconds > 0
+    ? durationSeconds
+    : 180;
+  const tracks = new Set(trackIds);
+  try {
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((point) =>
+        typeof point?.id === "string"
+        && tracks.has(point.trackId)
+        && (point.parameter === "volume" || point.parameter === "pan")
+        && Number.isFinite(point.seconds)
+        && Number.isFinite(point.value))
+      .map((point) => ({
+        id: point.id,
+        trackId: point.trackId,
+        parameter: point.parameter,
+        seconds: Math.max(0, Math.min(duration, clipPrecision(point.seconds))),
+        value: clampAutomationValue(point.parameter, point.value),
+        selected: point.selected === true,
+        archived: point.archived === true,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export function addTimelineAutomationPoint(
+  points: TimelineDawAutomationPoint[],
+  input: {
+    trackId: string;
+    parameter: TimelineDawAutomationParameter;
+    seconds: number;
+    value: number;
+    durationSeconds: number;
+  },
+): TimelineDawAutomationPoint[] {
+  const duration = Number.isFinite(input.durationSeconds) && input.durationSeconds > 0
+    ? input.durationSeconds
+    : 180;
+  const seconds = Math.max(0, Math.min(duration, clipPrecision(input.seconds)));
+  const existing = points.find((point) =>
+    !point.archived
+    && point.trackId === input.trackId
+    && point.parameter === input.parameter
+    && point.seconds === seconds);
+  if (existing) {
+    return points.map((point) => point.id === existing.id
+      ? { ...point, value: clampAutomationValue(input.parameter, input.value), selected: true }
+      : { ...point, selected: false });
+  }
+  const sequence = points.reduce((highest, point) => {
+    const match = point.id.match(/^automation:(\d+)$/);
+    return Math.max(highest, Number(match?.[1] ?? 0));
+  }, 0) + 1;
+  return [
+    ...points.map((point) => ({ ...point, selected: false })),
+    {
+      id: `automation:${sequence}`,
+      trackId: input.trackId,
+      parameter: input.parameter,
+      seconds,
+      value: clampAutomationValue(input.parameter, input.value),
+      selected: true,
+      archived: false,
+    },
+  ];
+}
+
+export function archiveTimelineAutomationPoint(
+  points: TimelineDawAutomationPoint[],
+  pointId: string,
+): TimelineDawAutomationPoint[] {
+  return points.map((point) => point.id === pointId
+    ? { ...point, archived: true, selected: false }
+    : { ...point });
+}
+
+export function selectTimelineAutomationPoint(
+  points: TimelineDawAutomationPoint[],
+  pointId: string,
+): TimelineDawAutomationPoint[] {
+  return points.map((point) => ({ ...point, selected: point.id === pointId }));
+}
+
+export function timelineAutomationValueAt(
+  points: TimelineDawAutomationPoint[],
+  trackId: string,
+  parameter: TimelineDawAutomationParameter,
+  seconds: number,
+): number | null {
+  const active = points
+    .filter((point) =>
+      !point.archived
+      && point.trackId === trackId
+      && point.parameter === parameter)
+    .sort((left, right) => left.seconds - right.seconds);
+  if (!active.length) return null;
+  if (seconds <= active[0].seconds) return active[0].value;
+  if (seconds >= active.at(-1)!.seconds) return active.at(-1)!.value;
+  const nextIndex = active.findIndex((point) => point.seconds >= seconds);
+  const left = active[nextIndex - 1];
+  const right = active[nextIndex];
+  const progress = (seconds - left.seconds) / (right.seconds - left.seconds);
+  return clipPrecision(left.value + (right.value - left.value) * progress);
 }
 
 export function createTimelineRulerMarks(

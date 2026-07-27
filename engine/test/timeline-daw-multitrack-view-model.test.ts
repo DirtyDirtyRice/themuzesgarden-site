@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   addTimelineClip,
+  addTimelineAutomationPoint,
   addTimelineMarker,
   archiveTimelineMarker,
+  archiveTimelineAutomationPoint,
   archiveSelectedTimelineClips,
   archiveTimelineClip,
   clampTimelineZoom,
@@ -19,6 +21,7 @@ import {
   parseTimelineLaneState,
   reconcileTimelineLanes,
   reconcileTimelineMarkers,
+  reconcileTimelineAutomation,
   restoreTimelineClip,
   restoreTimelineMarker,
   renameTimelineMarker,
@@ -29,6 +32,7 @@ import {
   timelineCanvasWidth,
   timelinePlayheadPercent,
   timelineSecondsFromPixels,
+  timelineAutomationValueAt,
   toggleTimelineClipSelection,
   trimTimelineClip,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
@@ -87,6 +91,23 @@ describe("TimelineDawMultitrackViewModel", () => {
       archiveTimelineMarker(named, "marker:1"),
       "marker:1",
     )[0]).toMatchObject({ archived: false, selected: true });
+  });
+
+  it("writes, replaces, interpolates, and archives automation points", () => {
+    const first = addTimelineAutomationPoint([], {
+      trackId: "song-1", parameter: "volume", seconds: 0, value: 0.2, durationSeconds: 120,
+    });
+    const second = addTimelineAutomationPoint(first, {
+      trackId: "song-1", parameter: "volume", seconds: 10, value: 0.8, durationSeconds: 120,
+    });
+    expect(timelineAutomationValueAt(second, "song-1", "volume", 5)).toBe(0.5);
+    const replaced = addTimelineAutomationPoint(second, {
+      trackId: "song-1", parameter: "volume", seconds: 10, value: 2, durationSeconds: 120,
+    });
+    expect(replaced).toHaveLength(2);
+    expect(replaced[1].value).toBe(1);
+    expect(reconcileTimelineAutomation(JSON.stringify(replaced), ["song-1"], 5)[1].seconds).toBe(5);
+    expect(archiveTimelineAutomationPoint(replaced, replaced[1].id)[1].archived).toBe(true);
   });
 
   it("converts pointer movement into timeline seconds", () => {

@@ -5,8 +5,10 @@ import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { listLinkedProjectTrackIds } from "../../../../lib/projectTracksApi";
 import {
   addTimelineClip,
+  addTimelineAutomationPoint,
   addTimelineMarker,
   archiveTimelineMarker,
+  archiveTimelineAutomationPoint,
   archiveSelectedTimelineClips,
   clampTimelineZoom,
   copySelectedTimelineClips,
@@ -21,21 +23,26 @@ import {
   reconcileTimelineClips,
   reconcileTimelineLanes,
   reconcileTimelineMarkers,
+  reconcileTimelineAutomation,
   restoreTimelineClip,
   restoreTimelineMarker,
   renameTimelineMarker,
   selectTimelineClip,
   selectTimelineMarker,
+  selectTimelineAutomationPoint,
   snapTimelineSeconds,
   splitTimelineClip,
   timelineCanvasWidth,
   timelinePlayheadPercent,
   timelineSecondsFromPixels,
+  timelineAutomationValueAt,
   toggleTimelineClipSelection,
   trimTimelineClip,
   type TimelineDawClipState,
   type TimelineDawLaneState,
   type TimelineDawMarkerState,
+  type TimelineDawAutomationParameter,
+  type TimelineDawAutomationPoint,
 } from "../../../../lib/timeline/TimelineDawMultitrackViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
 import type { DawSession } from "./projectDawTypes";
@@ -69,6 +76,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [clipHistory, setClipHistory] = useState<TimelineDawClipState[][]>([]);
   const [clipClipboard, setClipClipboard] = useState<TimelineDawClipState[]>([]);
   const [markers, setMarkers] = useState<TimelineDawMarkerState[]>([]);
+  const [automation, setAutomation] = useState<TimelineDawAutomationPoint[]>([]);
+  const [automationParameter, setAutomationParameter] =
+    useState<TimelineDawAutomationParameter>("volume");
+  const [automationValue, setAutomationValue] = useState(0.75);
   const [elapsed, setElapsed] = useState(0);
   const [duration, setDuration] = useState(180);
   const [zoom, setZoom] = useState(1);
@@ -84,6 +95,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const clipStorageKey = `muzes:daw-timeline-clips:v1:${session.id}`;
   const snapStorageKey = `muzes:daw-timeline-snap:v1:${session.id}`;
   const markerStorageKey = `muzes:daw-timeline-markers:v1:${session.id}`;
+  const automationStorageKey = `muzes:daw-timeline-automation:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
@@ -114,9 +126,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         duration,
       ));
       setMarkers(reconcileTimelineMarkers(localStorage.getItem(markerStorageKey), duration));
+      setAutomation(reconcileTimelineAutomation(
+        localStorage.getItem(automationStorageKey),
+        linkedIds,
+        duration,
+      ));
     })();
     return () => { current = false; };
-  }, [clipStorageKey, duration, markerStorageKey, session.projectId, session.songId, storageKey]);
+  }, [
+    automationStorageKey,
+    clipStorageKey,
+    duration,
+    markerStorageKey,
+    session.projectId,
+    session.songId,
+    storageKey,
+  ]);
 
   useEffect(() => {
     if (lanes.length) localStorage.setItem(storageKey, JSON.stringify(lanes));
@@ -129,6 +154,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   useEffect(() => {
     if (markers.length) localStorage.setItem(markerStorageKey, JSON.stringify(markers));
   }, [markerStorageKey, markers]);
+
+  useEffect(() => {
+    if (automation.length) {
+      localStorage.setItem(automationStorageKey, JSON.stringify(automation));
+    }
+  }, [automation, automationStorageKey]);
 
   useEffect(() => {
     const raw = localStorage.getItem(snapStorageKey);
@@ -180,6 +211,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const archivedClips = clips.filter((clip) => clip.archived);
   const selectedMarker = markers.find((marker) => marker.selected && !marker.archived) ?? null;
   const archivedMarkers = markers.filter((marker) => marker.archived);
+  const selectedAutomation = automation.find((point) => point.selected && !point.archived) ?? null;
   const editStep = snapSeconds || (zoom >= 4 ? 0.25 : zoom >= 2 ? 0.5 : 1);
 
   function applyClipEdit(
@@ -263,6 +295,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setMarkers((value) => selectTimelineMarker(value, marker.id));
     window.dispatchEvent(new CustomEvent("muzes:daw-locate-command", {
       detail: { sessionId: session.id, seconds: marker.seconds },
+    }));
+  }
+
+  function writeAutomationPoint() {
+    const trackId = lanes.find((lane) => lane.selected)?.trackId ?? session.songId;
+    setAutomation((value) => addTimelineAutomationPoint(value, {
+      trackId,
+      parameter: automationParameter,
+      seconds: snapTimelineSeconds(elapsed, snapSeconds),
+      value: automationValue,
+      durationSeconds: duration,
     }));
   }
 
@@ -555,11 +598,73 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-emerald-300/[0.035] px-5 py-3">
+        <span className="text-xs font-black uppercase tracking-wider text-emerald-200/75">
+          Automation
+        </span>
+        <select
+          value={automationParameter}
+          onChange={(event) => {
+            const parameter = event.target.value as TimelineDawAutomationParameter;
+            setAutomationParameter(parameter);
+            setAutomationValue(parameter === "volume" ? 0.75 : 0);
+          }}
+          className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black text-emerald-100"
+          aria-label="Automation parameter"
+        >
+          <option value="volume">Volume</option>
+          <option value="pan">Pan</option>
+        </select>
+        <input
+          type="range"
+          min={automationParameter === "volume" ? 0 : -1}
+          max={1}
+          step={0.01}
+          value={automationValue}
+          onChange={(event) => setAutomationValue(Number(event.target.value))}
+          className="w-40 accent-emerald-300"
+          aria-label={`${automationParameter} automation value`}
+        />
+        <span className="w-14 font-mono text-xs text-emerald-100">
+          {automationParameter === "volume"
+            ? `${Math.round(automationValue * 100)}%`
+            : automationValue === 0
+              ? "Center"
+              : `${automationValue < 0 ? "L" : "R"}${Math.round(Math.abs(automationValue) * 100)}`}
+        </span>
+        <button
+          type="button"
+          onClick={writeAutomationPoint}
+          className="rounded-lg bg-emerald-300 px-3 py-2 text-xs font-black text-black"
+        >
+          Write at Playhead
+        </button>
+        {selectedAutomation ? (
+          <button
+            type="button"
+            onClick={() => setAutomation((value) =>
+              archiveTimelineAutomationPoint(value, selectedAutomation.id))}
+            className="rounded-lg border border-amber-300/35 px-3 py-2 text-xs font-black text-amber-100"
+          >
+            Remove Point
+          </button>
+        ) : null}
+        <span className="ml-auto text-xs text-white/35">
+          {automation.filter((point) => !point.archived).length} active points
+        </span>
+      </div>
+
       <div className="grid grid-cols-[220px_minmax(0,1fr)]">
         <div className="border-r border-white/10 bg-[#0a0a0a]">
           <div className="h-12 border-b border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-white/35">Tracks</div>
           {lanes.map((lane, index) => {
             const track = trackById.get(lane.trackId);
+            const automatedValue = timelineAutomationValueAt(
+              automation,
+              lane.trackId,
+              automationParameter,
+              elapsed,
+            );
             return (
               <div key={lane.trackId} className={`h-28 border-b border-white/10 p-3 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
                 <button type="button" onClick={() => updateLane(lane.trackId, { selected: true })}
@@ -567,7 +672,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                   {track?.title || lane.trackId}
                 </button>
                 <p className="mt-1 truncate text-xs text-white/40">{track?.artist || "Project audio"} · Audio {index + 1}</p>
-                <div className="mt-3 flex items-center gap-1.5">
+                {automatedValue !== null ? (
+                  <p className="mt-1 font-mono text-[10px] text-emerald-200/70">
+                    {automationParameter === "volume"
+                      ? `VOL ${Math.round(automatedValue * 100)}%`
+                      : `PAN ${automatedValue === 0 ? "C" : `${automatedValue < 0 ? "L" : "R"}${Math.round(Math.abs(automatedValue) * 100)}`}`}
+                  </p>
+                ) : null}
+                <div className={`${automatedValue === null ? "mt-3" : "mt-1"} flex items-center gap-1.5`}>
                   <button type="button" aria-pressed={lane.muted} onClick={() => updateLane(lane.trackId, { muted: !lane.muted })}
                     className={`rounded px-2 py-1 text-[10px] font-black ${lane.muted ? "bg-amber-300 text-black" : "bg-white/10"}`}>M</button>
                   <button type="button" aria-pressed={lane.soloed} onClick={() => updateLane(lane.trackId, { soloed: !lane.soloed })}
@@ -617,6 +729,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               const track = trackById.get(lane.trackId);
               const audible = !lane.muted && (!anySoloed || lane.soloed);
               const laneClips = clips.filter((clip) => clip.trackId === lane.trackId && !clip.archived);
+              const laneAutomation = automation
+                .filter((point) =>
+                  point.trackId === lane.trackId
+                  && point.parameter === automationParameter
+                  && !point.archived)
+                .sort((left, right) => left.seconds - right.seconds);
+              const automationTop = (value: number) => automationParameter === "volume"
+                ? 88 - value * 72
+                : 52 - value * 36;
               return (
                 <div key={lane.trackId} className={`relative h-28 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
                   {laneClips.map((clip) => {
@@ -681,6 +802,51 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           onPointerUp={finishClipDrag}
                           onPointerCancel={finishClipDrag}
                           aria-hidden="true"
+                        />
+                      </div>
+                    );
+                  })}
+                  {laneAutomation.map((point, index) => {
+                    const next = laneAutomation[index + 1];
+                    const left = timelinePlayheadPercent(point.seconds, duration);
+                    const top = automationTop(point.value);
+                    const nextLeft = next
+                      ? timelinePlayheadPercent(next.seconds, duration)
+                      : left;
+                    const nextTop = next ? automationTop(next.value) : top;
+                    return (
+                      <div key={point.id}>
+                        {next ? (
+                          <>
+                            <div
+                              className="pointer-events-none absolute z-[11] h-px bg-emerald-300/75"
+                              style={{ left: `${left}%`, width: `${nextLeft - left}%`, top }}
+                            />
+                            <div
+                              className="pointer-events-none absolute z-[11] w-px bg-emerald-300/45"
+                              style={{
+                                left: `${nextLeft}%`,
+                                top: Math.min(top, nextTop),
+                                height: Math.abs(nextTop - top),
+                              }}
+                            />
+                          </>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAutomation((value) => selectTimelineAutomationPoint(value, point.id));
+                            setAutomationValue(point.value);
+                            updateLane(lane.trackId, { selected: true });
+                          }}
+                          className={`absolute z-[12] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border ${
+                            point.selected
+                              ? "border-white bg-emerald-300 ring-2 ring-emerald-300/30"
+                              : "border-emerald-100 bg-emerald-500"
+                          }`}
+                          style={{ left: `${left}%`, top }}
+                          aria-label={`Select ${automationParameter} automation point at ${clock(point.seconds)}`}
+                          title={`${automationParameter} ${point.value} at ${clock(point.seconds)}`}
                         />
                       </div>
                     );
