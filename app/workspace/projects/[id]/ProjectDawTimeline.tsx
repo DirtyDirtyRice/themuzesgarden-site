@@ -2407,6 +2407,17 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             <span className="whitespace-nowrap text-[8px] text-white/30">
                               {matchingCheckpointLanes(checkpoint).length} matches
                             </span>
+                            <button
+                              type="button"
+                              disabled={!checkpointLaneSearches[checkpoint.id]}
+                              onClick={() => setCheckpointLaneSearches((searches) => ({
+                                ...searches,
+                                [checkpoint.id]: "",
+                              }))}
+                              className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/45 hover:text-white/80 disabled:opacity-30"
+                            >
+                              Clear Search
+                            </button>
                             <select
                               value={checkpointLaneOrders[checkpoint.id] ?? "checkpoint"}
                               onChange={(event) => setCheckpointLaneOrders((orders) => ({
