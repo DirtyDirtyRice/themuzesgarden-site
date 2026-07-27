@@ -43,6 +43,7 @@ import {
   timelineAutomationValueAt,
   timelineLaneMeterLevel,
   toggleTimelineLaneEffectBypass,
+  updateTimelineLaneEffect,
   toggleTimelineClipSelection,
   trimTimelineClip,
   type TimelineDawClipState,
@@ -93,6 +94,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [clipClipboard, setClipClipboard] = useState<TimelineDawClipState[]>([]);
   const [markers, setMarkers] = useState<TimelineDawMarkerState[]>([]);
   const [automation, setAutomation] = useState<TimelineDawAutomationPoint[]>([]);
+  const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -119,6 +121,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const sections = createTimelineSections(markers, duration);
   const trackById = useMemo(() => new Map(tracks.map((track) => [String(track.id), track])), [tracks]);
   const anySoloed = lanes.some((lane) => lane.soloed);
+  const selectedEffect = lanes
+    .flatMap((lane) => lane.effects.map((effect) => ({ lane, effect })))
+    .find(({ effect }) => effect.id === selectedEffectId) ?? null;
+  const effectPresets: Record<TimelineDawEffectKind, string[]> = {
+    eq: ["Balanced", "Vocal Presence", "Bass Cleanup", "Air"],
+    compressor: ["Vocal Glue", "Punch", "Gentle Bus", "Limiter"],
+    reverb: ["Studio Room", "Plate", "Large Hall", "Dream"],
+    delay: ["Quarter Note", "Eighth Note", "Slapback", "Ping Pong"],
+  };
 
   useEffect(() => {
     let current = true;
@@ -760,6 +771,85 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
       </div>
 
+      {selectedEffect ? (
+        <div className="flex flex-wrap items-center gap-3 border-b border-violet-300/15 bg-violet-300/[0.05] px-5 py-3">
+          <span className="text-xs font-black uppercase tracking-wider text-violet-200">
+            {selectedEffect.effect.kind === "compressor" ? "Compressor" : selectedEffect.effect.kind} Editor
+          </span>
+          <span className="max-w-36 truncate text-[10px] text-white/40">
+            {trackById.get(selectedEffect.lane.trackId)?.title || selectedEffect.lane.trackId}
+          </span>
+          <select
+            value={selectedEffect.effect.preset}
+            onChange={(event) => setLanes((value) => updateTimelineLaneEffect(
+              value,
+              selectedEffect.lane.trackId,
+              selectedEffect.effect.id,
+              { preset: event.target.value },
+            ))}
+            className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black text-violet-100"
+            aria-label="Effect preset"
+          >
+            {effectPresets[selectedEffect.effect.kind].map((preset) => (
+              <option key={preset} value={preset}>{preset}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
+            AMOUNT
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={selectedEffect.effect.amount}
+              onChange={(event) => setLanes((value) => updateTimelineLaneEffect(
+                value,
+                selectedEffect.lane.trackId,
+                selectedEffect.effect.id,
+                { amount: Number(event.target.value) },
+              ))}
+              className="w-28 accent-violet-300"
+            />
+            {Math.round(selectedEffect.effect.amount * 100)}%
+          </label>
+          <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
+            MIX
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={selectedEffect.effect.mix}
+              onChange={(event) => setLanes((value) => updateTimelineLaneEffect(
+                value,
+                selectedEffect.lane.trackId,
+                selectedEffect.effect.id,
+                { mix: Number(event.target.value) },
+              ))}
+              className="w-28 accent-cyan-300"
+            />
+            {Math.round(selectedEffect.effect.mix * 100)}%
+          </label>
+          <button
+            type="button"
+            onClick={() => setLanes((value) => toggleTimelineLaneEffectBypass(
+              value,
+              selectedEffect.lane.trackId,
+              selectedEffect.effect.id,
+            ))}
+            className={`rounded-lg px-3 py-2 text-xs font-black ${
+              selectedEffect.effect.bypassed
+                ? "bg-amber-300 text-black"
+                : "border border-white/15 text-white/65"
+            }`}
+          >
+            {selectedEffect.effect.bypassed ? "Bypassed" : "Active"}
+          </button>
+          <button type="button" onClick={() => setSelectedEffectId(null)}
+            className="ml-auto rounded-lg bg-white/10 px-3 py-2 text-xs font-black">Close</button>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-[220px_minmax(0,1fr)]">
         <div className="border-r border-white/10 bg-[#0a0a0a]">
           <div className="h-12 border-b border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-white/35">Tracks</div>
@@ -861,14 +951,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     }`}>
                       <button
                         type="button"
-                        onClick={() => setLanes((value) =>
-                          toggleTimelineLaneEffectBypass(value, lane.trackId, effect.id))}
+                        onClick={() => setSelectedEffectId(effect.id)}
                         className="px-1.5 py-0.5 uppercase"
-                        aria-pressed={effect.bypassed}
-                        title={effect.bypassed ? "Enable effect" : "Bypass effect"}
+                        aria-pressed={selectedEffectId === effect.id}
+                        title={`Edit ${effect.kind}: ${effect.preset}`}
                       >
                         {effect.kind === "compressor" ? "COMP" : effect.kind}
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setLanes((value) =>
+                          toggleTimelineLaneEffectBypass(value, lane.trackId, effect.id))}
+                        className="border-l border-white/10 px-1"
+                        aria-label={`${effect.bypassed ? "Enable" : "Bypass"} ${effect.kind}`}
+                      >B</button>
                       <button
                         type="button"
                         onClick={() => setLanes((value) =>

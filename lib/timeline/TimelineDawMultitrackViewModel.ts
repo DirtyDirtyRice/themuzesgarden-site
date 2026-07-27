@@ -4,7 +4,22 @@ export type TimelineDawLaneEffect = {
   id: string;
   kind: TimelineDawEffectKind;
   bypassed: boolean;
+  preset: string;
+  amount: number;
+  mix: number;
 };
+
+const defaultEffectSettings = (kind: TimelineDawEffectKind) => ({
+  preset: kind === "eq"
+    ? "Balanced"
+    : kind === "compressor"
+      ? "Vocal Glue"
+      : kind === "reverb"
+        ? "Studio Room"
+        : "Quarter Note",
+  amount: 0.5,
+  mix: kind === "eq" || kind === "compressor" ? 1 : 0.25,
+});
 
 export type TimelineDawLaneState = {
   trackId: string;
@@ -445,6 +460,15 @@ export function parseTimelineLaneState(
             id: effect.id,
             kind: effect.kind,
             bypassed: effect.bypassed === true,
+            preset: typeof effect.preset === "string" && effect.preset.trim()
+              ? effect.preset.trim()
+              : defaultEffectSettings(effect.kind).preset,
+            amount: Number.isFinite(effect.amount)
+              ? Math.min(1, Math.max(0, effect.amount))
+              : defaultEffectSettings(effect.kind).amount,
+            mix: Number.isFinite(effect.mix)
+              ? Math.min(1, Math.max(0, effect.mix))
+              : defaultEffectSettings(effect.kind).mix,
           }))
         : [],
     };
@@ -488,7 +512,17 @@ export function reconcileTimelineLanes(
         ? previous!.effects.filter((effect) =>
             typeof effect?.id === "string"
             && ["eq", "compressor", "reverb", "delay"].includes(effect.kind))
-          .map((effect) => ({ ...effect, bypassed: effect.bypassed === true }))
+          .map((effect) => ({
+            ...effect,
+            bypassed: effect.bypassed === true,
+            ...(!effect.preset ? defaultEffectSettings(effect.kind) : {}),
+            amount: Number.isFinite(effect.amount)
+              ? Math.min(1, Math.max(0, effect.amount))
+              : defaultEffectSettings(effect.kind).amount,
+            mix: Number.isFinite(effect.mix)
+              ? Math.min(1, Math.max(0, effect.mix))
+              : defaultEffectSettings(effect.kind).mix,
+          }))
         : [],
     };
   });
@@ -524,6 +558,7 @@ export function addTimelineLaneEffect(
         id: `${trackId}:fx:${sequence}`,
         kind,
         bypassed: false,
+        ...defaultEffectSettings(kind),
       }],
     };
   });
@@ -551,6 +586,33 @@ export function removeTimelineLaneEffect(
 ): TimelineDawLaneState[] {
   return lanes.map((lane) => lane.trackId === trackId
     ? { ...lane, effects: lane.effects.filter((effect) => effect.id !== effectId).map((effect) => ({ ...effect })) }
+    : { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) });
+}
+
+export function updateTimelineLaneEffect(
+  lanes: TimelineDawLaneState[],
+  trackId: string,
+  effectId: string,
+  patch: Partial<Pick<TimelineDawLaneEffect, "preset" | "amount" | "mix">>,
+): TimelineDawLaneState[] {
+  return lanes.map((lane) => lane.trackId === trackId
+    ? {
+        ...lane,
+        effects: lane.effects.map((effect) => effect.id === effectId
+          ? {
+              ...effect,
+              ...(typeof patch.preset === "string" && patch.preset.trim()
+                ? { preset: patch.preset.trim() }
+                : {}),
+              ...(Number.isFinite(patch.amount)
+                ? { amount: Math.min(1, Math.max(0, patch.amount!)) }
+                : {}),
+              ...(Number.isFinite(patch.mix)
+                ? { mix: Math.min(1, Math.max(0, patch.mix!)) }
+                : {}),
+            }
+          : { ...effect }),
+      }
     : { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) });
 }
 

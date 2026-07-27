@@ -41,6 +41,7 @@ import {
   timelineLaneMeterLevel,
   toggleTimelineClipSelection,
   toggleTimelineLaneEffectBypass,
+  updateTimelineLaneEffect,
   trimTimelineClip,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
 
@@ -212,13 +213,28 @@ describe("TimelineDawMultitrackViewModel", () => {
       "reverb",
     );
     expect(added[0].effects).toEqual([
-      { id: "song-1:fx:1", kind: "eq", bypassed: false },
-      { id: "song-1:fx:2", kind: "reverb", bypassed: false },
+      {
+        id: "song-1:fx:1", kind: "eq", bypassed: false,
+        preset: "Balanced", amount: 0.5, mix: 1,
+      },
+      {
+        id: "song-1:fx:2", kind: "reverb", bypassed: false,
+        preset: "Studio Room", amount: 0.5, mix: 0.25,
+      },
     ]);
     const bypassed = toggleTimelineLaneEffectBypass(added, "song-1", "song-1:fx:1");
     expect(bypassed[0].effects[0].bypassed).toBe(true);
-    expect(removeTimelineLaneEffect(bypassed, "song-1", "song-1:fx:2")[0].effects)
-      .toEqual([{ id: "song-1:fx:1", kind: "eq", bypassed: true }]);
+    const edited = updateTimelineLaneEffect(bypassed, "song-1", "song-1:fx:1", {
+      preset: "Vocal Presence", amount: 2, mix: -1,
+    });
+    expect(edited[0].effects[0]).toMatchObject({
+      preset: "Vocal Presence", amount: 1, mix: 0,
+    });
+    expect(removeTimelineLaneEffect(edited, "song-1", "song-1:fx:2")[0].effects)
+      .toEqual([{
+        id: "song-1:fx:1", kind: "eq", bypassed: true,
+        preset: "Vocal Presence", amount: 1, mix: 0,
+      }]);
   });
 
   it("creates one source-preserving clip for every current lane", () => {
