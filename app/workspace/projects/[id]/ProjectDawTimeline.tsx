@@ -183,6 +183,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [comparedMixerCheckpointId, setComparedMixerCheckpointId] = useState("");
   const [expandedMixerCheckpointId, setExpandedMixerCheckpointId] = useState("");
   const [checkpointLaneSelections, setCheckpointLaneSelections] = useState<Record<string, string>>({});
+  const [checkpointMultiLaneSelections, setCheckpointMultiLaneSelections] =
+    useState<Record<string, string[]>>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -880,6 +882,31 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setMixerUndoHistory((history) => [...history, {
       state: current,
       label: `Recall ${laneName} ${sectionName} from ${checkpoint.name}`,
+      createdAt: Date.now(),
+    }].slice(-50));
+    setMixerRedoHistory([]);
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(recalled);
+  }
+
+  function recallMixerCheckpointLanes(checkpoint: MixerCheckpoint, trackIds: string[]) {
+    if (comparedMixerCheckpointId || comparingSnapshot || !trackIds.length) return;
+    const current = captureMixState();
+    const selectedIds = new Set(trackIds);
+    const savedByTrackId = new Map(
+      checkpoint.state.lanes.map((lane) => [lane.trackId, lane]),
+    );
+    const recalled: MixSnapshotState = {
+      ...current,
+      lanes: current.lanes.map((lane) =>
+        selectedIds.has(lane.trackId) ? savedByTrackId.get(lane.trackId) ?? lane : lane),
+    };
+    const recalledCount = current.lanes.filter((lane) =>
+      selectedIds.has(lane.trackId) && savedByTrackId.has(lane.trackId)).length;
+    if (!recalledCount) return;
+    setMixerUndoHistory((history) => [...history, {
+      state: current,
+      label: `Recall ${recalledCount} lanes from ${checkpoint.name}`,
       createdAt: Date.now(),
     }].slice(-50));
     setMixerRedoHistory([]);
@@ -2135,6 +2162,65 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               {label}
                             </button>
                           ))}
+                        </div>
+                        <div className="grid gap-1 border-t border-white/5 pt-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[8px] font-black uppercase text-white/35">
+                              Multi-lane recall
+                            </span>
+                            <button
+                              type="button"
+                              disabled={
+                                Boolean(comparedMixerCheckpointId)
+                                || comparingSnapshot
+                                || !(checkpointMultiLaneSelections[checkpoint.id]?.length)
+                              }
+                              onClick={() => recallMixerCheckpointLanes(
+                                checkpoint,
+                                checkpointMultiLaneSelections[checkpoint.id] ?? [],
+                              )}
+                              className="rounded bg-indigo-300/15 px-2 py-1 text-[8px] font-black text-indigo-100 hover:bg-indigo-300/25 disabled:opacity-30"
+                            >
+                              Recall Selected
+                            </button>
+                          </div>
+                          <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto">
+                            {checkpoint.state.lanes
+                              .filter((savedLane) =>
+                                lanes.some((lane) => lane.trackId === savedLane.trackId))
+                              .map((savedLane) => {
+                                const selected =
+                                  checkpointMultiLaneSelections[checkpoint.id]?.includes(
+                                    savedLane.trackId,
+                                  ) ?? false;
+                                return (
+                                  <label
+                                    key={savedLane.trackId}
+                                    className={`flex cursor-pointer items-center gap-1 rounded border px-2 py-1 text-[8px] ${
+                                      selected
+                                        ? "border-indigo-300/30 bg-indigo-300/10 text-indigo-100"
+                                        : "border-white/10 text-white/40"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selected}
+                                      onChange={() => setCheckpointMultiLaneSelections((selections) => {
+                                        const current = selections[checkpoint.id] ?? [];
+                                        return {
+                                          ...selections,
+                                          [checkpoint.id]: current.includes(savedLane.trackId)
+                                            ? current.filter((id) => id !== savedLane.trackId)
+                                            : [...current, savedLane.trackId],
+                                        };
+                                      })}
+                                      className="accent-indigo-300"
+                                    />
+                                    {trackById.get(savedLane.trackId)?.title ?? savedLane.trackId}
+                                  </label>
+                                );
+                              })}
+                          </div>
                         </div>
                         <div className="flex flex-wrap gap-1 border-t border-white/5 pt-2">
                           {(["lanes", "master", "buses"] as const).map((section) => (
