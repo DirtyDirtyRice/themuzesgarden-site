@@ -1425,6 +1425,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   async function importMixSnapshots(file: File) {
+    if (comparingSnapshot || comparedMixerCheckpointId) {
+      if (snapshotFileRef.current) snapshotFileRef.current.value = "";
+      return;
+    }
     try {
       const imported = parseTimelineMixSnapshotBundle(await file.text()) as MixSnapshot[];
       const stamp = Date.now();
@@ -3454,14 +3458,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </button>
         <button
           type="button"
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
           onClick={() => snapshotFileRef.current?.click()}
-          className="rounded border border-violet-300/15 px-2 py-1.5 text-[9px] font-black text-violet-100"
+          className="rounded border border-violet-300/15 px-2 py-1.5 text-[9px] font-black text-violet-100 disabled:opacity-30"
         >
           Import
         </button>
         <input
           ref={snapshotFileRef}
           type="file"
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
           accept="application/json,.json"
           className="hidden"
           onChange={(event) => {
