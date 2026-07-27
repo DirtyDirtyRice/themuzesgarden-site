@@ -19,6 +19,7 @@ import {
   moveTimelineAutomationPoint,
   moveSelectedTimelineClips,
   moveTimelineLane,
+  moveTimelineLaneEffect,
   normalizeTimelineLoopRegion,
   pasteTimelineClips,
   parseTimelineLaneState,
@@ -28,6 +29,7 @@ import {
   restoreTimelineClip,
   restoreTimelineMarker,
   removeTimelineLaneEffect,
+  replaceTimelineLaneEffects,
   renameTimelineMarker,
   reconcileTimelineClips,
   selectTimelineClip,
@@ -235,6 +237,16 @@ describe("TimelineDawMultitrackViewModel", () => {
         id: "song-1:fx:1", kind: "eq", bypassed: true,
         preset: "Vocal Presence", amount: 1, mix: 0,
       }]);
+    const reordered = moveTimelineLaneEffect(edited, "song-1", "song-1:fx:2", -1);
+    expect(reordered[0].effects.map((effect) => effect.kind)).toEqual(["reverb", "eq"]);
+    const target = reconcileTimelineLanes(null, ["stem-1"], "song-1");
+    const pasted = replaceTimelineLaneEffects(target, "stem-1", reordered[0].effects);
+    expect(pasted[1].effects.map((effect) => ({
+      id: effect.id, kind: effect.kind, preset: effect.preset,
+    }))).toEqual([
+      { id: "stem-1:fx:1", kind: "reverb", preset: "Studio Room" },
+      { id: "stem-1:fx:2", kind: "eq", preset: "Vocal Presence" },
+    ]);
   });
 
   it("creates one source-preserving clip for every current lane", () => {

@@ -21,6 +21,7 @@ import {
   moveSelectedTimelineClips,
   moveTimelineAutomationPoint,
   moveTimelineLane,
+  moveTimelineLaneEffect,
   normalizeTimelineLoopRegion,
   pasteTimelineClips,
   reconcileTimelineClips,
@@ -31,6 +32,7 @@ import {
   restoreTimelineMarker,
   renameTimelineMarker,
   removeTimelineLaneEffect,
+  replaceTimelineLaneEffects,
   selectTimelineClip,
   selectTimelineMarker,
   selectTimelineAutomationPoint,
@@ -49,6 +51,7 @@ import {
   type TimelineDawClipState,
   type TimelineDawLaneState,
   type TimelineDawEffectKind,
+  type TimelineDawLaneEffect,
   type TimelineDawMarkerState,
   type TimelineDawAutomationParameter,
   type TimelineDawAutomationPoint,
@@ -95,6 +98,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [markers, setMarkers] = useState<TimelineDawMarkerState[]>([]);
   const [automation, setAutomation] = useState<TimelineDawAutomationPoint[]>([]);
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
+  const [effectClipboard, setEffectClipboard] = useState<TimelineDawLaneEffect[]>([]);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -845,8 +849,31 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           >
             {selectedEffect.effect.bypassed ? "Bypassed" : "Active"}
           </button>
+          <button
+            type="button"
+            disabled={selectedEffect.lane.effects[0]?.id === selectedEffect.effect.id}
+            onClick={() => setLanes((value) => moveTimelineLaneEffect(
+              value, selectedEffect.lane.trackId, selectedEffect.effect.id, -1,
+            ))}
+            className="rounded-lg bg-white/10 px-3 py-2 text-xs font-black disabled:opacity-25"
+          >Move Left</button>
+          <button
+            type="button"
+            disabled={selectedEffect.lane.effects.at(-1)?.id === selectedEffect.effect.id}
+            onClick={() => setLanes((value) => moveTimelineLaneEffect(
+              value, selectedEffect.lane.trackId, selectedEffect.effect.id, 1,
+            ))}
+            className="rounded-lg bg-white/10 px-3 py-2 text-xs font-black disabled:opacity-25"
+          >Move Right</button>
+          <button
+            type="button"
+            onClick={() => setEffectClipboard(
+              selectedEffect.lane.effects.map((effect) => ({ ...effect })),
+            )}
+            className="rounded-lg border border-cyan-300/25 px-3 py-2 text-xs font-black text-cyan-100"
+          >Copy Rack</button>
           <button type="button" onClick={() => setSelectedEffectId(null)}
-            className="ml-auto rounded-lg bg-white/10 px-3 py-2 text-xs font-black">Close</button>
+            className="rounded-lg bg-white/10 px-3 py-2 text-xs font-black">Close</button>
         </div>
       ) : null}
 
@@ -941,6 +968,18 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     <option value="delay">Delay</option>
                   </select>
                   <span className="truncate text-[9px] text-white/35">{lane.effects.length} slots</span>
+                  {effectClipboard.length ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLanes((value) => replaceTimelineLaneEffects(
+                          value, lane.trackId, effectClipboard,
+                        ));
+                        setSelectedEffectId(null);
+                      }}
+                      className="rounded bg-cyan-300/15 px-1.5 py-1 text-[9px] font-black text-cyan-100"
+                    >Paste</button>
+                  ) : null}
                 </div>
                 <div className="mt-1 flex max-h-8 flex-wrap gap-1 overflow-y-auto">
                   {lane.effects.map((effect) => (

@@ -616,6 +616,43 @@ export function updateTimelineLaneEffect(
     : { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) });
 }
 
+export function moveTimelineLaneEffect(
+  lanes: TimelineDawLaneState[],
+  trackId: string,
+  effectId: string,
+  direction: -1 | 1,
+): TimelineDawLaneState[] {
+  return lanes.map((lane) => {
+    if (lane.trackId !== trackId) {
+      return { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) };
+    }
+    const index = lane.effects.findIndex((effect) => effect.id === effectId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= lane.effects.length) {
+      return { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) };
+    }
+    const effects = lane.effects.map((effect) => ({ ...effect }));
+    [effects[index], effects[target]] = [effects[target], effects[index]];
+    return { ...lane, effects };
+  });
+}
+
+export function replaceTimelineLaneEffects(
+  lanes: TimelineDawLaneState[],
+  trackId: string,
+  sourceEffects: TimelineDawLaneEffect[],
+): TimelineDawLaneState[] {
+  return lanes.map((lane) => lane.trackId === trackId
+    ? {
+        ...lane,
+        effects: sourceEffects.map((effect, index) => ({
+          ...effect,
+          id: `${trackId}:fx:${index + 1}`,
+        })),
+      }
+    : { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) });
+}
+
 export function timelineLaneMeterLevel(
   trackId: string,
   seconds: number,
