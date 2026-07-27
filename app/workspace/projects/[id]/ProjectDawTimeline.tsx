@@ -1290,6 +1290,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       && !visibleIds.has(savedLane.trackId)).length;
   }
 
+  function selectedUnavailableCheckpointLaneCount(checkpoint: MixerCheckpoint): number {
+    const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
+    return checkpoint.state.lanes.filter((savedLane) =>
+      selectedIds.has(savedLane.trackId)
+      && !lanes.some((lane) => lane.trackId === savedLane.trackId)).length;
+  }
+
   function selectedCheckpointLaneChangeCount(
     checkpoint: MixerCheckpoint,
     changed: boolean,
@@ -2394,6 +2401,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 title="Selected available lanes hidden by the current filter"
                               >
                                 {selectedHiddenCheckpointLaneCount(checkpoint)} hidden
+                              </span>
+                              <span
+                                className="rounded border border-rose-300/15 px-2 py-1 text-[8px] text-rose-100/55"
+                                title="Selected checkpoint lanes whose project tracks are unavailable"
+                              >
+                                {selectedUnavailableCheckpointLaneCount(checkpoint)} unavailable
                               </span>
                               <span
                                 className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-white/40"
