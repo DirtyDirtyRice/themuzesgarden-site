@@ -2319,6 +2319,30 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </button>
                             <button
                               type="button"
+                              disabled={!matchingCheckpointLanes(checkpoint).length}
+                              onClick={() => {
+                                const visibleLanes = matchingCheckpointLanes(checkpoint);
+                                const visibleIds = new Set(visibleLanes.map((lane) => lane.trackId));
+                                setCheckpointMultiLaneSelections((selections) => {
+                                  const current = selections[checkpoint.id] ?? [];
+                                  const selectedIds = new Set(current);
+                                  return {
+                                    ...selections,
+                                    [checkpoint.id]: [
+                                      ...current.filter((id) => !visibleIds.has(id)),
+                                      ...visibleLanes
+                                        .filter((lane) => !selectedIds.has(lane.trackId))
+                                        .map((lane) => lane.trackId),
+                                    ],
+                                  };
+                                });
+                              }}
+                              className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] text-cyan-100/60 hover:text-cyan-100 disabled:opacity-30"
+                            >
+                              Invert Visible
+                            </button>
+                            <button
+                              type="button"
                               disabled={!changedMatchingCheckpointLaneIds(checkpoint).length}
                               onClick={() => setCheckpointMultiLaneSelections((selections) => ({
                                 ...selections,
