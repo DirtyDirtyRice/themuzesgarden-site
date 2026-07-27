@@ -835,19 +835,51 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     applyMixState(recalled);
   }
 
-  function recallMixerCheckpointLane(checkpoint: MixerCheckpoint, trackId: string) {
+  function recallMixerCheckpointLane(
+    checkpoint: MixerCheckpoint,
+    trackId: string,
+    section: "all" | "mix" | "routing" | "effects",
+  ) {
     if (comparedMixerCheckpointId || comparingSnapshot || !trackId) return;
     const current = captureMixState();
     const savedLane = checkpoint.state.lanes.find((lane) => lane.trackId === trackId);
     if (!savedLane || !current.lanes.some((lane) => lane.trackId === trackId)) return;
+    const currentLane = current.lanes.find((lane) => lane.trackId === trackId)!;
+    const recalledLane: TimelineDawLaneState = section === "all"
+      ? savedLane
+      : section === "mix"
+        ? {
+            ...currentLane,
+            volume: savedLane.volume,
+            pan: savedLane.pan,
+            muted: savedLane.muted,
+            soloed: savedLane.soloed,
+          }
+        : section === "routing"
+          ? {
+              ...currentLane,
+              groupId: savedLane.groupId,
+              reverbSend: savedLane.reverbSend,
+              delaySend: savedLane.delaySend,
+            }
+          : {
+              ...currentLane,
+              effects: savedLane.effects,
+            };
     const recalled: MixSnapshotState = {
       ...current,
-      lanes: current.lanes.map((lane) => lane.trackId === trackId ? savedLane : lane),
+      lanes: current.lanes.map((lane) => lane.trackId === trackId ? recalledLane : lane),
     };
     const laneName = trackById.get(trackId)?.title ?? trackId;
+    const sectionName = {
+      all: "channel",
+      mix: "level and pan",
+      routing: "routing and sends",
+      effects: "effects",
+    }[section];
     setMixerUndoHistory((history) => [...history, {
       state: current,
-      label: `Recall ${laneName} from ${checkpoint.name}`,
+      label: `Recall ${laneName} ${sectionName} from ${checkpoint.name}`,
       createdAt: Date.now(),
     }].slice(-50));
     setMixerRedoHistory([]);
@@ -2075,25 +2107,34 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 </option>
                               ))}
                           </select>
-                          <button
-                            type="button"
-                            disabled={
-                              Boolean(comparedMixerCheckpointId)
-                              || comparingSnapshot
-                              || !checkpoint.state.lanes.some((savedLane) =>
-                                lanes.some((lane) => lane.trackId === savedLane.trackId))
-                            }
-                            onClick={() => recallMixerCheckpointLane(
-                              checkpoint,
-                              checkpointLaneSelections[checkpoint.id]
-                                ?? checkpoint.state.lanes.find((savedLane) =>
-                                  lanes.some((lane) => lane.trackId === savedLane.trackId))?.trackId
-                                ?? "",
-                            )}
-                            className="rounded bg-cyan-300/15 px-2 py-1 text-[8px] font-black text-cyan-100 hover:bg-cyan-300/25 disabled:opacity-30"
-                          >
-                            Recall Lane
-                          </button>
+                          {([
+                            ["all", "All"],
+                            ["mix", "Level/Pan"],
+                            ["routing", "Sends"],
+                            ["effects", "FX"],
+                          ] as const).map(([section, label]) => (
+                            <button
+                              key={section}
+                              type="button"
+                              disabled={
+                                Boolean(comparedMixerCheckpointId)
+                                || comparingSnapshot
+                                || !checkpoint.state.lanes.some((savedLane) =>
+                                  lanes.some((lane) => lane.trackId === savedLane.trackId))
+                              }
+                              onClick={() => recallMixerCheckpointLane(
+                                checkpoint,
+                                checkpointLaneSelections[checkpoint.id]
+                                  ?? checkpoint.state.lanes.find((savedLane) =>
+                                    lanes.some((lane) => lane.trackId === savedLane.trackId))?.trackId
+                                  ?? "",
+                                section,
+                              )}
+                              className="rounded bg-cyan-300/15 px-2 py-1 text-[8px] font-black text-cyan-100 hover:bg-cyan-300/25 disabled:opacity-30"
+                            >
+                              {label}
+                            </button>
+                          ))}
                         </div>
                         <div className="flex flex-wrap gap-1 border-t border-white/5 pt-2">
                           {(["lanes", "master", "buses"] as const).map((section) => (
