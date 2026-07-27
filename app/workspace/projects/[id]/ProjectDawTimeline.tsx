@@ -1135,6 +1135,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     return details.length ? details : ["No differences from the current mixer"];
   }
 
+  function changedCheckpointLaneIds(snapshot: MixSnapshotState): string[] {
+    const currentById = new Map(lanes.map((lane) => [lane.trackId, lane]));
+    return snapshot.lanes.flatMap((savedLane) => {
+      const current = currentById.get(savedLane.trackId);
+      if (!current) return [];
+      const changed = current.volume !== savedLane.volume
+        || current.pan !== savedLane.pan
+        || current.muted !== savedLane.muted
+        || current.soloed !== savedLane.soloed
+        || current.groupId !== savedLane.groupId
+        || current.reverbSend !== savedLane.reverbSend
+        || current.delaySend !== savedLane.delaySend
+        || JSON.stringify(current.effects) !== JSON.stringify(savedLane.effects);
+      return changed ? [savedLane.trackId] : [];
+    });
+  }
+
   function exportMixSnapshots() {
     if (!mixSnapshots.length) return;
     const blob = new Blob(
@@ -2182,7 +2199,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                         <div className="grid gap-1 border-t border-white/5 pt-2">
                           <div className="flex items-center justify-between">
                             <span className="text-[8px] font-black uppercase text-white/35">
-                              Multi-lane recall
+                              Multi-lane recall · {checkpointMultiLaneSelections[checkpoint.id]?.length ?? 0} selected
                             </span>
                             <div className="flex gap-1">
                               {([
@@ -2210,6 +2227,41 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 </button>
                               ))}
                             </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: checkpoint.state.lanes
+                                  .filter((savedLane) =>
+                                    lanes.some((lane) => lane.trackId === savedLane.trackId))
+                                  .map((lane) => lane.trackId),
+                              }))}
+                              className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/50 hover:text-white/80"
+                            >
+                              Select All
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: changedCheckpointLaneIds(checkpoint.state),
+                              }))}
+                              className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-amber-100/60 hover:text-amber-100"
+                            >
+                              Select Changed
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: [],
+                              }))}
+                              className="rounded border border-white/10 px-2 py-1 text-[8px] text-white/35 hover:text-white/70"
+                            >
+                              Clear
+                            </button>
                           </div>
                           <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto">
                             {checkpoint.state.lanes
