@@ -1135,19 +1135,30 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     return details.length ? details : ["No differences from the current mixer"];
   }
 
-  function changedCheckpointLaneIds(snapshot: MixSnapshotState): string[] {
+  function changedCheckpointLaneIds(
+    snapshot: MixSnapshotState,
+    section: LaneRecallSection = "all",
+  ): string[] {
     const currentById = new Map(lanes.map((lane) => [lane.trackId, lane]));
     return snapshot.lanes.flatMap((savedLane) => {
       const current = currentById.get(savedLane.trackId);
       if (!current) return [];
-      const changed = current.volume !== savedLane.volume
+      const mixChanged = current.volume !== savedLane.volume
         || current.pan !== savedLane.pan
         || current.muted !== savedLane.muted
-        || current.soloed !== savedLane.soloed
-        || current.groupId !== savedLane.groupId
+        || current.soloed !== savedLane.soloed;
+      const routingChanged = current.groupId !== savedLane.groupId
         || current.reverbSend !== savedLane.reverbSend
-        || current.delaySend !== savedLane.delaySend
-        || JSON.stringify(current.effects) !== JSON.stringify(savedLane.effects);
+        || current.delaySend !== savedLane.delaySend;
+      const effectsChanged =
+        JSON.stringify(current.effects) !== JSON.stringify(savedLane.effects);
+      const changed = section === "mix"
+        ? mixChanged
+        : section === "routing"
+          ? routingChanged
+          : section === "effects"
+            ? effectsChanged
+            : mixChanged || routingChanged || effectsChanged;
       return changed ? [savedLane.trackId] : [];
     });
   }
@@ -2242,16 +2253,27 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             >
                               Select All
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
-                                ...selections,
-                                [checkpoint.id]: changedCheckpointLaneIds(checkpoint.state),
-                              }))}
-                              className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-amber-100/60 hover:text-amber-100"
-                            >
-                              Select Changed
-                            </button>
+                            {([
+                              ["all", "Changed"],
+                              ["mix", "Level"],
+                              ["routing", "Sends"],
+                              ["effects", "FX"],
+                            ] as const).map(([section, label]) => (
+                              <button
+                                key={section}
+                                type="button"
+                                onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                  ...selections,
+                                  [checkpoint.id]: changedCheckpointLaneIds(
+                                    checkpoint.state,
+                                    section,
+                                  ),
+                                }))}
+                                className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-amber-100/60 hover:text-amber-100"
+                              >
+                                {label}
+                              </button>
+                            ))}
                             <button
                               type="button"
                               onClick={() => setCheckpointMultiLaneSelections((selections) => ({
