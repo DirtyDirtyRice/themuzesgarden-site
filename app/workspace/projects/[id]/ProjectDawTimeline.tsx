@@ -2282,7 +2282,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </li>
                           ))}
                         </ul>
-                        <div className="flex items-center gap-1 border-t border-white/5 pt-2">
+                        <div className="flex flex-wrap items-center gap-1 border-t border-white/5 pt-2">
                           <select
                             value={checkpointLaneSelections[checkpoint.id]
                               ?? checkpoint.state.lanes.find((savedLane) =>
@@ -2292,7 +2292,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               ...selections,
                               [checkpoint.id]: event.target.value,
                             }))}
-                            className="min-w-0 flex-1 rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-cyan-50/70"
+                            className="min-w-48 flex-1 basis-48 rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-cyan-50/70"
                             aria-label={`Lane to recall from ${checkpoint.name}`}
                           >
                             {checkpoint.state.lanes
