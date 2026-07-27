@@ -653,6 +653,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   ]);
 
   function updateLane(trackId: string, patch: Partial<TimelineDawLaneState>) {
+    const changesMix = Object.keys(patch).some((key) => key !== "selected");
+    if (changesMix && (comparingSnapshot || comparedMixerCheckpointId)) return;
     setLanes((current) => current.map((lane) => lane.trackId === trackId
       ? { ...lane, ...patch }
       : patch.selected ? { ...lane, selected: false } : lane));
@@ -3897,10 +3899,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                   </p>
                 ) : null}
                 <div className={`${automatedValue === null ? "mt-1" : "mt-0.5"} flex items-center gap-1.5`}>
-                  <button type="button" aria-pressed={lane.muted} onClick={() => updateLane(lane.trackId, { muted: !lane.muted })}
-                    className={`rounded px-2 py-1 text-[10px] font-black ${lane.muted ? "bg-amber-300 text-black" : "bg-white/10"}`}>M</button>
-                  <button type="button" aria-pressed={lane.soloed} onClick={() => updateLane(lane.trackId, { soloed: !lane.soloed })}
-                    className={`rounded px-2 py-1 text-[10px] font-black ${lane.soloed ? "bg-emerald-300 text-black" : "bg-white/10"}`}>S</button>
+                  <button type="button" aria-pressed={lane.muted}
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+                    onClick={() => updateLane(lane.trackId, { muted: !lane.muted })}
+                    className={`rounded px-2 py-1 text-[10px] font-black disabled:opacity-30 ${lane.muted ? "bg-amber-300 text-black" : "bg-white/10"}`}>M</button>
+                  <button type="button" aria-pressed={lane.soloed}
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+                    onClick={() => updateLane(lane.trackId, { soloed: !lane.soloed })}
+                    className={`rounded px-2 py-1 text-[10px] font-black disabled:opacity-30 ${lane.soloed ? "bg-emerald-300 text-black" : "bg-white/10"}`}>S</button>
                   <button type="button" disabled={index === 0} onClick={() => setLanes((value) => moveTimelineLane(value, lane.trackId, -1))}
                     className="ml-auto rounded bg-white/10 px-2 py-1 text-[10px] font-black disabled:opacity-25" aria-label={`Move ${track?.title || lane.trackId} up`}>↑</button>
                   <button type="button" disabled={index === lanes.length - 1} onClick={() => setLanes((value) => moveTimelineLane(value, lane.trackId, 1))}
@@ -3914,8 +3920,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     max={1}
                     step={0.01}
                     value={lane.volume}
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                     onChange={(event) => updateLane(lane.trackId, { volume: Number(event.target.value) })}
-                    className="w-16 accent-cyan-300"
+                    className="w-16 accent-cyan-300 disabled:opacity-30"
                     aria-label={`${track?.title || lane.trackId} mixer volume`}
                   />
                   <span className="w-7 font-mono text-[9px] text-white/45">{Math.round(lane.volume * 100)}</span>
@@ -3926,22 +3933,25 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     max={1}
                     step={0.01}
                     value={lane.pan}
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                     onChange={(event) => updateLane(lane.trackId, { pan: Number(event.target.value) })}
-                    className="w-12 accent-violet-300"
+                    className="w-12 accent-violet-300 disabled:opacity-30"
                     aria-label={`${track?.title || lane.trackId} mixer pan`}
                   />
                 </div>
                 <div className="mt-1 flex items-center gap-1">
                   <span className="font-mono text-[9px] text-cyan-200/60">A</span>
                   <input type="range" min={0} max={1} step={0.01} value={lane.reverbSend}
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                     onChange={(event) => updateLane(lane.trackId, { reverbSend: Number(event.target.value) })}
-                    className="w-14 accent-cyan-300"
+                    className="w-14 accent-cyan-300 disabled:opacity-30"
                     aria-label={`${track?.title || lane.trackId} reverb send`} />
                   <span className="w-5 font-mono text-[9px] text-white/35">{Math.round(lane.reverbSend * 100)}</span>
                   <span className="font-mono text-[9px] text-violet-200/60">B</span>
                   <input type="range" min={0} max={1} step={0.01} value={lane.delaySend}
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                     onChange={(event) => updateLane(lane.trackId, { delaySend: Number(event.target.value) })}
-                    className="w-14 accent-violet-300"
+                    className="w-14 accent-violet-300 disabled:opacity-30"
                     aria-label={`${track?.title || lane.trackId} delay send`} />
                   <span className="font-mono text-[9px] text-white/35">{Math.round(lane.delaySend * 100)}</span>
                 </div>
@@ -3949,10 +3959,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                   <span className="font-mono text-[9px] text-emerald-200/60">GROUP</span>
                   <select
                     value={lane.groupId}
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                     onChange={(event) => updateLane(lane.trackId, {
                       groupId: event.target.value as TimelineDawGroupId,
                     })}
-                    className="min-w-0 flex-1 rounded border border-emerald-300/15 bg-black px-1 py-1 text-[9px] font-black uppercase text-emerald-100"
+                    className="min-w-0 flex-1 rounded border border-emerald-300/15 bg-black px-1 py-1 text-[9px] font-black uppercase text-emerald-100 disabled:opacity-30"
                     aria-label={`${track?.title || lane.trackId} group`}
                   >
                     <option value="none">None</option>
