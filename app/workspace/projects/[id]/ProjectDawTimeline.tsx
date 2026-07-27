@@ -3689,11 +3689,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               max={1}
               step={0.01}
               value={groupBuses[groupId].volume}
-              onChange={(event) => setGroupBuses((current) => ({
-                ...current,
-                [groupId]: { ...current[groupId], volume: Number(event.target.value) },
-              }))}
-              className="w-20 accent-emerald-300"
+              disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+              onChange={(event) => {
+                if (comparingSnapshot || comparedMixerCheckpointId) return;
+                setGroupBuses((current) => ({
+                  ...current,
+                  [groupId]: { ...current[groupId], volume: Number(event.target.value) },
+                }));
+              }}
+              className="w-20 accent-emerald-300 disabled:opacity-30"
               aria-label={`${groupId} group volume`}
             />
             <span className="w-7 font-mono text-[9px] text-white/40">
@@ -3702,11 +3706,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             <button
               type="button"
               aria-pressed={groupBuses[groupId].muted}
-              onClick={() => setGroupBuses((current) => ({
-                ...current,
-                [groupId]: { ...current[groupId], muted: !current[groupId].muted },
-              }))}
-              className={`rounded px-2 py-1 text-[9px] font-black ${
+              disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+              onClick={() => {
+                if (comparingSnapshot || comparedMixerCheckpointId) return;
+                setGroupBuses((current) => ({
+                  ...current,
+                  [groupId]: { ...current[groupId], muted: !current[groupId].muted },
+                }));
+              }}
+              className={`rounded px-2 py-1 text-[9px] font-black disabled:opacity-30 ${
                 groupBuses[groupId].muted ? "bg-amber-300 text-black" : "bg-white/10"
               }`}
             >
