@@ -336,8 +336,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   ]);
 
   useEffect(() => {
-    if (lanes.length) localStorage.setItem(storageKey, JSON.stringify(lanes));
-  }, [lanes, storageKey]);
+    if (!comparingSnapshot && !comparedMixerCheckpointId && lanes.length) {
+      localStorage.setItem(storageKey, JSON.stringify(lanes));
+    }
+  }, [comparedMixerCheckpointId, comparingSnapshot, lanes, storageKey]);
 
   useEffect(() => {
     try {
@@ -352,8 +354,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [busStorageKey]);
 
   useEffect(() => {
-    localStorage.setItem(busStorageKey, JSON.stringify({ reverbReturn, delayReturn }));
-  }, [busStorageKey, delayReturn, reverbReturn]);
+    if (!comparingSnapshot && !comparedMixerCheckpointId) {
+      localStorage.setItem(busStorageKey, JSON.stringify({ reverbReturn, delayReturn }));
+    }
+  }, [
+    busStorageKey, comparedMixerCheckpointId, comparingSnapshot, delayReturn, reverbReturn,
+  ]);
 
   useEffect(() => {
     try {
@@ -377,8 +383,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [groupStorageKey]);
 
   useEffect(() => {
-    if (groupBusesReady) localStorage.setItem(groupStorageKey, JSON.stringify(groupBuses));
-  }, [groupBuses, groupBusesReady, groupStorageKey]);
+    if (groupBusesReady && !comparingSnapshot && !comparedMixerCheckpointId) {
+      localStorage.setItem(groupStorageKey, JSON.stringify(groupBuses));
+    }
+  }, [
+    comparedMixerCheckpointId, comparingSnapshot, groupBuses, groupBusesReady, groupStorageKey,
+  ]);
 
   useEffect(() => {
     try {
@@ -413,15 +423,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }, [masterStorageKey]);
 
   useEffect(() => {
-    if (masterReady) {
+    if (masterReady && !comparingSnapshot && !comparedMixerCheckpointId) {
       localStorage.setItem(masterStorageKey, JSON.stringify({
         masterGain, limiterEnabled, limiterCeiling, overloads: masterOverloads,
         masterBalance, monoCheck, referenceTrackId, comparisonMode, referenceMatch,
       }));
     }
   }, [
-    limiterCeiling, limiterEnabled, masterBalance, masterGain, masterOverloads, masterReady,
-    masterStorageKey, monoCheck, referenceTrackId, comparisonMode, referenceMatch,
+    comparedMixerCheckpointId, comparingSnapshot, limiterCeiling, limiterEnabled, masterBalance,
+    masterGain, masterOverloads, masterReady, masterStorageKey, monoCheck, referenceTrackId,
+    comparisonMode, referenceMatch,
   ]);
 
   useEffect(() => {
