@@ -2199,10 +2199,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <select
           value={referenceTrackId}
           onChange={(event) => {
+            if (comparingSnapshot || comparedMixerCheckpointId) return;
             setReferenceTrackId(event.target.value);
             if (!event.target.value) setComparisonMode("mix");
           }}
-          className="max-w-52 rounded border border-fuchsia-300/20 bg-black px-3 py-1.5 text-[10px] font-black text-fuchsia-100"
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+          className="max-w-52 rounded border border-fuchsia-300/20 bg-black px-3 py-1.5 text-[10px] font-black text-fuchsia-100 disabled:opacity-30"
           aria-label="Reference track"
         >
           <option value="">Choose linked track</option>
@@ -2215,8 +2217,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <div className="flex overflow-hidden rounded-lg border border-white/10">
           <button
             type="button"
-            onClick={() => setComparisonMode("mix")}
-            className={`px-3 py-1.5 text-[10px] font-black ${
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onClick={() => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setComparisonMode("mix");
+            }}
+            className={`px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
               comparisonMode === "mix" ? "bg-cyan-300 text-black" : "bg-black text-white/50"
             }`}
           >
@@ -2224,8 +2230,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           </button>
           <button
             type="button"
-            disabled={!referenceTrackId}
-            onClick={() => setComparisonMode("reference")}
+            disabled={
+              !referenceTrackId
+              || comparingSnapshot
+              || Boolean(comparedMixerCheckpointId)
+            }
+            onClick={() => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setComparisonMode("reference");
+            }}
             className={`px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
               comparisonMode === "reference"
                 ? "bg-fuchsia-300 text-black"
@@ -2238,8 +2251,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <button
           type="button"
           aria-pressed={referenceMatch}
-          onClick={() => setReferenceMatch((enabled) => !enabled)}
-          className={`rounded px-3 py-1.5 text-[10px] font-black ${
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+          onClick={() => {
+            if (comparingSnapshot || comparedMixerCheckpointId) return;
+            setReferenceMatch((enabled) => !enabled);
+          }}
+          className={`rounded px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
             referenceMatch ? "bg-fuchsia-300/20 text-fuchsia-100" : "border border-white/10 text-white/45"
           }`}
         >
