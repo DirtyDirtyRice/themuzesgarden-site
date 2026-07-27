@@ -1289,6 +1289,33 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       && changedIds.has(savedLane.trackId) === changed).length;
   }
 
+  function resetCheckpointLaneView(checkpointId: string) {
+    setCheckpointLaneSearches((searches) => ({
+      ...searches,
+      [checkpointId]: "",
+    }));
+    setCheckpointSelectedOnlyFilters((filters) => ({
+      ...filters,
+      [checkpointId]: false,
+    }));
+    setCheckpointChangedOnlyFilters((filters) => ({
+      ...filters,
+      [checkpointId]: false,
+    }));
+    setCheckpointUnchangedOnlyFilters((filters) => ({
+      ...filters,
+      [checkpointId]: false,
+    }));
+    setCheckpointChangeSectionFilters((filters) => ({
+      ...filters,
+      [checkpointId]: "all",
+    }));
+    setCheckpointLaneOrders((orders) => ({
+      ...orders,
+      [checkpointId]: "checkpoint",
+    }));
+  }
+
   function exportMixSnapshots() {
     if (!mixSnapshots.length) return;
     const blob = new Blob(
@@ -2563,32 +2590,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 && (checkpointLaneOrders[checkpoint.id] ?? "checkpoint")
                                   === "checkpoint"
                               }
-                              onClick={() => {
-                                setCheckpointLaneSearches((searches) => ({
-                                  ...searches,
-                                  [checkpoint.id]: "",
-                                }));
-                                setCheckpointSelectedOnlyFilters((filters) => ({
-                                  ...filters,
-                                  [checkpoint.id]: false,
-                                }));
-                                setCheckpointChangedOnlyFilters((filters) => ({
-                                  ...filters,
-                                  [checkpoint.id]: false,
-                                }));
-                                setCheckpointUnchangedOnlyFilters((filters) => ({
-                                  ...filters,
-                                  [checkpoint.id]: false,
-                                }));
-                                setCheckpointChangeSectionFilters((filters) => ({
-                                  ...filters,
-                                  [checkpoint.id]: "all",
-                                }));
-                                setCheckpointLaneOrders((orders) => ({
-                                  ...orders,
-                                  [checkpoint.id]: "checkpoint",
-                                }));
-                              }}
+                              onClick={() => resetCheckpointLaneView(checkpoint.id)}
                               className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] text-cyan-100/55 hover:text-cyan-100 disabled:opacity-30"
                             >
                               Reset View
@@ -2887,9 +2889,18 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               })}
                           </div>
                           {!matchingCheckpointLanes(checkpoint).length ? (
-                            <span className="py-1 text-center text-[8px] text-white/25">
-                              No checkpoint lanes match this filter
-                            </span>
+                            <div className="flex items-center justify-center gap-2 py-1">
+                              <span className="text-[8px] text-white/25">
+                                No checkpoint lanes match this view
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => resetCheckpointLaneView(checkpoint.id)}
+                                className="rounded border border-cyan-300/15 px-2 py-1 text-[8px] font-black text-cyan-100/60 hover:text-cyan-100"
+                              >
+                                Reset Lane View
+                              </button>
+                            </div>
                           ) : null}
                         </div>
                         <div className="flex flex-wrap gap-1 border-t border-white/5 pt-2">
