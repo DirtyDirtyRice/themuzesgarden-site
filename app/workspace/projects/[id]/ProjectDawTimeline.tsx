@@ -1258,6 +1258,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       .map((lane) => lane.trackId);
   }
 
+  function unchangedMatchingCheckpointLaneIds(
+    checkpoint: MixerCheckpoint,
+    section: LaneRecallSection = "all",
+  ): string[] {
+    const changedIds = new Set(changedCheckpointLaneIds(checkpoint.state, section));
+    return matchingCheckpointLanes(checkpoint)
+      .filter((lane) => !changedIds.has(lane.trackId))
+      .map((lane) => lane.trackId);
+  }
+
   function selectedMatchingCheckpointLaneCount(checkpoint: MixerCheckpoint): number {
     const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
     return matchingCheckpointLanes(checkpoint)
@@ -2642,17 +2652,43 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </button>
                             <button
                               type="button"
-                              disabled={!changedMatchingCheckpointLaneIds(checkpoint).length}
+                              disabled={!changedMatchingCheckpointLaneIds(
+                                checkpoint,
+                                checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+                              ).length}
                               onClick={() => setCheckpointMultiLaneSelections((selections) => ({
                                 ...selections,
                                 [checkpoint.id]: Array.from(new Set([
                                   ...(selections[checkpoint.id] ?? []),
-                                  ...changedMatchingCheckpointLaneIds(checkpoint),
+                                  ...changedMatchingCheckpointLaneIds(
+                                    checkpoint,
+                                    checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+                                  ),
                                 ])),
                               }))}
                               className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-amber-100/60 hover:text-amber-100 disabled:opacity-30"
                             >
                               Select Changed Visible
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!unchangedMatchingCheckpointLaneIds(
+                                checkpoint,
+                                checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+                              ).length}
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: Array.from(new Set([
+                                  ...(selections[checkpoint.id] ?? []),
+                                  ...unchangedMatchingCheckpointLaneIds(
+                                    checkpoint,
+                                    checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+                                  ),
+                                ])),
+                              }))}
+                              className="rounded border border-emerald-300/15 px-2 py-1 text-[8px] text-emerald-100/60 hover:text-emerald-100 disabled:opacity-30"
+                            >
+                              Select Unchanged Visible
                             </button>
                             {([
                               ["all", "Changed"],
