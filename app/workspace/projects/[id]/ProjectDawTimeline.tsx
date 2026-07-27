@@ -2574,7 +2574,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               Reset View
                             </button>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex flex-wrap items-center gap-1">
                             <span className="mr-1 text-[8px] font-black uppercase text-cyan-100/45">
                               Recall visible
                             </span>
@@ -2603,7 +2603,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 {label}
                               </button>
                             ))}
-                            <span className="ml-auto text-[8px] text-white/25">
+                            <span className="ml-auto whitespace-nowrap text-[8px] text-white/25">
                               Keeps saved selection
                             </span>
                           </div>
