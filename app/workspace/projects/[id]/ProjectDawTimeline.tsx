@@ -190,6 +190,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     useState<Record<string, boolean>>({});
   const [checkpointChangedOnlyFilters, setCheckpointChangedOnlyFilters] =
     useState<Record<string, boolean>>({});
+  const [checkpointUnchangedOnlyFilters, setCheckpointUnchangedOnlyFilters] =
+    useState<Record<string, boolean>>({});
   const [checkpointChangeSectionFilters, setCheckpointChangeSectionFilters] =
     useState<Record<string, LaneRecallSection>>({});
   const [automationParameter, setAutomationParameter] =
@@ -1178,13 +1180,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         checkpoint.state,
         checkpointChangeSectionFilters[checkpoint.id] ?? "all",
       ))
+      : checkpointUnchangedOnlyFilters[checkpoint.id]
+        ? new Set(changedCheckpointLaneIds(checkpoint.state))
       : null;
     return checkpoint.state.lanes.filter((savedLane) => {
       if (!lanes.some((lane) => lane.trackId === savedLane.trackId)) return false;
       if (checkpointSelectedOnlyFilters[checkpoint.id] && !selectedIds.has(savedLane.trackId)) {
         return false;
       }
-      if (changedIds && !changedIds.has(savedLane.trackId)) return false;
+      if (
+        changedIds
+        && checkpointChangedOnlyFilters[checkpoint.id]
+        && !changedIds.has(savedLane.trackId)
+      ) return false;
+      if (
+        changedIds
+        && checkpointUnchangedOnlyFilters[checkpoint.id]
+        && changedIds.has(savedLane.trackId)
+      ) return false;
       if (!query) return true;
       const laneName = trackById.get(savedLane.trackId)?.title ?? "";
       return laneName.toLowerCase().includes(query)
@@ -2323,10 +2336,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             <button
                               type="button"
                               aria-pressed={Boolean(checkpointChangedOnlyFilters[checkpoint.id])}
-                              onClick={() => setCheckpointChangedOnlyFilters((filters) => ({
-                                ...filters,
-                                [checkpoint.id]: !filters[checkpoint.id],
-                              }))}
+                              onClick={() => {
+                                setCheckpointChangedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: !filters[checkpoint.id],
+                                }));
+                                setCheckpointUnchangedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: false,
+                                }));
+                              }}
                               className={`rounded border px-2 py-1 text-[8px] ${
                                 checkpointChangedOnlyFilters[checkpoint.id]
                                   ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
@@ -2334,6 +2353,27 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               }`}
                             >
                               Changed Only
+                            </button>
+                            <button
+                              type="button"
+                              aria-pressed={Boolean(checkpointUnchangedOnlyFilters[checkpoint.id])}
+                              onClick={() => {
+                                setCheckpointUnchangedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: !filters[checkpoint.id],
+                                }));
+                                setCheckpointChangedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: false,
+                                }));
+                              }}
+                              className={`rounded border px-2 py-1 text-[8px] ${
+                                checkpointUnchangedOnlyFilters[checkpoint.id]
+                                  ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
+                                  : "border-white/10 text-white/45 hover:text-white/80"
+                              }`}
+                            >
+                              Unchanged Only
                             </button>
                             <select
                               value={checkpointChangeSectionFilters[checkpoint.id] ?? "all"}
@@ -2356,6 +2396,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 !checkpointLaneSearches[checkpoint.id]
                                 && !checkpointSelectedOnlyFilters[checkpoint.id]
                                 && !checkpointChangedOnlyFilters[checkpoint.id]
+                                && !checkpointUnchangedOnlyFilters[checkpoint.id]
                               }
                               onClick={() => {
                                 setCheckpointLaneSearches((searches) => ({
@@ -2367,6 +2408,10 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                   [checkpoint.id]: false,
                                 }));
                                 setCheckpointChangedOnlyFilters((filters) => ({
+                                  ...filters,
+                                  [checkpoint.id]: false,
+                                }));
+                                setCheckpointUnchangedOnlyFilters((filters) => ({
                                   ...filters,
                                   [checkpoint.id]: false,
                                 }));
