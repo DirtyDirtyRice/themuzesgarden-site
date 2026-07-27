@@ -2161,9 +2161,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             max={1}
             step={0.01}
             value={masterBalance}
-            onChange={(event) => setMasterBalance(Number(event.target.value))}
-            className="w-28 accent-sky-300"
-            disabled={monoCheck}
+            onChange={(event) => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setMasterBalance(Number(event.target.value));
+            }}
+            className="w-28 accent-sky-300 disabled:opacity-30"
+            disabled={
+              monoCheck
+              || comparingSnapshot
+              || Boolean(comparedMixerCheckpointId)
+            }
           />
           <span className="w-8 font-mono text-[9px]">
             {masterBalance === 0
@@ -2174,8 +2181,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <button
           type="button"
           aria-pressed={monoCheck}
-          onClick={() => setMonoCheck((enabled) => !enabled)}
-          className={`rounded px-3 py-1.5 text-[10px] font-black ${
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+          onClick={() => {
+            if (comparingSnapshot || comparedMixerCheckpointId) return;
+            setMonoCheck((enabled) => !enabled);
+          }}
+          className={`rounded px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
             monoCheck ? "bg-sky-300 text-black" : "border border-sky-300/20 text-sky-100"
           }`}
         >
