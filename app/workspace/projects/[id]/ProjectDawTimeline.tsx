@@ -1181,8 +1181,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         checkpointChangeSectionFilters[checkpoint.id] ?? "all",
       ))
       : checkpointUnchangedOnlyFilters[checkpoint.id]
-        ? new Set(changedCheckpointLaneIds(checkpoint.state))
-      : null;
+        ? new Set(changedCheckpointLaneIds(
+          checkpoint.state,
+          checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+        ))
+        : null;
     return checkpoint.state.lanes.filter((savedLane) => {
       if (!lanes.some((lane) => lane.trackId === savedLane.trackId)) return false;
       if (checkpointSelectedOnlyFilters[checkpoint.id] && !selectedIds.has(savedLane.trackId)) {
@@ -2377,15 +2380,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             </button>
                             <select
                               value={checkpointChangeSectionFilters[checkpoint.id] ?? "all"}
-                              disabled={!checkpointChangedOnlyFilters[checkpoint.id]}
+                              disabled={
+                                !checkpointChangedOnlyFilters[checkpoint.id]
+                                && !checkpointUnchangedOnlyFilters[checkpoint.id]
+                              }
                               onChange={(event) => setCheckpointChangeSectionFilters((filters) => ({
                                 ...filters,
                                 [checkpoint.id]: event.target.value as LaneRecallSection,
                               }))}
-                              className="rounded border border-amber-300/15 bg-black px-2 py-1 text-[8px] text-amber-100/70 outline-none disabled:opacity-30"
-                              aria-label={`Changed lane section in ${checkpoint.name}`}
+                              className={`rounded border bg-black px-2 py-1 text-[8px] outline-none disabled:opacity-30 ${
+                                checkpointUnchangedOnlyFilters[checkpoint.id]
+                                  ? "border-emerald-300/15 text-emerald-100/70"
+                                  : "border-amber-300/15 text-amber-100/70"
+                              }`}
+                              aria-label={`Checkpoint lane comparison section in ${checkpoint.name}`}
                             >
-                              <option value="all">All Changes</option>
+                              <option value="all">All Sections</option>
                               <option value="mix">Level/Pan</option>
                               <option value="routing">Sends</option>
                               <option value="effects">FX</option>
