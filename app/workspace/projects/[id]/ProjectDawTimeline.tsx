@@ -99,6 +99,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [automation, setAutomation] = useState<TimelineDawAutomationPoint[]>([]);
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
   const [effectClipboard, setEffectClipboard] = useState<TimelineDawLaneEffect[]>([]);
+  const [reverbReturn, setReverbReturn] = useState(0.35);
+  const [delayReturn, setDelayReturn] = useState(0.3);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -118,6 +120,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const snapStorageKey = `muzes:daw-timeline-snap:v1:${session.id}`;
   const markerStorageKey = `muzes:daw-timeline-markers:v1:${session.id}`;
   const automationStorageKey = `muzes:daw-timeline-automation:v1:${session.id}`;
+  const busStorageKey = `muzes:daw-timeline-buses:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
@@ -177,6 +180,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   useEffect(() => {
     if (lanes.length) localStorage.setItem(storageKey, JSON.stringify(lanes));
   }, [lanes, storageKey]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(busStorageKey) ?? "{}");
+      if (Number.isFinite(saved.reverbReturn)) {
+        setReverbReturn(Math.min(1, Math.max(0, saved.reverbReturn)));
+      }
+      if (Number.isFinite(saved.delayReturn)) {
+        setDelayReturn(Math.min(1, Math.max(0, saved.delayReturn)));
+      }
+    } catch {}
+  }, [busStorageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(busStorageKey, JSON.stringify({ reverbReturn, delayReturn }));
+  }, [busStorageKey, delayReturn, reverbReturn]);
 
   useEffect(() => {
     if (clips.length) localStorage.setItem(clipStorageKey, JSON.stringify(clips));
@@ -775,6 +794,25 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-4 border-b border-cyan-300/15 bg-cyan-300/[0.035] px-5 py-3">
+        <span className="text-xs font-black uppercase tracking-wider text-cyan-200/75">Aux Returns</span>
+        <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
+          A · REVERB
+          <input type="range" min={0} max={1} step={0.01} value={reverbReturn}
+            onChange={(event) => setReverbReturn(Number(event.target.value))}
+            className="w-32 accent-cyan-300" />
+          {Math.round(reverbReturn * 100)}%
+        </label>
+        <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
+          B · DELAY
+          <input type="range" min={0} max={1} step={0.01} value={delayReturn}
+            onChange={(event) => setDelayReturn(Number(event.target.value))}
+            className="w-32 accent-violet-300" />
+          {Math.round(delayReturn * 100)}%
+        </label>
+        <span className="ml-auto text-[10px] text-white/30">Shared post-fader buses</span>
+      </div>
+
       {selectedEffect ? (
         <div className="flex flex-wrap items-center gap-3 border-b border-violet-300/15 bg-violet-300/[0.05] px-5 py-3">
           <span className="text-xs font-black uppercase tracking-wider text-violet-200">
@@ -896,7 +934,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               audible,
             );
             return (
-              <div key={lane.trackId} className={`relative h-40 border-b border-white/10 p-3 pr-6 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
+              <div key={lane.trackId} className={`relative h-48 border-b border-white/10 p-3 pr-6 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
                 <div className="absolute bottom-3 right-2 top-3 w-2 overflow-hidden rounded-full bg-black/70" aria-label={`${Math.round(meterLevel * 100)} percent level`}>
                   <div
                     className="absolute inset-x-0 bottom-0 rounded-full bg-gradient-to-t from-emerald-400 via-amber-300 to-rose-400 transition-[height] duration-100"
@@ -949,6 +987,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     className="w-12 accent-violet-300"
                     aria-label={`${track?.title || lane.trackId} mixer pan`}
                   />
+                </div>
+                <div className="mt-1 flex items-center gap-1">
+                  <span className="font-mono text-[9px] text-cyan-200/60">A</span>
+                  <input type="range" min={0} max={1} step={0.01} value={lane.reverbSend}
+                    onChange={(event) => updateLane(lane.trackId, { reverbSend: Number(event.target.value) })}
+                    className="w-14 accent-cyan-300"
+                    aria-label={`${track?.title || lane.trackId} reverb send`} />
+                  <span className="w-5 font-mono text-[9px] text-white/35">{Math.round(lane.reverbSend * 100)}</span>
+                  <span className="font-mono text-[9px] text-violet-200/60">B</span>
+                  <input type="range" min={0} max={1} step={0.01} value={lane.delaySend}
+                    onChange={(event) => updateLane(lane.trackId, { delaySend: Number(event.target.value) })}
+                    className="w-14 accent-violet-300"
+                    aria-label={`${track?.title || lane.trackId} delay send`} />
+                  <span className="font-mono text-[9px] text-white/35">{Math.round(lane.delaySend * 100)}</span>
                 </div>
                 <div className="mt-1 flex items-center gap-1">
                   <select
@@ -1065,7 +1117,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 ? 88 - value * 72
                 : 52 - value * 36;
               return (
-                <div key={lane.trackId} className={`relative h-40 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
+                <div key={lane.trackId} className={`relative h-48 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
                   {crossfades.map((crossfade) => (
                     <div
                       key={`${crossfade.leftClipId}:${crossfade.rightClipId}`}

@@ -28,6 +28,8 @@ export type TimelineDawLaneState = {
   soloed: boolean;
   volume: number;
   pan: number;
+  reverbSend: number;
+  delaySend: number;
   effects: TimelineDawLaneEffect[];
 };
 
@@ -436,7 +438,8 @@ export function parseTimelineLaneState(
   trackId: string,
 ): TimelineDawLaneState {
   const fallback = {
-    trackId, selected: true, muted: false, soloed: false, volume: 1, pan: 0, effects: [],
+    trackId, selected: true, muted: false, soloed: false, volume: 1, pan: 0,
+    reverbSend: 0, delaySend: 0, effects: [],
   };
   if (!raw) return fallback;
   try {
@@ -451,6 +454,12 @@ export function parseTimelineLaneState(
         : 1,
       pan: value.trackId === trackId && Number.isFinite(value.pan)
         ? Math.min(1, Math.max(-1, value.pan!))
+        : 0,
+      reverbSend: value.trackId === trackId && Number.isFinite(value.reverbSend)
+        ? Math.min(1, Math.max(0, value.reverbSend!))
+        : 0,
+      delaySend: value.trackId === trackId && Number.isFinite(value.delaySend)
+        ? Math.min(1, Math.max(0, value.delaySend!))
         : 0,
       effects: value.trackId === trackId && Array.isArray(value.effects)
         ? value.effects.filter((effect) =>
@@ -507,6 +516,12 @@ export function reconcileTimelineLanes(
         : 1,
       pan: Number.isFinite(previous?.pan)
         ? Math.min(1, Math.max(-1, previous!.pan))
+        : 0,
+      reverbSend: Number.isFinite(previous?.reverbSend)
+        ? Math.min(1, Math.max(0, previous!.reverbSend))
+        : 0,
+      delaySend: Number.isFinite(previous?.delaySend)
+        ? Math.min(1, Math.max(0, previous!.delaySend))
         : 0,
       effects: Array.isArray(previous?.effects)
         ? previous!.effects.filter((effect) =>
