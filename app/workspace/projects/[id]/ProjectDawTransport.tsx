@@ -477,6 +477,32 @@ export default function ProjectDawTransport({
     }
   }
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("muzes:daw-loop", {
+      detail: {
+        sessionId: session.id,
+        enabled: transport?.loop.enabled ?? false,
+        startSeconds: tickToSeconds(loopStartTick),
+        endSeconds: tickToSeconds(loopEndTick),
+      },
+    }));
+  }, [loopEndTick, loopStartTick, session.id, transport?.loop.enabled]);
+
+  useEffect(() => {
+    const handleLoopCommand = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        sessionId: string;
+        action: "set-start" | "set-end" | "toggle";
+      }>).detail;
+      if (!detail || detail.sessionId !== session.id) return;
+      if (detail.action === "set-start") setLoopBoundary("start");
+      else if (detail.action === "set-end") setLoopBoundary("end");
+      else void saveLoop(!(transportRef.current?.loop.enabled ?? false));
+    };
+    window.addEventListener("muzes:daw-loop-command", handleLoopCommand);
+    return () => window.removeEventListener("muzes:daw-loop-command", handleLoopCommand);
+  });
+
   async function saveCountIn(bars: number) {
     setError(null);
     try {

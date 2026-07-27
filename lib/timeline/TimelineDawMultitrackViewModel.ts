@@ -24,6 +24,13 @@ export type TimelineDawClipState = {
   archived: boolean;
 };
 
+export type TimelineDawLoopRegion = {
+  startSeconds: number;
+  endSeconds: number;
+  startPercent: number;
+  widthPercent: number;
+};
+
 export function clampTimelineZoom(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.min(8, Math.max(0.5, Math.round(value * 4) / 4));
@@ -43,6 +50,28 @@ export function timelinePlayheadPercent(
   if (!Number.isFinite(elapsedSeconds) || elapsedSeconds <= 0) return 0;
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return 0;
   return Math.min(100, Math.max(0, (elapsedSeconds / durationSeconds) * 100));
+}
+
+export function normalizeTimelineLoopRegion(
+  startSeconds: number,
+  endSeconds: number,
+  durationSeconds: number,
+): TimelineDawLoopRegion | null {
+  if (
+    !Number.isFinite(startSeconds)
+    || !Number.isFinite(endSeconds)
+    || !Number.isFinite(durationSeconds)
+    || durationSeconds <= 0
+  ) return null;
+  const start = Math.max(0, Math.min(durationSeconds, clipPrecision(startSeconds)));
+  const end = Math.max(0, Math.min(durationSeconds, clipPrecision(endSeconds)));
+  if (end <= start) return null;
+  return {
+    startSeconds: start,
+    endSeconds: end,
+    startPercent: clipPrecision((start / durationSeconds) * 100),
+    widthPercent: clipPrecision(((end - start) / durationSeconds) * 100),
+  };
 }
 
 export function createTimelineRulerMarks(

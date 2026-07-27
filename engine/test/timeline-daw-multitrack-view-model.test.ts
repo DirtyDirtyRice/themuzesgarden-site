@@ -11,6 +11,7 @@ import {
   moveTimelineClip,
   moveSelectedTimelineClips,
   moveTimelineLane,
+  normalizeTimelineLoopRegion,
   pasteTimelineClips,
   parseTimelineLaneState,
   reconcileTimelineLanes,
@@ -38,6 +39,22 @@ describe("TimelineDawMultitrackViewModel", () => {
     expect(timelinePlayheadPercent(30, 120)).toBe(25);
     expect(timelinePlayheadPercent(150, 120)).toBe(100);
     expect(timelinePlayheadPercent(Number.NaN, 120)).toBe(0);
+  });
+
+  it("normalizes a visible loop region within the timeline", () => {
+    expect(normalizeTimelineLoopRegion(30, 90, 120)).toEqual({
+      startSeconds: 30,
+      endSeconds: 90,
+      startPercent: 25,
+      widthPercent: 50,
+    });
+    expect(normalizeTimelineLoopRegion(-5, 200, 120)).toEqual({
+      startSeconds: 0,
+      endSeconds: 120,
+      startPercent: 0,
+      widthPercent: 100,
+    });
+    expect(normalizeTimelineLoopRegion(90, 30, 120)).toBeNull();
   });
 
   it("converts pointer movement into timeline seconds", () => {

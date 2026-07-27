@@ -13,6 +13,7 @@ import {
   duplicateSelectedTimelineClips,
   moveSelectedTimelineClips,
   moveTimelineLane,
+  normalizeTimelineLoopRegion,
   pasteTimelineClips,
   reconcileTimelineClips,
   reconcileTimelineLanes,
@@ -33,6 +34,12 @@ import type { DawSession } from "./projectDawTypes";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
 type PlayheadDetail = { sessionId: string; elapsed: number; duration: number };
+type LoopDetail = {
+  sessionId: string;
+  enabled: boolean;
+  startSeconds: number;
+  endSeconds: number;
+};
 type ClipDrag = {
   clipId: string;
   mode: "move" | "trim-start" | "trim-end";
@@ -58,12 +65,19 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [zoom, setZoom] = useState(1);
   const [follow, setFollow] = useState(true);
   const [snapSeconds, setSnapSeconds] = useState(1);
+  const [loop, setLoop] = useState<LoopDetail>({
+    sessionId: session.id,
+    enabled: false,
+    startSeconds: 0,
+    endSeconds: 0,
+  });
   const storageKey = `muzes:daw-timeline-lanes:v2:${session.id}`;
   const clipStorageKey = `muzes:daw-timeline-clips:v1:${session.id}`;
   const snapStorageKey = `muzes:daw-timeline-snap:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
+  const loopRegion = normalizeTimelineLoopRegion(loop.startSeconds, loop.endSeconds, duration);
   const trackById = useMemo(() => new Map(tracks.map((track) => [String(track.id), track])), [tracks]);
   const anySoloed = lanes.some((lane) => lane.soloed);
 
@@ -120,6 +134,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     };
     window.addEventListener("muzes:daw-playhead", update);
     return () => window.removeEventListener("muzes:daw-playhead", update);
+  }, [session.id]);
+
+  useEffect(() => {
+    const update = (event: Event) => {
+      const detail = (event as CustomEvent<LoopDetail>).detail;
+      if (!detail || detail.sessionId !== session.id) return;
+      setLoop(detail);
+    };
+    window.addEventListener("muzes:daw-loop", update);
+    return () => window.removeEventListener("muzes:daw-loop", update);
   }, [session.id]);
 
   useEffect(() => {
@@ -201,6 +225,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   function duplicateClips() {
     if (!selectedClips.length) return;
     applyClipEdit((value) => duplicateSelectedTimelineClips(value, editStep));
+  }
+
+  function sendLoopCommand(action: "set-start" | "set-end" | "toggle") {
+    window.dispatchEvent(new CustomEvent("muzes:daw-loop-command", {
+      detail: { sessionId: session.id, action },
+    }));
   }
 
   function startClipDrag(
@@ -333,6 +363,33 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => sendLoopCommand("set-start")}
+            className="rounded-lg border border-violet-300/30 px-3 py-2 text-xs font-black text-violet-100"
+          >
+            Loop In
+          </button>
+          <button
+            type="button"
+            onClick={() => sendLoopCommand("set-end")}
+            className="rounded-lg border border-violet-300/30 px-3 py-2 text-xs font-black text-violet-100"
+          >
+            Loop Out
+          </button>
+          <button
+            type="button"
+            disabled={!loopRegion}
+            onClick={() => sendLoopCommand("toggle")}
+            aria-pressed={loop.enabled}
+            className={`rounded-lg border px-3 py-2 text-xs font-black disabled:opacity-30 ${
+              loop.enabled
+                ? "border-violet-300 bg-violet-300 text-black"
+                : "border-white/15 text-white/60"
+            }`}
+          >
+            Repeat {loop.enabled ? "On" : "Off"}
+          </button>
           <label className="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-black">
             <span className="text-white/45">Snap</span>
             <select
@@ -526,6 +583,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 </div>
               );
             })}
+            {loopRegion ? (
+              <div
+                className={`pointer-events-none absolute bottom-0 top-12 z-[5] border-x ${
+                  loop.enabled
+                    ? "border-violet-300/80 bg-violet-300/10"
+                    : "border-violet-200/35 bg-violet-200/[0.035]"
+                }`}
+                style={{
+                  left: `${loopRegion.startPercent}%`,
+                  width: `${loopRegion.widthPercent}%`,
+                }}
+                aria-hidden="true"
+              >
+                <span className="absolute left-1 top-1 rounded bg-violet-300 px-1.5 py-0.5 font-mono text-[9px] font-black text-black">
+                  LOOP {clock(loopRegion.startSeconds)}–{clock(loopRegion.endSeconds)}
+                </span>
+              </div>
+            ) : null}
             <div className="pointer-events-none absolute bottom-0 top-0 z-20 w-px bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.9)]" style={{ left: `${playhead}%` }}>
               <span className="absolute -left-6 top-1 rounded bg-rose-400 px-1.5 py-0.5 font-mono text-[9px] font-black text-black">{clock(elapsed)}</span>
             </div>
@@ -546,6 +621,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span>Delete: archive</span>
         <span>Ctrl/Cmd + C/V: copy/paste</span>
         <span>Ctrl/Cmd + D: duplicate</span>
+        <span>Loop In/Out: use playhead</span>
         <span>Ctrl/Cmd + Z: undo</span>
       </div>
       {archivedClips.length ? (
