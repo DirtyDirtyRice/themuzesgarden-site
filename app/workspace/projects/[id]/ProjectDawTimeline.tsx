@@ -137,6 +137,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const automationDragRef = useRef<AutomationDrag | null>(null);
   const overloadActiveRef = useRef(false);
   const snapshotCompareRef = useRef<MixSnapshotState | null>(null);
+  const mixerCheckpointCompareRef = useRef<MixSnapshotState | null>(null);
   const snapshotFileRef = useRef<HTMLInputElement | null>(null);
   const mixerCheckpointFileRef = useRef<HTMLInputElement | null>(null);
   const mixerLastStateRef = useRef<MixSnapshotState | null>(null);
@@ -179,6 +180,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [mixerCheckpoints, setMixerCheckpoints] = useState<MixerCheckpoint[]>([]);
   const [mixerCheckpointsReady, setMixerCheckpointsReady] = useState(false);
   const [mixerCheckpointTransferStatus, setMixerCheckpointTransferStatus] = useState("");
+  const [comparedMixerCheckpointId, setComparedMixerCheckpointId] = useState("");
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -700,6 +702,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function undoMixerChange() {
+    if (comparedMixerCheckpointId) return;
     const target = mixerUndoHistory.at(-1);
     if (!target) return;
     const current = captureMixState();
@@ -714,6 +717,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function redoMixerChange() {
+    if (comparedMixerCheckpointId) return;
     const target = mixerRedoHistory.at(-1);
     if (!target) return;
     const current = captureMixState();
@@ -728,6 +732,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function jumpToMixerHistory(index: number) {
+    if (comparedMixerCheckpointId) return;
     const target = mixerUndoHistory[index];
     if (!target) return;
     const current = captureMixState();
@@ -773,7 +778,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function restoreMixerCheckpoint(checkpoint: MixerCheckpoint) {
-    const current = captureMixState();
+    const current = mixerCheckpointCompareRef.current ?? captureMixState();
+    mixerCheckpointCompareRef.current = null;
+    setComparedMixerCheckpointId("");
     setMixerUndoHistory((history) => [...history, {
       state: current,
       label: `Restore checkpoint: ${checkpoint.name}`,
@@ -782,6 +789,29 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setMixerRedoHistory([]);
     mixerApplyingHistoryRef.current = true;
     applyMixState(checkpoint.state);
+  }
+
+  function toggleMixerCheckpointComparison(checkpoint: MixerCheckpoint) {
+    if (comparedMixerCheckpointId) {
+      if (comparedMixerCheckpointId !== checkpoint.id) {
+        mixerApplyingHistoryRef.current = true;
+        applyMixState(checkpoint.state);
+        setComparedMixerCheckpointId(checkpoint.id);
+        return;
+      }
+      const current = mixerCheckpointCompareRef.current;
+      if (current) {
+        mixerApplyingHistoryRef.current = true;
+        applyMixState(current);
+      }
+      mixerCheckpointCompareRef.current = null;
+      setComparedMixerCheckpointId("");
+      return;
+    }
+    mixerCheckpointCompareRef.current = captureMixState();
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(checkpoint.state);
+    setComparedMixerCheckpointId(checkpoint.id);
   }
 
   function exportMixerCheckpoints() {
@@ -976,6 +1006,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function toggleSnapshotComparison() {
+    if (comparedMixerCheckpointId) return;
     const snapshot = mixSnapshots.find((entry) => entry.id === selectedSnapshotId);
     if (!snapshot) return;
     if (comparingSnapshot) {
@@ -1731,7 +1762,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
         <button
           type="button"
-          disabled={!mixerUndoHistory.length}
+          disabled={!mixerUndoHistory.length || Boolean(comparedMixerCheckpointId)}
           onClick={undoMixerChange}
           className="rounded border border-indigo-300/20 px-3 py-1.5 text-[10px] font-black text-indigo-100 disabled:opacity-30"
         >
@@ -1739,7 +1770,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </button>
         <button
           type="button"
-          disabled={!mixerRedoHistory.length}
+          disabled={!mixerRedoHistory.length || Boolean(comparedMixerCheckpointId)}
           onClick={redoMixerChange}
           className="rounded border border-indigo-300/20 px-3 py-1.5 text-[10px] font-black text-indigo-100 disabled:opacity-30"
         >
@@ -1858,9 +1889,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       </button>
                       <button
                         type="button"
+                        disabled={comparingSnapshot}
+                        onClick={() => toggleMixerCheckpointComparison(checkpoint)}
+                        className={`rounded px-2 py-1 text-[8px] font-black disabled:opacity-30 ${
+                          comparedMixerCheckpointId === checkpoint.id
+                            ? "bg-cyan-300 text-black"
+                            : "border border-cyan-300/20 text-cyan-100"
+                        }`}
+                      >
+                        {comparedMixerCheckpointId === checkpoint.id ? "Return" : "A/B"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={comparedMixerCheckpointId === checkpoint.id}
                         onClick={() => setMixerCheckpoints((checkpoints) =>
                           checkpoints.filter((entry) => entry.id !== checkpoint.id))}
-                        className="rounded px-1.5 py-1 text-[8px] text-white/35 hover:bg-white/5 hover:text-white/70"
+                        className="rounded px-1.5 py-1 text-[8px] text-white/35 hover:bg-white/5 hover:text-white/70 disabled:opacity-25"
                         aria-label={`Unpin ${checkpoint.name}`}
                       >
                         Unpin
@@ -1980,7 +2024,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </button>
         <button
           type="button"
-          disabled={!selectedSnapshotId}
+          disabled={!selectedSnapshotId || Boolean(comparedMixerCheckpointId)}
           onClick={toggleSnapshotComparison}
           className={`rounded px-3 py-1.5 text-[10px] font-black disabled:opacity-30 ${
             comparingSnapshot ? "bg-amber-300 text-black" : "border border-amber-300/20 text-amber-100"
