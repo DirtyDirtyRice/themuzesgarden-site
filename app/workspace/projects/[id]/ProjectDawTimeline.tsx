@@ -922,17 +922,18 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     const savedByTrackId = new Map(
       checkpoint.state.lanes.map((lane) => [lane.trackId, lane]),
     );
+    let recalledCount = 0;
     const recalled: MixSnapshotState = {
       ...current,
       lanes: current.lanes.map((lane) => {
         const savedLane = savedByTrackId.get(lane.trackId);
-        return selectedIds.has(lane.trackId) && savedLane
-          ? mergeCheckpointLaneSection(lane, savedLane, section)
-          : lane;
+        if (!selectedIds.has(lane.trackId) || !savedLane) return lane;
+        const recalledLane = mergeCheckpointLaneSection(lane, savedLane, section);
+        if (JSON.stringify(recalledLane) === JSON.stringify(lane)) return lane;
+        recalledCount += 1;
+        return recalledLane;
       }),
     };
-    const recalledCount = current.lanes.filter((lane) =>
-      selectedIds.has(lane.trackId) && savedByTrackId.has(lane.trackId)).length;
     if (!recalledCount) return;
     setMixerUndoHistory((history) => [...history, {
       state: current,
