@@ -3907,9 +3907,27 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                     onClick={() => updateLane(lane.trackId, { soloed: !lane.soloed })}
                     className={`rounded px-2 py-1 text-[10px] font-black disabled:opacity-30 ${lane.soloed ? "bg-emerald-300 text-black" : "bg-white/10"}`}>S</button>
-                  <button type="button" disabled={index === 0} onClick={() => setLanes((value) => moveTimelineLane(value, lane.trackId, -1))}
+                  <button type="button"
+                    disabled={
+                      index === 0
+                      || comparingSnapshot
+                      || Boolean(comparedMixerCheckpointId)
+                    }
+                    onClick={() => {
+                      if (comparingSnapshot || comparedMixerCheckpointId) return;
+                      setLanes((value) => moveTimelineLane(value, lane.trackId, -1));
+                    }}
                     className="ml-auto rounded bg-white/10 px-2 py-1 text-[10px] font-black disabled:opacity-25" aria-label={`Move ${track?.title || lane.trackId} up`}>↑</button>
-                  <button type="button" disabled={index === lanes.length - 1} onClick={() => setLanes((value) => moveTimelineLane(value, lane.trackId, 1))}
+                  <button type="button"
+                    disabled={
+                      index === lanes.length - 1
+                      || comparingSnapshot
+                      || Boolean(comparedMixerCheckpointId)
+                    }
+                    onClick={() => {
+                      if (comparingSnapshot || comparedMixerCheckpointId) return;
+                      setLanes((value) => moveTimelineLane(value, lane.trackId, 1));
+                    }}
                     className="rounded bg-white/10 px-2 py-1 text-[10px] font-black disabled:opacity-25" aria-label={`Move ${track?.title || lane.trackId} down`}>↓</button>
                 </div>
                 <div className="mt-1 flex items-center gap-1.5">
@@ -3975,12 +3993,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 <div className="mt-1 flex items-center gap-1">
                   <select
                     defaultValue=""
+                    disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                     onChange={(event) => {
+                      if (comparingSnapshot || comparedMixerCheckpointId) return;
                       const kind = event.target.value as TimelineDawEffectKind;
                       if (kind) setLanes((value) => addTimelineLaneEffect(value, lane.trackId, kind));
                       event.currentTarget.value = "";
                     }}
-                    className="w-20 rounded border border-white/10 bg-black px-1 py-1 text-[9px] font-black text-violet-100"
+                    className="w-20 rounded border border-white/10 bg-black px-1 py-1 text-[9px] font-black text-violet-100 disabled:opacity-30"
                     aria-label={`Add effect to ${track?.title || lane.trackId}`}
                   >
                     <option value="">+ FX</option>
@@ -3993,13 +4013,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                   {effectClipboard.length ? (
                     <button
                       type="button"
+                      disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                       onClick={() => {
+                        if (comparingSnapshot || comparedMixerCheckpointId) return;
                         setLanes((value) => replaceTimelineLaneEffects(
                           value, lane.trackId, effectClipboard,
                         ));
                         setSelectedEffectId(null);
                       }}
-                      className="rounded bg-cyan-300/15 px-1.5 py-1 text-[9px] font-black text-cyan-100"
+                      className="rounded bg-cyan-300/15 px-1.5 py-1 text-[9px] font-black text-cyan-100 disabled:opacity-30"
                     >Paste</button>
                   ) : null}
                 </div>
@@ -4021,16 +4043,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                       </button>
                       <button
                         type="button"
-                        onClick={() => setLanes((value) =>
-                          toggleTimelineLaneEffectBypass(value, lane.trackId, effect.id))}
-                        className="border-l border-white/10 px-1"
+                        disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+                        onClick={() => {
+                          if (comparingSnapshot || comparedMixerCheckpointId) return;
+                          setLanes((value) =>
+                            toggleTimelineLaneEffectBypass(value, lane.trackId, effect.id));
+                        }}
+                        className="border-l border-white/10 px-1 disabled:opacity-30"
                         aria-label={`${effect.bypassed ? "Enable" : "Bypass"} ${effect.kind}`}
                       >B</button>
                       <button
                         type="button"
-                        onClick={() => setLanes((value) =>
-                          removeTimelineLaneEffect(value, lane.trackId, effect.id))}
-                        className="border-l border-white/10 px-1 text-rose-200/70"
+                        disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+                        onClick={() => {
+                          if (comparingSnapshot || comparedMixerCheckpointId) return;
+                          setLanes((value) =>
+                            removeTimelineLaneEffect(value, lane.trackId, effect.id));
+                        }}
+                        className="border-l border-white/10 px-1 text-rose-200/70 disabled:opacity-30"
                         aria-label={`Remove ${effect.kind}`}
                       >×</button>
                     </span>
