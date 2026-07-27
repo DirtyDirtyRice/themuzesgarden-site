@@ -1274,6 +1274,21 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       .filter((lane) => selectedIds.has(lane.trackId)).length;
   }
 
+  function selectedCheckpointLaneChangeCount(
+    checkpoint: MixerCheckpoint,
+    changed: boolean,
+  ): number {
+    const selectedIds = new Set(checkpointMultiLaneSelections[checkpoint.id] ?? []);
+    const changedIds = new Set(changedCheckpointLaneIds(
+      checkpoint.state,
+      checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+    ));
+    return checkpoint.state.lanes.filter((savedLane) =>
+      lanes.some((lane) => lane.trackId === savedLane.trackId)
+      && selectedIds.has(savedLane.trackId)
+      && changedIds.has(savedLane.trackId) === changed).length;
+  }
+
   function exportMixSnapshots() {
     if (!mixSnapshots.length) return;
     const blob = new Blob(
@@ -2330,6 +2345,18 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               >
                                 {selectedMatchingCheckpointLaneCount(checkpoint)}/
                                 {matchingCheckpointLanes(checkpoint).length} visible
+                              </span>
+                              <span
+                                className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-white/40"
+                                title="Selected recall lanes by checkpoint comparison status"
+                              >
+                                <span className="text-amber-100/70">
+                                  {selectedCheckpointLaneChangeCount(checkpoint, true)} changed
+                                </span>
+                                {" / "}
+                                <span className="text-emerald-100/70">
+                                  {selectedCheckpointLaneChangeCount(checkpoint, false)} unchanged
+                                </span>
                               </span>
                               {([
                                 ["all", "All"],
