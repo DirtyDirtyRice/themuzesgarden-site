@@ -195,7 +195,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [checkpointChangeSectionFilters, setCheckpointChangeSectionFilters] =
     useState<Record<string, LaneRecallSection>>({});
   const [checkpointLaneOrders, setCheckpointLaneOrders] =
-    useState<Record<string, "checkpoint" | "name" | "selected">>({});
+    useState<Record<string, "checkpoint" | "name" | "selected" | "changed">>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -1219,6 +1219,15 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     if (order === "selected") {
       return matching.sort((left, right) =>
         Number(selectedIds.has(right.trackId)) - Number(selectedIds.has(left.trackId)));
+    }
+    if (order === "changed") {
+      const orderedChangedIds = new Set(changedCheckpointLaneIds(
+        checkpoint.state,
+        checkpointChangeSectionFilters[checkpoint.id] ?? "all",
+      ));
+      return matching.sort((left, right) =>
+        Number(orderedChangedIds.has(right.trackId))
+        - Number(orderedChangedIds.has(left.trackId)));
     }
     return matching;
   }
@@ -2343,7 +2352,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                                 [checkpoint.id]: event.target.value as
                                   | "checkpoint"
                                   | "name"
-                                  | "selected",
+                                  | "selected"
+                                  | "changed",
                               }))}
                               className="rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/55 outline-none"
                               aria-label={`Order lanes in ${checkpoint.name}`}
@@ -2351,6 +2361,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               <option value="checkpoint">Checkpoint Order</option>
                               <option value="name">Name A-Z</option>
                               <option value="selected">Selected First</option>
+                              <option value="changed">Changed First</option>
                             </select>
                             <button
                               type="button"
