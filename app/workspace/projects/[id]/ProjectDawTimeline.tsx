@@ -5,6 +5,7 @@ import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { listLinkedProjectTrackIds } from "../../../../lib/projectTracksApi";
 import {
   addTimelineClip,
+  addTimelineLaneEffect,
   addTimelineAutomationPoint,
   addTimelineMarker,
   archiveTimelineMarker,
@@ -29,6 +30,7 @@ import {
   restoreTimelineClip,
   restoreTimelineMarker,
   renameTimelineMarker,
+  removeTimelineLaneEffect,
   selectTimelineClip,
   selectTimelineMarker,
   selectTimelineAutomationPoint,
@@ -40,10 +42,12 @@ import {
   timelineSecondsFromPixels,
   timelineAutomationValueAt,
   timelineLaneMeterLevel,
+  toggleTimelineLaneEffectBypass,
   toggleTimelineClipSelection,
   trimTimelineClip,
   type TimelineDawClipState,
   type TimelineDawLaneState,
+  type TimelineDawEffectKind,
   type TimelineDawMarkerState,
   type TimelineDawAutomationParameter,
   type TimelineDawAutomationPoint,
@@ -775,7 +779,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               audible,
             );
             return (
-              <div key={lane.trackId} className={`relative h-28 border-b border-white/10 p-3 pr-6 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
+              <div key={lane.trackId} className={`relative h-40 border-b border-white/10 p-3 pr-6 ${lane.selected ? "bg-cyan-300/10" : ""}`}>
                 <div className="absolute bottom-3 right-2 top-3 w-2 overflow-hidden rounded-full bg-black/70" aria-label={`${Math.round(meterLevel * 100)} percent level`}>
                   <div
                     className="absolute inset-x-0 bottom-0 rounded-full bg-gradient-to-t from-emerald-400 via-amber-300 to-rose-400 transition-[height] duration-100"
@@ -829,6 +833,52 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     aria-label={`${track?.title || lane.trackId} mixer pan`}
                   />
                 </div>
+                <div className="mt-1 flex items-center gap-1">
+                  <select
+                    defaultValue=""
+                    onChange={(event) => {
+                      const kind = event.target.value as TimelineDawEffectKind;
+                      if (kind) setLanes((value) => addTimelineLaneEffect(value, lane.trackId, kind));
+                      event.currentTarget.value = "";
+                    }}
+                    className="w-20 rounded border border-white/10 bg-black px-1 py-1 text-[9px] font-black text-violet-100"
+                    aria-label={`Add effect to ${track?.title || lane.trackId}`}
+                  >
+                    <option value="">+ FX</option>
+                    <option value="eq">EQ</option>
+                    <option value="compressor">Comp</option>
+                    <option value="reverb">Reverb</option>
+                    <option value="delay">Delay</option>
+                  </select>
+                  <span className="truncate text-[9px] text-white/35">{lane.effects.length} slots</span>
+                </div>
+                <div className="mt-1 flex max-h-8 flex-wrap gap-1 overflow-y-auto">
+                  {lane.effects.map((effect) => (
+                    <span key={effect.id} className={`inline-flex rounded border text-[9px] font-black ${
+                      effect.bypassed
+                        ? "border-white/10 bg-white/5 text-white/30"
+                        : "border-violet-300/35 bg-violet-300/15 text-violet-100"
+                    }`}>
+                      <button
+                        type="button"
+                        onClick={() => setLanes((value) =>
+                          toggleTimelineLaneEffectBypass(value, lane.trackId, effect.id))}
+                        className="px-1.5 py-0.5 uppercase"
+                        aria-pressed={effect.bypassed}
+                        title={effect.bypassed ? "Enable effect" : "Bypass effect"}
+                      >
+                        {effect.kind === "compressor" ? "COMP" : effect.kind}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLanes((value) =>
+                          removeTimelineLaneEffect(value, lane.trackId, effect.id))}
+                        className="border-l border-white/10 px-1 text-rose-200/70"
+                        aria-label={`Remove ${effect.kind}`}
+                      >×</button>
+                    </span>
+                  ))}
+                </div>
               </div>
             );
           })}
@@ -880,7 +930,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 ? 88 - value * 72
                 : 52 - value * 36;
               return (
-                <div key={lane.trackId} className={`relative h-28 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
+                <div key={lane.trackId} className={`relative h-40 border-b border-white/10 ${lane.selected ? "bg-cyan-300/[0.04]" : "bg-white/[0.02]"}`}>
                   {crossfades.map((crossfade) => (
                     <div
                       key={`${crossfade.leftClipId}:${crossfade.rightClipId}`}

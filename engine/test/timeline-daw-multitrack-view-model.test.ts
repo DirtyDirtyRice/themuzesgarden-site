@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addTimelineClip,
+  addTimelineLaneEffect,
   addTimelineAutomationPoint,
   addTimelineMarker,
   archiveTimelineMarker,
@@ -26,6 +27,7 @@ import {
   reconcileTimelineAutomation,
   restoreTimelineClip,
   restoreTimelineMarker,
+  removeTimelineLaneEffect,
   renameTimelineMarker,
   reconcileTimelineClips,
   selectTimelineClip,
@@ -38,6 +40,7 @@ import {
   timelineAutomationValueAt,
   timelineLaneMeterLevel,
   toggleTimelineClipSelection,
+  toggleTimelineLaneEffectBypass,
   trimTimelineClip,
 } from "../../lib/timeline/TimelineDawMultitrackViewModel";
 
@@ -163,13 +166,13 @@ describe("TimelineDawMultitrackViewModel", () => {
       JSON.stringify({ trackId: "song-1", selected: false, muted: true, soloed: true }),
       "song-1",
     )).toEqual({
-      trackId: "song-1", selected: false, muted: true, soloed: true, volume: 1, pan: 0,
+      trackId: "song-1", selected: false, muted: true, soloed: true, volume: 1, pan: 0, effects: [],
     });
     expect(parseTimelineLaneState(
       JSON.stringify({ trackId: "other", muted: true, soloed: true }),
       "song-1",
     )).toEqual({
-      trackId: "song-1", selected: true, muted: false, soloed: false, volume: 1, pan: 0,
+      trackId: "song-1", selected: true, muted: false, soloed: false, volume: 1, pan: 0, effects: [],
     });
   });
 
@@ -180,9 +183,9 @@ describe("TimelineDawMultitrackViewModel", () => {
       { trackId: "removed", selected: false, muted: false, soloed: true },
     ]);
     expect(reconcileTimelineLanes(saved, ["stem-1", "stem-2"], "song-1")).toEqual([
-      { trackId: "stem-2", selected: true, muted: true, soloed: false, volume: 1, pan: 0 },
-      { trackId: "song-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0 },
-      { trackId: "stem-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0 },
+      { trackId: "stem-2", selected: true, muted: true, soloed: false, volume: 1, pan: 0, effects: [] },
+      { trackId: "song-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0, effects: [] },
+      { trackId: "stem-1", selected: false, muted: false, soloed: false, volume: 1, pan: 0, effects: [] },
     ]);
   });
 
@@ -199,6 +202,23 @@ describe("TimelineDawMultitrackViewModel", () => {
       .toBe(timelineLaneMeterLevel("song-1", 4, 0.8, true));
     expect(timelineLaneMeterLevel("song-1", 4, 2, true)).toBeLessThanOrEqual(1);
     expect(timelineLaneMeterLevel("song-1", 4, 0.8, false)).toBe(0);
+  });
+
+  it("adds, bypasses, and removes persistent lane effects", () => {
+    const lanes = reconcileTimelineLanes(null, [], "song-1");
+    const added = addTimelineLaneEffect(
+      addTimelineLaneEffect(lanes, "song-1", "eq"),
+      "song-1",
+      "reverb",
+    );
+    expect(added[0].effects).toEqual([
+      { id: "song-1:fx:1", kind: "eq", bypassed: false },
+      { id: "song-1:fx:2", kind: "reverb", bypassed: false },
+    ]);
+    const bypassed = toggleTimelineLaneEffectBypass(added, "song-1", "song-1:fx:1");
+    expect(bypassed[0].effects[0].bypassed).toBe(true);
+    expect(removeTimelineLaneEffect(bypassed, "song-1", "song-1:fx:2")[0].effects)
+      .toEqual([{ id: "song-1:fx:1", kind: "eq", bypassed: true }]);
   });
 
   it("creates one source-preserving clip for every current lane", () => {

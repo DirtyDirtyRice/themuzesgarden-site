@@ -1,3 +1,11 @@
+export type TimelineDawEffectKind = "eq" | "compressor" | "reverb" | "delay";
+
+export type TimelineDawLaneEffect = {
+  id: string;
+  kind: TimelineDawEffectKind;
+  bypassed: boolean;
+};
+
 export type TimelineDawLaneState = {
   trackId: string;
   selected: boolean;
@@ -5,6 +13,7 @@ export type TimelineDawLaneState = {
   soloed: boolean;
   volume: number;
   pan: number;
+  effects: TimelineDawLaneEffect[];
 };
 
 export type TimelineDawRulerMark = {
@@ -412,7 +421,7 @@ export function parseTimelineLaneState(
   trackId: string,
 ): TimelineDawLaneState {
   const fallback = {
-    trackId, selected: true, muted: false, soloed: false, volume: 1, pan: 0,
+    trackId, selected: true, muted: false, soloed: false, volume: 1, pan: 0, effects: [],
   };
   if (!raw) return fallback;
   try {
@@ -428,6 +437,16 @@ export function parseTimelineLaneState(
       pan: value.trackId === trackId && Number.isFinite(value.pan)
         ? Math.min(1, Math.max(-1, value.pan!))
         : 0,
+      effects: value.trackId === trackId && Array.isArray(value.effects)
+        ? value.effects.filter((effect) =>
+            typeof effect?.id === "string"
+            && ["eq", "compressor", "reverb", "delay"].includes(effect.kind))
+          .map((effect) => ({
+            id: effect.id,
+            kind: effect.kind,
+            bypassed: effect.bypassed === true,
+          }))
+        : [],
     };
   } catch {
     return fallback;
@@ -465,6 +484,12 @@ export function reconcileTimelineLanes(
       pan: Number.isFinite(previous?.pan)
         ? Math.min(1, Math.max(-1, previous!.pan))
         : 0,
+      effects: Array.isArray(previous?.effects)
+        ? previous!.effects.filter((effect) =>
+            typeof effect?.id === "string"
+            && ["eq", "compressor", "reverb", "delay"].includes(effect.kind))
+          .map((effect) => ({ ...effect, bypassed: effect.bypassed === true }))
+        : [],
     };
   });
 }
@@ -480,6 +505,53 @@ export function moveTimelineLane(
   const next = lanes.map((lane) => ({ ...lane }));
   [next[index], next[target]] = [next[target], next[index]];
   return next;
+}
+
+export function addTimelineLaneEffect(
+  lanes: TimelineDawLaneState[],
+  trackId: string,
+  kind: TimelineDawEffectKind,
+): TimelineDawLaneState[] {
+  return lanes.map((lane) => {
+    if (lane.trackId !== trackId) return { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) };
+    const sequence = lane.effects.reduce((highest, effect) => {
+      const match = effect.id.match(/:fx:(\d+)$/);
+      return Math.max(highest, Number(match?.[1] ?? 0));
+    }, 0) + 1;
+    return {
+      ...lane,
+      effects: [...lane.effects, {
+        id: `${trackId}:fx:${sequence}`,
+        kind,
+        bypassed: false,
+      }],
+    };
+  });
+}
+
+export function toggleTimelineLaneEffectBypass(
+  lanes: TimelineDawLaneState[],
+  trackId: string,
+  effectId: string,
+): TimelineDawLaneState[] {
+  return lanes.map((lane) => lane.trackId === trackId
+    ? {
+        ...lane,
+        effects: lane.effects.map((effect) => effect.id === effectId
+          ? { ...effect, bypassed: !effect.bypassed }
+          : { ...effect }),
+      }
+    : { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) });
+}
+
+export function removeTimelineLaneEffect(
+  lanes: TimelineDawLaneState[],
+  trackId: string,
+  effectId: string,
+): TimelineDawLaneState[] {
+  return lanes.map((lane) => lane.trackId === trackId
+    ? { ...lane, effects: lane.effects.filter((effect) => effect.id !== effectId).map((effect) => ({ ...effect })) }
+    : { ...lane, effects: lane.effects.map((effect) => ({ ...effect })) });
 }
 
 export function timelineLaneMeterLevel(
