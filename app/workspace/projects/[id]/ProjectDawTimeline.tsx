@@ -1175,6 +1175,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     });
   }
 
+  function changedMatchingCheckpointLaneIds(
+    checkpoint: MixerCheckpoint,
+    section: LaneRecallSection = "all",
+  ): string[] {
+    const changedIds = new Set(changedCheckpointLaneIds(checkpoint.state, section));
+    return matchingCheckpointLanes(checkpoint)
+      .filter((lane) => changedIds.has(lane.trackId))
+      .map((lane) => lane.trackId);
+  }
+
   function exportMixSnapshots() {
     if (!mixSnapshots.length) return;
     const blob = new Blob(
@@ -2288,6 +2298,20 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                               className="rounded border border-indigo-300/15 px-2 py-1 text-[8px] text-indigo-100/60 hover:text-indigo-100 disabled:opacity-30"
                             >
                               Select Visible
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!changedMatchingCheckpointLaneIds(checkpoint).length}
+                              onClick={() => setCheckpointMultiLaneSelections((selections) => ({
+                                ...selections,
+                                [checkpoint.id]: Array.from(new Set([
+                                  ...(selections[checkpoint.id] ?? []),
+                                  ...changedMatchingCheckpointLaneIds(checkpoint),
+                                ])),
+                              }))}
+                              className="rounded border border-amber-300/15 px-2 py-1 text-[8px] text-amber-100/60 hover:text-amber-100 disabled:opacity-30"
+                            >
+                              Select Changed Visible
                             </button>
                             {([
                               ["all", "Changed"],
