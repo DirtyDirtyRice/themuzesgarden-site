@@ -1082,6 +1082,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setSelectedSnapshotId(duplicate.id);
   }
 
+  function recallMixSnapshot() {
+    if (
+      !selectedMixSnapshot
+      || comparingSnapshot
+      || comparedMixerCheckpointId
+      || summarizeSnapshotDifference(selectedMixSnapshot) === "Matches current mixer"
+    ) return;
+    const current = captureMixState();
+    setMixerUndoHistory((history) => [...history, {
+      state: current,
+      label: `Recall snapshot: ${selectedMixSnapshot.name}`,
+      createdAt: Date.now(),
+    }].slice(-50));
+    setMixerRedoHistory([]);
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(selectedMixSnapshot);
+  }
+
   function updateSnapshotDetails() {
     if (!selectedMixSnapshot) return;
     const name = snapshotEditName.trim() || selectedMixSnapshot.name;
@@ -3374,11 +3392,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </select>
         <button
           type="button"
-          disabled={!selectedSnapshotId || comparingSnapshot}
-          onClick={() => {
-            const snapshot = mixSnapshots.find((entry) => entry.id === selectedSnapshotId);
-            if (snapshot) applyMixState(snapshot);
-          }}
+          disabled={
+            !selectedMixSnapshot
+            || comparingSnapshot
+            || Boolean(comparedMixerCheckpointId)
+            || summarizeSnapshotDifference(selectedMixSnapshot) === "Matches current mixer"
+          }
+          onClick={recallMixSnapshot}
           className="rounded border border-emerald-300/20 px-3 py-1.5 text-[10px] font-black text-emerald-100 disabled:opacity-30"
         >
           Recall
