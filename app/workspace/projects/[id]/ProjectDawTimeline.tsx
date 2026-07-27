@@ -658,6 +658,11 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       : patch.selected ? { ...lane, selected: false } : lane));
   }
 
+  function clearMasterOverloads() {
+    if (comparingSnapshot || comparedMixerCheckpointId) return;
+    setMasterOverloads([]);
+  }
+
   function captureMixState(): MixSnapshotState {
     return {
       lanes: lanes.map((lane) => ({
@@ -3586,8 +3591,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         {masterOverloads.length ? (
           <button
             type="button"
-            onClick={() => setMasterOverloads([])}
-            className="ml-auto rounded border border-white/10 px-2 py-1 text-[9px] font-black text-white/45"
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onClick={clearMasterOverloads}
+            className="ml-auto rounded border border-white/10 px-2 py-1 text-[9px] font-black text-white/45 disabled:opacity-30"
           >
             Clear
           </button>
