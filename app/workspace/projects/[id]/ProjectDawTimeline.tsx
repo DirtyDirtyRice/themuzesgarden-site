@@ -194,6 +194,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     useState<Record<string, boolean>>({});
   const [checkpointChangeSectionFilters, setCheckpointChangeSectionFilters] =
     useState<Record<string, LaneRecallSection>>({});
+  const [checkpointLaneOrders, setCheckpointLaneOrders] =
+    useState<Record<string, "checkpoint" | "name" | "selected">>({});
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -1186,7 +1188,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           checkpointChangeSectionFilters[checkpoint.id] ?? "all",
         ))
         : null;
-    return checkpoint.state.lanes.filter((savedLane) => {
+    const matching = checkpoint.state.lanes.filter((savedLane) => {
       if (!lanes.some((lane) => lane.trackId === savedLane.trackId)) return false;
       if (checkpointSelectedOnlyFilters[checkpoint.id] && !selectedIds.has(savedLane.trackId)) {
         return false;
@@ -1206,6 +1208,19 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       return laneName.toLowerCase().includes(query)
         || savedLane.trackId.toLowerCase().includes(query);
     });
+    const order = checkpointLaneOrders[checkpoint.id] ?? "checkpoint";
+    if (order === "name") {
+      return matching.sort((left, right) => {
+        const leftName = trackById.get(left.trackId)?.title ?? left.trackId;
+        const rightName = trackById.get(right.trackId)?.title ?? right.trackId;
+        return leftName.localeCompare(rightName, undefined, { sensitivity: "base" });
+      });
+    }
+    if (order === "selected") {
+      return matching.sort((left, right) =>
+        Number(selectedIds.has(right.trackId)) - Number(selectedIds.has(left.trackId)));
+    }
+    return matching;
   }
 
   function changedMatchingCheckpointLaneIds(
@@ -2321,6 +2336,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                             <span className="whitespace-nowrap text-[8px] text-white/30">
                               {matchingCheckpointLanes(checkpoint).length} matches
                             </span>
+                            <select
+                              value={checkpointLaneOrders[checkpoint.id] ?? "checkpoint"}
+                              onChange={(event) => setCheckpointLaneOrders((orders) => ({
+                                ...orders,
+                                [checkpoint.id]: event.target.value as
+                                  | "checkpoint"
+                                  | "name"
+                                  | "selected",
+                              }))}
+                              className="rounded border border-white/10 bg-black px-2 py-1 text-[8px] text-white/55 outline-none"
+                              aria-label={`Order lanes in ${checkpoint.name}`}
+                            >
+                              <option value="checkpoint">Checkpoint Order</option>
+                              <option value="name">Name A-Z</option>
+                              <option value="selected">Selected First</option>
+                            </select>
                             <button
                               type="button"
                               aria-pressed={Boolean(checkpointSelectedOnlyFilters[checkpoint.id])}
