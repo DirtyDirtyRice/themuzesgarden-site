@@ -2060,6 +2060,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                   : "custom"
           }
           onChange={(event) => {
+            if (comparingSnapshot || comparedMixerCheckpointId) return;
             const preset = event.target.value;
             if (preset === "streaming") {
               setMasterGain(0.9); setLimiterEnabled(true); setLimiterCeiling(0.89);
@@ -2069,7 +2070,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
               setMasterGain(1.15); setLimiterEnabled(true); setLimiterCeiling(0.98);
             }
           }}
-          className="rounded-lg border border-amber-300/20 bg-black px-3 py-2 text-[10px] font-black uppercase text-amber-100"
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+          className="rounded-lg border border-amber-300/20 bg-black px-3 py-2 text-[10px] font-black uppercase text-amber-100 disabled:opacity-30"
           aria-label="Master output preset"
         >
           <option value="streaming">Streaming Safe</option>
@@ -2085,16 +2087,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             max={1.25}
             step={0.01}
             value={masterGain}
-            onChange={(event) => setMasterGain(Number(event.target.value))}
-            className="w-28 accent-amber-300"
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onChange={(event) => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setMasterGain(Number(event.target.value));
+            }}
+            className="w-28 accent-amber-300 disabled:opacity-30"
           />
           {Math.round(masterGain * 100)}%
         </label>
         <button
           type="button"
           aria-pressed={limiterEnabled}
-          onClick={() => setLimiterEnabled((enabled) => !enabled)}
-          className={`rounded-lg px-3 py-2 text-[10px] font-black ${
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+          onClick={() => {
+            if (comparingSnapshot || comparedMixerCheckpointId) return;
+            setLimiterEnabled((enabled) => !enabled);
+          }}
+          className={`rounded-lg px-3 py-2 text-[10px] font-black disabled:opacity-30 ${
             limiterEnabled ? "bg-amber-300 text-black" : "border border-white/15 text-white/55"
           }`}
         >
@@ -2108,9 +2118,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             max={1}
             step={0.01}
             value={limiterCeiling}
-            onChange={(event) => setLimiterCeiling(Number(event.target.value))}
-            className="w-24 accent-rose-300"
-            disabled={!limiterEnabled}
+            onChange={(event) => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setLimiterCeiling(Number(event.target.value));
+            }}
+            className="w-24 accent-rose-300 disabled:opacity-30"
+            disabled={
+              !limiterEnabled
+              || comparingSnapshot
+              || Boolean(comparedMixerCheckpointId)
+            }
           />
           {(20 * Math.log10(limiterCeiling)).toFixed(1)} dB
         </label>
