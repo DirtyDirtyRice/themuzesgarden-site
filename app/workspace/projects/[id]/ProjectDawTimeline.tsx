@@ -114,6 +114,9 @@ type MixerHistoryEntry = {
   label: string;
   createdAt: number;
 };
+type MixerCheckpoint = MixerHistoryEntry & {
+  id: string;
+};
 
 const defaultGroupBuses: TimelineGroupBuses = {
   vocals: { volume: 1, muted: false },
@@ -170,6 +173,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [mixerRedoHistory, setMixerRedoHistory] = useState<MixerHistoryEntry[]>([]);
   const [mixerHistorySearch, setMixerHistorySearch] = useState("");
   const [showMixerHistory, setShowMixerHistory] = useState(false);
+  const [mixerCheckpoints, setMixerCheckpoints] = useState<MixerCheckpoint[]>([]);
+  const [mixerCheckpointsReady, setMixerCheckpointsReady] = useState(false);
   const [automationParameter, setAutomationParameter] =
     useState<TimelineDawAutomationParameter>("volume");
   const [automationValue, setAutomationValue] = useState(0.75);
@@ -193,6 +198,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const groupStorageKey = `muzes:daw-timeline-groups:v1:${session.id}`;
   const masterStorageKey = `muzes:daw-timeline-master:v1:${session.id}`;
   const snapshotStorageKey = `muzes:daw-timeline-snapshots:v1:${session.id}`;
+  const mixerCheckpointStorageKey = `muzes:daw-mixer-checkpoints:v1:${session.id}`;
   const canvasWidth = timelineCanvasWidth(duration, zoom);
   const playhead = timelinePlayheadPercent(elapsed, duration);
   const ruler = useMemo(() => createTimelineRulerMarks(duration, zoom), [duration, zoom]);
@@ -209,6 +215,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     .map((entry, index) => ({ entry, index }))
     .filter(({ entry }) =>
       entry.label.toLowerCase().includes(mixerHistorySearch.trim().toLowerCase()));
+  const filteredMixerCheckpoints = mixerCheckpoints.filter((entry) =>
+    entry.label.toLowerCase().includes(mixerHistorySearch.trim().toLowerCase()));
   const masterLaneLevels = lanes.map((lane) => {
       const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
       const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
@@ -414,6 +422,21 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       localStorage.setItem(snapshotStorageKey, JSON.stringify(mixSnapshots));
     }
   }, [mixSnapshots, snapshotReady, snapshotStorageKey]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(mixerCheckpointStorageKey) ?? "[]");
+      if (Array.isArray(stored)) setMixerCheckpoints(stored.slice(-12));
+    } catch {} finally {
+      setMixerCheckpointsReady(true);
+    }
+  }, [mixerCheckpointStorageKey]);
+
+  useEffect(() => {
+    if (mixerCheckpointsReady) {
+      localStorage.setItem(mixerCheckpointStorageKey, JSON.stringify(mixerCheckpoints));
+    }
+  }, [mixerCheckpointStorageKey, mixerCheckpoints, mixerCheckpointsReady]);
 
   useEffect(() => {
     setSnapshotEditName(selectedMixSnapshot?.name ?? "");
@@ -710,6 +733,31 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setMixerRedoHistory(chronologicalFuture.reverse().slice(-50));
     mixerApplyingHistoryRef.current = true;
     applyMixState(target.state);
+  }
+
+  function pinMixerHistory(entry: MixerHistoryEntry) {
+    setMixerCheckpoints((checkpoints) => {
+      if (checkpoints.some((checkpoint) =>
+        checkpoint.createdAt === entry.createdAt && checkpoint.label === entry.label)) {
+        return checkpoints;
+      }
+      return [...checkpoints, {
+        ...entry,
+        id: `checkpoint:${Date.now()}`,
+      }].slice(-12);
+    });
+  }
+
+  function restoreMixerCheckpoint(checkpoint: MixerCheckpoint) {
+    const current = captureMixState();
+    setMixerUndoHistory((history) => [...history, {
+      state: current,
+      label: `Restore checkpoint: ${checkpoint.label}`,
+      createdAt: Date.now(),
+    }].slice(-50));
+    setMixerRedoHistory([]);
+    mixerApplyingHistoryRef.current = true;
+    applyMixState(checkpoint.state);
   }
 
   function saveMixSnapshot() {
@@ -1615,7 +1663,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           Redo{mixerRedoHistory.length ? `: ${mixerRedoHistory.at(-1)!.label}` : ""}
         </button>
         <span className="font-mono text-[9px] text-white/35">
-          {mixerUndoHistory.length} undo · {mixerRedoHistory.length} redo
+          {mixerUndoHistory.length} undo · {mixerRedoHistory.length} redo · {mixerCheckpoints.length} pinned
         </span>
         <input
           value={mixerHistorySearch}
@@ -1664,30 +1712,77 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
       {showMixerHistory ? (
         <div className="border-b border-indigo-300/10 bg-black/35 px-5 py-3">
+          {mixerCheckpoints.length ? (
+            <div className="mb-3">
+              <div className="mb-2 flex items-center justify-between text-[9px] text-amber-200/55">
+                <span className="font-black uppercase tracking-wider">Pinned Checkpoints</span>
+                <span>Protected from the 50-change history limit</span>
+              </div>
+              <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
+                {[...filteredMixerCheckpoints].reverse().map((checkpoint) => (
+                  <div
+                    key={checkpoint.id}
+                    className="flex items-center gap-1 rounded-lg border border-amber-300/20 bg-amber-300/[0.04] p-1"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => restoreMixerCheckpoint(checkpoint)}
+                      className="min-w-0 flex-1 truncate px-2 py-1.5 text-left text-[9px] font-black text-amber-100"
+                      title={`Restore ${checkpoint.label}`}
+                    >
+                      ★ {checkpoint.label}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMixerCheckpoints((checkpoints) =>
+                        checkpoints.filter((entry) => entry.id !== checkpoint.id))}
+                      className="rounded px-2 py-1 text-[9px] text-white/35 hover:bg-white/5 hover:text-white/70"
+                      aria-label={`Unpin ${checkpoint.label}`}
+                    >
+                      Unpin
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <div className="mb-2 flex items-center justify-between text-[9px] text-white/30">
             <span>{filteredMixerHistory.length} matching changes</span>
-            <span>Choose any point to restore it; later states move to Redo</span>
+            <span>Restore a point or pin it as a protected checkpoint</span>
           </div>
           <div className="grid max-h-40 gap-1 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
             {[...filteredMixerHistory].reverse().map(({ entry, index }) => (
-              <button
+              <div
                 key={`${entry.createdAt}:${index}`}
-                type="button"
-                onClick={() => jumpToMixerHistory(index)}
                 className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-left hover:border-indigo-300/30 hover:bg-indigo-300/[0.06]"
               >
-                <span className="rounded bg-indigo-300/10 px-1.5 py-1 font-mono text-[8px] text-indigo-200">
-                  {index + 1}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[9px] font-black text-white/65">
-                  {entry.label}
-                </span>
+                <button
+                  type="button"
+                  onClick={() => jumpToMixerHistory(index)}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                >
+                  <span className="rounded bg-indigo-300/10 px-1.5 py-1 font-mono text-[8px] text-indigo-200">
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[9px] font-black text-white/65">
+                    {entry.label}
+                  </span>
+                </button>
                 <span className="font-mono text-[8px] text-white/25">
                   {new Date(entry.createdAt).toLocaleTimeString([], {
                     hour: "2-digit", minute: "2-digit",
                   })}
                 </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => pinMixerHistory(entry)}
+                  className="rounded px-1.5 py-1 text-[10px] text-amber-200/50 hover:bg-amber-300/10 hover:text-amber-100"
+                  aria-label={`Pin ${entry.label}`}
+                  title="Pin checkpoint"
+                >
+                  ☆
+                </button>
+              </div>
             ))}
           </div>
           {!filteredMixerHistory.length ? (
