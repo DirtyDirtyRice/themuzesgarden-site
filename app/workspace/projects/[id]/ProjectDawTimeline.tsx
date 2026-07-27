@@ -1146,7 +1146,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function updateSnapshotDetails() {
-    if (!selectedMixSnapshot) return;
+    if (!selectedMixSnapshot || comparingSnapshot || comparedMixerCheckpointId) return;
     const name = snapshotEditName.trim() || selectedMixSnapshot.name;
     setMixSnapshots((current) => current.map((snapshot) =>
       snapshot.id === selectedMixSnapshot.id
@@ -3545,21 +3545,24 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <div className="flex flex-wrap items-center gap-3 border-b border-emerald-300/10 bg-emerald-300/[0.015] px-5 py-2">
           <input
             value={snapshotEditName}
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
             onChange={(event) => setSnapshotEditName(event.target.value)}
-            className="w-36 rounded border border-white/10 bg-black px-2 py-1.5 text-[10px] text-white"
+            className="w-36 rounded border border-white/10 bg-black px-2 py-1.5 text-[10px] text-white disabled:opacity-30"
             aria-label="Rename selected mix snapshot"
           />
           <input
             value={snapshotNotes}
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
             onChange={(event) => setSnapshotNotes(event.target.value)}
             placeholder="Mix notes"
-            className="min-w-48 flex-1 rounded border border-white/10 bg-black px-2 py-1.5 text-[10px] text-white placeholder:text-white/25"
+            className="min-w-48 flex-1 rounded border border-white/10 bg-black px-2 py-1.5 text-[10px] text-white placeholder:text-white/25 disabled:opacity-30"
             aria-label="Selected mix snapshot notes"
           />
           <button
             type="button"
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
             onClick={updateSnapshotDetails}
-            className="rounded bg-white/10 px-3 py-1.5 text-[9px] font-black text-white/70"
+            className="rounded bg-white/10 px-3 py-1.5 text-[9px] font-black text-white/70 disabled:opacity-30"
           >
             Save Details
           </button>
