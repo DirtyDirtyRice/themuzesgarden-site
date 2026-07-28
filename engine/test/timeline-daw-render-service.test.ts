@@ -1,0 +1,9 @@
+import { describe, expect, it } from "vitest";
+import { InMemoryTimelineDawWorkspaceStore, TimelineDawWorkspaceService } from "../../lib/timeline/TimelineDawWorkspaceService";
+import { TimelineDawRenderService } from "../../lib/timeline/TimelineDawRenderService";
+
+async function setup(){const store=new InMemoryTimelineDawWorkspaceStore();const workspace=new TimelineDawWorkspaceService(store);const opened=await workspace.execute({action:"open",projectId:"project-1",songId:"song-1",name:"Main",expectedWorkspaceRevision:0},"owner-1");return{store,opened};}
+describe("TimelineDawRenderService",()=>{
+ it("persists validated render jobs in the owner workspace",async()=>{const{store,opened}=await setup();const service=new TimelineDawRenderService(store);const prepared=await service.execute({action:"prepare",sessionId:opened.session.id,expectedWorkspaceRevision:opened.workspaceRevision,name:"Main Mix",target:"mix",sourceIds:["master"],startSample:0,endSample:48000,sampleRate:48000,bitDepth:24,channels:2,format:"wav"},"owner-1");expect(prepared.job.state).toBe("validated");const restored=await new TimelineDawRenderService(store).snapshot("owner-1",opened.session.id);expect(restored.jobs).toEqual([prepared.job]);});
+ it("rejects stale revisions and other owners",async()=>{const{store,opened}=await setup();const service=new TimelineDawRenderService(store);await expect(service.snapshot("other",opened.session.id)).rejects.toThrow(/session owner/);await expect(service.execute({action:"prepare",sessionId:opened.session.id,expectedWorkspaceRevision:0,name:"Mix",target:"mix",sourceIds:["master"],startSample:0,endSample:1,sampleRate:48000,bitDepth:24,channels:2,format:"wav"},"owner-1")).rejects.toThrow(/revision conflict/);});
+});

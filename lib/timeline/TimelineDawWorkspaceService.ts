@@ -5,11 +5,13 @@ import {
   type TimelineDawSessionArchive,
 } from "./TimelineDawSessionCoordinator";
 import type { TimelineTransportArchive } from "./TimelineTransportAndSynchronizationEngine";
+import type { TimelineOfflineRenderArchive } from "./TimelineOfflineRenderAndExportEngine";
 
 export type TimelineDawWorkspaceDocument = {
   revision: number;
   archive: TimelineDawSessionArchive & {
     transports?: Record<TimelineId, TimelineTransportArchive>;
+    renders?: Record<TimelineId, TimelineOfflineRenderArchive>;
   };
   updatedAt: string;
 };
@@ -164,6 +166,7 @@ export class TimelineDawWorkspaceService {
       archive: {
         ...coordinator.exportArchive(),
         transports: document?.archive.transports,
+        renders: document?.archive.renders,
       },
       updatedAt: recordedAt,
     }, currentRevision);

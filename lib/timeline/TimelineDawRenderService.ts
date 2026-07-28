@@ -1,0 +1,16 @@
+import { TimelineDawSessionCoordinator } from "./TimelineDawSessionCoordinator";
+import { TimelineOfflineRenderAndExportEngine, type TimelineOfflineRenderArchive, type TimelineOfflineRenderJob, type TimelineRenderFormat, type TimelineRenderTarget } from "./TimelineOfflineRenderAndExportEngine";
+import { TimelineDawWorkspaceConflictError, type TimelineDawWorkspaceStore } from "./TimelineDawWorkspaceService";
+import type { TimelineId, TimelineUserId } from "./TimelineTypes";
+
+export type TimelineDawRenderCommand = { action: "prepare"; sessionId: TimelineId; expectedWorkspaceRevision: number; name: string; target: TimelineRenderTarget; sourceIds: TimelineId[]; startSample: number; endSample: number; sampleRate: number; bitDepth: 16|24|32; channels: number; format: TimelineRenderFormat; normalizePeakDb?: number|null; dither?: boolean };
+export type TimelineDawRenderSnapshot = { workspaceRevision: number; jobs: TimelineOfflineRenderJob[] };
+
+export class TimelineDawRenderService {
+ private queue: Promise<void> = Promise.resolve();
+ constructor(private store: TimelineDawWorkspaceStore) {}
+ snapshot(actorId: TimelineUserId, sessionId: TimelineId): Promise<TimelineDawRenderSnapshot> { return this.queue.then(async()=>{const d=await this.store.load();if(!d)throw new Error("DAW workspace was not found.");this.session(d.archive,actorId,sessionId);return{workspaceRevision:d.revision,jobs:d.archive.renders?.[sessionId]?.jobs??[]}}); }
+ execute(command: TimelineDawRenderCommand, actorId: TimelineUserId) { const operation=this.queue.then(()=>this.prepare(command,actorId));this.queue=operation.then(()=>undefined,()=>undefined);return operation; }
+ private async prepare(c:TimelineDawRenderCommand,actorId:TimelineUserId){const d=await this.store.load();if(!d)throw new Error("DAW workspace was not found.");if(d.revision!==c.expectedWorkspaceRevision)throw new TimelineDawWorkspaceConflictError(`DAW workspace revision conflict: expected ${c.expectedWorkspaceRevision}, current ${d.revision}.`);const session=this.session(d.archive,actorId,c.sessionId);const engine=new TimelineOfflineRenderAndExportEngine();const existing=d.archive.renders?.[c.sessionId];if(existing)engine.restoreArchive(existing);let job=engine.createJob({projectId:session.projectId,name:c.name,target:c.target,sourceIds:c.sourceIds,startSample:c.startSample,endSample:c.endSample,sampleRate:c.sampleRate,bitDepth:c.bitDepth,channels:c.channels,format:c.format,normalizePeakDb:c.normalizePeakDb,dither:c.dither,createdBy:actorId});job=engine.validate({jobId:job.id,expectedHead:job.head,validatedBy:actorId});const revision=d.revision+1;await this.store.save({revision,archive:{...d.archive,renders:{...d.archive.renders,[c.sessionId]:engine.exportArchive()}},updatedAt:new Date().toISOString()},d.revision);return{workspaceRevision:revision,job};}
+ private session(archive:any,actorId:string,sessionId:string){const coordinator=new TimelineDawSessionCoordinator();coordinator.restoreArchive(archive);const session=coordinator.get(sessionId);if(!session||session.ownerId!==actorId)throw new Error("DAW render access is limited to its session owner.");return session;}
+}
