@@ -155,6 +155,11 @@ const METADATA_CHILD_LINKS: TitleBarLink[] = [
 
 const TOOLS_CHILD_LINKS: TitleBarLink[] = [
   {
+    label: "DAW Studio",
+    href: "/workspace/daw",
+    detail: "Discover project Studios and open authenticated DAW sessions",
+  },
+  {
     label: "AI Developer Workspace",
     href: "/developer-workspace",
     detail: "Open the standalone coding workspace for project indexing, prevention, investigation, and safe patches",
