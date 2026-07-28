@@ -31,7 +31,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(init?.body && !(init.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       ...init?.headers,
     },
   });
@@ -143,4 +143,39 @@ export function prepareDawRender(input: {
     method: "POST",
     body: JSON.stringify({ action: "prepare", ...input }),
   });
+}
+export type DawRenderSource = {
+  id: string;
+  name: string;
+  uri: string;
+  byteLength: number;
+  checksum: string;
+};
+
+export function uploadDawRenderSource(sessionId: string, file: File): Promise<{ source: DawRenderSource; audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number } }> {
+  const body = new FormData();
+  body.set("sessionId", sessionId);
+  body.set("file", file);
+  return request("/api/timeline/daw-render-sources", { method: "POST", body });
+}
+
+export function executeDawWavRender(input: {
+  sessionId: string;
+  jobId: string;
+  expectedWorkspaceRevision: number;
+}): Promise<{
+  receipt: {
+    workspaceRevision: number;
+    job: TimelineOfflineRenderJob;
+    deliveryUrl: string;
+    progress: Array<{ renderedFrames: number; totalFrames: number; percent: number }>;
+  };
+}> {
+  return request("/api/timeline/daw-renders", {
+    method: "POST",
+    body: JSON.stringify({ action: "execute-wav", ...input }),
+  });
+}
+export function loadDawRenderDelivery(sessionId: string, jobId: string): Promise<{ deliveryUrl: string }> {
+  return request(`/api/timeline/daw-renders?sessionId=${encodeURIComponent(sessionId)}&jobId=${encodeURIComponent(jobId)}`);
 }

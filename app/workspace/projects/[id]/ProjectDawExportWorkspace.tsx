@@ -6,7 +6,7 @@ import type {
   TimelineRenderFormat,
   TimelineRenderTarget,
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
-import { loadDawRenders, prepareDawRender, ProjectDawApiError } from "./projectDawApi";
+import { executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
 import type { DawSession } from "./projectDawTypes";
 
 const field = "rounded-xl border border-white/20 bg-black px-3 py-2 text-white";
@@ -23,9 +23,13 @@ export default function ProjectDawExportWorkspace({
   const [target, setTarget] = useState<TimelineRenderTarget>("mix");
   const [format, setFormat] = useState<TimelineRenderFormat>("wav");
   const [sampleRate, setSampleRate] = useState(48000);
+  const [channels, setChannels] = useState(2);
   const [bitDepth, setBitDepth] = useState<16 | 24 | 32>(24);
   const [durationSeconds, setDurationSeconds] = useState(180);
-  const [sources, setSources] = useState("master");
+  const [sources, setSources] = useState("");
+  const [sourceFiles, setSourceFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [deliveryUrls, setDeliveryUrls] = useState<Record<string, string>>({});
   const [jobs, setJobs] = useState<TimelineOfflineRenderJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<TimelineOfflineRenderJob | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +57,62 @@ export default function ProjectDawExportWorkspace({
 
   useEffect(() => { void load(); }, [load]);
 
+  async function uploadSources() {
+    if (!sourceFiles.length) return;
+    setUploading(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const uploaded = [];
+      for (const file of sourceFiles) {
+        uploaded.push(await uploadDawRenderSource(session.id, file));
+      }
+      const sampleRates = new Set(uploaded.map((item) => item.audio.sampleRate));
+      const channelCounts = new Set(uploaded.map((item) => item.audio.channelCount));
+      if (sampleRates.size !== 1 || channelCounts.size !== 1) {
+        throw new Error("Uploaded WAV sources must share one sample rate and channel count.");
+      }
+      setSampleRate(uploaded[0].audio.sampleRate);
+      setChannels(uploaded[0].audio.channelCount);
+      setDurationSeconds(Math.max(0.001, Math.floor(Math.min(...uploaded.map((item) => item.audio.durationSeconds)) * 1000) / 1000));
+      setSources(uploaded.map((item) => item.source.uri).join(", "));
+      setNotice(`${uploaded.length} private WAV source${uploaded.length === 1 ? "" : "s"} uploaded at ${uploaded[0].audio.sampleRate.toLocaleString()} Hz.`);
+      setSourceFiles([]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "WAV sources could not be uploaded.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function execute(job: TimelineOfflineRenderJob) {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const result = await executeDawWavRender({
+        sessionId: session.id,
+        jobId: job.id,
+        expectedWorkspaceRevision: workspaceRevision,
+      });
+      setJobs((current) => current.map((candidate) =>
+        candidate.id === job.id ? result.receipt.job : candidate));
+      setSelectedJob(result.receipt.job);
+      setDeliveryUrls((current) => ({ ...current, [job.id]: result.receipt.deliveryUrl }));
+      onWorkspaceRevision(result.receipt.workspaceRevision);
+      setNotice(`PCM WAV completed and fingerprinted after ${result.receipt.progress.length} durable progress update${result.receipt.progress.length === 1 ? "" : "s"}.`);
+    } catch (cause) {
+      if (cause instanceof ProjectDawApiError && cause.status === 409) {
+        await load();
+        setNotice("The workspace changed. Render history was reloaded; review it and retry.");
+      } else {
+        setError(cause instanceof Error ? cause.message : "PCM WAV execution failed.");
+        await load();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
   async function prepare() {
     setBusy(true);
     setError(null);
@@ -62,7 +122,7 @@ export default function ProjectDawExportWorkspace({
         sessionId: session.id, expectedWorkspaceRevision: workspaceRevision, name, target,
         sourceIds: sources.split(",").map((value) => value.trim()).filter(Boolean),
         startSample: 0, endSample: Math.round(durationSeconds * sampleRate), sampleRate,
-        bitDepth: format === "mp3" ? 16 : bitDepth, channels: 2, format,
+        bitDepth: format === "mp3" ? 16 : bitDepth, channels, format,
         dither: format === "wav" && bitDepth === 16,
       });
       setJobs((current) => [...current, receipt.receipt.job]);
@@ -81,6 +141,15 @@ export default function ProjectDawExportWorkspace({
     }
   }
 
+  async function refreshDelivery(job: TimelineOfflineRenderJob) {
+    setError(null);
+    try {
+      const result = await loadDawRenderDelivery(session.id, job.id);
+      setDeliveryUrls((current) => ({ ...current, [job.id]: result.deliveryUrl }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Private WAV delivery could not be prepared.");
+    }
+  }
   function downloadManifest(job: TimelineOfflineRenderJob | null) {
     if (!job || job.state !== "validated") return;
     const payload = JSON.stringify({
@@ -100,20 +169,24 @@ export default function ProjectDawExportWorkspace({
     <section className="rounded-3xl border border-white/15 bg-[#080808] p-5 sm:p-7">
       <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">Render &amp; Export</p>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
-        <div><h2 className="text-2xl font-black">Delivery preparation</h2><p className="mt-2 max-w-2xl text-sm text-white/60">Validate and durably save a reproducible mix, stem, or selection render before it reaches an offline audio worker.</p></div>
-        <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-black uppercase text-amber-200">Audio worker not connected</span>
+        <div><h2 className="text-2xl font-black">Delivery preparation</h2><p className="mt-2 max-w-2xl text-sm text-white/60">Upload real WAV sources, validate a reproducible specification, and produce a private fingerprinted PCM delivery.</p></div>
+        <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-black uppercase text-amber-200">PCM WAV worker connected</span>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <input className={field} value={name} onChange={(event) => setName(event.target.value)} aria-label="Export name" />
         <select className={field} value={target} onChange={(event) => setTarget(event.target.value as TimelineRenderTarget)} aria-label="Export target"><option value="mix">Full mix</option><option value="stem">Stems</option><option value="selection">Selection</option></select>
         <select className={field} value={format} onChange={(event) => setFormat(event.target.value as TimelineRenderFormat)} aria-label="Export format"><option value="wav">WAV</option><option value="flac">FLAC</option><option value="mp3">MP3</option></select>
         <select className={field} value={sampleRate} onChange={(event) => setSampleRate(Number(event.target.value))} aria-label="Sample rate"><option value={44100}>44.1 kHz</option><option value={48000}>48 kHz</option><option value={96000}>96 kHz</option></select>
+        <select className={field} value={channels} onChange={(event) => setChannels(Number(event.target.value))} aria-label="Channel count"><option value={1}>Mono</option><option value={2}>Stereo</option></select>
         <select className={field} value={format === "mp3" ? 16 : bitDepth} disabled={format === "mp3"} onChange={(event) => setBitDepth(Number(event.target.value) as 16 | 24 | 32)} aria-label="Bit depth"><option value={16}>16-bit</option><option value={24}>24-bit</option><option value={32}>32-bit float</option></select>
-        <input className={field} type="number" min={1} step={1} value={durationSeconds} onChange={(event) => setDurationSeconds(Number(event.target.value))} aria-label="Duration in seconds" />
-        <input className={`${field} md:col-span-2 xl:col-span-3`} value={sources} onChange={(event) => setSources(event.target.value)} aria-label="Comma-separated render sources" placeholder="master, vocals, drums" />
+        <input className={field} type="number" min={0.001} step={0.001} value={durationSeconds} onChange={(event) => setDurationSeconds(Number(event.target.value))} aria-label="Duration in seconds" />
+        <input className={`${field} md:col-span-2 xl:col-span-3`} value={sources} readOnly aria-label="Private render source identifiers" placeholder="Upload one or more WAV sources below" />
+        <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,audio/wav" onChange={(event) => setSourceFiles(Array.from(event.target.files ?? []))} aria-label="WAV render source files" />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={busy || loading} onClick={() => void prepare()}>{busy ? "Saving…" : "Validate & Save Render"}</button>
+        <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploading…" : "Upload Private WAV Sources"}</button>
+        <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Working…" : "Validate & Save Render"}</button>
+        <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav"} onClick={() => selectedJob && void execute(selectedJob)}>Render PCM WAV</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
       </div>
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
@@ -127,11 +200,14 @@ export default function ProjectDawExportWorkspace({
         <ol className="mt-3 grid gap-2">
           {[...jobs].reverse().map((job) => (
             <li key={job.id}>
-              <button type="button" onClick={() => setSelectedJob(job)} className={`w-full rounded-2xl border p-4 text-left ${selectedJob?.id === job.id ? "border-emerald-300/50 bg-emerald-300/[0.08]" : "border-white/10 bg-white/[0.03]"}`}>
+              <div className={`rounded-2xl border p-4 ${selectedJob?.id === job.id ? "border-emerald-300/50 bg-emerald-300/[0.08]" : "border-white/10 bg-white/[0.03]"}`}>
+                <button type="button" onClick={() => setSelectedJob(job)} className="w-full text-left">
                 <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-black">{job.name}</span><span className="text-xs font-black uppercase text-emerald-200">{job.state}</span></div>
                 <p className="mt-1 text-sm text-white/55">{job.target} · {job.format.toUpperCase()} · {job.sampleRate.toLocaleString()} Hz · {job.bitDepth}-bit · {job.totalFrames.toLocaleString()} frames</p>
-                <p className="mt-1 text-xs text-white/35">{job.id}</p>
-              </button>
+                <p className="mt-1 text-xs text-white/35">{job.id} · {job.renderedFrames.toLocaleString()}/{job.totalFrames.toLocaleString()} frames</p>
+                </button>
+                {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>Download private WAV</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>Create private download link</button> : null}
+              </div>
             </li>
           ))}
         </ol>

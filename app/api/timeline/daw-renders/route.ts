@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { parseTimelineDawRenderCommand } from "@/lib/timeline/TimelineDawRenderApiPolicy";
+import { parseTimelineDawRenderExecutionCommand } from "@/lib/timeline/TimelineDawRenderExecutionApiPolicy";
+import { TimelineDawRenderExecutionService } from "@/lib/timeline/TimelineDawRenderExecutionService";
+import { TimelineDawRenderSourceMixer } from "@/lib/timeline/TimelineDawRenderSourceMixer";
+import { TimelineDawRenderSupabaseSourceStore } from "@/lib/timeline/TimelineDawRenderSourceStore";
+import { TimelineDawRenderSupabaseArtifactStore } from "@/lib/timeline/TimelineDawRenderSupabaseArtifactStore";
 import { TimelineDawRenderService } from "@/lib/timeline/TimelineDawRenderService";
 import { createTimelineDawWorkspaceStore } from "@/lib/timeline/TimelineDawWorkspaceServer";
 import { TimelineDawWorkspaceConflictError } from "@/lib/timeline/TimelineDawWorkspaceService";
@@ -32,7 +37,7 @@ async function authorize(request: NextRequest) {
   );
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user?.id) throw new ApiError("Supabase session is invalid or expired.", 401);
-  return { id: data.user.id, token };
+  return { id: data.user.id, token, client };
 }
 function failure(error: unknown) {
   const status = error instanceof ApiError ? error.status
@@ -48,15 +53,58 @@ export async function GET(request: NextRequest) {
     const sessionId = request.nextUrl.searchParams.get("sessionId")?.trim();
     if (!sessionId) throw new ApiError("sessionId is required.", 400);
     const service = new TimelineDawRenderService(createTimelineDawWorkspaceStore(user.id, user.token));
-    return NextResponse.json(await service.snapshot(user.id, sessionId), {
-      headers: { "Cache-Control": "no-store" },
-    });
+    const snapshot = await service.snapshot(user.id, sessionId);
+    const jobId = request.nextUrl.searchParams.get("jobId")?.trim();
+    if (jobId) {
+      const job = snapshot.jobs.find((candidate) => candidate.id === jobId);
+      if (!job || job.state !== "completed" || !job.outputUri || !job.checksum) {
+        throw new ApiError("Completed DAW render artifact was not found.", 404);
+      }
+      const deliveryUrl = await new TimelineDawRenderSupabaseArtifactStore(user.client, user.id)
+        .createDeliveryUrl({
+          ownerId: user.id,
+          sessionId,
+          jobId: job.id,
+          uri: job.outputUri,
+          byteLength: 0,
+          checksum: job.checksum,
+          contentType: "audio/wav",
+        });
+      return NextResponse.json({ deliveryUrl }, { headers: { "Cache-Control": "no-store" } });
+    }
+    return NextResponse.json(snapshot, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return failure(error); }
 }
 export async function POST(request: NextRequest) {
   try {
     const user = await authorize(request);
-    const command = parseTimelineDawRenderCommand(await request.json());
+    const raw = await request.json();
+    if ((raw as { action?: unknown })?.action === "execute-wav") {
+      const command = parseTimelineDawRenderExecutionCommand(raw);
+      const workspaceStore = createTimelineDawWorkspaceStore(user.id, user.token);
+      const snapshot = await new TimelineDawRenderService(workspaceStore)
+        .snapshot(user.id, command.sessionId);
+      const job = snapshot.jobs.find((candidate) => candidate.id === command.jobId);
+      if (!job) throw new ApiError("DAW render job was not found.", 404);
+      const sourceStore = new TimelineDawRenderSupabaseSourceStore(user.client, user.id);
+      const channels = await new TimelineDawRenderSourceMixer(sourceStore).resolve(job, user.id);
+      const receipt = await new TimelineDawRenderExecutionService(
+        workspaceStore,
+        new TimelineDawRenderSupabaseArtifactStore(user.client, user.id),
+      ).execute({
+        actorId: user.id,
+        sessionId: command.sessionId,
+        jobId: command.jobId,
+        expectedWorkspaceRevision: command.expectedWorkspaceRevision,
+        channels,
+        workerId: "timeline-pcm-wav-worker-v1",
+      });
+      return NextResponse.json({ receipt }, {
+        status: 201,
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
+    const command = parseTimelineDawRenderCommand(raw);
     const service = new TimelineDawRenderService(createTimelineDawWorkspaceStore(user.id, user.token));
     return NextResponse.json(
       { receipt: await service.execute(command, user.id) },
