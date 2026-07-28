@@ -1625,6 +1625,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function writeAutomationPoint() {
+    if (comparingSnapshot || comparedMixerCheckpointId) return;
     const trackId = lanes.find((lane) => lane.selected)?.trackId ?? session.songId;
     setAutomation((value) => addTimelineAutomationPoint(value, {
       trackId,
@@ -1716,7 +1717,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     event: ReactPointerEvent<HTMLButtonElement>,
     point: TimelineDawAutomationPoint,
   ) {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || comparingSnapshot || comparedMixerCheckpointId) return;
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -1735,6 +1736,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   }
 
   function continueAutomationDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (comparingSnapshot || comparedMixerCheckpointId) return;
     const drag = automationDragRef.current;
     if (!drag) return;
     const seconds = snapTimelineSeconds(
@@ -2029,17 +2031,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </span>
         <button
           type="button"
+          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
           onClick={writeAutomationPoint}
-          className="rounded-lg bg-emerald-300 px-3 py-2 text-xs font-black text-black"
+          className="rounded-lg bg-emerald-300 px-3 py-2 text-xs font-black text-black disabled:opacity-30"
         >
           Write at Playhead
         </button>
         {selectedAutomation ? (
           <button
             type="button"
-            onClick={() => setAutomation((value) =>
-              archiveTimelineAutomationPoint(value, selectedAutomation.id))}
-            className="rounded-lg border border-amber-300/35 px-3 py-2 text-xs font-black text-amber-100"
+            disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+            onClick={() => {
+              if (comparingSnapshot || comparedMixerCheckpointId) return;
+              setAutomation((value) =>
+                archiveTimelineAutomationPoint(value, selectedAutomation.id));
+            }}
+            className="rounded-lg border border-amber-300/35 px-3 py-2 text-xs font-black text-amber-100 disabled:opacity-30"
           >
             Remove Point
           </button>
@@ -4259,11 +4266,12 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                         ) : null}
                         <button
                           type="button"
+                          disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
                           onPointerDown={(event) => startAutomationDrag(event, point)}
                           onPointerMove={continueAutomationDrag}
                           onPointerUp={finishAutomationDrag}
                           onPointerCancel={finishAutomationDrag}
-                          className={`absolute z-[12] h-3 w-3 touch-none -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full border ${
+                          className={`absolute z-[12] h-3 w-3 touch-none -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full border disabled:cursor-not-allowed disabled:opacity-40 ${
                             point.selected
                               ? "border-white bg-emerald-300 ring-2 ring-emerald-300/30"
                               : "border-emerald-100 bg-emerald-500"
