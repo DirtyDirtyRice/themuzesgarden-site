@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../../../components/AuthProvider";
 import ProjectDawTimeline from "../../ProjectDawTimeline";
+import ProjectDawExportWorkspace from "../../ProjectDawExportWorkspace";
 import ProjectDawTransport from "../../ProjectDawTransport";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
@@ -189,6 +190,8 @@ export default function ProjectDawSessionPage() {
       />
 
       <ProjectDawTimeline session={session} />
+
+      <ProjectDawExportWorkspace session={session} actorId={user.id} />
 
       <section>
         <div className="mb-3">
