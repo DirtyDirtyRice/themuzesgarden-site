@@ -1,6 +1,11 @@
 import { requireProjectSupabase } from "./projectSupabase";
 import type { DawSession, DawSessionAction, DawSnapshot } from "./projectDawTypes";
 import type {
+  TimelineOfflineRenderJob,
+  TimelineRenderFormat,
+  TimelineRenderTarget,
+} from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
+import type {
   TimelineTransportEvent,
   TimelineTransportSynchronization,
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
@@ -107,5 +112,35 @@ export function changeDawTransport(input: {
     method: "POST",
     keepalive: true,
     body: JSON.stringify(input),
+  });
+}
+
+export type DawRenderSnapshot = {
+  workspaceRevision: number;
+  jobs: TimelineOfflineRenderJob[];
+};
+
+export function loadDawRenders(sessionId: string): Promise<DawRenderSnapshot> {
+  return request(`/api/timeline/daw-renders?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function prepareDawRender(input: {
+  sessionId: string;
+  expectedWorkspaceRevision: number;
+  name: string;
+  target: TimelineRenderTarget;
+  sourceIds: string[];
+  startSample: number;
+  endSample: number;
+  sampleRate: number;
+  bitDepth: 16 | 24 | 32;
+  channels: number;
+  format: TimelineRenderFormat;
+  normalizePeakDb?: number | null;
+  dither?: boolean;
+}): Promise<{ receipt: { workspaceRevision: number; job: TimelineOfflineRenderJob } }> {
+  return request("/api/timeline/daw-renders", {
+    method: "POST",
+    body: JSON.stringify({ action: "prepare", ...input }),
   });
 }

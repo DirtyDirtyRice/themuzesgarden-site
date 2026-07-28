@@ -191,7 +191,11 @@ export default function ProjectDawSessionPage() {
 
       <ProjectDawTimeline session={session} />
 
-      <ProjectDawExportWorkspace session={session} actorId={user.id} />
+      <ProjectDawExportWorkspace
+        session={session}
+        workspaceRevision={snapshot.workspaceRevision}
+        onWorkspaceRevision={handleWorkspaceRevision}
+      />
 
       <section>
         <div className="mb-3">
