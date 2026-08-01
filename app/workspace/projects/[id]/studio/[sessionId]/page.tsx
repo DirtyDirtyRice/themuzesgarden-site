@@ -9,6 +9,7 @@ import ProjectDawExportWorkspace from "../../ProjectDawExportWorkspace";
 import ProjectDawRecoveryWorkspace from "../../ProjectDawRecoveryWorkspace";
 import ProjectDawTransport from "../../ProjectDawTransport";
 import ProjectDawDeviceDiagnostics from "../../ProjectDawDeviceDiagnostics";
+import ProjectDawRecordingWorkspace from "../../ProjectDawRecordingWorkspace";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -192,6 +193,7 @@ export default function ProjectDawSessionPage() {
       />
 
       <ProjectDawDeviceDiagnostics />
+      <ProjectDawRecordingWorkspace session={session} />
 
       <ProjectDawTimeline session={session} />
       <ProjectDawRecoveryWorkspace

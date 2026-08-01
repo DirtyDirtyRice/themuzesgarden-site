@@ -8,6 +8,10 @@ import type {
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
 import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
 import ProjectDawInterchangeWorkspace from "./ProjectDawInterchangeWorkspace";
+import {
+  DAW_RECORDED_SOURCE_EVENT,
+  type DawRecordedSourceEventDetail,
+} from "./ProjectDawRecordingWorkspace";
 import type { DawSession } from "./projectDawTypes";
 
 const field = "rounded-xl border border-white/20 bg-black px-3 py-2 text-white";
@@ -57,6 +61,23 @@ export default function ProjectDawExportWorkspace({
   }, [onWorkspaceRevision, session.id]);
 
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<DawRecordedSourceEventDetail>).detail;
+      if (!detail?.source?.uri) return;
+      setSources((current) => {
+        const values = current.split(",").map((value) => value.trim()).filter(Boolean);
+        return [...new Set([...values, detail.source.uri])].join(", ");
+      });
+      setSampleRate(detail.audio.sampleRate);
+      setChannels(detail.audio.channelCount);
+      setDurationSeconds(Math.max(0.001, Math.floor(detail.audio.durationSeconds * 1000) / 1000));
+      setNotice("Recorded WAV was added to the private render sources.");
+      setError(null);
+    };
+    window.addEventListener(DAW_RECORDED_SOURCE_EVENT, receive);
+    return () => window.removeEventListener(DAW_RECORDED_SOURCE_EVENT, receive);
+  }, []);
 
   async function uploadSources() {
     if (!sourceFiles.length) return;
