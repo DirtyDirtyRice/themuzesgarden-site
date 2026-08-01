@@ -8,6 +8,7 @@ import {
 import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Encoder";
 import { uploadDawRenderSource, type DawRenderSource } from "./projectDawApi";
 import {
+  createDawRecordingTakeAudition,
   deleteDawRecordingTake,
   loadDawRecordingTakes,
   preferDawRecordingTake,
@@ -39,6 +40,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [outputFormat, setOutputFormat] = useState<"wav" | "mp3">("wav");
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [auditionUrls, setAuditionUrls] = useState<Record<string, string>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -210,6 +212,19 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     }
   }
 
+  async function auditionTake(take: UploadedTake) {
+    setUploading(true);
+    setError(null);
+    try {
+      const result = await createDawRecordingTakeAudition(session.id, take.id);
+      setAuditionUrls((current) => ({ ...current, [take.id]: result.auditionUrl }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Recording audition could not be prepared.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function preferTake(take: UploadedTake) {
     setUploading(true);
     setError(null);
@@ -312,7 +327,11 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
               {take.mp3Url ? (
                 <a className="mt-2 inline-block text-sm font-black text-rose-300 hover:text-rose-200" href={take.mp3Url} download={take.name.replace(/\.wav$/i, ".mp3")}>Download MP3 copy</a>
               ) : null}
+              {auditionUrls[take.id] ? (
+                <audio className="mt-3 w-full" controls preload="metadata" src={auditionUrls[take.id]} />
+              ) : null}
               <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" className={button} disabled={uploading} onClick={() => void auditionTake(take)}>{auditionUrls[take.id] ? "Refresh Audition" : "Audition Take"}</button>
                 <button type="button" className={button} disabled={uploading || take.preferred} onClick={() => void preferTake(take)}>Use as Preferred</button>
                 <button type="button" className={button} disabled={uploading} onClick={() => void deleteTake(take)}>Delete Take</button>
               </div>

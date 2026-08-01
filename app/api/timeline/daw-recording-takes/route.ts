@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { createTimelineDawWorkspaceServer } from "@/lib/timeline/TimelineDawWorkspaceServer";
+import {
+  resolveTimelineDawTakeStoragePath,
+  TIMELINE_DAW_TAKE_BUCKET,
+  TIMELINE_DAW_TAKE_DELIVERY_SECONDS,
+} from "@/lib/timeline/TimelineDawRecordingTakeDeliveryPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -143,6 +148,33 @@ export async function POST(request: NextRequest) {
         .single();
       if (error || !data) throw new ApiError("Recording take was not found.", 404);
       return NextResponse.json({ take: take(data) }, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (body.action === "audition") {
+      if (!body.takeId) throw new ApiError("takeId is required.", 400);
+      const { data, error } = await user.client.from(TABLE)
+        .select("uri")
+        .eq("owner_id", user.id)
+        .eq("session_id", sessionId)
+        .eq("id", body.takeId)
+        .single();
+      if (error || !data) throw new ApiError("Recording take was not found.", 404);
+      let path: string;
+      try {
+        path = resolveTimelineDawTakeStoragePath(String(data.uri), user.id, sessionId);
+      } catch (cause) {
+        throw new ApiError(cause instanceof Error ? cause.message : "Recording source path is invalid.", 400);
+      }
+      const { data: signed, error: signedError } = await user.client.storage
+        .from(TIMELINE_DAW_TAKE_BUCKET)
+        .createSignedUrl(path, TIMELINE_DAW_TAKE_DELIVERY_SECONDS);
+      if (signedError || !signed?.signedUrl) {
+        throw new ApiError(`Recording audition could not be prepared: ${signedError?.message ?? "signed URL missing"}`, 500);
+      }
+      return NextResponse.json(
+        { auditionUrl: signed.signedUrl, expiresInSeconds: TIMELINE_DAW_TAKE_DELIVERY_SECONDS },
+        { headers: { "Cache-Control": "no-store" } },
+      );
     }
 
     if (body.action === "delete") {

@@ -192,6 +192,16 @@ export function preferDawRecordingTake(sessionId: string, takeId: string): Promi
   });
 }
 
+export function createDawRecordingTakeAudition(
+  sessionId: string,
+  takeId: string,
+): Promise<{ auditionUrl: string; expiresInSeconds: number }> {
+  return request("/api/timeline/daw-recording-takes", {
+    method: "POST",
+    body: JSON.stringify({ action: "audition", sessionId, takeId }),
+  });
+}
+
 export function deleteDawRecordingTake(sessionId: string, takeId: string): Promise<{ deletedTakeId: string }> {
   return request("/api/timeline/daw-recording-takes", {
     method: "POST",
