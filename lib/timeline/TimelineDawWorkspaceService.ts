@@ -7,6 +7,7 @@ import {
 import type { TimelineTransportArchive } from "./TimelineTransportAndSynchronizationEngine";
 import type { TimelineOfflineRenderArchive } from "./TimelineOfflineRenderAndExportEngine";
 import type { TimelineInterchangeExportArchive } from "./TimelineInterchangeExportEngine";
+import type { TimelineDawRecoveryCheckpoint } from "./TimelineDawRecoveryCheckpointStore";
 
 export type TimelineDawWorkspaceDocument = {
   revision: number;
@@ -14,6 +15,7 @@ export type TimelineDawWorkspaceDocument = {
     transports?: Record<TimelineId, TimelineTransportArchive>;
     renders?: Record<TimelineId, TimelineOfflineRenderArchive>;
     interchange?: Record<TimelineId, TimelineInterchangeExportArchive>;
+    recovery?: Record<TimelineId, TimelineDawRecoveryCheckpoint[]>;
   };
   updatedAt: string;
 };
@@ -170,6 +172,7 @@ export class TimelineDawWorkspaceService {
         transports: document?.archive.transports,
         renders: document?.archive.renders,
         interchange: document?.archive.interchange,
+        recovery: document?.archive.recovery,
       },
       updatedAt: recordedAt,
     }, currentRevision);

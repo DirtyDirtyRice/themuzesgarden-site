@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../../../components/AuthProvider";
 import ProjectDawTimeline from "../../ProjectDawTimeline";
 import ProjectDawExportWorkspace from "../../ProjectDawExportWorkspace";
+import ProjectDawRecoveryWorkspace from "../../ProjectDawRecoveryWorkspace";
 import ProjectDawTransport from "../../ProjectDawTransport";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
@@ -190,6 +191,12 @@ export default function ProjectDawSessionPage() {
       />
 
       <ProjectDawTimeline session={session} />
+      <ProjectDawRecoveryWorkspace
+        session={session}
+        workspaceRevision={snapshot.workspaceRevision}
+        onWorkspaceRevision={handleWorkspaceRevision}
+      />
+
 
       <ProjectDawExportWorkspace
         session={session}

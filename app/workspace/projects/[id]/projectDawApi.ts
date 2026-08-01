@@ -6,6 +6,7 @@ import type {
   TimelineRenderTarget,
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
 import type { TimelineInterchangePackage } from "../../../../lib/timeline/TimelineInterchangeExportEngine";
+import type { TimelineDawRecoveryCheckpoint } from "../../../../lib/timeline/TimelineDawRecoveryCheckpointStore";
 import type {
   TimelineTransportEvent,
   TimelineTransportSynchronization,
@@ -233,4 +234,35 @@ export function loadDawInterchangeDelivery(
   return request(
     `/api/timeline/daw-interchange?sessionId=${encodeURIComponent(sessionId)}&packageId=${encodeURIComponent(packageId)}`,
   );
+}
+
+export type DawRecoverySnapshot = {
+  workspaceRevision: number;
+  checkpoints: TimelineDawRecoveryCheckpoint[];
+};
+
+export function loadDawRecovery(sessionId: string): Promise<DawRecoverySnapshot> {
+  return request(`/api/timeline/daw-recovery?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function captureDawRecovery(input: {
+  sessionId: string;
+  label: string;
+  expectedWorkspaceRevision: number;
+}): Promise<{ receipt: { workspaceRevision: number; checkpoint: TimelineDawRecoveryCheckpoint } }> {
+  return request("/api/timeline/daw-recovery", {
+    method: "POST",
+    body: JSON.stringify({ action: "capture", ...input }),
+  });
+}
+
+export function restoreDawRecovery(input: {
+  sessionId: string;
+  checkpointId: string;
+  expectedWorkspaceRevision: number;
+}): Promise<{ receipt: { workspaceRevision: number; checkpoint: TimelineDawRecoveryCheckpoint } }> {
+  return request("/api/timeline/daw-recovery", {
+    method: "POST",
+    body: JSON.stringify({ action: "restore", ...input }),
+  });
 }
