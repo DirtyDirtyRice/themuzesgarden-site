@@ -161,6 +161,44 @@ export function uploadDawRenderSource(sessionId: string, file: File): Promise<{ 
   return request("/api/timeline/daw-render-sources", { method: "POST", body });
 }
 
+export type DawRecordingTake = {
+  id: string;
+  sessionId: string;
+  source: DawRenderSource;
+  name: string;
+  audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number };
+  preferred: boolean;
+  createdAt: string;
+};
+
+export function loadDawRecordingTakes(sessionId: string): Promise<{ takes: DawRecordingTake[] }> {
+  return request(`/api/timeline/daw-recording-takes?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function registerDawRecordingTake(
+  sessionId: string,
+  recorded: { source: DawRenderSource; audio: DawRecordingTake["audio"] },
+): Promise<{ take: DawRecordingTake }> {
+  return request("/api/timeline/daw-recording-takes", {
+    method: "POST",
+    body: JSON.stringify({ action: "register", sessionId, ...recorded }),
+  });
+}
+
+export function preferDawRecordingTake(sessionId: string, takeId: string): Promise<{ take: DawRecordingTake }> {
+  return request("/api/timeline/daw-recording-takes", {
+    method: "POST",
+    body: JSON.stringify({ action: "prefer", sessionId, takeId }),
+  });
+}
+
+export function deleteDawRecordingTake(sessionId: string, takeId: string): Promise<{ deletedTakeId: string }> {
+  return request("/api/timeline/daw-recording-takes", {
+    method: "POST",
+    body: JSON.stringify({ action: "delete", sessionId, takeId }),
+  });
+}
+
 export function executeDawWavRender(input: {
   sessionId: string;
   jobId: string;
