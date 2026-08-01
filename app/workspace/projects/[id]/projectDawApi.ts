@@ -179,3 +179,21 @@ export function executeDawWavRender(input: {
 export function loadDawRenderDelivery(sessionId: string, jobId: string): Promise<{ deliveryUrl: string }> {
   return request(`/api/timeline/daw-renders?sessionId=${encodeURIComponent(sessionId)}&jobId=${encodeURIComponent(jobId)}`);
 }
+export function executeDawStemPackage(input: {
+  sessionId: string;
+  jobId: string;
+  expectedWorkspaceRevision: number;
+}): Promise<{
+  receipt: {
+    workspaceRevision: number;
+    job: TimelineOfflineRenderJob;
+    deliveryUrl: string;
+    progressUpdates: number;
+    stems: Array<{ sourceId: string; name: string; byteLength: number; checksum: string }>;
+  };
+}> {
+  return request("/api/timeline/daw-renders", {
+    method: "POST",
+    body: JSON.stringify({ action: "execute-stems", ...input }),
+  });
+}

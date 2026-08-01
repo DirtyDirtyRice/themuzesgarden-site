@@ -6,7 +6,7 @@ import type {
   TimelineRenderFormat,
   TimelineRenderTarget,
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
-import { executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
+import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
 import type { DawSession } from "./projectDawTypes";
 
 const field = "rounded-xl border border-white/20 bg-black px-3 py-2 text-white";
@@ -90,17 +90,26 @@ export default function ProjectDawExportWorkspace({
     setError(null);
     setNotice(null);
     try {
-      const result = await executeDawWavRender({
+      const command = {
         sessionId: session.id,
         jobId: job.id,
         expectedWorkspaceRevision: workspaceRevision,
-      });
+      };
+      const result = job.target === "stem"
+        ? await executeDawStemPackage(command)
+        : await executeDawWavRender(command);
       setJobs((current) => current.map((candidate) =>
         candidate.id === job.id ? result.receipt.job : candidate));
       setSelectedJob(result.receipt.job);
       setDeliveryUrls((current) => ({ ...current, [job.id]: result.receipt.deliveryUrl }));
       onWorkspaceRevision(result.receipt.workspaceRevision);
-      setNotice(`PCM WAV completed and fingerprinted after ${result.receipt.progress.length} durable progress update${result.receipt.progress.length === 1 ? "" : "s"}.`);
+      const updates = "progress" in result.receipt
+        ? result.receipt.progress.length
+        : result.receipt.progressUpdates;
+      const packageDetail = "stems" in result.receipt
+        ? ` ${result.receipt.stems.length} fingerprinted stems were packaged.`
+        : "";
+      setNotice(`PCM rendering completed after ${updates} durable progress update${updates === 1 ? "" : "s"}.${packageDetail}`);
     } catch (cause) {
       if (cause instanceof ProjectDawApiError && cause.status === 409) {
         await load();
@@ -155,7 +164,7 @@ export default function ProjectDawExportWorkspace({
     const payload = JSON.stringify({
       schema: "the-muzes-garden/render-manifest/v1", sessionId: session.id,
       sessionRevision: session.revision, preparedAt: new Date().toISOString(),
-      render: job, audioWorkerStatus: "not-connected",
+      render: job, audioWorkerStatus: "connected",
     }, null, 2);
     const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
     const link = document.createElement("a");
@@ -186,7 +195,7 @@ export default function ProjectDawExportWorkspace({
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploading…" : "Upload Private WAV Sources"}</button>
         <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Working…" : "Validate & Save Render"}</button>
-        <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav"} onClick={() => selectedJob && void execute(selectedJob)}>Render PCM WAV</button>
+        <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav"} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
       </div>
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
@@ -206,7 +215,7 @@ export default function ProjectDawExportWorkspace({
                 <p className="mt-1 text-sm text-white/55">{job.target} · {job.format.toUpperCase()} · {job.sampleRate.toLocaleString()} Hz · {job.bitDepth}-bit · {job.totalFrames.toLocaleString()} frames</p>
                 <p className="mt-1 text-xs text-white/35">{job.id} · {job.renderedFrames.toLocaleString()}/{job.totalFrames.toLocaleString()} frames</p>
                 </button>
-                {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>Download private WAV</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>Create private download link</button> : null}
+                {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>{job.target === "stem" ? "Download private stem ZIP" : "Download private WAV"}</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>{job.target === "stem" ? "Create private ZIP link" : "Create private WAV link"}</button> : null}
               </div>
             </li>
           ))}
