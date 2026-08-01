@@ -6,6 +6,7 @@ import {
   encodeTimelineDawPcmWav,
 } from "../../../../lib/timeline/TimelineDawPcmCapture";
 import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Encoder";
+import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
 import { uploadDawRenderSource, type DawRenderSource } from "./projectDawApi";
 import {
   createDawRecordingTakeAudition,
@@ -47,7 +48,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const processorRef = useRef<AudioNode | null>(null);
   const silenceRef = useRef<GainNode | null>(null);
   const captureRef = useRef<TimelineDawPcmCaptureBuffer | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -118,10 +119,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         channelCount,
         context.sampleRate * 60 * 30,
       );
-      const processor = context.createScriptProcessor(4096, channelCount, channelCount);
+      const legacyProcessor = context.createScriptProcessor(4096, channelCount, channelCount);
       const silence = context.createGain();
       silence.gain.value = 0;
-      processor.onaudioprocess = (event) => {
+      legacyProcessor.onaudioprocess = (event) => {
         try {
           const channels = Array.from({ length: channelCount }, (_, channel) =>
             event.inputBuffer.numberOfChannels > channel
@@ -132,6 +133,30 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           captureErrorRef.current = cause instanceof Error ? cause : new Error("PCM capture failed.");
         }
       };
+      let processor: AudioNode = legacyProcessor;
+      if (context.audioWorklet && typeof AudioWorkletNode !== "undefined") {
+        try {
+          await context.audioWorklet.addModule("/daw-pcm-capture-worklet.js");
+          const worklet = new AudioWorkletNode(context, "timeline-daw-pcm-capture", {
+            numberOfInputs: 1,
+            numberOfOutputs: 1,
+            outputChannelCount: [channelCount],
+            channelCount,
+            channelCountMode: "explicit",
+            processorOptions: { channelCount },
+          });
+          worklet.port.onmessage = (event: MessageEvent<unknown>) => {
+            try {
+              capture.append(parseTimelineDawCaptureWorkletMessage(event.data, channelCount));
+            } catch (cause) {
+              captureErrorRef.current = cause instanceof Error ? cause : new Error("PCM worklet message failed.");
+            }
+          };
+          processor = worklet;
+        } catch {
+          processor = legacyProcessor;
+        }
+      }
       source.connect(processor);
       processor.connect(silence);
       silence.connect(context.destination);
