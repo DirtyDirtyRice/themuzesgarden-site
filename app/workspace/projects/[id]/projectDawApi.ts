@@ -5,6 +5,7 @@ import type {
   TimelineRenderFormat,
   TimelineRenderTarget,
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
+import type { TimelineInterchangePackage } from "../../../../lib/timeline/TimelineInterchangeExportEngine";
 import type {
   TimelineTransportEvent,
   TimelineTransportSynchronization,
@@ -196,4 +197,40 @@ export function executeDawStemPackage(input: {
     method: "POST",
     body: JSON.stringify({ action: "execute-stems", ...input }),
   });
+}
+export type DawInterchangeSnapshot = {
+  workspaceRevision: number;
+  packages: TimelineInterchangePackage[];
+};
+
+export function loadDawInterchange(sessionId: string): Promise<DawInterchangeSnapshot> {
+  return request(`/api/timeline/daw-interchange?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function createDawInterchange(input: {
+  sessionId: string;
+  jobIds: string[];
+  name: string;
+  destination: string;
+  expectedWorkspaceRevision: number;
+}): Promise<{
+  receipt: {
+    workspaceRevision: number;
+    package: TimelineInterchangePackage;
+    deliveryUrl: string;
+  };
+}> {
+  return request("/api/timeline/daw-interchange", {
+    method: "POST",
+    body: JSON.stringify({ action: "create", ...input }),
+  });
+}
+
+export function loadDawInterchangeDelivery(
+  sessionId: string,
+  packageId: string,
+): Promise<{ deliveryUrl: string }> {
+  return request(
+    `/api/timeline/daw-interchange?sessionId=${encodeURIComponent(sessionId)}&packageId=${encodeURIComponent(packageId)}`,
+  );
 }

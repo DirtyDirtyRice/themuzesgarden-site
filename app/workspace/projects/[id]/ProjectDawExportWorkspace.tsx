@@ -7,6 +7,7 @@ import type {
   TimelineRenderTarget,
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
 import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
+import ProjectDawInterchangeWorkspace from "./ProjectDawInterchangeWorkspace";
 import type { DawSession } from "./projectDawTypes";
 
 const field = "rounded-xl border border-white/20 bg-black px-3 py-2 text-white";
@@ -221,6 +222,12 @@ export default function ProjectDawExportWorkspace({
           ))}
         </ol>
       </div>
+      <ProjectDawInterchangeWorkspace
+        session={session}
+        jobs={jobs}
+        workspaceRevision={workspaceRevision}
+        onWorkspaceRevision={onWorkspaceRevision}
+      />
     </section>
   );
 }

@@ -6,12 +6,14 @@ import {
 } from "./TimelineDawSessionCoordinator";
 import type { TimelineTransportArchive } from "./TimelineTransportAndSynchronizationEngine";
 import type { TimelineOfflineRenderArchive } from "./TimelineOfflineRenderAndExportEngine";
+import type { TimelineInterchangeExportArchive } from "./TimelineInterchangeExportEngine";
 
 export type TimelineDawWorkspaceDocument = {
   revision: number;
   archive: TimelineDawSessionArchive & {
     transports?: Record<TimelineId, TimelineTransportArchive>;
     renders?: Record<TimelineId, TimelineOfflineRenderArchive>;
+    interchange?: Record<TimelineId, TimelineInterchangeExportArchive>;
   };
   updatedAt: string;
 };
@@ -167,6 +169,7 @@ export class TimelineDawWorkspaceService {
         ...coordinator.exportArchive(),
         transports: document?.archive.transports,
         renders: document?.archive.renders,
+        interchange: document?.archive.interchange,
       },
       updatedAt: recordedAt,
     }, currentRevision);
