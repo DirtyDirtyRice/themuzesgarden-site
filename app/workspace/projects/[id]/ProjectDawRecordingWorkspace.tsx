@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/timeline/TimelineDawPcmCapture";
 import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Encoder";
 import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
+import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
 import { uploadDawRenderSource, type DawRenderSource } from "./projectDawApi";
 import {
   createDawRecordingTakeAudition,
@@ -42,6 +43,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [auditionUrls, setAuditionUrls] = useState<Record<string, string>>({});
+  const [inputPeakDb, setInputPeakDb] = useState(-96);
+  const [inputClipped, setInputClipped] = useState(false);
+  const [captureMode, setCaptureMode] = useState<"worklet" | "compatibility" | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +59,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const startedAtRef = useRef(0);
   const captureErrorRef = useRef<Error | null>(null);
   const mp3UrlsRef = useRef<string[]>([]);
+  const meterUpdatedAtRef = useRef(0);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -93,10 +98,24 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     mp3UrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
   }, []);
 
+  function appendCaptureBlock(capture: TimelineDawPcmCaptureBuffer, channels: Float32Array[]) {
+    capture.append(channels);
+    const level = analyzeTimelineDawInputLevel(channels);
+    if (level.clipped) setInputClipped(true);
+    const now = performance.now();
+    if (now - meterUpdatedAtRef.current < 100) return;
+    meterUpdatedAtRef.current = now;
+    setInputPeakDb(level.peakDbfs);
+  }
+
   async function startRecording() {
     if (recording || uploading) return;
     setError(null);
     captureErrorRef.current = null;
+    setInputPeakDb(-96);
+    setInputClipped(false);
+    setCaptureMode("compatibility");
+    meterUpdatedAtRef.current = 0;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -128,7 +147,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
             event.inputBuffer.numberOfChannels > channel
               ? new Float32Array(event.inputBuffer.getChannelData(channel))
               : new Float32Array(event.inputBuffer.length));
-          capture.append(channels);
+          appendCaptureBlock(capture, channels);
         } catch (cause) {
           captureErrorRef.current = cause instanceof Error ? cause : new Error("PCM capture failed.");
         }
@@ -147,12 +166,13 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           });
           worklet.port.onmessage = (event: MessageEvent<unknown>) => {
             try {
-              capture.append(parseTimelineDawCaptureWorkletMessage(event.data, channelCount));
+              appendCaptureBlock(capture, parseTimelineDawCaptureWorkletMessage(event.data, channelCount));
             } catch (cause) {
               captureErrorRef.current = cause instanceof Error ? cause : new Error("PCM worklet message failed.");
             }
           };
           processor = worklet;
+          setCaptureMode("worklet");
         } catch {
           processor = legacyProcessor;
         }
@@ -337,6 +357,23 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <button type="button" className={button} disabled={!recording} onClick={() => void stopRecording()}>Stop &amp; Save</button>
         <button type="button" className={button} disabled={recording || uploading} onClick={() => void scanDevices()}>Rescan Inputs</button>
       </div>
+      {captureMode ? (
+        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.04] p-3">
+          <div className="flex items-center justify-between gap-3 text-xs font-black uppercase tracking-wide">
+            <span>Input level</span>
+            <span className={inputClipped ? "text-red-300" : inputPeakDb > -6 ? "text-amber-200" : "text-emerald-200"}>
+              {inputClipped ? "Clipping detected" : `${inputPeakDb.toFixed(1)} dBFS`} ? {captureMode === "worklet" ? "AudioWorklet" : "Compatibility"}
+            </span>
+          </div>
+          <div className="mt-2 h-3 overflow-hidden rounded-full bg-black">
+            <div
+              className={`h-full transition-[width] duration-100 ${inputClipped ? "bg-red-400" : inputPeakDb > -6 ? "bg-amber-300" : "bg-emerald-400"}`}
+              style={{ width: `${Math.max(0, Math.min(100, ((inputPeakDb + 60) / 60) * 100))}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-white/45">Aim for peaks between -18 and -6 dBFS. Lower the interface gain if clipping is detected.</p>
+        </div>
+      ) : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {takes.length ? (
         <ol className="mt-5 grid gap-2">
