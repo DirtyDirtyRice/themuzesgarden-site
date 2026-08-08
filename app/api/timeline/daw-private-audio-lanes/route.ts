@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { createTimelineDawWorkspaceServer } from "@/lib/timeline/TimelineDawWorkspaceServer";
 import { parseTimelineDawPrivateAudioLane } from "@/lib/timeline/TimelineDawPrivateAudioLanePolicy";
+import { parseTimelineDawPrivateLaneMix } from "@/lib/timeline/TimelineDawPrivateLaneMixerPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +45,7 @@ function lane(row: Record<string, unknown>, playbackUrl: string) {
     source: { id: String(row.source_id), uri: String(row.source_uri), checksum: String(row.source_checksum) },
     audio: { sampleRate: Number(row.sample_rate), channelCount: Number(row.channel_count), frameCount: Number(row.frame_count), durationSeconds: Number(row.duration_seconds) },
     timelineStartSeconds: Number(row.timeline_start_seconds),
+    mix: { muted: Boolean(row.muted), soloed: Boolean(row.soloed), gain: Number(row.gain), pan: Number(row.pan) },
     provenance: row.comp_id ? { compId: String(row.comp_id), renderChecksum: String(row.comp_render_checksum) } : null,
     playbackUrl, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
   };
@@ -89,6 +91,18 @@ export async function POST(request: NextRequest) {
       if (error || !data) throw new ApiError(`Private audio lane could not be saved: ${error?.message ?? "missing row"}`, 500);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, input.sourceUri)) }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
+    if (body.action === "mix") {
+      const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
+      if (!laneId) throw new ApiError("laneId is required.", 400);
+      let mix;
+      try { mix = parseTimelineDawPrivateLaneMix(body); }
+      catch (cause) { throw new ApiError(cause instanceof Error ? cause.message : "Private lane mixer settings are invalid.", 400); }
+      const { data, error } = await user.client.from(TABLE).update({ ...mix, updated_at: new Date().toISOString() })
+        .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("*").single();
+      if (error || !data) throw new ApiError("Private audio lane was not found.", 404);
+      return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { headers: { "Cache-Control": "no-store" } });
+    }
+
     if (body.action === "remove") {
       const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
       if (!laneId) throw new ApiError("laneId is required.", 400);

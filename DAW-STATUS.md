@@ -6,36 +6,33 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone ? Private Audio Source Lanes
+## Latest completed milestone ? Private Lane Mixer Controls
 
-Recorded and promoted private WAV sources are now durable, playable session lanes aligned to the DAW transport.
+Every private audio lane now has durable monitoring controls and post-gain metering.
 
-- Persist owner-scoped private audio lanes with source checksum and complete audio geometry.
-- Insert recording and promoted-comp sources at the current playhead through the shared source event.
-- Preserve comp ID and render-checksum provenance when a lane comes from a promoted comp.
-- Load each lane through a short-lived signed URL from the private source bucket.
-- Synchronize lane playback, pause, stop, and drift correction with explicit session transport events.
-- Display timeline start/end positions and distinguish recording lanes from comp-derived lanes.
-- Remove lane metadata safely without deleting the private WAV master.
+- Persist mute, solo, linear gain, and stereo-pan settings with bounded server validation.
+- Apply audio through a reusable MediaElement-to-Gain-to-StereoPanner-to-Analyser Web Audio graph.
+- Enforce deterministic solo precedence while ensuring mute always wins.
+- Debounce control persistence while updating the audible graph immediately.
+- Preserve mixer settings across reloads and signed source URL refreshes.
+- Display post-gain peak level in dBFS with clear clipping indication.
+- Resume, disconnect, and close Web Audio resources safely with lane playback lifecycle.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateAudioLanePolicy.ts`
-- `engine/test/timeline-daw-private-audio-lane-policy.test.ts`
-- `supabase/migrations/20260808163000_timeline_daw_private_audio_lanes.sql`
+- `lib/timeline/TimelineDawPrivateLaneMixerPolicy.ts`
+- `lib/timeline/TimelineDawPrivateLaneMonitorGraph.ts`
+- `engine/test/timeline-daw-private-lane-mixer-policy.test.ts`
+- `supabase/migrations/20260808173000_timeline_daw_private_lane_mix.sql`
 - `app/api/timeline/daw-private-audio-lanes/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
-- `lib/timeline/TimelineDawRecordedSourceEvent.ts`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
-- `app/components/TimelineDawTakeCompWorkspace.tsx`
-- `app/workspace/projects/[id]/ProjectDawTransport.tsx`
-- `app/workspace/projects/[id]/studio/[sessionId]/page.tsx`
 
 ### Verification
 
-- Focused private-lane and comp-promotion policy tests: 4 passed.
+- Focused private-lane mixer and lane policy tests: 4 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260808163000`.
+- Supabase migrations applied successfully through `20260808173000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 
 ## Previously completed DAW foundation
@@ -58,18 +55,19 @@ Recorded and promoted private WAV sources are now durable, playable session lane
 - Durable non-destructive take comp recipes and ordered preview.
 - Sample-accurate comp WAV rendering and private delivery.
 - Checksum-verified comp promotion with durable source provenance.
+- Durable transport-synchronized private audio source lanes.
 
-## Next milestone ? Private Lane Mixer Controls
+## Next milestone ? Private Lane Arrangement Editing
 
-Give each private audio lane practical monitoring and mix controls while preserving transport synchronization.
+Add non-destructive positioning and trimming controls for private audio lanes.
 
 Planned outcome:
 
-1. Persist lane mute, solo, gain, and stereo-pan settings.
-2. Apply gain and pan through a reusable Web Audio monitoring graph.
-3. Enforce predictable solo/mute precedence across all private lanes.
-4. Preserve settings across reloads and source URL refreshes.
-5. Show clear metering and clipping state per lane.
+1. Persist lane timeline start, source in, and source out boundaries.
+2. Validate sample-aligned boundaries against source duration.
+3. Move and trim lanes without altering private WAV masters.
+4. Keep transport playback aligned after edits and reloads.
+5. Add duplicate-lane and reset-to-full-source workflows with provenance intact.
 6. Add focused policy tests, run the production build, apply any reviewed migration, commit, and push.
 
 ## Working rules

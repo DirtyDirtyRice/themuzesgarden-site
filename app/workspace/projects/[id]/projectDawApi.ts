@@ -229,6 +229,7 @@ export type DawPrivateAudioLane = {
   source: { id: string; uri: string; checksum: string };
   audio: DawRecordingTake["audio"];
   timelineStartSeconds: number;
+  mix: { muted: boolean; soloed: boolean; gain: number; pan: number };
   provenance: { compId: string; renderChecksum: string } | null;
   playbackUrl: string;
   createdAt: string;
@@ -256,6 +257,17 @@ export function addDawPrivateAudioLane(input: {
   return request("/api/timeline/daw-private-audio-lanes", {
     method: "POST",
     body: JSON.stringify({ action: "add", ...input }),
+  });
+}
+
+export function updateDawPrivateAudioLaneMix(
+  sessionId: string,
+  laneId: string,
+  mix: DawPrivateAudioLane["mix"],
+): Promise<{ lane: DawPrivateAudioLane }> {
+  return request("/api/timeline/daw-private-audio-lanes", {
+    method: "POST",
+    body: JSON.stringify({ action: "mix", sessionId, laneId, ...mix }),
   });
 }
 
