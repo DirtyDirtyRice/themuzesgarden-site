@@ -8,6 +8,7 @@ import { encodeTimelineDawPcmWav } from "@/lib/timeline/TimelineDawPcmCapture";
 import { TimelineDawRenderSupabaseArtifactStore } from "@/lib/timeline/TimelineDawRenderSupabaseArtifactStore";
 import { TimelineDawRenderSupabaseSourceStore } from "@/lib/timeline/TimelineDawRenderSourceStore";
 import { TimelineDawTakeCompRenderer } from "@/lib/timeline/TimelineDawTakeCompRenderer";
+import { parseTimelineDawTakeCompPromotion } from "@/lib/timeline/TimelineDawTakeCompPromotionPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,6 +63,13 @@ function comp(row: Record<string, unknown>) {
     regions: row.regions,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
+    promotion: row.promoted_source_uri ? {
+      sourceId: String(row.promoted_source_id),
+      sourceUri: String(row.promoted_source_uri),
+      renderChecksum: String(row.promoted_render_checksum),
+      promotedAt: String(row.promoted_at),
+      current: Boolean(row.output_checksum) && String(row.promoted_render_checksum) === String(row.output_checksum),
+    } : null,
     render: row.output_uri ? {
       uri: String(row.output_uri),
       checksum: String(row.output_checksum),
@@ -204,6 +212,69 @@ export async function POST(request: NextRequest) {
           { stage: "assembled", percent: 70 },
           { stage: "persisted", percent: 100 },
         ],
+      }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (body.action === "promote") {
+      if (!body.compId) throw new ApiError("compId is required.", 400);
+      const { data: storedComp, error: compError } = await user.client.from(COMP_TABLE)
+        .select("*").eq("id", body.compId).eq("owner_id", user.id).eq("session_id", sessionId).single();
+      if (compError || !storedComp) throw new ApiError("Take comp was not found.", 404);
+      let promotion;
+      try {
+        promotion = parseTimelineDawTakeCompPromotion({
+          compId: storedComp.id,
+          name: storedComp.name,
+          renderUri: storedComp.output_uri,
+          renderChecksum: storedComp.output_checksum,
+          promotedSourceUri: storedComp.promoted_source_uri,
+          promotedRenderChecksum: storedComp.promoted_render_checksum,
+        });
+      } catch (cause) {
+        throw new ApiError(cause instanceof Error ? cause.message : "Comp promotion is invalid.", 400);
+      }
+      const renderPrefix = "supabase://timeline-daw-renders/";
+      const ownerPrefix = `${user.id}/${sessionId}/`;
+      if (!promotion.renderUri.startsWith(renderPrefix)) throw new ApiError("Comp render URI is invalid.", 400);
+      const renderPath = promotion.renderUri.slice(renderPrefix.length);
+      if (!renderPath.startsWith(ownerPrefix)) throw new ApiError("Comp render does not belong to this session.", 403);
+      const { data: artifact, error: downloadError } = await user.client.storage.from("timeline-daw-renders").download(renderPath);
+      if (downloadError || !artifact) throw new ApiError(`Comp render could not be loaded: ${downloadError?.message ?? "artifact missing"}`, 404);
+      const bytes = new Uint8Array(await artifact.arrayBuffer());
+      const actualChecksum = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+      if (actualChecksum !== promotion.renderChecksum) throw new ApiError("Comp render checksum no longer matches its saved provenance.", 409);
+      const decoded = new TimelineAudioDecodeEngine().decode({
+        sourceArtifactId: promotion.compId,
+        sourceFingerprint: actualChecksum,
+        bytes,
+        fileName: promotion.sourceName,
+        decodedBy: user.id,
+      });
+      if (!decoded.accepted || !decoded.audio) throw new ApiError(decoded.issues[0]?.message ?? "Comp render could not be decoded.", 400);
+      const source = await new TimelineDawRenderSupabaseSourceStore(user.client, user.id).save({
+        ownerId: user.id,
+        sessionId,
+        name: promotion.sourceName,
+        bytes,
+      });
+      const promotedAt = new Date().toISOString();
+      const { data: updated, error: updateError } = await user.client.from(COMP_TABLE).update({
+        promoted_source_id: source.id,
+        promoted_source_uri: source.uri,
+        promoted_render_checksum: actualChecksum,
+        promoted_at: promotedAt,
+        updated_at: promotedAt,
+      }).eq("id", body.compId).eq("owner_id", user.id).eq("session_id", sessionId).select("*").single();
+      if (updateError || !updated) throw new ApiError(`Comp promotion could not be saved: ${updateError?.message ?? "missing row"}`, 500);
+      return NextResponse.json({
+        comp: comp(updated),
+        source,
+        audio: {
+          sampleRate: decoded.audio.sampleRate,
+          channelCount: decoded.audio.channelCount,
+          frameCount: decoded.audio.frameCount,
+          durationSeconds: decoded.audio.durationSeconds,
+        },
       }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
 

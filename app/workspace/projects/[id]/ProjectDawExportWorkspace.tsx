@@ -8,10 +8,8 @@ import type {
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
 import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
 import ProjectDawInterchangeWorkspace from "./ProjectDawInterchangeWorkspace";
-import {
-  DAW_RECORDED_SOURCE_EVENT,
-  type DawRecordedSourceEventDetail,
-} from "./ProjectDawRecordingWorkspace";
+import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
+
 import type { DawSession } from "./projectDawTypes";
 
 const field = "rounded-xl border border-white/20 bg-black px-3 py-2 text-white";

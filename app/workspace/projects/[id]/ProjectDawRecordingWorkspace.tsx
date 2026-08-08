@@ -8,7 +8,7 @@ import {
 import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Encoder";
 import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
 import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
-import { uploadDawRenderSource, type DawRenderSource } from "./projectDawApi";
+import { uploadDawRenderSource } from "./projectDawApi";
 import {
   createDawRecordingTakeAudition,
   deleteDawRecordingTake,
@@ -19,19 +19,9 @@ import {
   type DawRecordingTake,
 } from "./projectDawApi";
 import type { DawSession } from "./projectDawTypes";
+import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
 import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWorkspace";
 
-export const DAW_RECORDED_SOURCE_EVENT = "the-muzes-garden:daw-recorded-source";
-
-export type DawRecordedSourceEventDetail = {
-  source: DawRenderSource;
-  audio: {
-    sampleRate: number;
-    channelCount: number;
-    frameCount: number;
-    durationSeconds: number;
-  };
-};
 
 const button = "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
 
