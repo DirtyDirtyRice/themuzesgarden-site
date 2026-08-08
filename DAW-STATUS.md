@@ -6,24 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Bounce in Place and Render Queue
+## Latest completed milestone — Sidechain and Dynamic Routing
 
-Private lane and bus processing can now be rendered through durable, recoverable bounce jobs.
+Private dynamics inserts now support durable external detector routing and safe sample-aligned rendering.
 
-- Persist queued, running, completed, failed, and cancelled job states with monotonic progress.
-- Render lane or bus targets through the canonical freeze recipe and private artifact pipeline.
-- Cancel queued/running work, retry failed/cancelled jobs, and recover interrupted running jobs.
-- Re-read completed artifacts and verify SHA-256 before completion or activation.
-- Record automatic plugin-latency trim samples for sample-aligned replacements.
-- Activate verified bounces and undo activation through durable history receipts.
-- Preserve source audio, recipes, and artifacts during cancellation and recovery.
+- Persist lane or bus sidechain sources on compressor and gate inserts.
+- Validate detector routing against the acyclic private bus graph.
+- Configure pre/post-fader mode, bounded sample lookahead, and detector listen mode.
+- Apply sidechain compressor/gate envelopes with PDC-aware lookahead in freeze rendering.
+- Preserve program audio when an external detector is missing and report that condition.
+- Return gain-reduction, listen-state, and missing-source evidence with freeze meters.
+- Include sidechain state in canonical freeze recipes and durable edit receipts.
 
 ### Verification
 
-- Focused bounce, PDC, freeze, and WAV worker tests: 16 passed.
+- Focused sidechain, routing, freeze, and PDC tests: 15 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809103000`.
+- Supabase migrations applied successfully through `20260809113000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -53,17 +53,17 @@ Private lane and bus processing can now be rendered through durable, recoverable
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Sidechain and Dynamic Routing
+## Next milestone — Track Templates and Routing Presets
 
-Add professional detector routing and controlled modulation across private buses.
+Make complex private recording and mixing setups reusable without copying project data.
 
 Planned outcome:
 
-1. Persist sidechain sources for compressor and gate-style inserts.
-2. Route pre/post-fader detector signals through the acyclic private bus graph.
-3. Add sample-aligned lookahead and PDC-aware detector timing.
-4. Add gain-reduction meters, listen mode, and missing-source safety.
-5. Include sidechain state in preview, freeze recipes, and reversible history.
+1. Persist owner-scoped lane, bus, insert, send, and automation templates.
+2. Capture validated routing graphs without source audio or private artifact leakage.
+3. Instantiate templates atomically with fresh stable IDs and conflict-safe names.
+4. Add preset versioning, favorites, import/export, and provenance.
+5. Support reversible template application and missing-plugin fallbacks.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

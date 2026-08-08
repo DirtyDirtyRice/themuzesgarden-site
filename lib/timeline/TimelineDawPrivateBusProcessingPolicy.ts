@@ -1,3 +1,4 @@
+import { parseTimelineDawPrivateSidechain, type TimelineDawPrivateSidechain } from "./TimelineDawPrivateSidechainPolicy";
 export type TimelineDawPrivateSend = {
   id: string;
   sourceKind: "lane" | "bus";
@@ -13,10 +14,11 @@ export type TimelineDawPrivateInsert = {
   sourceKind: "lane" | "bus";
   sourceId: string;
   slot: number;
-  effect: "gain" | "filter" | "compressor";
+  effect: "gain" | "filter" | "compressor" | "gate";
   bypassed: boolean;
   parameters: Record<string, number>;
   latencySamples?: number;
+  sidechain?: TimelineDawPrivateSidechain | null;
 };
 
 const finite = (value: unknown, name: string, minimum: number, maximum: number) => {
@@ -49,12 +51,12 @@ export function parseTimelineDawPrivateInsert(value: unknown): Omit<TimelineDawP
   if (!value || typeof value !== "object") throw new Error("Private insert settings are required.");
   const input = value as Record<string, unknown>; const sourceId = typeof input.sourceId === "string" ? input.sourceId.trim() : "";
   if ((input.sourceKind !== "lane" && input.sourceKind !== "bus") || !sourceId) throw new Error("Private insert source is required.");
-  if (input.effect !== "gain" && input.effect !== "filter" && input.effect !== "compressor") throw new Error("Private insert effect is not supported.");
+  if (input.effect !== "gain" && input.effect !== "filter" && input.effect !== "compressor" && input.effect !== "gate") throw new Error("Private insert effect is not supported.");
   if (typeof input.bypassed !== "boolean") throw new Error("Private insert bypass state must be boolean.");
   const slot = finite(input.slot, "Private insert slot", 0, 2); if (!Number.isInteger(slot)) throw new Error("Private insert slot must be an integer.");
   const values = (input.parameters && typeof input.parameters === "object" ? input.parameters : {}) as Record<string, unknown>;
   const parameters: Record<string, number> = input.effect === "gain" ? { gain: finite(values.gain ?? 1, "Insert gain", 0, 4) }
     : input.effect === "filter" ? { frequency: finite(values.frequency ?? 12000, "Filter frequency", 20, 20000), q: finite(values.q ?? 0.7, "Filter Q", 0.0001, 30) }
-    : { threshold: finite(values.threshold ?? -24, "Compressor threshold", -100, 0), ratio: finite(values.ratio ?? 4, "Compressor ratio", 1, 20) };
-  return { sourceKind: input.sourceKind, sourceId, slot, effect: input.effect, bypassed: input.bypassed, parameters, latencySamples: Math.round(finite(input.latencySamples ?? 0, "Insert latency", 0, 192000)) };
+    : { threshold: finite(values.threshold ?? -24, "Dynamics threshold", -100, 0), ratio: finite(values.ratio ?? 4, "Dynamics ratio", 1, 20) };
+  return { sourceKind: input.sourceKind, sourceId, slot, effect: input.effect, bypassed: input.bypassed, parameters, latencySamples: Math.round(finite(input.latencySamples ?? 0, "Insert latency", 0, 192000)), sidechain: parseTimelineDawPrivateSidechain(input.sidechain) };
 }
