@@ -6,31 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Transient Analysis and Anchors
+## Latest completed milestone — Anchor-Aware Elastic Rendering
 
-Private sources now have checksum-cached rhythmic onset analysis and editable transient anchors.
+Private lane transforms now use protected transient anchors across preview planning and offline freeze rendering.
 
-- Analyze channel-aware energy flux into deterministic source-frame transient markers.
-- Cache owner-scoped markers by verified private-source checksum.
-- Navigate previous and next transients directly from each lane.
-- Protect or unprotect important anchors and quantize selected markers to an exact sample grid.
-- Preserve immutable source WAVs and validate cache geometry and checksum provenance.
-
-### Files delivered
-
-- `lib/timeline/TimelineDawPrivateTransientPolicy.ts`
-- `engine/test/timeline-daw-private-transient-policy.test.ts`
-- `supabase/migrations/20260809063000_timeline_daw_private_transients.sql`
-- `app/api/timeline/daw-private-transients/route.ts`
-- `app/components/TimelineDawTransientEditor.tsx`
-- `app/components/TimelineDawPrivateAudioLanes.tsx`
+- Added deterministic anchor-aware elastic plans with draft, balanced, and high quality windows.
+- Preserve protected attack samples while distributing stretch timing between adjacent anchors.
+- Share transform duration and playback-rate planning between browser preview and offline rendering.
+- Persist lane quality choices and include them in freeze recipe staleness checks.
+- Feed checksum-cached protected transients into private freeze renders.
+- Move, delete, threshold, protect, quantize, navigate, and audition transient anchors.
+- Preserve non-destructive source PCM and reversible lane-transform history.
 
 ### Verification
 
-- Focused transient, transform, and freeze tests: 7 passed.
+- Focused transform, anchor, transient, and freeze tests: 10 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809063000`.
+- Supabase migrations applied successfully through `20260809073000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -60,17 +53,17 @@ Private sources now have checksum-cached rhythmic onset analysis and editable tr
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Anchor-Aware Elastic Rendering
+## Next milestone — Private Warp Markers and Groove Quantization
 
-Use protected transients to improve preserve-pitch stretch quality and preview/render parity.
+Turn transient anchors into durable user-authored warp maps and reusable rhythmic feel.
 
 Planned outcome:
 
-1. Add transient-anchored overlap-add stretching with selectable quality modes.
-2. Preserve protected attacks while distributing timing changes between anchors.
-3. Use one transform plan for browser preview and offline freeze rendering.
-4. Add anchor movement, deletion, strength thresholds, and audition controls.
-5. Integrate elastic plans with fades, automation, markers, and reversible history.
+1. Persist lane-specific warp marker source and destination frame pairs.
+2. Add reversible drag editing with collision and monotonic-order validation.
+3. Extract, save, and apply owner-scoped groove templates.
+4. Quantize selected anchors with adjustable strength while protecting explicit attacks.
+5. Use identical warp maps in preview, freeze, and stale-recipe detection.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

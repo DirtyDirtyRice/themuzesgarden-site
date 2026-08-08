@@ -240,7 +240,7 @@ export type DawPrivateAudioLane = {
   busId: string | null;
   mix: { muted: boolean; soloed: boolean; gain: number; pan: number };
   fade: { inSeconds: number; outSeconds: number };
-  transform: { stretchRatio: number; pitchSemitones: number; algorithm: "preserve-pitch" | "resample"; bypassed: boolean };
+  transform: { stretchRatio: number; pitchSemitones: number; algorithm: "preserve-pitch" | "resample"; quality: "draft" | "balanced" | "high"; bypassed: boolean };
   provenance: { compId: string; renderChecksum: string } | null;
   playbackUrl: string;
   createdAt: string;
