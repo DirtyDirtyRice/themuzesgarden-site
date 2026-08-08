@@ -6,24 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Collaborative Session Locks and Presence
+## Latest completed milestone — Timeline Comments and Review Workflow
 
-Closed-beta DAW sessions now expose explicit membership, presence, and conflict-safe edit ownership.
+Private sessions now support sample-addressed musical review threads and transport-linked audition.
 
-- Persist owner-authorized editor, mixer, and viewer roles with scoped policy checks.
-- Track active session presence with heartbeat timestamps and disconnected-client expiry.
-- Acquire expiring lane or bus edit leases with holder and expiry details.
-- Reject primary lane, send, and insert mutations when another active holder owns the target.
-- Heartbeat, release, recover expired leases, and permit explicit owner takeover.
-- Record collaborator changes, lease acquisition/release, and forced takeover in an audit ledger.
-- Protect collaboration rows with owner/member-specific RLS policies.
+- Persist point or range comments on lanes, buses, and master output.
+- Store lane comments with source-relative frames and optional tempo ticks for durable anchoring.
+- Relocate anchors after lane moves and deterministically choose split children.
+- Add threaded replies, deduplicated mentions, assignees, priorities, and resolve/reopen state.
+- Navigate directly to comment samples and audition bounded review ranges.
+- Filter open, resolved, urgent, or all threads.
+- Record create, reply, assignment, priority, and resolution actions in a private audit ledger.
 
 ### Verification
 
-- Focused collaboration, lease, lane history, bus, and template tests: 12 passed.
+- Focused review-anchor, collaboration, split, and arrangement tests: 13 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809133000`.
+- Supabase migrations applied successfully through `20260809143000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -53,17 +53,17 @@ Closed-beta DAW sessions now expose explicit membership, presence, and conflict-
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Timeline Comments and Review Workflow
+## Next milestone — Versioned Session Snapshots and Compare
 
-Add sample-addressed musical review notes for collaborative closed-beta sessions.
+Give musicians safe named mix checkpoints with audible and structural comparison.
 
 Planned outcome:
 
-1. Persist comments on exact samples, ranges, lanes, buses, and master output.
-2. Add threads, replies, mentions, assignees, priority, and resolved state.
-3. Navigate transport directly to comment anchors and audition ranges.
-4. Preserve anchors through lane moves, splits, tempo changes, and bounce activation.
-5. Add role-aware editing, notifications, filters, and audit history.
+1. Capture immutable named snapshots of lanes, routing, processing, automation, master, and arrangement.
+2. Compute deterministic structural diffs without duplicating source audio.
+3. Add A/B audition, loudness-matched compare, and current-state staleness checks.
+4. Restore snapshots atomically with conflict protection and automatic safety checkpointing.
+5. Add favorites, notes, provenance, and reversible restore history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
