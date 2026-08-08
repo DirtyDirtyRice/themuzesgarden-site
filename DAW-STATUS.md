@@ -6,23 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Standard MIDI Import and Round-Trip Interchange
+## Latest completed milestone — MIDI Reversible History and Offline Bounce
 
-Private sessions can now ingest externally authored Standard MIDI clips without losing event geometry.
+Private MIDI clips now have studio-facing recovery controls and checksum-verified audio delivery.
 
-- Parse validated SMF headers, PPQ timing, variable-length deltas, running status, note-on/off pairs, and controller events.
-- Reject unsupported SMPTE timing and malformed track streams before persistence.
-- Preserve channels, pitches, velocities, note lengths, controller values, and deterministic clip ordering.
-- Record source-file SHA-256 provenance on every imported clip.
-- Persist imported clips through the existing owner-scoped revision and history model.
-- Round-trip exported clips back through the importer with stable musical events.
+- Add expected-revision-protected undo and redo backed by durable before/after MIDI history.
+- Restore notes, controllers, instruments, timing, routing metadata, and provenance as new revisions.
+- Import Standard MIDI files directly from the studio UI into owner-scoped session clips.
+- Render the deterministic bounded-polyphony instrument to stereo 48 kHz PCM.
+- Encode rendered instruments through the canonical WAV worker and private render-source store.
+- Persist artifact ID, URI, SHA-256 checksum, byte length, sample rate, frame count, and source revision.
+- Expose one-click MIDI export and offline WAV bounce controls beside piano-roll editing.
 
 ### Verification
 
-- Focused SMF, private MIDI, arrangement, and performance tests: 14 passed.
+- Focused private MIDI, arrangement, performance, and PCM WAV tests: 18 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- No migration was required; schema remains current through `20260809173000`.
+- Supabase migrations applied successfully through `20260809183000`.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -57,17 +58,17 @@ Private sessions can now ingest externally authored Standard MIDI clips without 
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
 
-## Next milestone — MIDI History, Routing, and Offline Bounce
+## Next milestone — MIDI Mix Routing and Expressive Controllers
 
-Complete MIDI production integration with reversible editing and canonical audio delivery.
+Bring MIDI instrument playback fully into the tempo-aware mix graph.
 
 Planned outcome:
 
-1. Add user-facing undo and redo for MIDI clip edits and imports.
-2. Route virtual instruments through buses, inserts, automation, and master processing.
-3. Freeze and bounce MIDI clips through the canonical offline renderer with checksum-verified artifacts.
-4. Add controller-lane editing, sustain handling, program changes, and tempo-map-aware scheduling.
-5. Add import controls and verified MIDI/audio delivery in the studio UI.
+1. Process bounced and live virtual instruments through buses, sends, inserts, automation, and master state.
+2. Add tempo-map-aware transport scheduling across tempo changes and clip offsets.
+3. Add editable controller lanes, sustain-pedal note extension, program changes, and pitch bend.
+4. Detect stale MIDI bounces after event, controller, instrument, tempo, or routing changes.
+5. Add private audition URLs and promote verified bounces into audio lanes.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 
 ## Working rules
