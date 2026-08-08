@@ -6,24 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Sidechain and Dynamic Routing
+## Latest completed milestone — Track Templates and Routing Presets
 
-Private dynamics inserts now support durable external detector routing and safe sample-aligned rendering.
+Private routing setups can now be captured, versioned, exchanged, and instantiated without leaking source media.
 
-- Persist lane or bus sidechain sources on compressor and gate inserts.
-- Validate detector routing against the acyclic private bus graph.
-- Configure pre/post-fader mode, bounded sample lookahead, and detector listen mode.
-- Apply sidechain compressor/gate envelopes with PDC-aware lookahead in freeze rendering.
-- Preserve program audio when an external detector is missing and report that condition.
-- Return gain-reduction, listen-state, and missing-source evidence with freeze meters.
-- Include sidechain state in canonical freeze recipes and durable edit receipts.
+- Capture owner-scoped lane slots, buses, inserts, sends, and automation configuration.
+- Reject templates containing source URIs, signed playback URLs, artifacts, or checksums.
+- Validate captured bus graphs and reject feedback cycles.
+- Instantiate fresh stable IDs with conflict-safe bus names and rollback on partial failure.
+- Version same-name captures and support favorites plus JSON import/export provenance.
+- Bypass missing-plugin entries and report audio-dependent lane slots instead of fabricating sources.
+- Undo applications through durable created-ID receipts without touching private audio.
 
 ### Verification
 
-- Focused sidechain, routing, freeze, and PDC tests: 15 passed.
+- Focused template, routing, sidechain, and automation tests: 12 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809113000`.
+- Supabase migrations applied successfully through `20260809123000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -53,17 +53,17 @@ Private dynamics inserts now support durable external detector routing and safe 
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Track Templates and Routing Presets
+## Next milestone — Collaborative Session Locks and Presence
 
-Make complex private recording and mixing setups reusable without copying project data.
+Make closed-beta multi-user editing explicit, conflict-safe, and recoverable.
 
 Planned outcome:
 
-1. Persist owner-scoped lane, bus, insert, send, and automation templates.
-2. Capture validated routing graphs without source audio or private artifact leakage.
-3. Instantiate templates atomically with fresh stable IDs and conflict-safe names.
-4. Add preset versioning, favorites, import/export, and provenance.
-5. Support reversible template application and missing-plugin fallbacks.
+1. Add owner-authorized collaborators with scoped DAW roles.
+2. Persist session presence and expiring lane/bus edit leases.
+3. Reject conflicting mutations with actionable holder and expiry details.
+4. Add heartbeat, release, takeover, and disconnected-client recovery.
+5. Record collaboration changes and forced takeovers in an audit ledger.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

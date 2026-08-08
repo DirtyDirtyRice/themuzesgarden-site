@@ -37,6 +37,7 @@ import TimelineDawTransientEditor from "@/app/components/TimelineDawTransientEdi
 import TimelineDawWarpEditor from "@/app/components/TimelineDawWarpEditor";
 import TimelineDawPrivateMasterBus from "@/app/components/TimelineDawPrivateMasterBus";
 import TimelineDawPrivateBounceQueue from "@/app/components/TimelineDawPrivateBounceQueue";
+import TimelineDawPrivateTemplates from "@/app/components/TimelineDawPrivateTemplates";
 import TimelineDawPrivateLaneWaveform from "@/app/components/TimelineDawPrivateLaneWaveform";
 import TimelineDawPrivateLaneHistory from "@/app/components/TimelineDawPrivateLaneHistory";
 import TimelineDawPrivateLaneGroupEditor, { type PrivateLaneGroupEditInput } from "@/app/components/TimelineDawPrivateLaneGroupEditor";
@@ -392,6 +393,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
+      <TimelineDawPrivateTemplates sessionId={sessionId} onApplied={()=>window.location.reload()} />
       <TimelineDawPrivateBounceQueue sessionId={sessionId} targets={[...lanes.map(lane=>({id:lane.id,kind:"lane" as const,name:lane.name})),...buses.map(bus=>({id:bus.id,kind:"bus" as const,name:bus.name}))]} />
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <TimelineDawPrivateBusMixer detectorSources={[...lanes.map(l=>({id:l.id,kind:"lane" as const,name:l.name})),...buses.map(b=>({id:b.id,kind:"bus" as const,name:b.name}))]} buses={buses} sends={sends} inserts={inserts} meters={busMeters} busy={busy} onSave={(bus) => void saveBus(bus)} onDelete={(bus) => void deleteBus(bus)} onSend={(send) => void persistSend(send)} onInsert={(insert) => void persistInsert(insert)} />
