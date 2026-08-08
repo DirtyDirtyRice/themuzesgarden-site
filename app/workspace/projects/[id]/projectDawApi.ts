@@ -281,6 +281,10 @@ export function freezeDawPrivateProcessing(sessionId: string, sourceKind: "lane"
 export function unfreezeDawPrivateProcessing(sessionId: string, sourceKind: "lane" | "bus", sourceId: string): Promise<{ freeze: DawPrivateFreeze }> { return request("/api/timeline/daw-private-freezes", { method: "POST", body: JSON.stringify({ action: "unfreeze", sessionId, sourceKind, sourceId }) }); }
 
 export type DawPrivateLaneWaveform = { binCount: number; frameCount: number; peaks: number[] };
+export type DawPrivateClipRepair = { laneId: string; revision: number; bypassed: boolean; gainPoints: Array<{ frame: number; gainDb: number }>; spectralRepairs: Array<{ id: string; startFrame: number; endFrame: number; lowHz: number; highHz: number; attenuationDb: number; bypassed: boolean; provenance: string }>; checksum: string; updatedAt: string };
+
+export function loadDawPrivateClipRepair(sessionId: string, laneId: string): Promise<{ repair: DawPrivateClipRepair }> { return request(`/api/timeline/daw-private-clip-repairs?sessionId=${encodeURIComponent(sessionId)}&laneId=${encodeURIComponent(laneId)}`); }
+export function saveDawPrivateClipRepair(sessionId: string, repair: DawPrivateClipRepair, action: "save" | "undo" | "redo" = "save"): Promise<{ repair: DawPrivateClipRepair }> { return request("/api/timeline/daw-private-clip-repairs", { method: "POST", body: JSON.stringify({ sessionId, laneId: repair.laneId, expectedRevision: repair.revision, action, bypassed: repair.bypassed, gainPoints: repair.gainPoints, spectralRepairs: repair.spectralRepairs }) }); }
 
 export function loadDawPrivateLaneWaveform(sessionId: string, laneId: string): Promise<{ waveform: DawPrivateLaneWaveform; cached: boolean }> {
   return request(`/api/timeline/daw-private-waveforms?sessionId=${encodeURIComponent(sessionId)}&laneId=${encodeURIComponent(laneId)}`);

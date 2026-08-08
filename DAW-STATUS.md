@@ -6,24 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Versioned Session Snapshots and Compare
+## Latest completed milestone — Clip Gain Envelopes and Spectral Repair
 
-Private sessions now support immutable named mix checkpoints with structural comparison and guarded restore.
+Private lanes now support precise, non-destructive source-level correction before mixer processing.
 
-- Capture lanes, routing, inserts, sends, automation envelopes and scoped points, master state, and arrangement without duplicating source audio.
-- Canonically serialize session state, exclude ephemeral signed playback URLs, and compute deterministic SHA-256 checksums.
-- Compare snapshots against the current session with section-level diffs and staleness indicators.
-- Audition snapshot master settings as A/B states with bounded RMS loudness matching.
-- Protect restores with snapshot-integrity and expected-current-state conflict checks.
-- Create an automatic safety snapshot before restore and persist a restore receipt with provenance.
-- Store snapshot names, notes, favorites, revisions, and creator metadata under owner-only RLS policies.
+- Persist up to 512 sample-aligned clip-gain points with bounded linear interpolation from -96 to +24 dB.
+- Define time-and-frequency spectral selections with durable attenuation, provenance, and per-repair bypass.
+- Validate lane geometry, Nyquist limits, unique repair IDs, and deterministic SHA-256 state checksums.
+- Reject stale writes with explicit expected-revision conflict protection.
+- Record before/after history for reversible undo and redo without rewriting source audio.
+- Apply clip gain during live monitoring and apply the canonical gain-plus-spectral graph before transforms, inserts, freeze, and delegated bounce rendering.
+- Include repair state in freeze recipe checksums so existing freezes become stale after a correction changes.
 
 ### Verification
 
-- Focused snapshot, template, review, and freeze-policy tests: 14 passed.
+- Focused clip-repair, freeze-renderer, freeze-policy, and bounce-policy tests: 14 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809153000`.
+- Supabase migrations applied successfully through `20260809163000`.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -54,18 +54,19 @@ Private sessions now support immutable named mix checkpoints with structural com
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 - Timeline comments and review workflow with sample-addressed threads and transport-linked audition.
+- Immutable versioned session snapshots with structural compare, A/B audition, and guarded restore.
 
-## Next milestone — Clip Gain Envelopes and Spectral Repair
+## Next milestone — MIDI Sequencing and Virtual Instrument Foundation
 
-Add precise non-destructive source-level correction before mixer processing.
+Add a deterministic musical-event lane alongside the mature audio workflow.
 
 Planned outcome:
 
-1. Persist sample-aligned clip-gain envelope points with conflict-aware revisions.
-2. Add direct waveform editing with bounded interpolation and reversible history.
-3. Define spectral selections and durable attenuation or repair recipes without rewriting source audio.
-4. Make preview, freeze, bounce, and export consume the same deterministic processing graph.
-5. Add integrity checks, provenance, and safe bypass for every repair operation.
+1. Persist MIDI clips, notes, controller events, channels, and revisions with sample-and-tick alignment.
+2. Add piano-roll editing, quantization, velocity, note length, and reversible history.
+3. Add a built-in polyphonic instrument with bounded voice allocation and transport-synchronized preview.
+4. Route MIDI instruments through the existing buses, automation, master, freeze, bounce, and snapshot systems.
+5. Import and export Standard MIDI Files with tempo-map and provenance checks.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 
 ## Working rules

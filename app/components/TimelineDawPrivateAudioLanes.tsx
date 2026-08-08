@@ -29,6 +29,7 @@ import {
   type DawPrivateInsert,
   type DawPrivateFreeze,
   type DawPrivateLaneWaveform,
+  type DawPrivateClipRepair,
 } from "@/app/workspace/projects/[id]/projectDawApi";
 import { resolveTimelineDawPrivateRoutingAudibility } from "@/lib/timeline/TimelineDawPrivateBusPolicy";
 import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } from "@/lib/timeline/TimelineDawPrivateLaneMonitorGraph";
@@ -51,6 +52,8 @@ import { loadDawPrivateAutomation, type DawPrivateAutomationEnvelope } from "@/a
 import { timelineDawPrivateAutomationValue } from "@/lib/timeline/TimelineDawPrivateAutomationPolicy";
 import { dispatchTimelineDawPrivateMixChange } from "@/lib/timeline/TimelineDawPrivateAutomationEvents";
 import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBusGraph";
+import TimelineDawPrivateClipRepairEditor from "@/app/components/TimelineDawPrivateClipRepairEditor";
+import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -69,6 +72,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [inserts, setInserts] = useState<DawPrivateInsert[]>([]);
   const [freezes, setFreezes] = useState<DawPrivateFreeze[]>([]);
   const [automation, setAutomation] = useState<DawPrivateAutomationEnvelope[]>([]);
+  const [clipRepairs, setClipRepairs] = useState<Record<string, DawPrivateClipRepair>>({});
   const [master,setMaster]=useState({gain:1,muted:false,revision:0});
   const audioRefs = useRef(new Map<string, HTMLAudioElement>());
   const freezeAudioRefs = useRef(new Map<string, HTMLAudioElement>());
@@ -108,7 +112,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       audio.preservesPitch = lane.transform.algorithm === "preserve-pitch"; audio.playbackRate = timelineDawPrivateLanePlaybackRate(lane.transform);
       const active = localSeconds >= 0 && localSeconds < arrangedDuration;
       const fade = effectiveFades.get(lane.id) ?? lane.fade;
-      const samplePosition=Math.max(0,Math.round(elapsed*lane.audio.sampleRate)),gain=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="gain"),samplePosition,lane.mix.gain),pan=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="pan"),samplePosition,lane.mix.pan);
+      const samplePosition=Math.max(0,Math.round(elapsed*lane.audio.sampleRate)),clipFrame=Math.max(0,Math.round(localSeconds/(lane.transform.bypassed?1:lane.transform.stretchRatio)*lane.audio.sampleRate)),clipRepair=clipRepairs[lane.id],clipGain=clipRepair&&!clipRepair.bypassed?timelineDawPrivateClipGainAtFrame(clipRepair.gainPoints,clipFrame):1,gain=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="gain"),samplePosition,lane.mix.gain)*clipGain,pan=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="pan"),samplePosition,lane.mix.pan);
       graphRefs.current.get(lane.id)?.applyEnvelope({...lane.mix,gain:gain*(master.muted?0:master.gain),pan}, audibility.get(lane.id) ?? false, localSeconds, arrangedDuration, fade.inSeconds, fade.outSeconds);
       if (!active || !playing) {
         audio.pause();
@@ -126,7 +130,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       audio.volume=master.muted?0:Math.min(1,master.gain); if (Math.abs(audio.currentTime - elapsed) > 0.08) audio.currentTime = elapsed; if (audio.paused) void audio.play().catch(() => setError("Frozen playback could not start."));
     }
     for(const bus of buses){const sampleRate=lanes[0]?.audio.sampleRate??48000,samplePosition=Math.max(0,Math.round(elapsed*sampleRate)),gain=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="bus"&&item.sourceId===bus.id&&item.parameter==="gain"),samplePosition,bus.mix.gain),pan=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="bus"&&item.sourceId===bus.id&&item.parameter==="pan"),samplePosition,bus.mix.pan);busGraphRefs.current.get(bus.id)?.apply({...bus.mix,gain,pan},!buses.some((candidate)=>candidate.mix.soloed)||bus.mix.soloed);}
-  }, [audibility, automation, buses, effectiveFades, freezes, lanes, master, warpMaps]);
+  }, [audibility, automation, buses, clipRepairs, effectiveFades, freezes, lanes, master, warpMaps]);
 
   useEffect(() => {
     for (const lane of lanes) {
@@ -419,6 +423,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
                 </div>
                 <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} />
+                <TimelineDawPrivateClipRepairEditor sessionId={sessionId} lane={lane} onChange={(repair) => setClipRepairs((current) => current[repair.laneId]?.checksum === repair.checksum ? current : { ...current, [repair.laneId]: repair })} />
                 <TimelineDawTransientEditor sessionId={sessionId} laneId={lane.id} sampleRate={lane.audio.sampleRate} onNavigate={(seconds) => { const audio=audioRefs.current.get(lane.id); if(audio) audio.currentTime=seconds; }} onAudition={(seconds)=>{const audio=audioRefs.current.get(lane.id);if(audio){audio.currentTime=seconds;void audio.play()}}} />
                 <TimelineDawWarpEditor sessionId={sessionId} laneId={lane.id} frameCount={lane.audio.frameCount} sampleRate={lane.audio.sampleRate} onChange={(markers)=>setWarpMaps(x=>({...x,[lane.id]:markers}))} />
                 <label className="mt-3 block text-xs font-black text-white/55">Output routing<select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={lane.busId ?? ""} onChange={(event) => void assignBus(lane, event.target.value || null)}><option value="">Master</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label><label className="ml-3 text-xs font-black text-white/55">Parallel send<select aria-label={`${lane.name} parallel send`} className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" defaultValue="" onChange={(event) => { if (event.target.value) void persistSend({ sourceKind: "lane", sourceId: lane.id, destinationBusId: event.target.value, level: 0.5, preFader: false, muted: false }); event.currentTarget.value = ""; }}><option value="">Add send…</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label>
