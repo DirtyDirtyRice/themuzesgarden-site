@@ -7,15 +7,18 @@ import {
   arrangeDawPrivateAudioLane,
   duplicateDawPrivateAudioLane,
   loadDawPrivateAudioLanes,
+  loadDawPrivateLaneWaveform,
   removeDawPrivateAudioLane,
   splitDawPrivateAudioLane,
   updateDawPrivateAudioLaneMix,
   updateDawPrivateAudioLaneFade,
   type DawPrivateAudioLane,
+  type DawPrivateLaneWaveform,
 } from "@/app/workspace/projects/[id]/projectDawApi";
 import { resolveTimelineDawPrivateLaneAudibility } from "@/lib/timeline/TimelineDawPrivateLaneMixerPolicy";
 import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } from "@/lib/timeline/TimelineDawPrivateLaneMonitorGraph";
 import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
+import TimelineDawPrivateLaneWaveform from "@/app/components/TimelineDawPrivateLaneWaveform";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -24,6 +27,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
+  const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const audioRefs = useRef(new Map<string, HTMLAudioElement>());
   const graphRefs = useRef(new Map<string, TimelineDawPrivateLaneMonitorGraph>());
   const contextRefs = useRef(new Map<string, AudioContext>());
@@ -33,6 +37,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const transportStateRef = useRef<"playing" | "paused" | "stopped">("stopped");
   const audibility = useMemo(() => resolveTimelineDawPrivateLaneAudibility(lanes.map((lane) => ({ id: lane.id, muted: lane.mix.muted, soloed: lane.mix.soloed }))), [lanes]);
   const crossfades = useMemo(() => detectTimelineDawPrivateLaneCrossfades(lanes), [lanes]);
+  const timelineExtentSeconds = useMemo(() => Math.max(60, ...lanes.map((lane) => lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds)), [lanes]);
+  const waveformSourceKey = useMemo(() => [...new Set(lanes.map((lane) => lane.source.checksum))].sort().join("|"), [lanes]);
   const effectiveFades = useMemo(() => {
     const result = new Map(lanes.map((lane) => [lane.id, { ...lane.fade }]));
     for (const crossfade of crossfades) {
@@ -80,6 +86,17 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     }, 100);
     return () => window.clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const sources = [...new Map(lanes.map((lane) => [lane.source.checksum, lane])).values()];
+    void Promise.all(sources.map(async (lane) => {
+      const { waveform } = await loadDawPrivateLaneWaveform(sessionId, lane.id);
+      return [lane.source.checksum, waveform] as const;
+    })).then((loaded) => { if (active) setWaveforms((current) => ({ ...current, ...Object.fromEntries(loaded) })); })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Private waveforms could not be prepared."); });
+    return () => { active = false; };
+  }, [sessionId, waveformSourceKey]);
 
   useEffect(() => {
     let active = true;
@@ -273,6 +290,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s → {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p></div>
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
                 </div>
+                <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} />
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-3">
                   <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>

@@ -6,33 +6,34 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Lane Splits and Region Editing
+## Latest completed milestone — Private Lane Waveforms and Direct Editing
 
-Arranged private audio can now be divided into independent sample-aligned regions without changing its source master.
+Private regions now have checksum-verified waveform summaries and timeline-proportional direct edit controls.
 
-- Normalize requested timeline splits to the corresponding exact source frame.
-- Reject endpoints and require at least one source frame on both sides.
-- Preserve source identity, checksum, comp provenance, mixer state, and outer edge fades.
-- Leave the newly created internal edges at unity gain for continuous playback across an untouched split.
-- Reject splits that would truncate an existing outer fade.
-- Update the original left region and insert the right region in one owner-scoped database transaction.
-- Lock the source row and independently revalidate ownership, geometry, fades, and timeline/source alignment inside the transaction.
-- Provide a Split at Playhead action that replaces the original lane with the two returned regions.
+- Decode private WAV masters only on the authenticated server and never expose public source URLs.
+- Verify the immutable source checksum and stored sample geometry before deriving waveform data.
+- Derive bounded multichannel absolute peaks with a maximum of 256 cached bins per source.
+- Cache summaries by owner, checksum, sample rate, channel count, and frame count under row-level security.
+- Project only each region's arranged source-in/source-out window into its waveform display.
+- Render region position and duration in shared timeline proportion with visible region and fade boundaries.
+- Provide accessible range controls for moving and sample-aware left/right trimming while retaining numeric fallback controls.
+- Keep waveform loading and rendering separate from the transport-critical Web Audio monitoring graph.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateLaneSplitPolicy.ts`
-- `engine/test/timeline-daw-private-lane-split-policy.test.ts`
-- `supabase/migrations/20260808203000_timeline_daw_private_lane_splits.sql`
-- `app/api/timeline/daw-private-audio-lanes/route.ts`
+- `lib/timeline/TimelineDawPrivateLaneWaveformPolicy.ts`
+- `engine/test/timeline-daw-private-lane-waveform-policy.test.ts`
+- `supabase/migrations/20260808213000_timeline_daw_private_lane_waveforms.sql`
+- `app/api/timeline/daw-private-waveforms/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
+- `app/components/TimelineDawPrivateLaneWaveform.tsx`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
 
 ### Verification
 
-- Focused private-lane split, arrangement, fade, and mixer policy tests: 10 passed.
+- Focused waveform, split, and arrangement policy tests: 8 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260808203000`.
+- Supabase migrations applied successfully through `20260808213000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -58,18 +59,19 @@ Arranged private audio can now be divided into independent sample-aligned region
 - Persistent private-lane mute, solo, gain, pan, and metering.
 - Durable frame-normalized lane fades and automatic compatible equal-power crossfades.
 - Atomic sample-aligned lane splits with continuous non-destructive region boundaries.
+- Checksum-cached private waveforms with timeline-proportional direct region editing.
 
-## Next milestone — Private Lane Waveforms and Direct Editing
+## Next milestone — Private Lane Edit History and Undo
 
-Make private regions visually legible and provide direct timeline-oriented edit controls.
+Make destructive-feeling arrangement changes safely reversible while retaining non-destructive source semantics.
 
 Planned outcome:
 
-1. Derive bounded waveform peaks from private WAV masters without exposing public source URLs.
-2. Cache waveform summaries by immutable source checksum and audio geometry.
-3. Render each arranged source window with trim, fade, and split boundaries in timeline proportion.
-4. Support accessible direct move and trim interactions with sample-aware numeric fallback controls.
-5. Keep waveform work out of the transport-critical monitoring path.
+1. Record durable before/after edit receipts for move, trim, split, duplicate, fade, and remove operations.
+2. Scope history to the authenticated owner and DAW session with deterministic ordering.
+3. Undo and redo supported edits atomically with stale-state conflict detection.
+4. Preserve private masters and source provenance through every reversal.
+5. Expose clear history, undo, and redo controls with meaningful operation labels.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

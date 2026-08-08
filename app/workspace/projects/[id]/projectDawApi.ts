@@ -239,6 +239,12 @@ export type DawPrivateAudioLane = {
   updatedAt: string;
 };
 
+export type DawPrivateLaneWaveform = { binCount: number; frameCount: number; peaks: number[] };
+
+export function loadDawPrivateLaneWaveform(sessionId: string, laneId: string): Promise<{ waveform: DawPrivateLaneWaveform; cached: boolean }> {
+  return request(`/api/timeline/daw-private-waveforms?sessionId=${encodeURIComponent(sessionId)}&laneId=${encodeURIComponent(laneId)}`);
+}
+
 export function loadDawPrivateAudioLanes(sessionId: string): Promise<{ lanes: DawPrivateAudioLane[] }> {
   return request(`/api/timeline/daw-private-audio-lanes?sessionId=${encodeURIComponent(sessionId)}`);
 }
