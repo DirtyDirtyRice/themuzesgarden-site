@@ -1,5 +1,6 @@
 import type { TimelineDawPrivateLaneMix } from "./TimelineDawPrivateLaneMixerPolicy";
 import { timelineDawEqualPowerEnvelope } from "./TimelineDawPrivateLaneFadePolicy";
+import type { TimelineDawPrivateInsert, TimelineDawPrivateSend } from "./TimelineDawPrivateBusProcessingPolicy";
 
 export type TimelineDawPrivateLaneMeter = {
   peakAmplitude: number;
@@ -9,22 +10,36 @@ export type TimelineDawPrivateLaneMeter = {
 
 export class TimelineDawPrivateLaneMonitorGraph {
   private readonly source: MediaElementAudioSourceNode;
+  private readonly insertGain: GainNode;
+  private readonly filter: BiquadFilterNode;
+  private readonly compressor: DynamicsCompressorNode;
   private readonly gain: GainNode;
   private readonly panner: StereoPannerNode;
   private readonly analyser: AnalyserNode;
   private readonly samples: Float32Array<ArrayBuffer>;
+  private readonly sends = new Map<string, GainNode>();
 
   constructor(private readonly context: AudioContext, element: HTMLMediaElement, output: AudioNode = context.destination) {
     this.source = context.createMediaElementSource(element);
+    this.insertGain = context.createGain();
+    this.filter = context.createBiquadFilter();
+    this.compressor = context.createDynamicsCompressor();
     this.gain = context.createGain();
     this.panner = context.createStereoPanner();
     this.analyser = context.createAnalyser();
     this.analyser.fftSize = 256;
     this.analyser.smoothingTimeConstant = 0.55;
     this.samples = new Float32Array(this.analyser.fftSize);
-    this.source.connect(this.gain).connect(this.panner).connect(this.analyser).connect(output);
+    this.filter.type = "lowpass"; this.filter.frequency.value = 20000; this.compressor.threshold.value = 0; this.compressor.ratio.value = 1;
+    this.source.connect(this.insertGain).connect(this.filter).connect(this.compressor).connect(this.gain).connect(this.panner).connect(this.analyser).connect(output);
   }
 
+  applyProcessing(inserts: TimelineDawPrivateInsert[], sends: Array<TimelineDawPrivateSend & { output: AudioNode }>): void {
+    const active = (effect: TimelineDawPrivateInsert["effect"]) => inserts.find((item) => item.effect === effect && !item.bypassed);
+    const gain = active("gain"), filter = active("filter"), compressor = active("compressor"), at = this.context.currentTime;
+    this.insertGain.gain.setTargetAtTime(gain?.parameters.gain ?? 1, at, 0.008); this.filter.frequency.setTargetAtTime(filter?.parameters.frequency ?? 20000, at, 0.008); this.filter.Q.setTargetAtTime(filter?.parameters.q ?? 0.0001, at, 0.008); this.compressor.threshold.setTargetAtTime(compressor?.parameters.threshold ?? 0, at, 0.008); this.compressor.ratio.setTargetAtTime(compressor?.parameters.ratio ?? 1, at, 0.008);
+    this.sends.forEach((node) => node.disconnect()); this.sends.clear(); for (const send of sends) { const node = this.context.createGain(); node.gain.value = send.muted ? 0 : send.level; (send.preFader ? this.source : this.analyser).connect(node).connect(send.output); this.sends.set(send.id, node); }
+  }
   apply(mix: TimelineDawPrivateLaneMix, audible: boolean): void {
     const at = this.context.currentTime;
     this.gain.gain.setTargetAtTime(audible ? mix.gain : 0, at, 0.008);
@@ -95,7 +110,11 @@ export class TimelineDawPrivateLaneMonitorGraph {
   }
 
   dispose(): void {
+    this.sends.forEach((node) => node.disconnect());
     this.source.disconnect();
+    this.insertGain.disconnect();
+    this.filter.disconnect();
+    this.compressor.disconnect();
     this.gain.disconnect();
     this.panner.disconnect();
     this.analyser.disconnect();

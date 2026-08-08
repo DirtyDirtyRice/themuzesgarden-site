@@ -1,25 +1,12 @@
 import type { TimelineDawPrivateBusMix } from "./TimelineDawPrivateBusPolicy";
+import type { TimelineDawPrivateInsert, TimelineDawPrivateSend } from "./TimelineDawPrivateBusProcessingPolicy";
 import type { TimelineDawPrivateLaneMeter } from "./TimelineDawPrivateLaneMonitorGraph";
 
 export class TimelineDawPrivateBusGraph {
-  readonly input: GainNode;
-  private readonly gain: GainNode;
-  private readonly panner: StereoPannerNode;
-  private readonly analyser: AnalyserNode;
-  private readonly samples: Float32Array<ArrayBuffer>;
-
-  constructor(private readonly context: AudioContext) {
-    this.input = context.createGain(); this.gain = context.createGain(); this.panner = context.createStereoPanner(); this.analyser = context.createAnalyser();
-    this.analyser.fftSize = 256; this.analyser.smoothingTimeConstant = 0.55; this.samples = new Float32Array(this.analyser.fftSize);
-    this.input.connect(this.gain).connect(this.panner).connect(this.analyser).connect(context.destination);
-  }
-  apply(mix: TimelineDawPrivateBusMix, audible: boolean): void {
-    const at = this.context.currentTime; this.gain.gain.setTargetAtTime(audible && !mix.muted ? mix.gain : 0, at, 0.008); this.panner.pan.setTargetAtTime(mix.pan, at, 0.008);
-  }
-  meter(): TimelineDawPrivateLaneMeter {
-    this.analyser.getFloatTimeDomainData(this.samples); let peakAmplitude = 0;
-    for (const sample of this.samples) peakAmplitude = Math.max(peakAmplitude, Math.abs(sample));
-    return { peakAmplitude, peakDbfs: peakAmplitude > 0 ? Math.max(-96, 20 * Math.log10(peakAmplitude)) : -96, clipped: peakAmplitude >= 0.999 };
-  }
-  dispose(): void { this.input.disconnect(); this.gain.disconnect(); this.panner.disconnect(); this.analyser.disconnect(); }
+  readonly input: GainNode; private readonly insertGain: GainNode; private readonly filter: BiquadFilterNode; private readonly compressor: DynamicsCompressorNode; private readonly gain: GainNode; private readonly panner: StereoPannerNode; private readonly analyser: AnalyserNode; private readonly samples: Float32Array<ArrayBuffer>; private readonly sends = new Map<string, GainNode>();
+  constructor(private readonly context: AudioContext) { this.input=context.createGain(); this.insertGain=context.createGain(); this.filter=context.createBiquadFilter(); this.compressor=context.createDynamicsCompressor(); this.gain=context.createGain(); this.panner=context.createStereoPanner(); this.analyser=context.createAnalyser(); this.filter.type="lowpass"; this.filter.frequency.value=20000; this.compressor.threshold.value=0; this.compressor.ratio.value=1; this.analyser.fftSize=256; this.analyser.smoothingTimeConstant=0.55; this.samples=new Float32Array(this.analyser.fftSize); this.input.connect(this.insertGain).connect(this.filter).connect(this.compressor).connect(this.gain).connect(this.panner).connect(this.analyser).connect(context.destination); }
+  apply(mix:TimelineDawPrivateBusMix,audible:boolean):void { const at=this.context.currentTime; this.gain.gain.setTargetAtTime(audible&&!mix.muted?mix.gain:0,at,0.008); this.panner.pan.setTargetAtTime(mix.pan,at,0.008); }
+  applyProcessing(inserts:TimelineDawPrivateInsert[],sends:Array<TimelineDawPrivateSend & {output:AudioNode}>):void { const active=(effect:TimelineDawPrivateInsert["effect"])=>inserts.find((item)=>item.effect===effect&&!item.bypassed); const gain=active("gain"),filter=active("filter"),compressor=active("compressor"),at=this.context.currentTime; this.insertGain.gain.setTargetAtTime(gain?.parameters.gain??1,at,0.008); this.filter.frequency.setTargetAtTime(filter?.parameters.frequency??20000,at,0.008); this.filter.Q.setTargetAtTime(filter?.parameters.q??0.0001,at,0.008); this.compressor.threshold.setTargetAtTime(compressor?.parameters.threshold??0,at,0.008); this.compressor.ratio.setTargetAtTime(compressor?.parameters.ratio??1,at,0.008); this.sends.forEach((node)=>node.disconnect()); this.sends.clear(); for(const send of sends){const node=this.context.createGain();node.gain.value=send.muted?0:send.level;(send.preFader?this.input:this.analyser).connect(node).connect(send.output);this.sends.set(send.id,node);} }
+  meter():TimelineDawPrivateLaneMeter { this.analyser.getFloatTimeDomainData(this.samples);let peakAmplitude=0;for(const sample of this.samples)peakAmplitude=Math.max(peakAmplitude,Math.abs(sample));return{peakAmplitude,peakDbfs:peakAmplitude>0?Math.max(-96,20*Math.log10(peakAmplitude)):-96,clipped:peakAmplitude>=0.999}; }
+  dispose():void { this.sends.forEach((node)=>node.disconnect());this.input.disconnect();this.insertGain.disconnect();this.filter.disconnect();this.compressor.disconnect();this.gain.disconnect();this.panner.disconnect();this.analyser.disconnect(); }
 }

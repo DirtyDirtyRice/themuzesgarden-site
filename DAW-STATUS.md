@@ -6,37 +6,34 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Lane Routing and Buses
+## Latest completed milestone — Private Bus Sends and Insert Effects
 
-Private audio lanes can now be routed into durable owner-scoped buses for shared monitoring and mix control.
+Private lanes and buses now support durable parallel sends and shared non-destructive insert processing.
 
-- Persist named session buses with gain, pan, mute, and solo state under owner-scoped row-level security.
-- Assign each private lane to a validated bus or directly to the master output.
-- Use one shared session AudioContext and reconnect existing lane analyser outputs without duplicating media-element source nodes.
-- Apply deterministic lane, bus, and global solo/mute precedence across master and bus-routed lanes.
-- Sum routed lanes through real Web Audio bus graphs with post-sum bus meters.
-- Preserve bus assignments when lanes are duplicated or split and expose routing from every lane strip.
+- Persist owner-scoped lane and bus sends with bounded levels, mute state, and pre-fader or post-fader mode.
+- Validate every source and destination and reject direct or transitive bus feedback cycles.
+- Persist three ordered insert slots per lane or bus with bypassable gain, low-pass filter, and compressor processing.
+- Apply inserts and pre/post send taps inside the shared session AudioContext without recreating media-element sources.
+- Expose lane send creation plus bus send levels, mute controls, insert bypass controls, and post-processing meters.
+- Keep processing state isolated by owner and DAW session under row-level security.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateBusPolicy.ts`
+- `lib/timeline/TimelineDawPrivateBusProcessingPolicy.ts`
 - `lib/timeline/TimelineDawPrivateBusGraph.ts`
 - `lib/timeline/TimelineDawPrivateLaneMonitorGraph.ts`
-- `engine/test/timeline-daw-private-bus-policy.test.ts`
-- `supabase/migrations/20260809003000_timeline_daw_private_buses.sql`
-- `app/api/timeline/daw-private-buses/route.ts`
-- `app/api/timeline/daw-private-audio-lanes/route.ts`
-- `app/api/timeline/daw-private-lane-history/route.ts`
-- `app/api/timeline/daw-private-lane-groups/route.ts`
+- `engine/test/timeline-daw-private-bus-processing-policy.test.ts`
+- `supabase/migrations/20260809013000_timeline_daw_private_bus_processing.sql`
+- `app/api/timeline/daw-private-bus-processing/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
 - `app/components/TimelineDawPrivateBusMixer.tsx`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
 
 ### Verification
 
-- Focused private-bus routing policy tests: 2 passed.
+- Focused send, insert-validation, and feedback-cycle policy tests: 3 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809003000`.
+- Supabase migrations applied successfully through `20260809013000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -66,17 +63,17 @@ Private audio lanes can now be routed into durable owner-scoped buses for shared
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Private Bus Sends and Insert Effects
+## Next milestone — Private Track Freeze and Processing Bounce
 
-Extend routing with non-destructive parallel sends and a small durable insert-processing chain.
+Make larger processed sessions dependable by rendering selected lane and bus processing into reversible private audio artifacts.
 
 Planned outcome:
 
-1. Persist owner-scoped lane and bus send levels with validated destinations.
-2. Prevent feedback cycles while allowing pre-fader and post-fader sends.
-3. Add durable bypassable gain, filter, and compressor insert slots.
-4. Build shared Web Audio send and insert graphs without duplicating source nodes.
-5. Expose send controls, effect parameters, and post-processing meters in the private mixer.
+1. Create durable owner-scoped freeze recipes from lane routing, sends, and insert settings.
+2. Render sample-aligned processed WAV artifacts without changing the source masters.
+3. Replace live processing with checksum-verified frozen playback while retaining a reversible unfreeze path.
+4. Detect stale freezes when routing or processing settings change.
+5. Expose freeze progress, artifact provenance, unfreeze, and refresh controls.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

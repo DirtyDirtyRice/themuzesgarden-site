@@ -262,6 +262,12 @@ export function loadDawPrivateBuses(sessionId: string): Promise<{ buses: DawPriv
 export function saveDawPrivateBus(sessionId: string, input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }): Promise<{ bus: DawPrivateBus }> { return request("/api/timeline/daw-private-buses", { method: "POST", body: JSON.stringify({ sessionId, ...input }) }); }
 export function assignDawPrivateLaneBus(sessionId: string, laneId: string, busId: string | null): Promise<{ laneId: string; busId: string | null; updatedAt: string }> { return request("/api/timeline/daw-private-buses", { method: "POST", body: JSON.stringify({ action: "assign", sessionId, laneId, busId }) }); }
 export function deleteDawPrivateBus(sessionId: string, busId: string): Promise<{ deletedBusId: string }> { return request("/api/timeline/daw-private-buses", { method: "POST", body: JSON.stringify({ action: "delete", sessionId, busId }) }); }
+export type DawPrivateSend = { id: string; sourceKind: "lane" | "bus"; sourceId: string; destinationBusId: string; level: number; preFader: boolean; muted: boolean };
+export type DawPrivateInsert = { id: string; sourceKind: "lane" | "bus"; sourceId: string; slot: number; effect: "gain" | "filter" | "compressor"; bypassed: boolean; parameters: Record<string, number> };
+export function loadDawPrivateBusProcessing(sessionId: string): Promise<{ sends: DawPrivateSend[]; inserts: DawPrivateInsert[] }> { return request(`/api/timeline/daw-private-bus-processing?sessionId=${encodeURIComponent(sessionId)}`); }
+export function saveDawPrivateSend(sessionId: string, input: Omit<DawPrivateSend, "id"> & { id?: string }): Promise<{ send: DawPrivateSend }> { return request("/api/timeline/daw-private-bus-processing", { method: "POST", body: JSON.stringify({ sessionId, kind: "send", ...input }) }); }
+export function saveDawPrivateInsert(sessionId: string, input: Omit<DawPrivateInsert, "id"> & { id?: string }): Promise<{ insert: DawPrivateInsert }> { return request("/api/timeline/daw-private-bus-processing", { method: "POST", body: JSON.stringify({ sessionId, kind: "insert", ...input }) }); }
+export function deleteDawPrivateProcessing(sessionId: string, kind: "send" | "insert", id: string): Promise<{ deletedId: string }> { return request("/api/timeline/daw-private-bus-processing", { method: "POST", body: JSON.stringify({ action: "delete", sessionId, kind, id }) }); }
 
 export type DawPrivateLaneWaveform = { binCount: number; frameCount: number; peaks: number[] };
 
