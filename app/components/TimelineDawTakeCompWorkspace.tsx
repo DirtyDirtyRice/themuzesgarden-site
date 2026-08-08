@@ -5,6 +5,8 @@ import {
   createDawRecordingTakeAudition,
   deleteDawTakeComp,
   loadDawTakeComps,
+  loadDawTakeCompDelivery,
+  renderDawTakeComp,
   saveDawTakeComp,
   type DawRecordingTake,
   type DawTakeComp,
@@ -21,6 +23,9 @@ export default function TimelineDawTakeCompWorkspace({ sessionId, takes }: { ses
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [error, setError] = useState<string>();
+  const [renderingCompId, setRenderingCompId] = useState<string>();
+  const [renderProgress, setRenderProgress] = useState<Record<string, number>>({});
+  const [deliveryUrls, setDeliveryUrls] = useState<Record<string, string>>({});
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const previewRunRef = useRef(0);
   const previewResolveRef = useRef<(() => void) | undefined>(undefined);
@@ -69,6 +74,34 @@ export default function TimelineDawTakeCompWorkspace({ sessionId, takes }: { ses
       editComp(comp);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Take comp could not be saved.");
+    } finally { setBusy(false); }
+  }
+
+  async function renderComp(comp: DawTakeComp) {
+    setBusy(true);
+    setRenderingCompId(comp.id);
+    setRenderProgress((current) => ({ ...current, [comp.id]: 5 }));
+    setError(undefined);
+    try {
+      const result = await renderDawTakeComp(sessionId, comp.id);
+      setComps((current) => [result.comp, ...current.filter((candidate) => candidate.id !== comp.id)]);
+      setDeliveryUrls((current) => ({ ...current, [comp.id]: result.deliveryUrl }));
+      setRenderProgress((current) => ({ ...current, [comp.id]: result.progress.at(-1)?.percent ?? 100 }));
+      if (compId === comp.id) editComp(result.comp);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Take comp could not be rendered.");
+      setRenderProgress((current) => { const next = { ...current }; delete next[comp.id]; return next; });
+    } finally { setRenderingCompId(undefined); setBusy(false); }
+  }
+
+  async function loadDelivery(comp: DawTakeComp) {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const { deliveryUrl } = await loadDawTakeCompDelivery(sessionId, comp.id);
+      setDeliveryUrls((current) => ({ ...current, [comp.id]: deliveryUrl }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Rendered comp delivery could not be prepared.");
     } finally { setBusy(false); }
   }
 
@@ -126,7 +159,7 @@ export default function TimelineDawTakeCompWorkspace({ sessionId, takes }: { ses
       <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Take comping</p>
       <h3 className="mt-1 text-xl font-black">Non-destructive comp recipe</h3>
       <p className="mt-1 text-sm text-white/55">Select at least two takes, trim their source regions, order the edit list, then save or preview it. Private masters remain untouched.</p>
-      {comps.length ? <div className="mt-3 flex flex-wrap gap-2">{comps.map((comp) => <span key={comp.id} className="inline-flex overflow-hidden rounded-xl border border-white/15"><button type="button" className="bg-black px-3 py-2 text-sm font-black text-white" onClick={() => editComp(comp)}>{comp.name}</button><button type="button" className="bg-red-950 px-3 py-2 text-sm font-black text-red-100" disabled={busy} onClick={() => void removeComp(comp)}>Delete</button></span>)}</div> : null}
+      {comps.length ? <div className="mt-3 grid gap-2">{comps.map((comp) => <div key={comp.id} className="rounded-xl border border-white/15 bg-black p-3"><div className="flex flex-wrap items-center gap-2"><button type="button" className="text-sm font-black text-white underline decoration-white/30" onClick={() => editComp(comp)}>{comp.name}</button>{comp.render ? <span className="text-xs font-black text-emerald-200">Rendered {comp.render.durationSeconds.toFixed(2)}s · {(comp.render.byteLength / 1_048_576).toFixed(2)} MB</span> : <span className="text-xs text-white/45">Recipe only</span>}{renderProgress[comp.id] !== undefined ? <span className="text-xs font-black text-cyan-200">Render {renderProgress[comp.id]}%</span> : null}</div><div className="mt-2 flex flex-wrap gap-2"><button type="button" className={control} disabled={busy} onClick={() => void renderComp(comp)}>{renderingCompId === comp.id ? "Rendering…" : comp.render ? "Render Again" : "Render WAV"}</button>{comp.render ? <button type="button" className={control} disabled={busy} onClick={() => void loadDelivery(comp)}>{deliveryUrls[comp.id] ? "Refresh Delivery" : "Audition & Download"}</button> : null}<button type="button" className={control} disabled={busy} onClick={() => void removeComp(comp)}>Delete Recipe</button></div>{deliveryUrls[comp.id] ? <><audio className="mt-2 w-full" controls preload="metadata" src={deliveryUrls[comp.id]} /><a className="mt-2 inline-block text-sm font-black text-cyan-200" href={deliveryUrls[comp.id]} download={`${comp.name}.wav`}>Download rendered WAV</a></> : null}</div>)}</div> : null}
       <label className="mt-4 grid gap-1 text-xs font-black uppercase tracking-wide text-white/60">Comp name<input className="rounded-xl border border-white/20 bg-black px-3 py-2 text-sm normal-case tracking-normal text-white" maxLength={120} value={name} onChange={(event) => setName(event.target.value)} disabled={busy} /></label>
       <div className="mt-3 flex flex-wrap gap-2">{takes.map((take) => <label key={take.id} className="flex items-center gap-2 rounded-xl border border-white/15 bg-black px-3 py-2 text-sm"><input type="checkbox" checked={regions.some((region) => region.takeId === take.id)} onChange={() => toggleTake(take)} disabled={busy} />{take.name} ({take.audio.durationSeconds.toFixed(2)}s)</label>)}</div>
       {regions.length ? <ol className="mt-4 grid gap-2">{regions.map((region, index) => { const take = takeById.get(region.takeId); return <li key={region.takeId} className="grid gap-2 rounded-xl border border-white/10 bg-black/70 p-3 md:grid-cols-[1fr_auto_auto_auto]"><div><p className="font-black">{index + 1}. {take?.name ?? "Unavailable take"}</p><p className="text-xs text-white/45">Source region; output begins after the previous region.</p></div><label className="text-xs text-white/55">Start (s)<input className="block w-28 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={take?.audio.durationSeconds} step="0.01" value={region.startSeconds} onChange={(event) => updateRegion(index, { startSeconds: Number(event.target.value) })} /></label><label className="text-xs text-white/55">End (s)<input className="block w-28 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={take?.audio.durationSeconds} step="0.01" value={region.endSeconds} onChange={(event) => updateRegion(index, { endSeconds: Number(event.target.value) })} /></label><div className="flex gap-1"><button type="button" className={control} disabled={busy || index === 0} onClick={() => moveRegion(index, -1)}>Up</button><button type="button" className={control} disabled={busy || index === regions.length - 1} onClick={() => moveRegion(index, 1)}>Down</button></div></li>; })}</ol> : null}

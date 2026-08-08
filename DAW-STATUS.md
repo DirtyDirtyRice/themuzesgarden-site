@@ -6,32 +6,32 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone ? Take Comping Workspace
+## Latest completed milestone ? Comp Render Delivery
 
-Musicians can now build and audition durable, non-destructive comp recipes from their privately stored takes.
+Musicians can now turn a saved, editable take comp into a durable private WAV artifact.
 
-- Choose at least two reviewed takes for a comp.
-- Define and reorder bounded source regions without altering private masters.
-- Validate take ownership, duration bounds, multi-take membership, and illegal same-take overlaps on the server.
-- Save, update, load, and delete comp recipes with owner-only row-level security and owner-scoped API queries.
-- Preview the ordered edit-decision list through short-lived private audition URLs.
-- Preserve recording, review, preferred-take, MP3-copy, audition, and deletion workflows.
+- Decode owner-scoped private WAV masters referenced by a saved comp.
+- Convert region boundaries to exact source frames and reject unavailable or incompatible audio.
+- Assemble ordered regions with bounded 10 ms equal-power crossfades.
+- Encode and persist a private 24-bit WAV while retaining the editable recipe and source takes.
+- Store complete render provenance: URI, checksum, bytes, format geometry, duration, and render time.
+- Show render completion progress and provide signed audition and download delivery.
+- Clear stale render metadata whenever a comp recipe changes.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawTakeCompPolicy.ts`
-- `engine/test/timeline-daw-take-comp-policy.test.ts`
-- `supabase/migrations/20260808123000_timeline_daw_take_comps.sql`
+- `lib/timeline/TimelineDawTakeCompRenderer.ts`
+- `engine/test/timeline-daw-take-comp-renderer.test.ts`
+- `supabase/migrations/20260808143000_timeline_daw_take_comp_renders.sql`
 - `app/api/timeline/daw-take-comps/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
 - `app/components/TimelineDawTakeCompWorkspace.tsx`
-- `app/workspace/projects/[id]/ProjectDawRecordingWorkspace.tsx`
 
 ### Verification
 
-- Focused Take Comp policy tests: 2 passed.
+- Focused Take Comp policy and renderer tests: 4 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260808123000`.
+- Supabase migrations applied successfully through `20260808143000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 
 ## Previously completed DAW foundation
@@ -51,19 +51,20 @@ Musicians can now build and audition durable, non-destructive comp recipes from 
 - Input-level and clipping safety.
 - Preferred-take selection.
 - Recording take review, notes, ratings, and renaming.
+- Durable non-destructive take comp recipes and ordered preview.
 
-## Next milestone ? Comp Render Delivery
+## Next milestone ? Comp-to-Timeline Promotion
 
-Turn a saved comp recipe into a durable audio artifact while retaining the editable recipe.
+Promote a completed comp render into the active DAW timeline without losing its recipe or provenance.
 
 Planned outcome:
 
-1. Decode the private WAV masters referenced by a saved comp.
-2. Assemble ordered regions with sample-accurate boundaries.
-3. Add short equal-power crossfades at edit points.
-4. Render and persist a private WAV comp artifact without replacing the source takes or recipe.
-5. Expose progress, audition, and download delivery in the comping workspace.
-6. Add focused render tests, run the production build, apply any reviewed migration, commit, and push.
+1. Register a rendered comp as an owner-scoped timeline source.
+2. Preserve a durable link from the promoted source back to its comp recipe and checksum.
+3. Add the promoted comp to the session through the existing recorded-source workflow.
+4. Prevent promotion of stale or missing renders.
+5. Show promotion state and allow safe re-promotion after a new render.
+6. Add focused policy tests, run the production build, apply any reviewed migration, commit, and push.
 
 ## Working rules
 

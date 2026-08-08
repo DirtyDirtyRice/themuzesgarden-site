@@ -235,6 +235,16 @@ export type DawTakeComp = {
   regions: DawTakeCompRegion[];
   createdAt: string;
   updatedAt: string;
+  render: {
+    uri: string;
+    checksum: string;
+    byteLength: number;
+    sampleRate: number;
+    channelCount: number;
+    frameCount: number;
+    durationSeconds: number;
+    renderedAt: string;
+  } | null;
 };
 
 export function loadDawTakeComps(sessionId: string): Promise<{ comps: DawTakeComp[] }> {
@@ -250,6 +260,24 @@ export function saveDawTakeComp(input: {
   return request("/api/timeline/daw-take-comps", {
     method: "POST",
     body: JSON.stringify({ action: "save", ...input }),
+  });
+}
+
+export function renderDawTakeComp(sessionId: string, compId: string): Promise<{
+  comp: DawTakeComp;
+  deliveryUrl: string;
+  progress: Array<{ stage: "decoded" | "assembled" | "persisted"; percent: number }>;
+}> {
+  return request("/api/timeline/daw-take-comps", {
+    method: "POST",
+    body: JSON.stringify({ action: "render", sessionId, compId }),
+  });
+}
+
+export function loadDawTakeCompDelivery(sessionId: string, compId: string): Promise<{ deliveryUrl: string }> {
+  return request("/api/timeline/daw-take-comps", {
+    method: "POST",
+    body: JSON.stringify({ action: "delivery", sessionId, compId }),
   });
 }
 
