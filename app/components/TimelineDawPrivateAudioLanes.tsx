@@ -53,6 +53,7 @@ import { timelineDawPrivateAutomationValue } from "@/lib/timeline/TimelineDawPri
 import { dispatchTimelineDawPrivateMixChange } from "@/lib/timeline/TimelineDawPrivateAutomationEvents";
 import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBusGraph";
 import TimelineDawPrivateClipRepairEditor from "@/app/components/TimelineDawPrivateClipRepairEditor";
+import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
@@ -400,6 +401,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
+      <TimelineDawPrivateMidiSequencer sessionId={sessionId} />
       <TimelineDawPrivateSnapshots sessionId={sessionId} currentMaster={master} onAudition={setMaster} onRestored={()=>window.location.reload()} />
       <TimelineDawPrivateReviews sessionId={sessionId} sampleRate={lanes[0]?.audio.sampleRate??48000} targets={[...lanes.map(l=>({id:l.id,kind:"lane" as const,name:l.name,timelineStartSeconds:l.timelineStartSeconds,sourceInSeconds:l.sourceInSeconds})),...buses.map(b=>({id:b.id,kind:"bus" as const,name:b.name}))]} onNavigate={(seconds)=>{playheadRef.current=seconds;synchronize(seconds,false)}} onAudition={(start,end)=>{playheadRef.current=start;synchronize(start,true);window.setTimeout(()=>synchronize(end??start+2,false),Math.max(100,((end??start+2)-start)*1000))}} />
       <TimelineDawPrivateCollaboration sessionId={sessionId} targets={[...lanes.map(l=>({id:l.id,kind:"lane" as const,name:l.name})),...buses.map(b=>({id:b.id,kind:"bus" as const,name:b.name}))]} />
