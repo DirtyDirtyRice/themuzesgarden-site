@@ -6,6 +6,7 @@ import { parseTimelineDawPrivateLaneMix } from "@/lib/timeline/TimelineDawPrivat
 import { parseTimelineDawPrivateLaneArrangement } from "@/lib/timeline/TimelineDawPrivateLaneArrangementPolicy";
 import { parseTimelineDawPrivateLaneFade } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
 import { parseTimelineDawPrivateLaneSplit } from "@/lib/timeline/TimelineDawPrivateLaneSplitPolicy";
+import { createTimelineDawPrivateLaneEditReceipt, type TimelineDawPrivateLaneEditOperation } from "@/lib/timeline/TimelineDawPrivateLaneEditHistoryPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,6 +57,15 @@ function lane(row: Record<string, unknown>, playbackUrl: string) {
     playbackUrl, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
   };
 }
+async function recordEdit(client: SupabaseClient, ownerId: string, sessionId: string, operation: TimelineDawPrivateLaneEditOperation, beforeRows: Record<string, unknown>[], afterRows: Record<string, unknown>[]) {
+  const receipt = createTimelineDawPrivateLaneEditReceipt({ operation, beforeRows, afterRows });
+  const { error } = await client.from("timeline_daw_private_lane_edit_history").insert({
+    id: `timeline-daw-lane-history-${crypto.randomUUID()}`, owner_id: ownerId, session_id: sessionId,
+    operation: receipt.operation, label: receipt.label, before_rows: receipt.beforeRows, after_rows: receipt.afterRows,
+  });
+  if (error) throw new ApiError(`Private lane edit history could not be recorded: ${error.message}`, 500);
+}
+
 async function sign(client: SupabaseClient, ownerId: string, sessionId: string, uri: string) {
   const ownerPrefix = `${PREFIX}${ownerId}/${sessionId}/`;
   if (!uri.startsWith(ownerPrefix)) throw new ApiError("Private lane source path is invalid.", 403);
@@ -118,6 +128,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       }).eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("*").single();
       if (error || !data) throw new ApiError("Private audio lane was not found.", 404);
+      await recordEdit(user.client, user.id, sessionId, "arrange", [stored], [data]);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { headers: { "Cache-Control": "no-store" } });
     }
 
@@ -146,6 +157,7 @@ export async function POST(request: NextRequest) {
         fade_in_seconds: stored.fade_in_seconds, fade_out_seconds: stored.fade_out_seconds,
       }).select("*").single();
       if (error || !data) throw new ApiError(`Private audio lane could not be duplicated: ${error?.message ?? "missing row"}`, 500);
+      await recordEdit(user.client, user.id, sessionId, "duplicate", [], [data]);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
 
@@ -168,6 +180,7 @@ export async function POST(request: NextRequest) {
       if (error || !Array.isArray(data) || data.length !== 2) {
         throw new ApiError(`Private audio lane could not be split atomically: ${error?.message ?? "split rows missing"}`, 500);
       }
+      await recordEdit(user.client, user.id, sessionId, "split", [stored], data);
       const lanes = await Promise.all(data.map(async (row) => lane(row, await sign(user.client, user.id, sessionId, String(row.source_uri)))));
       return NextResponse.json({ lanes }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
@@ -198,14 +211,16 @@ export async function POST(request: NextRequest) {
         fade_in_seconds: fade.inSeconds, fade_out_seconds: fade.outSeconds, updated_at: new Date().toISOString(),
       }).eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("*").single();
       if (error || !data) throw new ApiError("Private audio lane was not found.", 404);
+      await recordEdit(user.client, user.id, sessionId, "fade", [stored], [data]);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { headers: { "Cache-Control": "no-store" } });
     }
 
     if (body.action === "remove") {
       const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
       if (!laneId) throw new ApiError("laneId is required.", 400);
-      const { data, error } = await user.client.from(TABLE).delete().eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("id").single();
+      const { data, error } = await user.client.from(TABLE).delete().eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("*").single();
       if (error || !data) throw new ApiError("Private audio lane was not found.", 404);
+      await recordEdit(user.client, user.id, sessionId, "remove", [data], []);
       return NextResponse.json({ removedLaneId: laneId }, { headers: { "Cache-Control": "no-store" } });
     }
     throw new ApiError("Private audio lane action is invalid.", 400);

@@ -239,6 +239,23 @@ export type DawPrivateAudioLane = {
   updatedAt: string;
 };
 
+export type DawPrivateLaneEditHistory = {
+  id: string;
+  operation: "arrange" | "split" | "duplicate" | "fade" | "remove";
+  label: string;
+  state: "applied" | "undone";
+  createdAt: string;
+  changedAt: string;
+};
+
+export function loadDawPrivateLaneHistory(sessionId: string): Promise<{ history: DawPrivateLaneEditHistory[] }> {
+  return request(`/api/timeline/daw-private-lane-history?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function applyDawPrivateLaneHistory(sessionId: string, historyId: string, action: "undo" | "redo"): Promise<{ lanes: DawPrivateAudioLane[]; history: DawPrivateLaneEditHistory[] }> {
+  return request("/api/timeline/daw-private-lane-history", { method: "POST", body: JSON.stringify({ sessionId, historyId, action }) });
+}
+
 export type DawPrivateLaneWaveform = { binCount: number; frameCount: number; peaks: number[] };
 
 export function loadDawPrivateLaneWaveform(sessionId: string, laneId: string): Promise<{ waveform: DawPrivateLaneWaveform; cached: boolean }> {
