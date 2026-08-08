@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createTimelineDawWorkspaceServer } from "@/lib/timeline/TimelineDawWorkspaceServer";
 import { parseTimelineDawPrivateAudioLane } from "@/lib/timeline/TimelineDawPrivateAudioLanePolicy";
 import { parseTimelineDawPrivateLaneMix } from "@/lib/timeline/TimelineDawPrivateLaneMixerPolicy";
+import { parseTimelineDawPrivateLaneArrangement } from "@/lib/timeline/TimelineDawPrivateLaneArrangementPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,6 +46,8 @@ function lane(row: Record<string, unknown>, playbackUrl: string) {
     source: { id: String(row.source_id), uri: String(row.source_uri), checksum: String(row.source_checksum) },
     audio: { sampleRate: Number(row.sample_rate), channelCount: Number(row.channel_count), frameCount: Number(row.frame_count), durationSeconds: Number(row.duration_seconds) },
     timelineStartSeconds: Number(row.timeline_start_seconds),
+    sourceInSeconds: Number(row.source_in_seconds ?? 0),
+    sourceOutSeconds: Number(row.source_out_seconds ?? row.duration_seconds),
     mix: { muted: Boolean(row.muted), soloed: Boolean(row.soloed), gain: Number(row.gain), pan: Number(row.pan) },
     provenance: row.comp_id ? { compId: String(row.comp_id), renderChecksum: String(row.comp_render_checksum) } : null,
     playbackUrl, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
@@ -86,11 +89,58 @@ export async function POST(request: NextRequest) {
         source_id: input.sourceId, source_uri: input.sourceUri, source_checksum: input.sourceChecksum,
         sample_rate: input.sampleRate, channel_count: input.channelCount, frame_count: input.frameCount,
         duration_seconds: input.durationSeconds, timeline_start_seconds: input.timelineStartSeconds,
+        source_in_seconds: 0, source_out_seconds: input.durationSeconds,
         comp_id: input.compId, comp_render_checksum: input.compRenderChecksum,
       }).select("*").single();
       if (error || !data) throw new ApiError(`Private audio lane could not be saved: ${error?.message ?? "missing row"}`, 500);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, input.sourceUri)) }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
+    if (body.action === "arrange") {
+      const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
+      if (!laneId) throw new ApiError("laneId is required.", 400);
+      const { data: stored, error: storedError } = await user.client.from(TABLE).select("*")
+        .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).single();
+      if (storedError || !stored) throw new ApiError("Private audio lane was not found.", 404);
+      let arrangement;
+      try { arrangement = parseTimelineDawPrivateLaneArrangement(body, Number(stored.sample_rate), Number(stored.frame_count)); }
+      catch (cause) { throw new ApiError(cause instanceof Error ? cause.message : "Private lane arrangement is invalid.", 400); }
+      const { data, error } = await user.client.from(TABLE).update({
+        timeline_start_seconds: arrangement.timelineStartSeconds,
+        source_in_seconds: arrangement.sourceInSeconds,
+        source_out_seconds: arrangement.sourceOutSeconds,
+        updated_at: new Date().toISOString(),
+      }).eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("*").single();
+      if (error || !data) throw new ApiError("Private audio lane was not found.", 404);
+      return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (body.action === "duplicate") {
+      const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
+      if (!laneId) throw new ApiError("laneId is required.", 400);
+      const { data: stored, error: storedError } = await user.client.from(TABLE).select("*")
+        .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).single();
+      if (storedError || !stored) throw new ApiError("Private audio lane was not found.", 404);
+      const nextStart = Number(stored.timeline_start_seconds) + Number(stored.source_out_seconds) - Number(stored.source_in_seconds);
+      const arrangement = parseTimelineDawPrivateLaneArrangement({
+        timelineStartSeconds: nextStart,
+        sourceInSeconds: stored.source_in_seconds,
+        sourceOutSeconds: stored.source_out_seconds,
+      }, Number(stored.sample_rate), Number(stored.frame_count));
+      const copyId = `timeline-daw-private-lane-${crypto.randomUUID()}`;
+      const { data, error } = await user.client.from(TABLE).insert({
+        id: copyId, owner_id: user.id, session_id: sessionId,
+        name: `${String(stored.name).slice(0, 113)} Copy`,
+        source_id: stored.source_id, source_uri: stored.source_uri, source_checksum: stored.source_checksum,
+        sample_rate: stored.sample_rate, channel_count: stored.channel_count, frame_count: stored.frame_count,
+        duration_seconds: stored.duration_seconds, timeline_start_seconds: arrangement.timelineStartSeconds,
+        source_in_seconds: arrangement.sourceInSeconds, source_out_seconds: arrangement.sourceOutSeconds,
+        comp_id: stored.comp_id, comp_render_checksum: stored.comp_render_checksum,
+        muted: stored.muted, soloed: stored.soloed, gain: stored.gain, pan: stored.pan,
+      }).select("*").single();
+      if (error || !data) throw new ApiError(`Private audio lane could not be duplicated: ${error?.message ?? "missing row"}`, 500);
+      return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    }
+
     if (body.action === "mix") {
       const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
       if (!laneId) throw new ApiError("laneId is required.", 400);

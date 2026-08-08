@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
 import {
   addDawPrivateAudioLane,
+  arrangeDawPrivateAudioLane,
+  duplicateDawPrivateAudioLane,
   loadDawPrivateAudioLanes,
   removeDawPrivateAudioLane,
   updateDawPrivateAudioLaneMix,
@@ -33,13 +35,15 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       const audio = audioRefs.current.get(lane.id);
       if (!audio) continue;
       const localSeconds = elapsed - lane.timelineStartSeconds;
-      const active = localSeconds >= 0 && localSeconds < lane.audio.durationSeconds;
+      const arrangedDuration = lane.sourceOutSeconds - lane.sourceInSeconds;
+      const active = localSeconds >= 0 && localSeconds < arrangedDuration;
       if (!active || !playing) {
         audio.pause();
-        if (localSeconds < 0) audio.currentTime = 0;
+        if (localSeconds < 0) audio.currentTime = lane.sourceInSeconds;
         continue;
       }
-      if (Math.abs(audio.currentTime - localSeconds) > 0.08) audio.currentTime = localSeconds;
+      const sourceSeconds = lane.sourceInSeconds + localSeconds;
+      if (Math.abs(audio.currentTime - sourceSeconds) > 0.08) audio.currentTime = sourceSeconds;
       void graphRefs.current.get(lane.id)?.resume();
       if (audio.paused) void audio.play().catch(() => setError(`Playback could not start for ${lane.name}.`));
     }
@@ -156,6 +160,38 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     }, 250));
   }
 
+  function editArrangement(laneId: string, patch: Partial<Pick<DawPrivateAudioLane, "timelineStartSeconds" | "sourceInSeconds" | "sourceOutSeconds">>) {
+    setLanes((current) => current.map((lane) => lane.id === laneId ? { ...lane, ...patch } : lane));
+  }
+
+  async function saveArrangement(lane: DawPrivateAudioLane, reset = false) {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const { lane: saved } = await arrangeDawPrivateAudioLane(sessionId, lane.id, {
+        timelineStartSeconds: lane.timelineStartSeconds,
+        sourceInSeconds: reset ? 0 : lane.sourceInSeconds,
+        sourceOutSeconds: reset ? lane.audio.durationSeconds : lane.sourceOutSeconds,
+      });
+      setLanes((current) => current.map((candidate) => candidate.id === saved.id ? saved : candidate)
+        .sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+      synchronize(playheadRef.current, transportStateRef.current === "playing");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Lane arrangement could not be saved.");
+    } finally { setBusy(false); }
+  }
+
+  async function duplicate(lane: DawPrivateAudioLane) {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const { lane: copy } = await duplicateDawPrivateAudioLane(sessionId, lane.id);
+      setLanes((current) => [...current, copy].sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Lane could not be duplicated.");
+    } finally { setBusy(false); }
+  }
+
   async function remove(lane: DawPrivateAudioLane) {
     if (!window.confirm(`Remove ${lane.name} from this timeline? The private WAV master will be preserved.`)) return;
     setBusy(true);
@@ -187,8 +223,14 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
             return (
               <li key={lane.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s → {(lane.timelineStartSeconds + lane.audio.durationSeconds).toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p></div>
+                  <div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s → {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p></div>
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
+                </div>
+                <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-3">
+                  <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
+                  <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>
+                  <label className="text-xs font-black text-white/55">Source out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceOutSeconds} onChange={(event) => editArrangement(lane.id, { sourceOutSeconds: Number(event.target.value) })} /></label>
+                  <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Duplicate Lane</button></div>
                 </div>
                 <div className="mt-3 grid gap-3 md:grid-cols-[auto_auto_1fr_1fr]">
                   <button type="button" aria-pressed={lane.mix.muted} className={`${button} ${lane.mix.muted ? "!bg-red-300" : ""}`} onClick={() => queueMix(lane, { muted: !lane.mix.muted })}>{lane.mix.muted ? "Muted" : "Mute"}</button>
