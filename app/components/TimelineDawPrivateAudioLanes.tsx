@@ -8,6 +8,7 @@ import {
   duplicateDawPrivateAudioLane,
   loadDawPrivateAudioLanes,
   removeDawPrivateAudioLane,
+  splitDawPrivateAudioLane,
   updateDawPrivateAudioLaneMix,
   updateDawPrivateAudioLaneFade,
   type DawPrivateAudioLane,
@@ -214,6 +215,18 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function splitAtPlayhead(lane: DawPrivateAudioLane) {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const { lanes: regions } = await splitDawPrivateAudioLane(sessionId, lane.id, playheadRef.current);
+      setLanes((current) => current.flatMap((candidate) => candidate.id === lane.id ? regions : [candidate])
+        .sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Lane could not be split at the playhead.");
+    } finally { setBusy(false); }
+  }
+
   async function duplicate(lane: DawPrivateAudioLane) {
     setBusy(true);
     setError(undefined);
@@ -264,7 +277,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceOutSeconds} onChange={(event) => editArrangement(lane.id, { sourceOutSeconds: Number(event.target.value) })} /></label>
-                  <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Duplicate Lane</button></div>
+                  <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Duplicate Lane</button><button type="button" className={button} disabled={busy} onClick={() => void splitAtPlayhead(lane)}>Split at Playhead</button></div>
                 </div>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-[1fr_1fr_auto]">
                   <label className="text-xs font-black text-white/55">Fade in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.sourceOutSeconds - lane.sourceInSeconds} step={1 / lane.audio.sampleRate} value={lane.fade.inSeconds} onChange={(event) => editFade(lane.id, { inSeconds: Number(event.target.value) })} /></label>

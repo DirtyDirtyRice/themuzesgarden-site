@@ -5,6 +5,7 @@ import { parseTimelineDawPrivateAudioLane } from "@/lib/timeline/TimelineDawPriv
 import { parseTimelineDawPrivateLaneMix } from "@/lib/timeline/TimelineDawPrivateLaneMixerPolicy";
 import { parseTimelineDawPrivateLaneArrangement } from "@/lib/timeline/TimelineDawPrivateLaneArrangementPolicy";
 import { parseTimelineDawPrivateLaneFade } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
+import { parseTimelineDawPrivateLaneSplit } from "@/lib/timeline/TimelineDawPrivateLaneSplitPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -146,6 +147,29 @@ export async function POST(request: NextRequest) {
       }).select("*").single();
       if (error || !data) throw new ApiError(`Private audio lane could not be duplicated: ${error?.message ?? "missing row"}`, 500);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (body.action === "split") {
+      const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
+      if (!laneId) throw new ApiError("laneId is required.", 400);
+      const { data: stored, error: storedError } = await user.client.from(TABLE).select("*")
+        .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).single();
+      if (storedError || !stored) throw new ApiError("Private audio lane was not found.", 404);
+      let split;
+      try {
+        split = parseTimelineDawPrivateLaneSplit(body, Number(stored.sample_rate), Number(stored.timeline_start_seconds),
+          Number(stored.source_in_seconds), Number(stored.source_out_seconds), Number(stored.fade_in_seconds), Number(stored.fade_out_seconds));
+      } catch (cause) { throw new ApiError(cause instanceof Error ? cause.message : "Private lane split is invalid.", 400); }
+      const rightLaneId = `timeline-daw-private-lane-${crypto.randomUUID()}`;
+      const { data, error } = await user.client.rpc("split_timeline_daw_private_audio_lane", {
+        p_lane_id: laneId, p_session_id: sessionId, p_right_lane_id: rightLaneId,
+        p_timeline_split_seconds: split.timelineSplitSeconds, p_source_split_seconds: split.sourceSplitSeconds,
+      });
+      if (error || !Array.isArray(data) || data.length !== 2) {
+        throw new ApiError(`Private audio lane could not be split atomically: ${error?.message ?? "split rows missing"}`, 500);
+      }
+      const lanes = await Promise.all(data.map(async (row) => lane(row, await sign(user.client, user.id, sessionId, String(row.source_uri)))));
+      return NextResponse.json({ lanes }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
 
     if (body.action === "mix") {

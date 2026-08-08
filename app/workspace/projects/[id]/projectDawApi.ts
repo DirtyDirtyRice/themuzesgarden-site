@@ -274,6 +274,17 @@ export function arrangeDawPrivateAudioLane(
   });
 }
 
+export function splitDawPrivateAudioLane(
+  sessionId: string,
+  laneId: string,
+  timelineSplitSeconds: number,
+): Promise<{ lanes: [DawPrivateAudioLane, DawPrivateAudioLane] }> {
+  return request("/api/timeline/daw-private-audio-lanes", {
+    method: "POST",
+    body: JSON.stringify({ action: "split", sessionId, laneId, timelineSplitSeconds }),
+  });
+}
+
 export function duplicateDawPrivateAudioLane(sessionId: string, laneId: string): Promise<{ lane: DawPrivateAudioLane }> {
   return request("/api/timeline/daw-private-audio-lanes", {
     method: "POST",

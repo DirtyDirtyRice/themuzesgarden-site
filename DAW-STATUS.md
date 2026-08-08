@@ -6,34 +6,33 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Lane Fades and Crossfades
+## Latest completed milestone — Private Lane Splits and Region Editing
 
-Private audio lanes now support durable non-destructive edge fades and automatic equal-power transitions across compatible overlaps.
+Arranged private audio can now be divided into independent sample-aligned regions without changing its source master.
 
-- Persist frame-normalized fade-in and fade-out durations without changing private WAV masters.
-- Reject negative, non-finite, and overlong fade envelopes at the API and database boundary.
-- Prevent trims that would invalidate an existing fade instead of silently changing it.
-- Schedule equal-power Web Audio gain curves across the remaining lane playback for sample-smooth monitoring.
-- Detect adjacent edge overlaps only when sample rate and channel geometry are compatible.
-- Apply complementary automatic fade-out and fade-in envelopes across detected overlap windows.
-- Describe each automatic transition and its exact timeline window in the lane workspace.
-- Preserve mute, solo, mixer gain, pan, and post-envelope peak metering behavior.
+- Normalize requested timeline splits to the corresponding exact source frame.
+- Reject endpoints and require at least one source frame on both sides.
+- Preserve source identity, checksum, comp provenance, mixer state, and outer edge fades.
+- Leave the newly created internal edges at unity gain for continuous playback across an untouched split.
+- Reject splits that would truncate an existing outer fade.
+- Update the original left region and insert the right region in one owner-scoped database transaction.
+- Lock the source row and independently revalidate ownership, geometry, fades, and timeline/source alignment inside the transaction.
+- Provide a Split at Playhead action that replaces the original lane with the two returned regions.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateLaneFadePolicy.ts`
-- `lib/timeline/TimelineDawPrivateLaneMonitorGraph.ts`
-- `engine/test/timeline-daw-private-lane-fade-policy.test.ts`
-- `supabase/migrations/20260808193000_timeline_daw_private_lane_fades.sql`
+- `lib/timeline/TimelineDawPrivateLaneSplitPolicy.ts`
+- `engine/test/timeline-daw-private-lane-split-policy.test.ts`
+- `supabase/migrations/20260808203000_timeline_daw_private_lane_splits.sql`
 - `app/api/timeline/daw-private-audio-lanes/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
 
 ### Verification
 
-- Focused private-lane fade, arrangement, and mixer policy tests: 7 passed.
+- Focused private-lane split, arrangement, fade, and mixer policy tests: 10 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260808193000`.
+- Supabase migrations applied successfully through `20260808203000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -58,19 +57,20 @@ Private audio lanes now support durable non-destructive edge fades and automatic
 - Durable transport-synchronized private audio source lanes.
 - Persistent private-lane mute, solo, gain, pan, and metering.
 - Durable frame-normalized lane fades and automatic compatible equal-power crossfades.
+- Atomic sample-aligned lane splits with continuous non-destructive region boundaries.
 
-## Next milestone — Private Lane Splits and Region Editing
+## Next milestone — Private Lane Waveforms and Direct Editing
 
-Add sample-accurate split operations so arranged audio can be divided and edited as independent non-destructive regions.
+Make private regions visually legible and provide direct timeline-oriented edit controls.
 
 Planned outcome:
 
-1. Split a private lane at a validated timeline position aligned to an exact source frame.
-2. Preserve source identity, provenance, mixer state, and valid edge fades across both resulting regions.
-3. Perform the split atomically so a failed write cannot remove or partially divide the original lane.
-4. Keep transport playback continuous across an untouched split boundary.
-5. Provide clear split controls at the current playhead without altering private source masters.
-6. Add focused policy tests, run the production build, apply any reviewed migration, commit, and push.
+1. Derive bounded waveform peaks from private WAV masters without exposing public source URLs.
+2. Cache waveform summaries by immutable source checksum and audio geometry.
+3. Render each arranged source window with trim, fade, and split boundaries in timeline proportion.
+4. Support accessible direct move and trim interactions with sample-aware numeric fallback controls.
+5. Keep waveform work out of the transport-critical monitoring path.
+6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
