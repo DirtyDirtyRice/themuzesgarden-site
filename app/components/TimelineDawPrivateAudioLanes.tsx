@@ -9,10 +9,12 @@ import {
   loadDawPrivateAudioLanes,
   removeDawPrivateAudioLane,
   updateDawPrivateAudioLaneMix,
+  updateDawPrivateAudioLaneFade,
   type DawPrivateAudioLane,
 } from "@/app/workspace/projects/[id]/projectDawApi";
 import { resolveTimelineDawPrivateLaneAudibility } from "@/lib/timeline/TimelineDawPrivateLaneMixerPolicy";
 import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } from "@/lib/timeline/TimelineDawPrivateLaneMonitorGraph";
+import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -29,6 +31,17 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const playheadRef = useRef(0);
   const transportStateRef = useRef<"playing" | "paused" | "stopped">("stopped");
   const audibility = useMemo(() => resolveTimelineDawPrivateLaneAudibility(lanes.map((lane) => ({ id: lane.id, muted: lane.mix.muted, soloed: lane.mix.soloed }))), [lanes]);
+  const crossfades = useMemo(() => detectTimelineDawPrivateLaneCrossfades(lanes), [lanes]);
+  const effectiveFades = useMemo(() => {
+    const result = new Map(lanes.map((lane) => [lane.id, { ...lane.fade }]));
+    for (const crossfade of crossfades) {
+      const outgoing = result.get(crossfade.outgoingLaneId);
+      const incoming = result.get(crossfade.incomingLaneId);
+      if (outgoing) outgoing.outSeconds = Math.max(outgoing.outSeconds, crossfade.durationSeconds);
+      if (incoming) incoming.inSeconds = Math.max(incoming.inSeconds, crossfade.durationSeconds);
+    }
+    return result;
+  }, [crossfades, lanes]);
 
   const synchronize = useCallback((elapsed: number, playing: boolean) => {
     for (const lane of lanes) {
@@ -37,6 +50,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       const localSeconds = elapsed - lane.timelineStartSeconds;
       const arrangedDuration = lane.sourceOutSeconds - lane.sourceInSeconds;
       const active = localSeconds >= 0 && localSeconds < arrangedDuration;
+      const fade = effectiveFades.get(lane.id) ?? lane.fade;
+      graphRefs.current.get(lane.id)?.applyEnvelope(lane.mix, audibility.get(lane.id) ?? false, localSeconds, arrangedDuration, fade.inSeconds, fade.outSeconds);
       if (!active || !playing) {
         audio.pause();
         if (localSeconds < 0) audio.currentTime = lane.sourceInSeconds;
@@ -47,12 +62,15 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       void graphRefs.current.get(lane.id)?.resume();
       if (audio.paused) void audio.play().catch(() => setError(`Playback could not start for ${lane.name}.`));
     }
-  }, [lanes]);
+  }, [audibility, effectiveFades, lanes]);
 
   useEffect(() => {
-    for (const lane of lanes) graphRefs.current.get(lane.id)?.apply(lane.mix, audibility.get(lane.id) ?? false);
-  }, [audibility, lanes]);
-
+    for (const lane of lanes) {
+      const duration = lane.sourceOutSeconds - lane.sourceInSeconds;
+      const fade = effectiveFades.get(lane.id) ?? lane.fade;
+      graphRefs.current.get(lane.id)?.applyEnvelope(lane.mix, audibility.get(lane.id) ?? false, playheadRef.current - lane.timelineStartSeconds, duration, fade.inSeconds, fade.outSeconds);
+    }
+  }, [audibility, effectiveFades, lanes]);
   useEffect(() => {
     const interval = window.setInterval(() => {
       const next: Record<string, TimelineDawPrivateLaneMeter> = {};
@@ -160,6 +178,21 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     }, 250));
   }
 
+  function editFade(laneId: string, patch: Partial<DawPrivateAudioLane["fade"]>) {
+    setLanes((current) => current.map((lane) => lane.id === laneId ? { ...lane, fade: { ...lane.fade, ...patch } } : lane));
+  }
+
+  async function saveFade(lane: DawPrivateAudioLane) {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const { lane: saved } = await updateDawPrivateAudioLaneFade(sessionId, lane.id, lane.fade);
+      setLanes((current) => current.map((candidate) => candidate.id === saved.id ? saved : candidate));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Lane fades could not be saved.");
+    } finally { setBusy(false); }
+  }
+
   function editArrangement(laneId: string, patch: Partial<Pick<DawPrivateAudioLane, "timelineStartSeconds" | "sourceInSeconds" | "sourceOutSeconds">>) {
     setLanes((current) => current.map((lane) => lane.id === laneId ? { ...lane, ...patch } : lane));
   }
@@ -216,6 +249,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <p className="text-xs font-black uppercase tracking-[0.22em] text-violet-200">Private source lanes</p>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
+      {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic equal-power transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} to {incoming?.name}: {crossfade.startSeconds.toFixed(2)}–{crossfade.endSeconds.toFixed(2)}s ({crossfade.durationSeconds.toFixed(2)}s)</p>; })}</div> : null}
       {lanes.length ? (
         <ol className="mt-4 grid gap-2">
           {lanes.map((lane) => {
@@ -231,6 +265,11 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceOutSeconds} onChange={(event) => editArrangement(lane.id, { sourceOutSeconds: Number(event.target.value) })} /></label>
                   <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Duplicate Lane</button></div>
+                </div>
+                <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <label className="text-xs font-black text-white/55">Fade in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.sourceOutSeconds - lane.sourceInSeconds} step={1 / lane.audio.sampleRate} value={lane.fade.inSeconds} onChange={(event) => editFade(lane.id, { inSeconds: Number(event.target.value) })} /></label>
+                  <label className="text-xs font-black text-white/55">Fade out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.sourceOutSeconds - lane.sourceInSeconds} step={1 / lane.audio.sampleRate} value={lane.fade.outSeconds} onChange={(event) => editFade(lane.id, { outSeconds: Number(event.target.value) })} /></label>
+                  <button type="button" className={`${button} self-end`} disabled={busy} onClick={() => void saveFade(lane)}>Save Fades</button>
                 </div>
                 <div className="mt-3 grid gap-3 md:grid-cols-[auto_auto_1fr_1fr]">
                   <button type="button" aria-pressed={lane.mix.muted} className={`${button} ${lane.mix.muted ? "!bg-red-300" : ""}`} onClick={() => queueMix(lane, { muted: !lane.mix.muted })}>{lane.mix.muted ? "Muted" : "Mute"}</button>

@@ -1,4 +1,5 @@
 import type { TimelineDawPrivateLaneMix } from "./TimelineDawPrivateLaneMixerPolicy";
+import { timelineDawEqualPowerEnvelope } from "./TimelineDawPrivateLaneFadePolicy";
 
 export type TimelineDawPrivateLaneMeter = {
   peakAmplitude: number;
@@ -28,6 +29,49 @@ export class TimelineDawPrivateLaneMonitorGraph {
     const at = this.context.currentTime;
     this.gain.gain.setTargetAtTime(audible ? mix.gain : 0, at, 0.008);
     this.panner.pan.setTargetAtTime(mix.pan, at, 0.008);
+  }
+
+  applyEnvelope(
+    mix: TimelineDawPrivateLaneMix,
+    audible: boolean,
+    localSeconds: number,
+    durationSeconds: number,
+    fadeInSeconds: number,
+    fadeOutSeconds: number,
+  ): void {
+    const at = this.context.currentTime;
+    this.panner.pan.setTargetAtTime(mix.pan, at, 0.008);
+    this.gain.gain.cancelScheduledValues(at);
+    if (!audible || localSeconds < 0 || localSeconds >= durationSeconds) {
+      this.gain.gain.setTargetAtTime(0, at, 0.008);
+      return;
+    }
+    const parameter = this.gain.gain;
+    parameter.setValueAtTime(mix.gain * timelineDawEqualPowerEnvelope(localSeconds, durationSeconds, fadeInSeconds, fadeOutSeconds), at);
+    if (fadeInSeconds > 0 && localSeconds < fadeInSeconds) {
+      const remainingFadeIn = fadeInSeconds - localSeconds;
+      const curve = new Float32Array(128);
+      for (let index = 0; index < curve.length; index += 1) {
+        const position = localSeconds + remainingFadeIn * index / (curve.length - 1);
+        curve[index] = mix.gain * timelineDawEqualPowerEnvelope(position, durationSeconds, fadeInSeconds, fadeOutSeconds);
+      }
+      parameter.setValueCurveAtTime(curve, at, remainingFadeIn);
+    }
+    if (fadeOutSeconds > 0) {
+      const fadeOutStart = durationSeconds - fadeOutSeconds;
+      const curveStart = Math.max(localSeconds, fadeOutStart);
+      const curveDuration = durationSeconds - curveStart;
+      if (curveDuration > 0.002) {
+        const curveAt = at + curveStart - localSeconds;
+        const curve = new Float32Array(128);
+        for (let index = 0; index < curve.length; index += 1) {
+          const position = curveStart + curveDuration * index / (curve.length - 1);
+          curve[index] = mix.gain * timelineDawEqualPowerEnvelope(position, durationSeconds, fadeInSeconds, fadeOutSeconds);
+        }
+        parameter.setValueAtTime(curve[0], curveAt);
+        parameter.setValueCurveAtTime(curve, curveAt, curveDuration);
+      }
+    }
   }
 
   async resume(): Promise<void> {
