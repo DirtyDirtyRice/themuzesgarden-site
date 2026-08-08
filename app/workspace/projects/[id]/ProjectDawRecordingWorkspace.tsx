@@ -15,6 +15,7 @@ import {
   loadDawRecordingTakes,
   preferDawRecordingTake,
   registerDawRecordingTake,
+  reviewDawRecordingTake,
   type DawRecordingTake,
 } from "./projectDawApi";
 import type { DawSession } from "./projectDawTypes";
@@ -48,6 +49,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [captureMode, setCaptureMode] = useState<"worklet" | "compatibility" | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
+  const [reviewingTakeId, setReviewingTakeId] = useState<string | null>(null);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [reviewRating, setReviewRating] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
@@ -287,6 +292,34 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     }
   }
 
+  function beginTakeReview(take: UploadedTake) {
+    setReviewingTakeId(take.id);
+    setReviewName(take.name);
+    setReviewNotes(take.notes);
+    setReviewRating(take.rating);
+    setError(null);
+  }
+
+  async function saveTakeReview(take: UploadedTake) {
+    setUploading(true);
+    setError(null);
+    try {
+      const { take: reviewed } = await reviewDawRecordingTake(session.id, take.id, {
+        name: reviewName,
+        notes: reviewNotes,
+        rating: reviewRating,
+      });
+      setTakes((current) => current.map((item) => (
+        item.id === reviewed.id ? { ...item, ...reviewed } : item
+      )));
+      setReviewingTakeId(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Recording take review could not be saved.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function deleteTake(take: UploadedTake) {
     if (!window.confirm(`Delete ${take.name} and its private WAV permanently?`)) return;
     setUploading(true);
@@ -386,6 +419,54 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
               <p className="mt-1 text-xs text-white/45">
                 {take.audio.channelCount} channel ? {take.audio.sampleRate.toLocaleString()} Hz ? {take.audio.durationSeconds.toFixed(2)}s ? privately uploaded
               </p>
+              <p className="mt-2 text-sm font-black text-amber-200" aria-label={`${take.rating} out of 5 stars`}>
+                {take.rating ? `${take.rating}/5 rating` : "Not rated"}
+              </p>
+              {take.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-white/65">{take.notes}</p> : null}
+              {reviewingTakeId === take.id ? (
+                <div className="mt-3 grid gap-3 rounded-xl border border-rose-300/25 bg-black/60 p-3">
+                  <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">
+                    Take name
+                    <input
+                      className="rounded-xl border border-white/20 bg-black px-3 py-2 text-sm font-normal normal-case tracking-normal text-white"
+                      value={reviewName}
+                      maxLength={120}
+                      onChange={(event) => setReviewName(event.target.value)}
+                      disabled={uploading}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">
+                    Musician notes
+                    <textarea
+                      className="min-h-24 rounded-xl border border-white/20 bg-black px-3 py-2 text-sm font-normal normal-case tracking-normal text-white"
+                      value={reviewNotes}
+                      maxLength={1000}
+                      onChange={(event) => setReviewNotes(event.target.value)}
+                      disabled={uploading}
+                    />
+                    <span className="text-right font-normal normal-case tracking-normal text-white/40">{reviewNotes.length}/1000</span>
+                  </label>
+                  <fieldset disabled={uploading}>
+                    <legend className="text-xs font-black uppercase tracking-wide text-white/65">Rating</legend>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {[0, 1, 2, 3, 4, 5].map((rating) => (
+                        <button
+                          key={rating}
+                          type="button"
+                          className={`rounded-lg border px-3 py-2 text-sm font-black ${reviewRating === rating ? "border-amber-200 bg-amber-300 text-black" : "border-white/20 bg-black text-white"}`}
+                          onClick={() => setReviewRating(rating)}
+                        >
+                          {rating === 0 ? "Unrated" : `${rating}/5`}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className={button} disabled={uploading || !reviewName.trim()} onClick={() => void saveTakeReview(take)}>Save Review</button>
+                    <button type="button" className={button} disabled={uploading} onClick={() => setReviewingTakeId(null)}>Cancel</button>
+                  </div>
+                </div>
+              ) : null}
               {take.mp3Url ? (
                 <a className="mt-2 inline-block text-sm font-black text-rose-300 hover:text-rose-200" href={take.mp3Url} download={take.name.replace(/\.wav$/i, ".mp3")}>Download MP3 copy</a>
               ) : null}
@@ -395,6 +476,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className={button} disabled={uploading} onClick={() => void auditionTake(take)}>{auditionUrls[take.id] ? "Refresh Audition" : "Audition Take"}</button>
                 <button type="button" className={button} disabled={uploading || take.preferred} onClick={() => void preferTake(take)}>Use as Preferred</button>
+                <button type="button" className={button} disabled={uploading} onClick={() => beginTakeReview(take)}>{reviewingTakeId === take.id ? "Reset Review" : "Review Take"}</button>
                 <button type="button" className={button} disabled={uploading} onClick={() => void deleteTake(take)}>Delete Take</button>
               </div>
             </li>

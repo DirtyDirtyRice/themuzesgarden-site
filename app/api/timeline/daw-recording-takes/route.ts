@@ -6,6 +6,7 @@ import {
   TIMELINE_DAW_TAKE_BUCKET,
   TIMELINE_DAW_TAKE_DELIVERY_SECONDS,
 } from "@/lib/timeline/TimelineDawRecordingTakeDeliveryPolicy";
+import { parseTimelineDawTakeReview } from "@/lib/timeline/TimelineDawTakeReviewPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,6 +59,8 @@ function take(row: Record<string, unknown>) {
     id: String(row.id),
     sessionId: String(row.session_id),
     name: String(row.name),
+    notes: String(row.notes ?? ""),
+    rating: Number(row.rating ?? 0),
     source: {
       id: String(row.source_id),
       name: String(row.name),
@@ -97,6 +100,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as {
       action?: string;
       sessionId?: string;
+      name?: string;
+      notes?: string;
+      rating?: number;
       takeId?: string;
       source?: { id?: string; name?: string; uri?: string; byteLength?: number; checksum?: string };
       audio?: { sampleRate?: number; channelCount?: number; frameCount?: number; durationSeconds?: number };
@@ -130,6 +136,25 @@ export async function POST(request: NextRequest) {
       }).select("*").single();
       if (error || !data) throw new ApiError(`Recording take could not be registered: ${error?.message ?? "missing row"}`, 500);
       return NextResponse.json({ take: take(data) }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (body.action === "review") {
+      if (!body.takeId) throw new ApiError("takeId is required.", 400);
+      let review;
+      try {
+        review = parseTimelineDawTakeReview(body);
+      } catch (cause) {
+        throw new ApiError(cause instanceof Error ? cause.message : "Take review is invalid.", 400);
+      }
+      const { data, error } = await user.client.from(TABLE)
+        .update({ ...review, updated_at: new Date().toISOString() })
+        .eq("owner_id", user.id)
+        .eq("session_id", sessionId)
+        .eq("id", body.takeId)
+        .select("*")
+        .single();
+      if (error || !data) throw new ApiError("Recording take was not found.", 404);
+      return NextResponse.json({ take: take(data) }, { headers: { "Cache-Control": "no-store" } });
     }
 
     if (body.action === "prefer") {

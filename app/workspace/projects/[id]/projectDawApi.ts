@@ -166,6 +166,8 @@ export type DawRecordingTake = {
   sessionId: string;
   source: DawRenderSource;
   name: string;
+  notes: string;
+  rating: number;
   audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number };
   preferred: boolean;
   createdAt: string;
@@ -184,6 +186,17 @@ export function registerDawRecordingTake(
     body: JSON.stringify({ action: "register", sessionId, ...recorded }),
   });
 }
+export function reviewDawRecordingTake(
+  sessionId: string,
+  takeId: string,
+  review: { name: string; notes: string; rating: number },
+): Promise<{ take: DawRecordingTake }> {
+  return request("/api/timeline/daw-recording-takes", {
+    method: "POST",
+    body: JSON.stringify({ action: "review", sessionId, takeId, ...review }),
+  });
+}
+
 
 export function preferDawRecordingTake(sessionId: string, takeId: string): Promise<{ take: DawRecordingTake }> {
   return request("/api/timeline/daw-recording-takes", {
