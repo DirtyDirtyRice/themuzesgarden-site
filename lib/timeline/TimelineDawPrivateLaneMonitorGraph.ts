@@ -14,7 +14,7 @@ export class TimelineDawPrivateLaneMonitorGraph {
   private readonly analyser: AnalyserNode;
   private readonly samples: Float32Array<ArrayBuffer>;
 
-  constructor(private readonly context: AudioContext, element: HTMLMediaElement) {
+  constructor(private readonly context: AudioContext, element: HTMLMediaElement, output: AudioNode = context.destination) {
     this.source = context.createMediaElementSource(element);
     this.gain = context.createGain();
     this.panner = context.createStereoPanner();
@@ -22,7 +22,7 @@ export class TimelineDawPrivateLaneMonitorGraph {
     this.analyser.fftSize = 256;
     this.analyser.smoothingTimeConstant = 0.55;
     this.samples = new Float32Array(this.analyser.fftSize);
-    this.source.connect(this.gain).connect(this.panner).connect(this.analyser).connect(context.destination);
+    this.source.connect(this.gain).connect(this.panner).connect(this.analyser).connect(output);
   }
 
   apply(mix: TimelineDawPrivateLaneMix, audible: boolean): void {
@@ -72,6 +72,11 @@ export class TimelineDawPrivateLaneMonitorGraph {
         parameter.setValueCurveAtTime(curve, curveAt, curveDuration);
       }
     }
+  }
+
+  connect(output: AudioNode): void {
+    this.analyser.disconnect();
+    this.analyser.connect(output);
   }
 
   async resume(): Promise<void> {

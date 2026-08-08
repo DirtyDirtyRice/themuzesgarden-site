@@ -26,7 +26,7 @@ async function sign(client: SupabaseClient, ownerId: string, sessionId: string, 
 function lane(row: Record<string, unknown>, playbackUrl: string) { return {
   id: String(row.id), sessionId: String(row.session_id), name: String(row.name), source: { id: String(row.source_id), uri: String(row.source_uri), checksum: String(row.source_checksum) },
   audio: { sampleRate: Number(row.sample_rate), channelCount: Number(row.channel_count), frameCount: Number(row.frame_count), durationSeconds: Number(row.duration_seconds) },
-  timelineStartSeconds: Number(row.timeline_start_seconds), sourceInSeconds: Number(row.source_in_seconds), sourceOutSeconds: Number(row.source_out_seconds),
+  timelineStartSeconds: Number(row.timeline_start_seconds), sourceInSeconds: Number(row.source_in_seconds), sourceOutSeconds: Number(row.source_out_seconds), busId: row.bus_id ? String(row.bus_id) : null,
   fade: { inSeconds: Number(row.fade_in_seconds), outSeconds: Number(row.fade_out_seconds) }, mix: { muted: Boolean(row.muted), soloed: Boolean(row.soloed), gain: Number(row.gain), pan: Number(row.pan) },
   provenance: row.comp_id ? { compId: String(row.comp_id), renderChecksum: String(row.comp_render_checksum) } : null, playbackUrl, createdAt: String(row.created_at), updatedAt: String(row.updated_at),
 }; }
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const selected = await user.client.from(TABLE).select("*").eq("owner_id", user.id).eq("session_id", sessionId).in("id", laneIds).order("id");
     if (selected.error || !selected.data || selected.data.length !== laneIds.length) throw new ApiError("One or more selected private regions were not found.", 404);
     let edit;
-    try { edit = parseTimelineDawPrivateLaneGroupEdit(body, selected.data.map((row) => ({ id: String(row.id), timelineStartSeconds: Number(row.timeline_start_seconds), sourceInSeconds: Number(row.source_in_seconds), sourceOutSeconds: Number(row.source_out_seconds), sampleRate: Number(row.sample_rate) }))); }
+    try { edit = parseTimelineDawPrivateLaneGroupEdit(body, selected.data.map((row) => ({ id: String(row.id), timelineStartSeconds: Number(row.timeline_start_seconds), sourceInSeconds: Number(row.source_in_seconds), sourceOutSeconds: Number(row.source_out_seconds), busId: row.bus_id ? String(row.bus_id) : null, sampleRate: Number(row.sample_rate) }))); }
     catch (cause) { throw new ApiError(cause instanceof Error ? cause.message : "Group edit is invalid.", 400); }
     const changedAt = new Date().toISOString();
     const after = selected.data.map((row) => {

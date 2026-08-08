@@ -35,7 +35,7 @@ function lane(row: Record<string, unknown>, playbackUrl: string) { return {
   id: String(row.id), sessionId: String(row.session_id), name: String(row.name),
   source: { id: String(row.source_id), uri: String(row.source_uri), checksum: String(row.source_checksum) },
   audio: { sampleRate: Number(row.sample_rate), channelCount: Number(row.channel_count), frameCount: Number(row.frame_count), durationSeconds: Number(row.duration_seconds) },
-  timelineStartSeconds: Number(row.timeline_start_seconds), sourceInSeconds: Number(row.source_in_seconds), sourceOutSeconds: Number(row.source_out_seconds),
+  timelineStartSeconds: Number(row.timeline_start_seconds), sourceInSeconds: Number(row.source_in_seconds), sourceOutSeconds: Number(row.source_out_seconds), busId: row.bus_id ? String(row.bus_id) : null,
   fade: { inSeconds: Number(row.fade_in_seconds), outSeconds: Number(row.fade_out_seconds) },
   mix: { muted: Boolean(row.muted), soloed: Boolean(row.soloed), gain: Number(row.gain), pan: Number(row.pan) },
   provenance: row.comp_id ? { compId: String(row.comp_id), renderChecksum: String(row.comp_render_checksum) } : null,

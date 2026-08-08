@@ -6,36 +6,37 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Lane Selection and Group Editing
+## Latest completed milestone — Private Lane Routing and Buses
 
-Private regions can now be explicitly selected and edited together as one safe, reversible operation.
+Private audio lanes can now be routed into durable owner-scoped buses for shared monitoring and mix control.
 
-- Provide accessible additive checkboxes, single-region selection, Select All, and Clear controls.
-- Display selection count and every affected region name before applying an edit.
-- Move selected regions by one shared delta while preserving all relative timeline offsets.
-- Apply common mute, gain, and pan values while retaining each region's solo state and source identity.
-- Apply common fades only when their sample-normalized lengths fit every selected region.
-- Validate distinct selection membership, timeline bounds, mixer bounds, and per-region fade compatibility on the server.
-- Lock and compare every selected row before replacing the group in one database transaction.
-- Store the complete grouped before/after snapshots as one reversible history receipt in that same transaction.
-- Clear abandoned redo branches when a new grouped edit is committed.
+- Persist named session buses with gain, pan, mute, and solo state under owner-scoped row-level security.
+- Assign each private lane to a validated bus or directly to the master output.
+- Use one shared session AudioContext and reconnect existing lane analyser outputs without duplicating media-element source nodes.
+- Apply deterministic lane, bus, and global solo/mute precedence across master and bus-routed lanes.
+- Sum routed lanes through real Web Audio bus graphs with post-sum bus meters.
+- Preserve bus assignments when lanes are duplicated or split and expose routing from every lane strip.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateLaneGroupEditPolicy.ts`
-- `lib/timeline/TimelineDawPrivateLaneEditHistoryPolicy.ts`
-- `engine/test/timeline-daw-private-lane-group-edit-policy.test.ts`
-- `supabase/migrations/20260808233000_timeline_daw_private_lane_group_edits.sql`
+- `lib/timeline/TimelineDawPrivateBusPolicy.ts`
+- `lib/timeline/TimelineDawPrivateBusGraph.ts`
+- `lib/timeline/TimelineDawPrivateLaneMonitorGraph.ts`
+- `engine/test/timeline-daw-private-bus-policy.test.ts`
+- `supabase/migrations/20260809003000_timeline_daw_private_buses.sql`
+- `app/api/timeline/daw-private-buses/route.ts`
+- `app/api/timeline/daw-private-audio-lanes/route.ts`
+- `app/api/timeline/daw-private-lane-history/route.ts`
 - `app/api/timeline/daw-private-lane-groups/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
-- `app/components/TimelineDawPrivateLaneGroupEditor.tsx`
+- `app/components/TimelineDawPrivateBusMixer.tsx`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
 
 ### Verification
 
-- Focused group-edit, history, and fade policy tests: 8 passed.
+- Focused private-bus routing policy tests: 2 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260808233000`.
+- Supabase migrations applied successfully through `20260809003000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -65,17 +66,17 @@ Private regions can now be explicitly selected and edited together as one safe, 
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Private Lane Routing and Buses
+## Next milestone — Private Bus Sends and Insert Effects
 
-Introduce durable track routing so multiple private lanes can feed shared processing and monitoring controls.
+Extend routing with non-destructive parallel sends and a small durable insert-processing chain.
 
 Planned outcome:
 
-1. Persist owner-scoped buses with names, gain, pan, mute, and solo state.
-2. Route each private lane to a validated bus or the master output.
-3. Build shared Web Audio bus graphs without duplicating media-element source nodes.
-4. Apply lane, bus, and global solo/mute precedence deterministically.
-5. Meter buses after summed lane gain and before the master destination.
+1. Persist owner-scoped lane and bus send levels with validated destinations.
+2. Prevent feedback cycles while allowing pre-fader and post-fader sends.
+3. Add durable bypassable gain, filter, and compressor insert slots.
+4. Build shared Web Audio send and insert graphs without duplicating source nodes.
+5. Expose send controls, effect parameters, and post-processing meters in the private mixer.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

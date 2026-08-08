@@ -1,0 +1,25 @@
+import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+import { createTimelineDawWorkspaceServer } from "@/lib/timeline/TimelineDawWorkspaceServer";
+import { parseTimelineDawPrivateBus } from "@/lib/timeline/TimelineDawPrivateBusPolicy";
+
+export const runtime = "nodejs"; export const dynamic = "force-dynamic";
+const TABLE = "timeline_daw_private_buses"; const LANES = "timeline_daw_private_audio_lanes";
+class ApiError extends Error { constructor(message: string, readonly status: number) { super(message); } }
+function env(name: string) { const value = process.env[name]?.trim(); if (!value) throw new ApiError(`${name} is not configured.`, 503); return value; }
+async function authorize(request: NextRequest) { const header = request.headers.get("authorization")?.trim() ?? ""; if (!header.toLowerCase().startsWith("bearer ")) throw new ApiError("Authentication is required.", 401); const token = header.slice(7).trim(); const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_ANON_KEY"), { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: `Bearer ${token}` } } }); const { data, error } = await client.auth.getUser(token); if (error || !data.user?.id) throw new ApiError("Supabase session is invalid or expired.", 401); return { id: data.user.id, token, client }; }
+async function session(user: Awaited<ReturnType<typeof authorize>>, sessionId: string) { if (!sessionId || !await createTimelineDawWorkspaceServer(user.id, user.token).get(user.id, sessionId)) throw new ApiError("DAW session was not found.", 404); }
+const map = (row: Record<string, unknown>) => ({ id: String(row.id), sessionId: String(row.session_id), name: String(row.name), mix: { muted: Boolean(row.muted), soloed: Boolean(row.soloed), gain: Number(row.gain), pan: Number(row.pan) }, createdAt: String(row.created_at), updatedAt: String(row.updated_at) });
+const failure = (error: unknown) => NextResponse.json({ error: error instanceof Error ? error.message : "Private bus request failed." }, { status: error instanceof ApiError ? error.status : 400, headers: { "Cache-Control": "no-store" } });
+
+export async function GET(request: NextRequest) { try { const user = await authorize(request); const sessionId = request.nextUrl.searchParams.get("sessionId")?.trim() ?? ""; await session(user, sessionId); const { data, error } = await user.client.from(TABLE).select("*").eq("owner_id", user.id).eq("session_id", sessionId).order("created_at"); if (error) throw new ApiError(error.message, 500); return NextResponse.json({ buses: (data ?? []).map(map) }, { headers: { "Cache-Control": "no-store" } }); } catch (error) { return failure(error); } }
+
+export async function POST(request: NextRequest) { try {
+  const user = await authorize(request); const body = await request.json() as Record<string, unknown>; const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : ""; await session(user, sessionId);
+  if (body.action === "assign") { const laneId = typeof body.laneId === "string" ? body.laneId.trim() : ""; const busId = typeof body.busId === "string" && body.busId.trim() ? body.busId.trim() : null; if (!laneId) throw new ApiError("laneId is required.", 400); if (busId) { const found = await user.client.from(TABLE).select("id").eq("id", busId).eq("owner_id", user.id).eq("session_id", sessionId).maybeSingle(); if (!found.data) throw new ApiError("Private bus was not found.", 404); } const { data, error } = await user.client.from(LANES).update({ bus_id: busId, updated_at: new Date().toISOString() }).eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("id,bus_id,updated_at").single(); if (error || !data) throw new ApiError("Private lane was not found.", 404); return NextResponse.json({ laneId, busId, updatedAt: data.updated_at }); }
+  if (body.action === "delete") { const busId = typeof body.busId === "string" ? body.busId.trim() : ""; const { data, error } = await user.client.from(TABLE).delete().eq("id", busId).eq("owner_id", user.id).eq("session_id", sessionId).select("id").single(); if (error || !data) throw new ApiError("Private bus was not found.", 404); return NextResponse.json({ deletedBusId: busId }); }
+  const mix = parseTimelineDawPrivateBus(body); const busId = typeof body.busId === "string" && body.busId.trim() ? body.busId.trim() : `timeline-daw-private-bus-${crypto.randomUUID()}`;
+  const values = { id: busId, owner_id: user.id, session_id: sessionId, name: mix.name, muted: mix.muted, soloed: mix.soloed, gain: mix.gain, pan: mix.pan, updated_at: new Date().toISOString() };
+  const { data, error } = await user.client.from(TABLE).upsert(values).select("*").single(); if (error || !data) throw new ApiError(`Private bus could not be saved: ${error?.message ?? "missing row"}`, 500);
+  return NextResponse.json({ bus: map(data) }, { status: body.busId ? 200 : 201 });
+} catch (error) { return failure(error); } }

@@ -231,6 +231,7 @@ export type DawPrivateAudioLane = {
   timelineStartSeconds: number;
   sourceInSeconds: number;
   sourceOutSeconds: number;
+  busId: string | null;
   mix: { muted: boolean; soloed: boolean; gain: number; pan: number };
   fade: { inSeconds: number; outSeconds: number };
   provenance: { compId: string; renderChecksum: string } | null;
@@ -255,6 +256,12 @@ export function loadDawPrivateLaneHistory(sessionId: string): Promise<{ history:
 export function applyDawPrivateLaneHistory(sessionId: string, historyId: string, action: "undo" | "redo"): Promise<{ lanes: DawPrivateAudioLane[]; history: DawPrivateLaneEditHistory[] }> {
   return request("/api/timeline/daw-private-lane-history", { method: "POST", body: JSON.stringify({ sessionId, historyId, action }) });
 }
+
+export type DawPrivateBus = { id: string; sessionId: string; name: string; mix: { muted: boolean; soloed: boolean; gain: number; pan: number }; createdAt: string; updatedAt: string };
+export function loadDawPrivateBuses(sessionId: string): Promise<{ buses: DawPrivateBus[] }> { return request(`/api/timeline/daw-private-buses?sessionId=${encodeURIComponent(sessionId)}`); }
+export function saveDawPrivateBus(sessionId: string, input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }): Promise<{ bus: DawPrivateBus }> { return request("/api/timeline/daw-private-buses", { method: "POST", body: JSON.stringify({ sessionId, ...input }) }); }
+export function assignDawPrivateLaneBus(sessionId: string, laneId: string, busId: string | null): Promise<{ laneId: string; busId: string | null; updatedAt: string }> { return request("/api/timeline/daw-private-buses", { method: "POST", body: JSON.stringify({ action: "assign", sessionId, laneId, busId }) }); }
+export function deleteDawPrivateBus(sessionId: string, busId: string): Promise<{ deletedBusId: string }> { return request("/api/timeline/daw-private-buses", { method: "POST", body: JSON.stringify({ action: "delete", sessionId, busId }) }); }
 
 export type DawPrivateLaneWaveform = { binCount: number; frameCount: number; peaks: number[] };
 

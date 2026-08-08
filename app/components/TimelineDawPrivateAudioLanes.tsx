@@ -4,24 +4,31 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
 import {
   addDawPrivateAudioLane,
+  assignDawPrivateLaneBus,
+  deleteDawPrivateBus,
   arrangeDawPrivateAudioLane,
   duplicateDawPrivateAudioLane,
   editDawPrivateLaneGroup,
   loadDawPrivateAudioLanes,
+  loadDawPrivateBuses,
   loadDawPrivateLaneWaveform,
   removeDawPrivateAudioLane,
+  saveDawPrivateBus,
   splitDawPrivateAudioLane,
   updateDawPrivateAudioLaneMix,
   updateDawPrivateAudioLaneFade,
   type DawPrivateAudioLane,
+  type DawPrivateBus,
   type DawPrivateLaneWaveform,
 } from "@/app/workspace/projects/[id]/projectDawApi";
-import { resolveTimelineDawPrivateLaneAudibility } from "@/lib/timeline/TimelineDawPrivateLaneMixerPolicy";
+import { resolveTimelineDawPrivateRoutingAudibility } from "@/lib/timeline/TimelineDawPrivateBusPolicy";
 import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } from "@/lib/timeline/TimelineDawPrivateLaneMonitorGraph";
 import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
 import TimelineDawPrivateLaneWaveform from "@/app/components/TimelineDawPrivateLaneWaveform";
 import TimelineDawPrivateLaneHistory from "@/app/components/TimelineDawPrivateLaneHistory";
 import TimelineDawPrivateLaneGroupEditor, { type PrivateLaneGroupEditInput } from "@/app/components/TimelineDawPrivateLaneGroupEditor";
+import TimelineDawPrivateBusMixer from "@/app/components/TimelineDawPrivateBusMixer";
+import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBusGraph";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -33,14 +40,17 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
   const [selectedIds, setSelectedIds] = useState(new Set<string>());
+  const [buses, setBuses] = useState<DawPrivateBus[]>([]);
+  const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const audioRefs = useRef(new Map<string, HTMLAudioElement>());
   const graphRefs = useRef(new Map<string, TimelineDawPrivateLaneMonitorGraph>());
-  const contextRefs = useRef(new Map<string, AudioContext>());
+  const contextRef = useRef<AudioContext | null>(null);
+  const busGraphRefs = useRef(new Map<string, TimelineDawPrivateBusGraph>());
   const saveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const audioCallbacksRef = useRef(new Map<string, (element: HTMLAudioElement | null) => void>());
   const playheadRef = useRef(0);
   const transportStateRef = useRef<"playing" | "paused" | "stopped">("stopped");
-  const audibility = useMemo(() => resolveTimelineDawPrivateLaneAudibility(lanes.map((lane) => ({ id: lane.id, muted: lane.mix.muted, soloed: lane.mix.soloed }))), [lanes]);
+  const audibility = useMemo(() => resolveTimelineDawPrivateRoutingAudibility(lanes.map((lane) => ({ id: lane.id, busId: lane.busId, muted: lane.mix.muted, soloed: lane.mix.soloed })), buses.map((bus) => ({ id: bus.id, muted: bus.mix.muted, soloed: bus.mix.soloed }))), [buses, lanes]);
   const crossfades = useMemo(() => detectTimelineDawPrivateLaneCrossfades(lanes), [lanes]);
   const timelineExtentSeconds = useMemo(() => Math.max(60, ...lanes.map((lane) => lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds)), [lanes]);
   const waveformSourceKey = useMemo(() => [...new Set(lanes.map((lane) => lane.source.checksum))].sort().join("|"), [lanes]);
@@ -84,10 +94,24 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     }
   }, [audibility, effectiveFades, lanes]);
   useEffect(() => {
+    if (!contextRef.current && (lanes.length || buses.length)) contextRef.current = new AudioContext();
+    const context = contextRef.current;
+    if (!context) return;
+    for (const bus of buses) {
+      let graph = busGraphRefs.current.get(bus.id);
+      if (!graph) { graph = new TimelineDawPrivateBusGraph(context); busGraphRefs.current.set(bus.id, graph); }
+      graph.apply(bus.mix, !buses.some((candidate) => candidate.mix.soloed) || bus.mix.soloed);
+    }
+    busGraphRefs.current.forEach((graph, id) => { if (!buses.some((bus) => bus.id === id)) { graph.dispose(); busGraphRefs.current.delete(id); } });
+    for (const lane of lanes) graphRefs.current.get(lane.id)?.connect(lane.busId ? busGraphRefs.current.get(lane.busId)?.input ?? context.destination : context.destination);
+  }, [buses, lanes]);
+
+  useEffect(() => {
     const interval = window.setInterval(() => {
       const next: Record<string, TimelineDawPrivateLaneMeter> = {};
       graphRefs.current.forEach((graph, id) => { next[id] = graph.meter(); });
       setMeters(next);
+      const nextBuses: Record<string, TimelineDawPrivateLaneMeter> = {}; busGraphRefs.current.forEach((graph, id) => { nextBuses[id] = graph.meter(); }); setBusMeters(nextBuses);
     }, 100);
     return () => window.clearInterval(interval);
   }, []);
@@ -108,7 +132,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     void loadDawPrivateAudioLanes(sessionId)
       .then(({ lanes: stored }) => { if (active) setLanes(stored); })
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Private audio lanes could not be loaded."); });
-    return () => { active = false; audioRefs.current.forEach((audio) => audio.pause()); graphRefs.current.forEach((graph) => graph.dispose()); contextRefs.current.forEach((context) => void context.close()); saveTimersRef.current.forEach((timer) => clearTimeout(timer)); };
+    void loadDawPrivateBuses(sessionId)
+      .then(({ buses: stored }) => { if (active) setBuses(stored); })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Private buses could not be loaded."); });
+    return () => { active = false; audioRefs.current.forEach((audio) => audio.pause()); graphRefs.current.forEach((graph) => graph.dispose()); busGraphRefs.current.forEach((graph) => graph.dispose()); if (contextRef.current) void contextRef.current.close(); saveTimersRef.current.forEach((timer) => clearTimeout(timer)); };
   }, [sessionId]);
 
   useEffect(() => {
@@ -164,10 +191,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       if (element) {
         audioRefs.current.set(lane.id, element);
         try {
-          const context = new AudioContext();
-          const graph = new TimelineDawPrivateLaneMonitorGraph(context, element);
+          const context = contextRef.current ?? new AudioContext(); contextRef.current = context;
+          const output = lane.busId ? busGraphRefs.current.get(lane.busId)?.input ?? context.destination : context.destination;
+          const graph = new TimelineDawPrivateLaneMonitorGraph(context, element, output);
           graph.apply(lane.mix, audibility.get(lane.id) ?? false);
-          contextRefs.current.set(lane.id, context);
           graphRefs.current.set(lane.id, graph);
         } catch (cause) {
           setError(cause instanceof Error ? cause.message : `Monitoring graph could not be created for ${lane.name}.`);
@@ -176,9 +203,6 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
         audioRefs.current.delete(lane.id);
         graphRefs.current.get(lane.id)?.dispose();
         graphRefs.current.delete(lane.id);
-        const context = contextRefs.current.get(lane.id);
-        if (context) void context.close();
-        contextRefs.current.delete(lane.id);
         audioCallbacksRef.current.delete(lane.id);
       }
     };
@@ -239,6 +263,24 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function saveBus(input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }) {
+    setBusy(true); setError(undefined);
+    try { const { bus } = await saveDawPrivateBus(sessionId, input); setBuses((current) => [...current.filter((item) => item.id !== bus.id), bus]); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Private bus could not be saved."); }
+    finally { setBusy(false); }
+  }
+  async function deleteBus(bus: DawPrivateBus) {
+    setBusy(true); setError(undefined);
+    try { await deleteDawPrivateBus(sessionId, bus.id); setBuses((current) => current.filter((item) => item.id !== bus.id)); setLanes((current) => current.map((lane) => lane.busId === bus.id ? { ...lane, busId: null } : lane)); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Private bus could not be deleted."); }
+    finally { setBusy(false); }
+  }
+  async function assignBus(lane: DawPrivateAudioLane, busId: string | null) {
+    setError(undefined);
+    try { const saved = await assignDawPrivateLaneBus(sessionId, lane.id, busId); setLanes((current) => current.map((item) => item.id === lane.id ? { ...item, busId: saved.busId, updatedAt: saved.updatedAt } : item)); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Lane routing could not be saved."); }
+  }
+
   async function applyGroupEdit(edit: PrivateLaneGroupEditInput) {
     setBusy(true); setError(undefined);
     try {
@@ -284,9 +326,6 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       audioRefs.current.delete(lane.id);
       graphRefs.current.get(lane.id)?.dispose();
       graphRefs.current.delete(lane.id);
-      const context = contextRefs.current.get(lane.id);
-      if (context) void context.close();
-      contextRefs.current.delete(lane.id);
       setLanes((current) => current.filter((candidate) => candidate.id !== lane.id));
       setHistoryRevision((current) => current + 1);
     } catch (cause) {
@@ -300,6 +339,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
+      <TimelineDawPrivateBusMixer buses={buses} meters={busMeters} busy={busy} onSave={(bus) => void saveBus(bus)} onDelete={(bus) => void deleteBus(bus)} />
       <TimelineDawPrivateLaneGroupEditor lanes={lanes} selectedIds={selectedIds} busy={busy} onSelection={setSelectedIds} onApply={(edit) => void applyGroupEdit(edit)} />
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic equal-power transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} to {incoming?.name}: {crossfade.startSeconds.toFixed(2)}–{crossfade.endSeconds.toFixed(2)}s ({crossfade.durationSeconds.toFixed(2)}s)</p>; })}</div> : null}
       {lanes.length ? (
@@ -313,6 +353,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
                 </div>
                 <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} />
+                <label className="mt-3 block text-xs font-black text-white/55">Output routing<select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={lane.busId ?? ""} onChange={(event) => void assignBus(lane, event.target.value || null)}><option value="">Master</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-3">
                   <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>

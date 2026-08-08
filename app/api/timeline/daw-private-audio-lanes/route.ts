@@ -51,6 +51,7 @@ function lane(row: Record<string, unknown>, playbackUrl: string) {
     timelineStartSeconds: Number(row.timeline_start_seconds),
     sourceInSeconds: Number(row.source_in_seconds ?? 0),
     sourceOutSeconds: Number(row.source_out_seconds ?? row.duration_seconds),
+    busId: row.bus_id ? String(row.bus_id) : null,
     fade: { inSeconds: Number(row.fade_in_seconds ?? 0), outSeconds: Number(row.fade_out_seconds ?? 0) },
     mix: { muted: Boolean(row.muted), soloed: Boolean(row.soloed), gain: Number(row.gain), pan: Number(row.pan) },
     provenance: row.comp_id ? { compId: String(row.comp_id), renderChecksum: String(row.comp_render_checksum) } : null,
@@ -155,6 +156,7 @@ export async function POST(request: NextRequest) {
         comp_id: stored.comp_id, comp_render_checksum: stored.comp_render_checksum,
         muted: stored.muted, soloed: stored.soloed, gain: stored.gain, pan: stored.pan,
         fade_in_seconds: stored.fade_in_seconds, fade_out_seconds: stored.fade_out_seconds,
+        bus_id: stored.bus_id,
       }).select("*").single();
       if (error || !data) throw new ApiError(`Private audio lane could not be duplicated: ${error?.message ?? "missing row"}`, 500);
       await recordEdit(user.client, user.id, sessionId, "duplicate", [], [data]);
@@ -179,6 +181,11 @@ export async function POST(request: NextRequest) {
       });
       if (error || !Array.isArray(data) || data.length !== 2) {
         throw new ApiError(`Private audio lane could not be split atomically: ${error?.message ?? "split rows missing"}`, 500);
+      }
+      if (stored.bus_id) {
+        const { data: routed, error: routeError } = await user.client.from(TABLE).update({ bus_id: stored.bus_id }).eq("id", rightLaneId).eq("owner_id", user.id).select("*").single();
+        if (routeError || !routed) throw new ApiError("Split region routing could not be preserved.", 500);
+        const index = data.findIndex((row) => row.id === rightLaneId); if (index >= 0) data[index] = routed;
       }
       await recordEdit(user.client, user.id, sessionId, "split", [stored], data);
       const lanes = await Promise.all(data.map(async (row) => lane(row, await sign(user.client, user.id, sessionId, String(row.source_uri)))));
