@@ -6,35 +6,33 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Durable Tempo Map and Musical Grid
+## Latest completed milestone — Musical Markers and Arrangement Sections
 
-Musical time can now be edited directly while audio and automation remain sample-aligned.
+Song structure is now durable, tempo-aware, navigable, loopable, and recoverable.
 
-- Persist ordered tempo and time-signature events in the existing owner-scoped revisioned transport archive.
-- Add validated add, update, move, and delete commands with optimistic workspace and transport-head conflicts.
-- Preserve required tick-zero tempo and signature origins and reject duplicate event ticks.
-- Convert between seconds, ticks, bars, and beats across tempo and meter changes.
-- Drive transport labels, bar navigation, scrub snapping, count-in, and metronome scheduling from the edited maps.
-- Record tempo and signature lifecycle actions in the durable transport event ledger.
-- Expose direct tempo and signature event controls in the live transport.
+- Persist owner-scoped colored markers and ranged arrangement sections at musical ticks.
+- Resolve exact seconds through the active tempo map while preserving tick anchors across tempo changes.
+- Add, move, resize, rename, and delete items from the live transport.
+- Locate directly to markers and enable transport loops from arrangement sections.
+- Record before/after edit receipts with deterministic undo and redo.
+- Enforce ordered ticks, bounded names, colors, and valid section ranges.
 
 ### Files delivered
 
-- `lib/timeline/TimelineTransportAndSynchronizationEngine.ts`
-- `lib/timeline/TimelineDawTransportService.ts`
-- `lib/timeline/TimelineDawTransportApiPolicy.ts`
-- `app/workspace/projects/[id]/projectDawApi.ts`
+- `lib/timeline/TimelineDawArrangementMarkerPolicy.ts`
+- `engine/test/timeline-daw-arrangement-marker-policy.test.ts`
+- `supabase/migrations/20260809043000_timeline_daw_arrangement_items.sql`
+- `app/api/timeline/daw-arrangement-items/route.ts`
+- `app/components/TimelineDawArrangementEditor.tsx`
 - `app/workspace/projects/[id]/ProjectDawTransport.tsx`
-- `app/components/TimelineDawTempoMapEditor.tsx`
-- `engine/test/timeline-daw-tempo-map-editing.test.ts`
 
 ### Verification
 
-- Focused tempo-map, conversion, API-policy, and durable transport tests: 24 passed.
+- Focused marker, section, and tempo-map tests: 5 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- No new migration was required; tempo maps remain in the existing durable workspace archive.
-- Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
+- Supabase migrations applied successfully through `20260809043000`.
+- Existing code-map broad-file-pattern build warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
 - Durable DAW workspaces and authenticated project sessions.
@@ -63,17 +61,17 @@ Musical time can now be edited directly while audio and automation remain sample
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Musical Markers and Arrangement Sections
+## Next milestone — Non-Destructive Time Stretch and Pitch
 
-Add durable song structure that follows the musical grid and accelerates navigation and editing.
+Add professional clip timing and tuning changes while preserving private source masters.
 
 Planned outcome:
 
-1. Persist owner-scoped markers, ranges, colors, and named arrangement sections.
-2. Anchor items to musical ticks while resolving exact sample positions through the tempo map.
-3. Provide marker insertion, movement, resizing, renaming, deletion, and ordered navigation.
-4. Add section-aware loop, selection, and transport locate actions.
-5. Integrate marker edits with conflict-aware reversible history.
+1. Persist per-region stretch ratios, pitch offsets, and algorithms.
+2. Validate duration, sample boundaries, and safe parameter ranges.
+3. Apply synchronized preview and offline freeze rendering.
+4. Provide direct controls, reset, bypass, and conflict-aware history.
+5. Preserve fades, automation, arrangement anchors, and source provenance.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

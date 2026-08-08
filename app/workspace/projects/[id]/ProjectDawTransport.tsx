@@ -32,6 +32,7 @@ import {
 import { getPlayableTrackUrl } from "./projectPlaybackHelpers";
 import type { DawSession } from "./projectDawTypes";
 import TimelineDawTempoMapEditor from "@/app/components/TimelineDawTempoMapEditor";
+import TimelineDawArrangementEditor from "@/app/components/TimelineDawArrangementEditor";
 
 type Track = {
   id: string;
@@ -927,6 +928,7 @@ export default function ProjectDawTransport({
       </div>
 
       {transport ? <TimelineDawTempoMapEditor transport={transport} onCommand={(action, extras) => update(action, extras)} /> : null}
+      {transport ? <TimelineDawArrangementEditor sessionId={session.id} transport={transport} onLocate={(tick) => void update("locate", { tick })} onLoop={(startTick, endTick) => void update("set-loop", { enabled: true, startTick, endTick })} /> : null}
 
       <input
         type="range"
