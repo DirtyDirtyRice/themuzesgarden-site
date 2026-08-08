@@ -1,12 +1,13 @@
 import type { TimelineDecodedAudioBuffer } from "./TimelineAudioDecodeEngine";
 import type { TimelineDawPrivateInsert } from "./TimelineDawPrivateBusProcessingPolicy";
+import type { TimelineDawPrivateWarpMarker } from "./TimelineDawPrivateWarpPolicy";
 import { transformTimelineDawPrivateLanePcm, type TimelineDawPrivateLaneTransform } from "./TimelineDawPrivateLaneTransformPolicy";
 import { timelineDawPrivateAutomationValue, type TimelineDawPrivateAutomationEnvelope } from "./TimelineDawPrivateAutomationPolicy";
 
 export type TimelineDawPrivateFreezeLaneInput = {
   id: string; audio: TimelineDecodedAudioBuffer; timelineStartSeconds: number; sourceInSeconds: number; sourceOutSeconds: number;
   gain: number; pan: number; inserts: TimelineDawPrivateInsert[];
-  automation?: TimelineDawPrivateAutomationEnvelope[]; transform?: TimelineDawPrivateLaneTransform; protectedFrames?: number[];
+  automation?: TimelineDawPrivateAutomationEnvelope[]; transform?: TimelineDawPrivateLaneTransform; protectedFrames?: number[]; warpMarkers?: TimelineDawPrivateWarpMarker[];
 };
 
 function process(channels: Float32Array[], sampleRate: number, inserts: TimelineDawPrivateInsert[]): void {
@@ -29,7 +30,7 @@ export class TimelineDawPrivateFreezeRenderer {
       const start = Math.round(lane.timelineStartSeconds * sampleRate), sourceStart = Math.round(lane.sourceInSeconds * sampleRate), count = Math.round((lane.sourceOutSeconds - lane.sourceInSeconds) * sampleRate);
       const local = [new Float32Array(count), new Float32Array(count)];
       for (let frame = 0; frame < count; frame += 1) { const left = lane.audio.channels[0]?.[sourceStart + frame] ?? 0; const right = lane.audio.channels[Math.min(1, lane.audio.channelCount - 1)]?.[sourceStart + frame] ?? left; local[0][frame] = left; local[1][frame] = right; }
-      const transformed=lane.transform?transformTimelineDawPrivateLanePcm(local,lane.transform,lane.protectedFrames??[],sampleRate):local; process(transformed, sampleRate, lane.inserts);
+      const transformed=lane.transform?transformTimelineDawPrivateLanePcm(local,lane.transform,lane.protectedFrames??[],sampleRate,lane.warpMarkers??[]):local; process(transformed, sampleRate, lane.inserts);
       for (let frame = 0; frame < transformed[0].length; frame += 1) { const timelineFrame=start+frame,gain=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="gain"),timelineFrame,lane.gain),pan=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="pan"),timelineFrame,lane.pan),leftGain=gain*Math.cos((pan+1)*Math.PI/4),rightGain=gain*Math.sin((pan+1)*Math.PI/4); output[0][timelineFrame] += transformed[0][frame] * leftGain; output[1][timelineFrame] += transformed[1][frame] * rightGain; }
     }
     process(output, sampleRate, outputInserts); for(let frame=0;frame<frameCount;frame+=1){const gain=timelineDawPrivateAutomationValue(outputAutomation.find((item)=>item.parameter==="gain"),frame,1),pan=timelineDawPrivateAutomationValue(outputAutomation.find((item)=>item.parameter==="pan"),frame,0),left=gain*Math.cos((pan+1)*Math.PI/4)*Math.SQRT2,right=gain*Math.sin((pan+1)*Math.PI/4)*Math.SQRT2;output[0][frame]=Math.max(-1,Math.min(1,output[0][frame]*left));output[1][frame]=Math.max(-1,Math.min(1,output[1][frame]*right));}

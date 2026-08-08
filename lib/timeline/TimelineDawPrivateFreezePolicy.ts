@@ -8,6 +8,7 @@ export type TimelineDawPrivateFreezeRecipe = {
   inserts: unknown[];
   sends: unknown[];
   automation?: unknown[];
+  warpMaps?: unknown[];
 };
 
 function canonical(value: unknown): string {

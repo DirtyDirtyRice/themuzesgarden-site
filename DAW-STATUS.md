@@ -6,24 +6,23 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Anchor-Aware Elastic Rendering
+## Latest completed milestone — Private Warp Markers and Groove Quantization
 
-Private lane transforms now use protected transient anchors across preview planning and offline freeze rendering.
+Private lanes now support durable monotonic warp maps and reusable owner-scoped rhythmic feel.
 
-- Added deterministic anchor-aware elastic plans with draft, balanced, and high quality windows.
-- Preserve protected attack samples while distributing stretch timing between adjacent anchors.
-- Share transform duration and playback-rate planning between browser preview and offline rendering.
-- Persist lane quality choices and include them in freeze recipe staleness checks.
-- Feed checksum-cached protected transients into private freeze renders.
-- Move, delete, threshold, protect, quantize, navigate, and audition transient anchors.
-- Preserve non-destructive source PCM and reversible lane-transform history.
+- Persist lane-specific source/destination warp markers with optimistic revisions.
+- Drag warp destinations within collision-safe monotonic bounds and protect explicit attacks.
+- Quantize selected anchors with adjustable strength without moving protected markers.
+- Extract, save, and apply private groove templates.
+- Undo and redo warp changes through durable before/after edit receipts.
+- Use identical warp maps in browser elastic planning, offline freeze rendering, and stale-recipe detection.
 
 ### Verification
 
-- Focused transform, anchor, transient, and freeze tests: 10 passed.
+- Focused warp, elastic, transform, and freeze tests: 15 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809073000`.
+- Supabase migrations applied successfully through `20260809083000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -53,17 +52,17 @@ Private lane transforms now use protected transient anchors across preview plann
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Private Warp Markers and Groove Quantization
+## Next milestone — Plugin Delay Compensation and Master Bus
 
-Turn transient anchors into durable user-authored warp maps and reusable rhythmic feel.
+Keep multi-bus playback phase-aligned while adding a production-ready final output stage.
 
 Planned outcome:
 
-1. Persist lane-specific warp marker source and destination frame pairs.
-2. Add reversible drag editing with collision and monotonic-order validation.
-3. Extract, save, and apply owner-scoped groove templates.
-4. Quantize selected anchors with adjustable strength while protecting explicit attacks.
-5. Use identical warp maps in preview, freeze, and stale-recipe detection.
+1. Calculate insert and routing latency across the private bus graph.
+2. Apply deterministic per-path delay compensation in preview and freeze rendering.
+3. Add a durable master bus with gain, mute, inserts, and automation.
+4. Add peak, RMS, true-peak, and clipping meters for final output.
+5. Include latency and master state in freeze staleness and reversible history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
