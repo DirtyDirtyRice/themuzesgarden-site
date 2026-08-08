@@ -6,25 +6,26 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Timeline Comments and Review Workflow
+## Latest completed milestone — Versioned Session Snapshots and Compare
 
-Private sessions now support sample-addressed musical review threads and transport-linked audition.
+Private sessions now support immutable named mix checkpoints with structural comparison and guarded restore.
 
-- Persist point or range comments on lanes, buses, and master output.
-- Store lane comments with source-relative frames and optional tempo ticks for durable anchoring.
-- Relocate anchors after lane moves and deterministically choose split children.
-- Add threaded replies, deduplicated mentions, assignees, priorities, and resolve/reopen state.
-- Navigate directly to comment samples and audition bounded review ranges.
-- Filter open, resolved, urgent, or all threads.
-- Record create, reply, assignment, priority, and resolution actions in a private audit ledger.
+- Capture lanes, routing, inserts, sends, automation envelopes and scoped points, master state, and arrangement without duplicating source audio.
+- Canonically serialize session state, exclude ephemeral signed playback URLs, and compute deterministic SHA-256 checksums.
+- Compare snapshots against the current session with section-level diffs and staleness indicators.
+- Audition snapshot master settings as A/B states with bounded RMS loudness matching.
+- Protect restores with snapshot-integrity and expected-current-state conflict checks.
+- Create an automatic safety snapshot before restore and persist a restore receipt with provenance.
+- Store snapshot names, notes, favorites, revisions, and creator metadata under owner-only RLS policies.
 
 ### Verification
 
-- Focused review-anchor, collaboration, split, and arrangement tests: 13 passed.
+- Focused snapshot, template, review, and freeze-policy tests: 14 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809143000`.
+- Supabase migrations applied successfully through `20260809153000`.
 - Existing code-map warning remains non-blocking and unrelated.
+
 ## Previously completed DAW foundation
 
 - Durable DAW workspaces and authenticated project sessions.
@@ -52,19 +53,21 @@ Private sessions now support sample-addressed musical review threads and transpo
 - Checksum-cached private waveforms with timeline-proportional direct region editing.
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
+- Timeline comments and review workflow with sample-addressed threads and transport-linked audition.
 
-## Next milestone — Versioned Session Snapshots and Compare
+## Next milestone — Clip Gain Envelopes and Spectral Repair
 
-Give musicians safe named mix checkpoints with audible and structural comparison.
+Add precise non-destructive source-level correction before mixer processing.
 
 Planned outcome:
 
-1. Capture immutable named snapshots of lanes, routing, processing, automation, master, and arrangement.
-2. Compute deterministic structural diffs without duplicating source audio.
-3. Add A/B audition, loudness-matched compare, and current-state staleness checks.
-4. Restore snapshots atomically with conflict protection and automatic safety checkpointing.
-5. Add favorites, notes, provenance, and reversible restore history.
+1. Persist sample-aligned clip-gain envelope points with conflict-aware revisions.
+2. Add direct waveform editing with bounded interpolation and reversible history.
+3. Define spectral selections and durable attenuation or repair recipes without rewriting source audio.
+4. Make preview, freeze, bounce, and export consume the same deterministic processing graph.
+5. Add integrity checks, provenance, and safe bypass for every repair operation.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
