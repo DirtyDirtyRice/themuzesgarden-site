@@ -6,34 +6,32 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Mix Automation Envelopes
+## Latest completed milestone — Private Automation Integrity and History
 
-Private lane and bus gain and pan can now evolve through durable, sample-aligned automation envelopes.
+Private automation is now recoverable, freeze-aware, and consistent between live playback and offline rendering.
 
-- Snapshot durable owner-scoped freeze recipes from lane arrangement, routing, sends, inserts, and bus mix state.
-- Decode verified private WAV sources and render timeline-aligned stereo PCM with gain, pan, filter, compressor, and bus processing.
-- Store 32-bit WAV freeze artifacts in the existing private render-source store without modifying source masters.
-- Replace active live lane or bus graphs with transport-synchronized frozen playback.
-- Detect stale artifacts by recomputing canonical recipe checksums after processing changes.
-- Expose render progress state, artifact size, stale refresh, re-render, and reversible unfreeze controls.
+- Load the same owner-scoped automation snapshot for freeze creation and stale-artifact checks.
+- Include relevant lane and bus envelopes in canonical freeze recipes.
+- Apply lane and output gain and pan automation at exact timeline sample positions during freeze rendering.
+- Persist before/after automation edit receipts with deterministic undo and redo.
+- Invalidate abandoned redo branches after a new edit.
+- Expose functional undo and redo controls with visible errors.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateFreezePolicy.ts`
-- `lib/timeline/TimelineDawPrivateFreezeRenderer.ts`
-- `engine/test/timeline-daw-private-freeze-policy.test.ts`
-- `engine/test/timeline-daw-private-freeze-renderer.test.ts`
-- `supabase/migrations/20260809023000_timeline_daw_private_freezes.sql`
+- `lib/timeline/TimelineDawPrivateAutomationStore.ts`
+- `app/api/timeline/daw-private-automation/route.ts`
 - `app/api/timeline/daw-private-freezes/route.ts`
-- `app/workspace/projects/[id]/projectDawApi.ts`
-- `app/components/TimelineDawPrivateFreezePanel.tsx`
-- `app/components/TimelineDawPrivateAudioLanes.tsx`
+- `app/components/timelineDawPrivateAutomationApi.ts`
+- `app/components/TimelineDawPrivateAutomationEditor.tsx`
+- `engine/test/timeline-daw-private-automation-integrity.test.ts`
 
 ### Verification
 
-- Focused automation validation, interpolation, rendering, and source-immutability tests: 5 passed.
+- Focused automation, freeze checksum, and sample-rendering tests: 10 passed.
+- TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809033000`.
+- No new migration was required; Supabase remains current through `20260809033000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -63,17 +61,17 @@ Private lane and bus gain and pan can now evolve through durable, sample-aligned
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Private Mix Automation Envelopes
+## Next milestone — Private Automation Recording and Curve Tools
 
-Add durable sample-aligned automation so lane and bus parameters can evolve across the session timeline.
+Capture expressive mixer moves and make automation curves faster to shape.
 
 Planned outcome:
 
-1. Persist owner-scoped automation lanes and ordered control points for gain and pan.
-2. Validate monotonic sample positions, bounded values, and deterministic interpolation modes.
-3. Apply automation sample-aligned during live monitoring and offline freeze rendering.
-4. Provide direct timeline editing, point insertion, movement, deletion, and bypass controls.
-5. Integrate automation changes with stale-freeze detection and reversible edit history.
+1. Record armed lane and bus gain or pan moves against the transport at sample-aligned positions.
+2. Reduce captured events deterministically without changing audible curves beyond a bounded tolerance.
+3. Add curve selection, multi-point movement, scaling, and interpolation changes.
+4. Provide touch, latch, and write recording modes with explicit arming and safe stop behavior.
+5. Integrate recorded edits with automation history and stale-freeze detection.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
