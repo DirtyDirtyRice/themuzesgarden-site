@@ -14,4 +14,8 @@ export type DawRecordedSourceEventDetail = {
     frameCount: number;
     durationSeconds: number;
   };
+  provenance?: {
+    compId: string;
+    renderChecksum: string;
+  };
 };

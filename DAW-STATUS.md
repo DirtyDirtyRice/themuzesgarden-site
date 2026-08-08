@@ -6,35 +6,36 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone ? Comp-to-Timeline Promotion
+## Latest completed milestone ? Private Audio Source Lanes
 
-Musicians can now promote a verified comp render into the session's private source workflow without losing its recipe or provenance.
+Recorded and promoted private WAV sources are now durable, playable session lanes aligned to the DAW transport.
 
-- Require a completed comp render with a valid SHA-256 checksum before promotion.
-- Verify owner and session storage paths before loading the private render artifact.
-- Recompute and compare the artifact checksum before copying any audio.
-- Decode the promoted WAV and register it in the owner-scoped private render-source bucket.
-- Persist the promoted source ID, URI, source render checksum, and promotion time on the comp.
-- Dispatch promoted comps through the same shared recorded-source event used by live recording.
-- Show current versus superseded promotion state and allow re-promotion only after a new render.
+- Persist owner-scoped private audio lanes with source checksum and complete audio geometry.
+- Insert recording and promoted-comp sources at the current playhead through the shared source event.
+- Preserve comp ID and render-checksum provenance when a lane comes from a promoted comp.
+- Load each lane through a short-lived signed URL from the private source bucket.
+- Synchronize lane playback, pause, stop, and drift correction with explicit session transport events.
+- Display timeline start/end positions and distinguish recording lanes from comp-derived lanes.
+- Remove lane metadata safely without deleting the private WAV master.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawTakeCompPromotionPolicy.ts`
-- `lib/timeline/TimelineDawRecordedSourceEvent.ts`
-- `engine/test/timeline-daw-take-comp-promotion-policy.test.ts`
-- `supabase/migrations/20260808153000_timeline_daw_take_comp_promotions.sql`
-- `app/api/timeline/daw-take-comps/route.ts`
+- `lib/timeline/TimelineDawPrivateAudioLanePolicy.ts`
+- `engine/test/timeline-daw-private-audio-lane-policy.test.ts`
+- `supabase/migrations/20260808163000_timeline_daw_private_audio_lanes.sql`
+- `app/api/timeline/daw-private-audio-lanes/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
+- `lib/timeline/TimelineDawRecordedSourceEvent.ts`
+- `app/components/TimelineDawPrivateAudioLanes.tsx`
 - `app/components/TimelineDawTakeCompWorkspace.tsx`
-- `app/workspace/projects/[id]/ProjectDawRecordingWorkspace.tsx`
-- `app/workspace/projects/[id]/ProjectDawExportWorkspace.tsx`
+- `app/workspace/projects/[id]/ProjectDawTransport.tsx`
+- `app/workspace/projects/[id]/studio/[sessionId]/page.tsx`
 
 ### Verification
 
-- Focused Take Comp promotion, policy, and renderer tests: 6 passed.
+- Focused private-lane and comp-promotion policy tests: 4 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260808153000`.
+- Supabase migrations applied successfully through `20260808163000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 
 ## Previously completed DAW foundation
@@ -56,18 +57,19 @@ Musicians can now promote a verified comp render into the session's private sour
 - Recording take review, notes, ratings, and renaming.
 - Durable non-destructive take comp recipes and ordered preview.
 - Sample-accurate comp WAV rendering and private delivery.
+- Checksum-verified comp promotion with durable source provenance.
 
-## Next milestone ? Private Audio Source Lanes
+## Next milestone ? Private Lane Mixer Controls
 
-Make recorded and promoted private WAV sources first-class playable lanes in the DAW timeline.
+Give each private audio lane practical monitoring and mix controls while preserving transport synchronization.
 
 Planned outcome:
 
-1. Persist owner-scoped private audio lanes for a DAW session.
-2. Insert recorded or promoted sources through the shared source event workflow.
-3. Retain source checksum, audio geometry, timeline position, and comp provenance when present.
-4. Load private source lanes with signed playback URLs and align them to transport time.
-5. Support safe lane removal without deleting the private source master.
+1. Persist lane mute, solo, gain, and stereo-pan settings.
+2. Apply gain and pan through a reusable Web Audio monitoring graph.
+3. Enforce predictable solo/mute precedence across all private lanes.
+4. Preserve settings across reloads and source URL refreshes.
+5. Show clear metering and clipping state per lane.
 6. Add focused policy tests, run the production build, apply any reviewed migration, commit, and push.
 
 ## Working rules

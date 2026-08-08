@@ -88,7 +88,7 @@ export default function TimelineDawTakeCompWorkspace({ sessionId, takes }: { ses
       if (compId === comp.id) editComp(result.comp);
       window.dispatchEvent(new CustomEvent<DawRecordedSourceEventDetail>(
         DAW_RECORDED_SOURCE_EVENT,
-        { detail: { source: result.source, audio: result.audio } },
+        { detail: { source: result.source, audio: result.audio, provenance: { compId: comp.id, renderChecksum: result.comp.render!.checksum } } },
       ));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Rendered comp could not be promoted.");

@@ -10,6 +10,7 @@ import ProjectDawRecoveryWorkspace from "../../ProjectDawRecoveryWorkspace";
 import ProjectDawTransport from "../../ProjectDawTransport";
 import ProjectDawDeviceDiagnostics from "../../ProjectDawDeviceDiagnostics";
 import ProjectDawRecordingWorkspace from "../../ProjectDawRecordingWorkspace";
+import TimelineDawPrivateAudioLanes from "@/app/components/TimelineDawPrivateAudioLanes";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -191,6 +192,8 @@ export default function ProjectDawSessionPage() {
         workspaceRevision={snapshot.workspaceRevision}
         onWorkspaceRevision={handleWorkspaceRevision}
       />
+
+      <TimelineDawPrivateAudioLanes sessionId={session.id} />
 
       <ProjectDawDeviceDiagnostics />
       <ProjectDawRecordingWorkspace session={session} />

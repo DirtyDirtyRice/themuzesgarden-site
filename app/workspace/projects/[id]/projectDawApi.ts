@@ -222,6 +222,50 @@ export function deleteDawRecordingTake(sessionId: string, takeId: string): Promi
   });
 }
 
+export type DawPrivateAudioLane = {
+  id: string;
+  sessionId: string;
+  name: string;
+  source: { id: string; uri: string; checksum: string };
+  audio: DawRecordingTake["audio"];
+  timelineStartSeconds: number;
+  provenance: { compId: string; renderChecksum: string } | null;
+  playbackUrl: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function loadDawPrivateAudioLanes(sessionId: string): Promise<{ lanes: DawPrivateAudioLane[] }> {
+  return request(`/api/timeline/daw-private-audio-lanes?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function addDawPrivateAudioLane(input: {
+  sessionId: string;
+  name: string;
+  sourceId: string;
+  sourceUri: string;
+  sourceChecksum: string;
+  sampleRate: number;
+  channelCount: number;
+  frameCount: number;
+  durationSeconds: number;
+  timelineStartSeconds: number;
+  compId?: string;
+  compRenderChecksum?: string;
+}): Promise<{ lane: DawPrivateAudioLane }> {
+  return request("/api/timeline/daw-private-audio-lanes", {
+    method: "POST",
+    body: JSON.stringify({ action: "add", ...input }),
+  });
+}
+
+export function removeDawPrivateAudioLane(sessionId: string, laneId: string): Promise<{ removedLaneId: string }> {
+  return request("/api/timeline/daw-private-audio-lanes", {
+    method: "POST",
+    body: JSON.stringify({ action: "remove", sessionId, laneId }),
+  });
+}
+
 export type DawTakeCompRegion = {
   takeId: string;
   startSeconds: number;
