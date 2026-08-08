@@ -6,31 +6,34 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Automation Recording and Curve Tools
+## Latest completed milestone — Durable Tempo Map and Musical Grid
 
-Mixer performance can now be captured against transport time and refined as deterministic automation curves.
+Musical time can now be edited directly while audio and automation remain sample-aligned.
 
-- Arm a specific lane or bus gain/pan envelope for touch, latch, or write recording.
-- Capture scoped mixer changes at exact session sample positions and finalize safely on pause or stop.
-- Reduce dense captured events with deterministic bounded-error curve simplification.
-- Merge recorded ranges into durable envelopes through the existing history and stale-freeze paths.
-- Select multiple automation points and move, scale, or change their interpolation together.
-- Reject curve transforms that would overlap ordered sample positions.
+- Persist ordered tempo and time-signature events in the existing owner-scoped revisioned transport archive.
+- Add validated add, update, move, and delete commands with optimistic workspace and transport-head conflicts.
+- Preserve required tick-zero tempo and signature origins and reject duplicate event ticks.
+- Convert between seconds, ticks, bars, and beats across tempo and meter changes.
+- Drive transport labels, bar navigation, scrub snapping, count-in, and metronome scheduling from the edited maps.
+- Record tempo and signature lifecycle actions in the durable transport event ledger.
+- Expose direct tempo and signature event controls in the live transport.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateAutomationRecordingPolicy.ts`
-- `lib/timeline/TimelineDawPrivateAutomationEvents.ts`
-- `engine/test/timeline-daw-private-automation-recording-policy.test.ts`
-- `app/components/TimelineDawPrivateAutomationEditor.tsx`
-- `app/components/TimelineDawPrivateAudioLanes.tsx`
+- `lib/timeline/TimelineTransportAndSynchronizationEngine.ts`
+- `lib/timeline/TimelineDawTransportService.ts`
+- `lib/timeline/TimelineDawTransportApiPolicy.ts`
+- `app/workspace/projects/[id]/projectDawApi.ts`
+- `app/workspace/projects/[id]/ProjectDawTransport.tsx`
+- `app/components/TimelineDawTempoMapEditor.tsx`
+- `engine/test/timeline-daw-tempo-map-editing.test.ts`
 
 ### Verification
 
-- Focused recording, reduction, curve transform, and automation-integrity tests: 7 passed.
+- Focused tempo-map, conversion, API-policy, and durable transport tests: 24 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- No new migration was required; Supabase remains current through `20260809033000`.
+- No new migration was required; tempo maps remain in the existing durable workspace archive.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -60,17 +63,17 @@ Mixer performance can now be captured against transport time and refined as dete
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Durable Tempo Map and Musical Grid
+## Next milestone — Musical Markers and Arrangement Sections
 
-Add musical time as a first-class session layer without weakening sample-aligned audio placement.
+Add durable song structure that follows the musical grid and accelerates navigation and editing.
 
 Planned outcome:
 
-1. Persist owner-scoped tempo and time-signature events with deterministic ordering.
-2. Convert reliably between samples, seconds, beats, bars, and ticks across tempo changes.
-3. Drive the transport grid, playhead labels, metronome, and snap behavior from the tempo map.
-4. Provide direct tempo-event insertion, movement, editing, deletion, and validation controls.
-5. Preserve sample-aligned lanes and automation while exposing reversible musical-grid edits.
+1. Persist owner-scoped markers, ranges, colors, and named arrangement sections.
+2. Anchor items to musical ticks while resolving exact sample positions through the tempo map.
+3. Provide marker insertion, movement, resizing, renaming, deletion, and ordered navigation.
+4. Add section-aware loop, selection, and transport locate actions.
+5. Integrate marker edits with conflict-aware reversible history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

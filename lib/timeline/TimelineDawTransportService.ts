@@ -96,7 +96,13 @@ export type TimelineDawTransportCommand =
       expectedTransportHead: number;
       expectedWorkspaceRevision: number;
       snap: TimelineTransportScrubSnap;
-    };
+    }
+  | { action: "add-tempo"; sessionId: TimelineId; expectedTransportHead: number; expectedWorkspaceRevision: number; tick: number; bpm: number }
+  | { action: "update-tempo"; sessionId: TimelineId; expectedTransportHead: number; expectedWorkspaceRevision: number; pointId: TimelineId; tick: number; bpm: number }
+  | { action: "remove-tempo"; sessionId: TimelineId; expectedTransportHead: number; expectedWorkspaceRevision: number; pointId: TimelineId }
+  | { action: "add-signature"; sessionId: TimelineId; expectedTransportHead: number; expectedWorkspaceRevision: number; tick: number; numerator: number; denominator: 1|2|4|8|16|32 }
+  | { action: "update-signature"; sessionId: TimelineId; expectedTransportHead: number; expectedWorkspaceRevision: number; pointId: TimelineId; tick: number; numerator: number; denominator: 1|2|4|8|16|32 }
+  | { action: "remove-signature"; sessionId: TimelineId; expectedTransportHead: number; expectedWorkspaceRevision: number; pointId: TimelineId };
 
 export type TimelineDawTransportSnapshot = {
   workspaceRevision: number;
@@ -258,12 +264,20 @@ export class TimelineDawTransportService {
           returnToCue: command.returnToCue,
           editedBy: actorId,
         });
+      } else if (command.action === "set-scrub-snap") {
+        transport = engine.setScrubSnap({ ...common, snap: command.snap, editedBy: actorId });
+      } else if (command.action === "add-tempo") {
+        transport = engine.addTempoPoint({ ...common, tick: command.tick, bpm: command.bpm, editedBy: actorId });
+      } else if (command.action === "update-tempo") {
+        transport = engine.updateTempoPoint({ ...common, pointId: command.pointId, tick: command.tick, bpm: command.bpm, editedBy: actorId });
+      } else if (command.action === "remove-tempo") {
+        transport = engine.removeTempoPoint({ ...common, pointId: command.pointId, editedBy: actorId });
+      } else if (command.action === "add-signature") {
+        transport = engine.addTimeSignaturePoint({ ...common, tick: command.tick, numerator: command.numerator, denominator: command.denominator, editedBy: actorId });
+      } else if (command.action === "update-signature") {
+        transport = engine.updateTimeSignaturePoint({ ...common, pointId: command.pointId, tick: command.tick, numerator: command.numerator, denominator: command.denominator, editedBy: actorId });
       } else {
-        transport = engine.setScrubSnap({
-          ...common,
-          snap: command.snap,
-          editedBy: actorId,
-        });
+        transport = engine.removeTimeSignaturePoint({ ...common, pointId: command.pointId, editedBy: actorId });
       }
     }
     const nextRevision = document.revision + 1;

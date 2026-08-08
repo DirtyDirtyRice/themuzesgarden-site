@@ -93,7 +93,11 @@ export type TimelineTransportEvent = {
   action:
     | "created"
     | "tempo-added"
+    | "tempo-updated"
+    | "tempo-removed"
     | "signature-added"
+    | "signature-updated"
+    | "signature-removed"
     | "loop-updated"
     | "count-in-updated"
     | "count-in-completed"
@@ -235,7 +239,7 @@ export class TimelineTransportAndSynchronizationEngine {
     bpm: number;
     editedBy: TimelineUserId;
   }): TimelineTransportSynchronization {
-    const transport = this.editable(input.transportId, input.expectedHead);
+    const transport = this.getRequired(input.transportId); this.head(transport,input.expectedHead); if(transport.status==="archived")throw new Error("Archived transports cannot be edited.");
     const tick = integer(input.tick, 0, Number.MAX_SAFE_INTEGER, "Tempo tick");
     if (transport.tempoMap.some((point) => point.tick === tick)) {
       throw new Error("A tempo point already exists at this tick.");
@@ -259,7 +263,7 @@ export class TimelineTransportAndSynchronizationEngine {
     denominator: 1 | 2 | 4 | 8 | 16 | 32;
     editedBy: TimelineUserId;
   }): TimelineTransportSynchronization {
-    const transport = this.editable(input.transportId, input.expectedHead);
+    const transport = this.getRequired(input.transportId); this.head(transport,input.expectedHead); if(transport.status==="archived")throw new Error("Archived transports cannot be edited.");
     const tick = integer(input.tick, 0, Number.MAX_SAFE_INTEGER, "Signature tick");
     if (transport.timeSignatureMap.some((point) => point.tick === tick)) {
       throw new Error("A time-signature point already exists at this tick.");
@@ -276,6 +280,21 @@ export class TimelineTransportAndSynchronizationEngine {
     return next;
   }
 
+  updateTempoPoint(input: { transportId: TimelineId; expectedHead: number; pointId: TimelineId; tick: number; bpm: number; editedBy: TimelineUserId }): TimelineTransportSynchronization {
+    const transport=this.getRequired(input.transportId);this.head(transport,input.expectedHead);if(transport.status==="archived")throw new Error("Archived transports cannot be edited.");const point=transport.tempoMap.find((item)=>item.id===input.pointId);if(!point)throw new Error("Tempo point was not found.");const tick=integer(input.tick,0,Number.MAX_SAFE_INTEGER,"Tempo tick");if(transport.tempoMap.some((item)=>item.id!==point.id&&item.tick===tick))throw new Error("A tempo point already exists at this tick.");if(point.tick===0&&tick!==0)throw new Error("The origin tempo point must remain at tick zero.");point.tick=tick;point.bpm=bpm(input.bpm);transport.tempoMap.sort((a,b)=>a.tick-b.tick);const next=this.save(transport,input.editedBy);this.record(next,"tempo-updated","Tempo point updated.",input.editedBy);return next;
+  }
+
+  removeTempoPoint(input: { transportId: TimelineId; expectedHead: number; pointId: TimelineId; editedBy: TimelineUserId }): TimelineTransportSynchronization {
+    const transport=this.getRequired(input.transportId);this.head(transport,input.expectedHead);if(transport.status==="archived")throw new Error("Archived transports cannot be edited.");const point=transport.tempoMap.find((item)=>item.id===input.pointId);if(!point)throw new Error("Tempo point was not found.");if(point.tick===0)throw new Error("The origin tempo point cannot be removed.");transport.tempoMap=transport.tempoMap.filter((item)=>item.id!==point.id);const next=this.save(transport,input.editedBy);this.record(next,"tempo-removed","Tempo point removed.",input.editedBy);return next;
+  }
+
+  updateTimeSignaturePoint(input: { transportId: TimelineId; expectedHead: number; pointId: TimelineId; tick: number; numerator: number; denominator: 1|2|4|8|16|32; editedBy: TimelineUserId }): TimelineTransportSynchronization {
+    const transport=this.getRequired(input.transportId);this.head(transport,input.expectedHead);if(transport.status==="archived")throw new Error("Archived transports cannot be edited.");const point=transport.timeSignatureMap.find((item)=>item.id===input.pointId);if(!point)throw new Error("Time-signature point was not found.");const tick=integer(input.tick,0,Number.MAX_SAFE_INTEGER,"Signature tick");if(transport.timeSignatureMap.some((item)=>item.id!==point.id&&item.tick===tick))throw new Error("A time-signature point already exists at this tick.");if(point.tick===0&&tick!==0)throw new Error("The origin signature point must remain at tick zero.");point.tick=tick;point.numerator=integer(input.numerator,1,32,"Numerator");point.denominator=input.denominator;transport.timeSignatureMap.sort((a,b)=>a.tick-b.tick);const next=this.save(transport,input.editedBy);this.record(next,"signature-updated","Time-signature point updated.",input.editedBy);return next;
+  }
+
+  removeTimeSignaturePoint(input: { transportId: TimelineId; expectedHead: number; pointId: TimelineId; editedBy: TimelineUserId }): TimelineTransportSynchronization {
+    const transport=this.getRequired(input.transportId);this.head(transport,input.expectedHead);if(transport.status==="archived")throw new Error("Archived transports cannot be edited.");const point=transport.timeSignatureMap.find((item)=>item.id===input.pointId);if(!point)throw new Error("Time-signature point was not found.");if(point.tick===0)throw new Error("The origin signature point cannot be removed.");transport.timeSignatureMap=transport.timeSignatureMap.filter((item)=>item.id!==point.id);const next=this.save(transport,input.editedBy);this.record(next,"signature-removed","Time-signature point removed.",input.editedBy);return next;
+  }
   setLoop(input: {
     transportId: TimelineId;
     expectedHead: number;

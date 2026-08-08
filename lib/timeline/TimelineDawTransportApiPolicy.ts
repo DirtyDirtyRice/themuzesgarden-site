@@ -13,6 +13,7 @@ const actions = new Set([
   "set-cue",
   "set-stop-return",
   "set-scrub-snap",
+  "add-tempo", "update-tempo", "remove-tempo", "add-signature", "update-signature", "remove-signature",
 ]);
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 const whole = (value: unknown) =>
@@ -38,7 +39,15 @@ export function parseTimelineDawTransportCommand(raw: unknown): TimelineDawTrans
   if (expectedTransportHead === null) {
     throw new Error("Transport operation requires expectedTransportHead.");
   }
-  if (value.action === "locate") {
+  if (value.action === "add-tempo" || value.action === "update-tempo") {
+    const tick=whole(value.tick),bpm=typeof value.bpm==="number"&&Number.isFinite(value.bpm)&&value.bpm>=20&&value.bpm<=400?value.bpm:null,pointId=value.action==="update-tempo"?text(value.pointId):null;if(tick===null||bpm===null||(value.action==="update-tempo"&&!pointId))throw new Error("Tempo edits require a tick, 20-400 BPM, and an existing point ID when updating.");return{action:value.action,sessionId,expectedTransportHead,expectedWorkspaceRevision,tick,bpm,...(pointId?{pointId}:{})} as TimelineDawTransportCommand;
+  }
+  if (value.action === "remove-tempo" || value.action === "remove-signature") {
+    const pointId=text(value.pointId);if(!pointId)throw new Error("Map removal requires a point ID.");return{action:value.action,sessionId,expectedTransportHead,expectedWorkspaceRevision,pointId};
+  }
+  if (value.action === "add-signature" || value.action === "update-signature") {
+    const tick=whole(value.tick),numerator=whole(value.numerator),denominator=value.denominator;const pointId=value.action==="update-signature"?text(value.pointId):null;if(tick===null||numerator===null||numerator<1||numerator>32||![1,2,4,8,16,32].includes(Number(denominator))||(value.action==="update-signature"&&!pointId))throw new Error("Signature edits require a tick, numerator 1-32, valid denominator, and an existing point ID when updating.");return{action:value.action,sessionId,expectedTransportHead,expectedWorkspaceRevision,tick,numerator,denominator:Number(denominator) as 1|2|4|8|16|32,...(pointId?{pointId}:{})} as TimelineDawTransportCommand;
+  }  if (value.action === "locate") {
     const tick = whole(value.tick);
     if (tick === null) throw new Error("Locate requires a non-negative tick.");
     return {

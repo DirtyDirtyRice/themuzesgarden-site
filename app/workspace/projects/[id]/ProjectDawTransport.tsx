@@ -31,6 +31,7 @@ import {
 } from "./projectDawApi";
 import { getPlayableTrackUrl } from "./projectPlaybackHelpers";
 import type { DawSession } from "./projectDawTypes";
+import TimelineDawTempoMapEditor from "@/app/components/TimelineDawTempoMapEditor";
 
 type Track = {
   id: string;
@@ -304,7 +305,9 @@ export default function ProjectDawTransport({
       | "set-metronome"
       | "set-cue"
       | "set-stop-return"
-      | "set-scrub-snap",
+      | "set-scrub-snap"
+      | "add-tempo" | "update-tempo" | "remove-tempo"
+      | "add-signature" | "update-signature" | "remove-signature",
     extras: {
       returnToTick?: number;
       tick?: number;
@@ -315,6 +318,10 @@ export default function ProjectDawTransport({
       cueTick?: number | null;
       returnToCue?: boolean;
       snap?: "free" | "beat" | "bar";
+      pointId?: string;
+      bpm?: number;
+      numerator?: number;
+      denominator?: 1 | 2 | 4 | 8 | 16 | 32;
     } = {},
   ) {
     return commandQueueRef.current.enqueue(async () => {
@@ -918,6 +925,8 @@ export default function ProjectDawTransport({
           {clock(elapsed)} / {clock(duration)}
         </span>
       </div>
+
+      {transport ? <TimelineDawTempoMapEditor transport={transport} onCommand={(action, extras) => update(action, extras)} /> : null}
 
       <input
         type="range"

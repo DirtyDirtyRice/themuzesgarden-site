@@ -96,7 +96,9 @@ export function changeDawTransport(input: {
     | "set-metronome"
     | "set-cue"
     | "set-stop-return"
-    | "set-scrub-snap";
+    | "set-scrub-snap"
+    | "add-tempo" | "update-tempo" | "remove-tempo"
+    | "add-signature" | "update-signature" | "remove-signature";
   sessionId: string;
   expectedWorkspaceRevision: number;
   expectedTransportHead?: number;
@@ -109,6 +111,10 @@ export function changeDawTransport(input: {
   cueTick?: number | null;
   returnToCue?: boolean;
   snap?: "free" | "beat" | "bar";
+  pointId?: string;
+  bpm?: number;
+  numerator?: number;
+  denominator?: 1 | 2 | 4 | 8 | 16 | 32;
 }): Promise<{ receipt: DawTransportSnapshot }> {
   return request("/api/timeline/daw-transports", {
     method: "POST",
