@@ -69,6 +69,7 @@ async function recordEdit(client: SupabaseClient, ownerId: string, sessionId: st
   if (error) throw new ApiError(`Private lane edit history could not be recorded: ${error.message}`, 500);
 }
 
+async function assertLease(client:SupabaseClient,ownerId:string,sessionId:string,resourceId:string,actorId:string){if(!resourceId)return;const{data}=await client.from("timeline_daw_private_edit_leases").select("holder_id,holder_name,expires_at").eq("owner_id",ownerId).eq("session_id",sessionId).eq("resource_kind","lane").eq("resource_id",resourceId).gt("expires_at",new Date().toISOString()).maybeSingle();if(data&&data.holder_id!==actorId)throw new ApiError(`${data.holder_name} holds this lane until ${data.expires_at}.`,409)}
 async function sign(client: SupabaseClient, ownerId: string, sessionId: string, uri: string) {
   const ownerPrefix = `${PREFIX}${ownerId}/${sessionId}/`;
   if (!uri.startsWith(ownerPrefix)) throw new ApiError("Private lane source path is invalid.", 403);
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as Record<string, unknown>;
     const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : "";
     await requireSession(user.id, user.token, sessionId);
+    if(request.method==="POST")await assertLease(user.client,user.id,sessionId,typeof body.laneId==="string"?body.laneId:"",user.id);
     if (body.action === "add") {
       let input;
       try { input = parseTimelineDawPrivateAudioLane(body, user.id, sessionId); }
