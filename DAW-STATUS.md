@@ -6,29 +6,28 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Automation Integrity and History
+## Latest completed milestone — Private Automation Recording and Curve Tools
 
-Private automation is now recoverable, freeze-aware, and consistent between live playback and offline rendering.
+Mixer performance can now be captured against transport time and refined as deterministic automation curves.
 
-- Load the same owner-scoped automation snapshot for freeze creation and stale-artifact checks.
-- Include relevant lane and bus envelopes in canonical freeze recipes.
-- Apply lane and output gain and pan automation at exact timeline sample positions during freeze rendering.
-- Persist before/after automation edit receipts with deterministic undo and redo.
-- Invalidate abandoned redo branches after a new edit.
-- Expose functional undo and redo controls with visible errors.
+- Arm a specific lane or bus gain/pan envelope for touch, latch, or write recording.
+- Capture scoped mixer changes at exact session sample positions and finalize safely on pause or stop.
+- Reduce dense captured events with deterministic bounded-error curve simplification.
+- Merge recorded ranges into durable envelopes through the existing history and stale-freeze paths.
+- Select multiple automation points and move, scale, or change their interpolation together.
+- Reject curve transforms that would overlap ordered sample positions.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateAutomationStore.ts`
-- `app/api/timeline/daw-private-automation/route.ts`
-- `app/api/timeline/daw-private-freezes/route.ts`
-- `app/components/timelineDawPrivateAutomationApi.ts`
+- `lib/timeline/TimelineDawPrivateAutomationRecordingPolicy.ts`
+- `lib/timeline/TimelineDawPrivateAutomationEvents.ts`
+- `engine/test/timeline-daw-private-automation-recording-policy.test.ts`
 - `app/components/TimelineDawPrivateAutomationEditor.tsx`
-- `engine/test/timeline-daw-private-automation-integrity.test.ts`
+- `app/components/TimelineDawPrivateAudioLanes.tsx`
 
 ### Verification
 
-- Focused automation, freeze checksum, and sample-rendering tests: 10 passed.
+- Focused recording, reduction, curve transform, and automation-integrity tests: 7 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
 - No new migration was required; Supabase remains current through `20260809033000`.
@@ -61,17 +60,17 @@ Private automation is now recoverable, freeze-aware, and consistent between live
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Private Automation Recording and Curve Tools
+## Next milestone — Durable Tempo Map and Musical Grid
 
-Capture expressive mixer moves and make automation curves faster to shape.
+Add musical time as a first-class session layer without weakening sample-aligned audio placement.
 
 Planned outcome:
 
-1. Record armed lane and bus gain or pan moves against the transport at sample-aligned positions.
-2. Reduce captured events deterministically without changing audible curves beyond a bounded tolerance.
-3. Add curve selection, multi-point movement, scaling, and interpolation changes.
-4. Provide touch, latch, and write recording modes with explicit arming and safe stop behavior.
-5. Integrate recorded edits with automation history and stale-freeze detection.
+1. Persist owner-scoped tempo and time-signature events with deterministic ordering.
+2. Convert reliably between samples, seconds, beats, bars, and ticks across tempo changes.
+3. Drive the transport grid, playhead labels, metronome, and snap behavior from the tempo map.
+4. Provide direct tempo-event insertion, movement, editing, deletion, and validation controls.
+5. Preserve sample-aligned lanes and automation while exposing reversible musical-grid edits.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

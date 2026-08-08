@@ -39,6 +39,7 @@ import TimelineDawPrivateFreezePanel from "@/app/components/TimelineDawPrivateFr
 import TimelineDawPrivateAutomationEditor from "@/app/components/TimelineDawPrivateAutomationEditor";
 import { loadDawPrivateAutomation, type DawPrivateAutomationEnvelope } from "@/app/components/timelineDawPrivateAutomationApi";
 import { timelineDawPrivateAutomationValue } from "@/lib/timeline/TimelineDawPrivateAutomationPolicy";
+import { dispatchTimelineDawPrivateMixChange } from "@/lib/timeline/TimelineDawPrivateAutomationEvents";
 import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBusGraph";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
@@ -251,6 +252,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
 
   function queueMix(lane: DawPrivateAudioLane, patch: Partial<DawPrivateAudioLane["mix"]>) {
     const mix = { ...lane.mix, ...patch };
+    if (patch.gain !== undefined) dispatchTimelineDawPrivateMixChange({ sourceKind: "lane", sourceId: lane.id, parameter: "gain", value: patch.gain });
+    if (patch.pan !== undefined) dispatchTimelineDawPrivateMixChange({ sourceKind: "lane", sourceId: lane.id, parameter: "pan", value: patch.pan });
     setLanes((current) => current.map((candidate) => candidate.id === lane.id ? { ...candidate, mix } : candidate));
     const pending = saveTimersRef.current.get(lane.id);
     if (pending) clearTimeout(pending);
@@ -304,7 +307,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
 
   async function saveBus(input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }) {
     setBusy(true); setError(undefined);
-    try { const { bus } = await saveDawPrivateBus(sessionId, input); setBuses((current) => [...current.filter((item) => item.id !== bus.id), bus]); }
+    try { const { bus } = await saveDawPrivateBus(sessionId, input); setBuses((current) => [...current.filter((item) => item.id !== bus.id), bus]); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "gain", value: bus.mix.gain }); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "pan", value: bus.mix.pan }); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Private bus could not be saved."); }
     finally { setBusy(false); }
   }
@@ -382,7 +385,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <TimelineDawPrivateBusMixer buses={buses} sends={sends} inserts={inserts} meters={busMeters} busy={busy} onSave={(bus) => void saveBus(bus)} onDelete={(bus) => void deleteBus(bus)} onSend={(send) => void persistSend(send)} onInsert={(insert) => void persistInsert(insert)} />
       <TimelineDawPrivateFreezePanel sessionId={sessionId} lanes={lanes} buses={buses} freezes={freezes} onChange={setFreezes} />
-      <TimelineDawPrivateAutomationEditor sessionId={sessionId} sources={[...lanes.map((lane)=>({id:lane.id,kind:"lane" as const,name:lane.name,sampleRate:lane.audio.sampleRate})),...buses.map((bus)=>({id:bus.id,kind:"bus" as const,name:bus.name,sampleRate:lanes[0]?.audio.sampleRate??48000}))]} envelopes={automation} onChange={setAutomation} />
+      <TimelineDawPrivateAutomationEditor sessionId={sessionId} sources={[...lanes.map((lane)=>({id:lane.id,kind:"lane" as const,name:lane.name,sampleRate:lane.audio.sampleRate,baseGain:lane.mix.gain,basePan:lane.mix.pan})),...buses.map((bus)=>({id:bus.id,kind:"bus" as const,name:bus.name,sampleRate:lanes[0]?.audio.sampleRate??48000,baseGain:bus.mix.gain,basePan:bus.mix.pan}))]} envelopes={automation} onChange={setAutomation} />
       <TimelineDawPrivateLaneGroupEditor lanes={lanes} selectedIds={selectedIds} busy={busy} onSelection={setSelectedIds} onApply={(edit) => void applyGroupEdit(edit)} />
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic equal-power transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} to {incoming?.name}: {crossfade.startSeconds.toFixed(2)}–{crossfade.endSeconds.toFixed(2)}s ({crossfade.durationSeconds.toFixed(2)}s)</p>; })}</div> : null}
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}
