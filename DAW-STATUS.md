@@ -6,24 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Plugin Delay Compensation and Master Bus
+## Latest completed milestone — Bounce in Place and Render Queue
 
-Private mixing now has declared insert latency, deterministic compensation, and a durable final-output stage.
+Private lane and bus processing can now be rendered through durable, recoverable bounce jobs.
 
-- Persist bounded per-insert latency in samples.
-- Calculate cumulative insert and upstream routing latency across acyclic bus paths.
-- Delay shorter render paths to the longest active path without changing source PCM.
-- Persist master gain and mute with optimistic revisions and durable undo/redo receipts.
-- Apply master gain/mute to live lane and frozen preview plus offline rendering.
-- Measure final peak, RMS, 4× interpolated true peak, and clipping evidence.
-- Include declared latency and master state in canonical freeze staleness checks.
+- Persist queued, running, completed, failed, and cancelled job states with monotonic progress.
+- Render lane or bus targets through the canonical freeze recipe and private artifact pipeline.
+- Cancel queued/running work, retry failed/cancelled jobs, and recover interrupted running jobs.
+- Re-read completed artifacts and verify SHA-256 before completion or activation.
+- Record automatic plugin-latency trim samples for sample-aligned replacements.
+- Activate verified bounces and undo activation through durable history receipts.
+- Preserve source audio, recipes, and artifacts during cancellation and recovery.
 
 ### Verification
 
-- Focused master, PDC, bus, renderer, automation, and freeze tests: 14 passed.
+- Focused bounce, PDC, freeze, and WAV worker tests: 16 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809093000`.
+- Supabase migrations applied successfully through `20260809103000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -53,17 +53,17 @@ Private mixing now has declared insert latency, deterministic compensation, and 
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Bounce in Place and Render Queue
+## Next milestone — Sidechain and Dynamic Routing
 
-Turn costly lane and bus processing into managed, recoverable private render jobs.
+Add professional detector routing and controlled modulation across private buses.
 
 Planned outcome:
 
-1. Add durable queued, running, completed, failed, and cancelled render-job states.
-2. Bounce lanes and buses in place while preserving source and processing recipes.
-3. Add progress, cancellation, retry, and checksum-verified promotion.
-4. Keep bounced replacements sample-aligned with automatic latency trimming.
-5. Add job recovery, artifact cleanup safety, and reversible activation history.
+1. Persist sidechain sources for compressor and gate-style inserts.
+2. Route pre/post-fader detector signals through the acyclic private bus graph.
+3. Add sample-aligned lookahead and PDC-aware detector timing.
+4. Add gain-reduction meters, listen mode, and missing-source safety.
+5. Include sidechain state in preview, freeze recipes, and reversible history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
