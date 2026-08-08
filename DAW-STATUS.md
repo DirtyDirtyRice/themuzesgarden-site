@@ -6,34 +6,31 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Non-Destructive Time Stretch and Pitch
+## Latest completed milestone — Private Transient Analysis and Anchors
 
-Private regions can now change duration and tuning without modifying source masters.
+Private sources now have checksum-cached rhythmic onset analysis and editable transient anchors.
 
-- Persist per-region stretch ratio, pitch offset, algorithm, and bypass state.
-- Validate 0.25x-4x stretch and -24 to +24 semitone bounds.
-- Synchronize transformed browser preview duration, source position, playback rate, and pitch-preservation mode.
-- Apply deterministic transformed PCM during offline freeze rendering without mutating decoded sources.
-- Include transform state in canonical freeze recipes for stale detection.
-- Expose direct save and reset controls backed by reversible lane edit history.
+- Analyze channel-aware energy flux into deterministic source-frame transient markers.
+- Cache owner-scoped markers by verified private-source checksum.
+- Navigate previous and next transients directly from each lane.
+- Protect or unprotect important anchors and quantize selected markers to an exact sample grid.
+- Preserve immutable source WAVs and validate cache geometry and checksum provenance.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateLaneTransformPolicy.ts`
-- `engine/test/timeline-daw-private-lane-transform-policy.test.ts`
-- `supabase/migrations/20260809053000_timeline_daw_private_lane_transforms.sql`
-- `app/api/timeline/daw-private-audio-lanes/route.ts`
-- `app/workspace/projects/[id]/projectDawApi.ts`
+- `lib/timeline/TimelineDawPrivateTransientPolicy.ts`
+- `engine/test/timeline-daw-private-transient-policy.test.ts`
+- `supabase/migrations/20260809063000_timeline_daw_private_transients.sql`
+- `app/api/timeline/daw-private-transients/route.ts`
+- `app/components/TimelineDawTransientEditor.tsx`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
-- `lib/timeline/TimelineDawPrivateFreezeRenderer.ts`
-- `app/api/timeline/daw-private-freezes/route.ts`
 
 ### Verification
 
-- Focused transform, freeze-render, and history tests: 7 passed.
+- Focused transient, transform, and freeze tests: 7 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809053000`.
+- Supabase migrations applied successfully through `20260809063000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -63,17 +60,17 @@ Private regions can now change duration and tuning without modifying source mast
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Transient-Aware Elastic Audio
+## Next milestone — Anchor-Aware Elastic Rendering
 
-Improve stretch quality and rhythmic editing with durable transient analysis.
+Use protected transients to improve preserve-pitch stretch quality and preview/render parity.
 
 Planned outcome:
 
-1. Analyze and cache owner-scoped transient markers for private sources.
-2. Add transient-aware preserve-pitch stretching and selectable quality modes.
-3. Provide transient navigation, quantization, and protected anchor controls.
-4. Apply identical transforms during preview and offline freeze rendering.
-5. Integrate elastic edits with fades, automation, markers, and reversible history.
+1. Add transient-anchored overlap-add stretching with selectable quality modes.
+2. Preserve protected attacks while distributing timing changes between anchors.
+3. Use one transform plan for browser preview and offline freeze rendering.
+4. Add anchor movement, deletion, strength thresholds, and audition controls.
+5. Integrate elastic plans with fades, automation, markers, and reversible history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
