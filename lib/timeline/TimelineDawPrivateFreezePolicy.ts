@@ -9,6 +9,7 @@ export type TimelineDawPrivateFreezeRecipe = {
   sends: unknown[];
   automation?: unknown[];
   warpMaps?: unknown[];
+  master?: unknown;
 };
 
 function canonical(value: unknown): string {

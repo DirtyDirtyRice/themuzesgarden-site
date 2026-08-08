@@ -16,6 +16,7 @@ export type TimelineDawPrivateInsert = {
   effect: "gain" | "filter" | "compressor";
   bypassed: boolean;
   parameters: Record<string, number>;
+  latencySamples?: number;
 };
 
 const finite = (value: unknown, name: string, minimum: number, maximum: number) => {
@@ -55,5 +56,5 @@ export function parseTimelineDawPrivateInsert(value: unknown): Omit<TimelineDawP
   const parameters: Record<string, number> = input.effect === "gain" ? { gain: finite(values.gain ?? 1, "Insert gain", 0, 4) }
     : input.effect === "filter" ? { frequency: finite(values.frequency ?? 12000, "Filter frequency", 20, 20000), q: finite(values.q ?? 0.7, "Filter Q", 0.0001, 30) }
     : { threshold: finite(values.threshold ?? -24, "Compressor threshold", -100, 0), ratio: finite(values.ratio ?? 4, "Compressor ratio", 1, 20) };
-  return { sourceKind: input.sourceKind, sourceId, slot, effect: input.effect, bypassed: input.bypassed, parameters };
+  return { sourceKind: input.sourceKind, sourceId, slot, effect: input.effect, bypassed: input.bypassed, parameters, latencySamples: Math.round(finite(input.latencySamples ?? 0, "Insert latency", 0, 192000)) };
 }

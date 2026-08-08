@@ -35,6 +35,7 @@ import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } 
 import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
 import TimelineDawTransientEditor from "@/app/components/TimelineDawTransientEditor";
 import TimelineDawWarpEditor from "@/app/components/TimelineDawWarpEditor";
+import TimelineDawPrivateMasterBus from "@/app/components/TimelineDawPrivateMasterBus";
 import TimelineDawPrivateLaneWaveform from "@/app/components/TimelineDawPrivateLaneWaveform";
 import TimelineDawPrivateLaneHistory from "@/app/components/TimelineDawPrivateLaneHistory";
 import TimelineDawPrivateLaneGroupEditor, { type PrivateLaneGroupEditInput } from "@/app/components/TimelineDawPrivateLaneGroupEditor";
@@ -63,6 +64,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [inserts, setInserts] = useState<DawPrivateInsert[]>([]);
   const [freezes, setFreezes] = useState<DawPrivateFreeze[]>([]);
   const [automation, setAutomation] = useState<DawPrivateAutomationEnvelope[]>([]);
+  const [master,setMaster]=useState({gain:1,muted:false,revision:0});
   const audioRefs = useRef(new Map<string, HTMLAudioElement>());
   const freezeAudioRefs = useRef(new Map<string, HTMLAudioElement>());
   const graphRefs = useRef(new Map<string, TimelineDawPrivateLaneMonitorGraph>());
@@ -102,7 +104,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       const active = localSeconds >= 0 && localSeconds < arrangedDuration;
       const fade = effectiveFades.get(lane.id) ?? lane.fade;
       const samplePosition=Math.max(0,Math.round(elapsed*lane.audio.sampleRate)),gain=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="gain"),samplePosition,lane.mix.gain),pan=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="pan"),samplePosition,lane.mix.pan);
-      graphRefs.current.get(lane.id)?.applyEnvelope({...lane.mix,gain,pan}, audibility.get(lane.id) ?? false, localSeconds, arrangedDuration, fade.inSeconds, fade.outSeconds);
+      graphRefs.current.get(lane.id)?.applyEnvelope({...lane.mix,gain:gain*(master.muted?0:master.gain),pan}, audibility.get(lane.id) ?? false, localSeconds, arrangedDuration, fade.inSeconds, fade.outSeconds);
       if (!active || !playing) {
         audio.pause();
         if (localSeconds < 0) audio.currentTime = lane.sourceInSeconds;
@@ -116,10 +118,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     for (const freeze of freezes.filter((item) => item.active)) {
       const audio = freezeAudioRefs.current.get(freeze.id); if (!audio) continue; const duration = freeze.artifact.frameCount / freeze.artifact.sampleRate;
       if (!playing || elapsed < 0 || elapsed >= duration) { audio.pause(); if (elapsed < 0) audio.currentTime = 0; continue; }
-      if (Math.abs(audio.currentTime - elapsed) > 0.08) audio.currentTime = elapsed; if (audio.paused) void audio.play().catch(() => setError("Frozen playback could not start."));
+      audio.volume=master.muted?0:Math.min(1,master.gain); if (Math.abs(audio.currentTime - elapsed) > 0.08) audio.currentTime = elapsed; if (audio.paused) void audio.play().catch(() => setError("Frozen playback could not start."));
     }
     for(const bus of buses){const sampleRate=lanes[0]?.audio.sampleRate??48000,samplePosition=Math.max(0,Math.round(elapsed*sampleRate)),gain=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="bus"&&item.sourceId===bus.id&&item.parameter==="gain"),samplePosition,bus.mix.gain),pan=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="bus"&&item.sourceId===bus.id&&item.parameter==="pan"),samplePosition,bus.mix.pan);busGraphRefs.current.get(bus.id)?.apply({...bus.mix,gain,pan},!buses.some((candidate)=>candidate.mix.soloed)||bus.mix.soloed);}
-  }, [audibility, automation, buses, effectiveFades, freezes, lanes]);
+  }, [audibility, automation, buses, effectiveFades, freezes, lanes, master, warpMaps]);
 
   useEffect(() => {
     for (const lane of lanes) {
@@ -388,6 +390,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <p className="text-xs font-black uppercase tracking-[0.22em] text-violet-200">Private source lanes</p>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
+      <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <TimelineDawPrivateBusMixer buses={buses} sends={sends} inserts={inserts} meters={busMeters} busy={busy} onSave={(bus) => void saveBus(bus)} onDelete={(bus) => void deleteBus(bus)} onSend={(send) => void persistSend(send)} onInsert={(insert) => void persistInsert(insert)} />
       <TimelineDawPrivateFreezePanel sessionId={sessionId} lanes={lanes} buses={buses} freezes={freezes} onChange={setFreezes} />

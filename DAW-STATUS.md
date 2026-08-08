@@ -6,23 +6,24 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Warp Markers and Groove Quantization
+## Latest completed milestone — Plugin Delay Compensation and Master Bus
 
-Private lanes now support durable monotonic warp maps and reusable owner-scoped rhythmic feel.
+Private mixing now has declared insert latency, deterministic compensation, and a durable final-output stage.
 
-- Persist lane-specific source/destination warp markers with optimistic revisions.
-- Drag warp destinations within collision-safe monotonic bounds and protect explicit attacks.
-- Quantize selected anchors with adjustable strength without moving protected markers.
-- Extract, save, and apply private groove templates.
-- Undo and redo warp changes through durable before/after edit receipts.
-- Use identical warp maps in browser elastic planning, offline freeze rendering, and stale-recipe detection.
+- Persist bounded per-insert latency in samples.
+- Calculate cumulative insert and upstream routing latency across acyclic bus paths.
+- Delay shorter render paths to the longest active path without changing source PCM.
+- Persist master gain and mute with optimistic revisions and durable undo/redo receipts.
+- Apply master gain/mute to live lane and frozen preview plus offline rendering.
+- Measure final peak, RMS, 4× interpolated true peak, and clipping evidence.
+- Include declared latency and master state in canonical freeze staleness checks.
 
 ### Verification
 
-- Focused warp, elastic, transform, and freeze tests: 15 passed.
+- Focused master, PDC, bus, renderer, automation, and freeze tests: 14 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809083000`.
+- Supabase migrations applied successfully through `20260809093000`.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -52,17 +53,17 @@ Private lanes now support durable monotonic warp maps and reusable owner-scoped 
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Plugin Delay Compensation and Master Bus
+## Next milestone — Bounce in Place and Render Queue
 
-Keep multi-bus playback phase-aligned while adding a production-ready final output stage.
+Turn costly lane and bus processing into managed, recoverable private render jobs.
 
 Planned outcome:
 
-1. Calculate insert and routing latency across the private bus graph.
-2. Apply deterministic per-path delay compensation in preview and freeze rendering.
-3. Add a durable master bus with gain, mute, inserts, and automation.
-4. Add peak, RMS, true-peak, and clipping meters for final output.
-5. Include latency and master state in freeze staleness and reversible history.
+1. Add durable queued, running, completed, failed, and cancelled render-job states.
+2. Bounce lanes and buses in place while preserving source and processing recipes.
+3. Add progress, cancellation, retry, and checksum-verified promotion.
+4. Keep bounced replacements sample-aligned with automatic latency trimming.
+5. Add job recovery, artifact cleanup safety, and reversible activation history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
