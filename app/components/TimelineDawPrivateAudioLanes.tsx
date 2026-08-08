@@ -6,6 +6,7 @@ import {
   addDawPrivateAudioLane,
   arrangeDawPrivateAudioLane,
   duplicateDawPrivateAudioLane,
+  editDawPrivateLaneGroup,
   loadDawPrivateAudioLanes,
   loadDawPrivateLaneWaveform,
   removeDawPrivateAudioLane,
@@ -20,6 +21,7 @@ import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } 
 import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
 import TimelineDawPrivateLaneWaveform from "@/app/components/TimelineDawPrivateLaneWaveform";
 import TimelineDawPrivateLaneHistory from "@/app/components/TimelineDawPrivateLaneHistory";
+import TimelineDawPrivateLaneGroupEditor, { type PrivateLaneGroupEditInput } from "@/app/components/TimelineDawPrivateLaneGroupEditor";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -30,6 +32,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
+  const [selectedIds, setSelectedIds] = useState(new Set<string>());
   const audioRefs = useRef(new Map<string, HTMLAudioElement>());
   const graphRefs = useRef(new Map<string, TimelineDawPrivateLaneMonitorGraph>());
   const contextRefs = useRef(new Map<string, AudioContext>());
@@ -236,6 +239,16 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function applyGroupEdit(edit: PrivateLaneGroupEditInput) {
+    setBusy(true); setError(undefined);
+    try {
+      const { lanes: saved } = await editDawPrivateLaneGroup({ sessionId, laneIds: [...selectedIds], ...edit });
+      setLanes(saved.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+      setHistoryRevision((current) => current + 1);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Selected regions could not be edited."); }
+    finally { setBusy(false); }
+  }
+
   async function splitAtPlayhead(lane: DawPrivateAudioLane) {
     setBusy(true);
     setError(undefined);
@@ -287,6 +300,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
+      <TimelineDawPrivateLaneGroupEditor lanes={lanes} selectedIds={selectedIds} busy={busy} onSelection={setSelectedIds} onApply={(edit) => void applyGroupEdit(edit)} />
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic equal-power transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} to {incoming?.name}: {crossfade.startSeconds.toFixed(2)}–{crossfade.endSeconds.toFixed(2)}s ({crossfade.durationSeconds.toFixed(2)}s)</p>; })}</div> : null}
       {lanes.length ? (
         <ol className="mt-4 grid gap-2">
@@ -295,7 +309,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
             return (
               <li key={lane.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s → {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p></div>
+                  <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s → {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
                 </div>
                 <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} />

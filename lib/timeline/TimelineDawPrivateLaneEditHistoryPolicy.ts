@@ -4,6 +4,7 @@ export const timelineDawPrivateLaneEditLabels = {
   duplicate: "Duplicate region",
   fade: "Change region fades",
   remove: "Remove region",
+  group: "Edit selected regions",
 } as const;
 
 export type TimelineDawPrivateLaneEditOperation = keyof typeof timelineDawPrivateLaneEditLabels;

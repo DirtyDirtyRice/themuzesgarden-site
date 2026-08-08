@@ -6,36 +6,36 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Lane Edit History and Undo
+## Latest completed milestone — Private Lane Selection and Group Editing
 
-Private region edits now produce durable receipts and can be reversed or reapplied with atomic stale-state protection.
+Private regions can now be explicitly selected and edited together as one safe, reversible operation.
 
-- Record deterministic before/after row snapshots for move, trim, split, duplicate, fade, and remove operations.
-- Label each operation with readable history text and retain owner/session-scoped chronological ordering.
-- Preserve complete lane source identity, checksums, audio geometry, provenance, mixer state, fades, and timestamps in snapshots.
-- Lock history receipts during undo and redo and enforce strict linear operation order.
-- Compare current affected rows with the expected snapshot before changing anything.
-- Reject stale reversals when any affected lane changed after the recorded edit.
-- Replace all affected rows and advance receipt state in one database transaction.
-- Expose recent history plus context-labeled Undo and Redo controls in the private-lane workspace.
-- Keep history refresh work outside routine transport and playhead updates.
+- Provide accessible additive checkboxes, single-region selection, Select All, and Clear controls.
+- Display selection count and every affected region name before applying an edit.
+- Move selected regions by one shared delta while preserving all relative timeline offsets.
+- Apply common mute, gain, and pan values while retaining each region's solo state and source identity.
+- Apply common fades only when their sample-normalized lengths fit every selected region.
+- Validate distinct selection membership, timeline bounds, mixer bounds, and per-region fade compatibility on the server.
+- Lock and compare every selected row before replacing the group in one database transaction.
+- Store the complete grouped before/after snapshots as one reversible history receipt in that same transaction.
+- Clear abandoned redo branches when a new grouped edit is committed.
 
 ### Files delivered
 
+- `lib/timeline/TimelineDawPrivateLaneGroupEditPolicy.ts`
 - `lib/timeline/TimelineDawPrivateLaneEditHistoryPolicy.ts`
-- `engine/test/timeline-daw-private-lane-edit-history-policy.test.ts`
-- `supabase/migrations/20260808223000_timeline_daw_private_lane_edit_history.sql`
-- `app/api/timeline/daw-private-audio-lanes/route.ts`
-- `app/api/timeline/daw-private-lane-history/route.ts`
+- `engine/test/timeline-daw-private-lane-group-edit-policy.test.ts`
+- `supabase/migrations/20260808233000_timeline_daw_private_lane_group_edits.sql`
+- `app/api/timeline/daw-private-lane-groups/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
-- `app/components/TimelineDawPrivateLaneHistory.tsx`
+- `app/components/TimelineDawPrivateLaneGroupEditor.tsx`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
 
 ### Verification
 
-- Focused edit-history, waveform, split, and arrangement policy tests: 10 passed.
+- Focused group-edit, history, and fade policy tests: 8 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260808223000`.
+- Supabase migrations applied successfully through `20260808233000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -63,18 +63,19 @@ Private region edits now produce durable receipts and can be reversed or reappli
 - Atomic sample-aligned lane splits with continuous non-destructive region boundaries.
 - Checksum-cached private waveforms with timeline-proportional direct region editing.
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
+- Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Private Lane Selection and Group Editing
+## Next milestone — Private Lane Routing and Buses
 
-Support coherent multi-region workflows without losing the safety of individual private masters.
+Introduce durable track routing so multiple private lanes can feed shared processing and monitoring controls.
 
 Planned outcome:
 
-1. Add explicit region selection with accessible single, additive, and select-all controls.
-2. Move selected regions together while preserving their relative timeline offsets.
-3. Apply mute, gain, pan, and fade changes to compatible selections with validated bounds.
-4. Record grouped changes as one atomic, reversible history operation.
-5. Clearly display selection count, incompatible actions, and affected region names.
+1. Persist owner-scoped buses with names, gain, pan, mute, and solo state.
+2. Route each private lane to a validated bus or the master output.
+3. Build shared Web Audio bus graphs without duplicating media-element source nodes.
+4. Apply lane, bus, and global solo/mute precedence deterministically.
+5. Meter buses after summed lane gain and before the master destination.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

@@ -241,7 +241,7 @@ export type DawPrivateAudioLane = {
 
 export type DawPrivateLaneEditHistory = {
   id: string;
-  operation: "arrange" | "split" | "duplicate" | "fade" | "remove";
+  operation: "arrange" | "split" | "duplicate" | "fade" | "remove" | "group";
   label: string;
   state: "applied" | "undone";
   createdAt: string;
@@ -260,6 +260,20 @@ export type DawPrivateLaneWaveform = { binCount: number; frameCount: number; pea
 
 export function loadDawPrivateLaneWaveform(sessionId: string, laneId: string): Promise<{ waveform: DawPrivateLaneWaveform; cached: boolean }> {
   return request(`/api/timeline/daw-private-waveforms?sessionId=${encodeURIComponent(sessionId)}&laneId=${encodeURIComponent(laneId)}`);
+}
+
+export function editDawPrivateLaneGroup(input: {
+  sessionId: string;
+  laneIds: string[];
+  groupAction: "move" | "mix" | "fade";
+  deltaSeconds?: number;
+  muted?: boolean;
+  gain?: number;
+  pan?: number;
+  fadeInSeconds?: number;
+  fadeOutSeconds?: number;
+}): Promise<{ lanes: DawPrivateAudioLane[] }> {
+  return request("/api/timeline/daw-private-lane-groups", { method: "POST", body: JSON.stringify(input) });
 }
 
 export function loadDawPrivateAudioLanes(sessionId: string): Promise<{ lanes: DawPrivateAudioLane[] }> {
