@@ -15,6 +15,7 @@ import {
   saveDawPrivateSend,
   saveDawPrivateInsert,
   loadDawPrivateLaneWaveform,
+  loadDawPrivateFreezes,
   removeDawPrivateAudioLane,
   saveDawPrivateBus,
   splitDawPrivateAudioLane,
@@ -24,6 +25,7 @@ import {
   type DawPrivateBus,
   type DawPrivateSend,
   type DawPrivateInsert,
+  type DawPrivateFreeze,
   type DawPrivateLaneWaveform,
 } from "@/app/workspace/projects/[id]/projectDawApi";
 import { resolveTimelineDawPrivateRoutingAudibility } from "@/lib/timeline/TimelineDawPrivateBusPolicy";
@@ -33,6 +35,7 @@ import TimelineDawPrivateLaneWaveform from "@/app/components/TimelineDawPrivateL
 import TimelineDawPrivateLaneHistory from "@/app/components/TimelineDawPrivateLaneHistory";
 import TimelineDawPrivateLaneGroupEditor, { type PrivateLaneGroupEditInput } from "@/app/components/TimelineDawPrivateLaneGroupEditor";
 import TimelineDawPrivateBusMixer from "@/app/components/TimelineDawPrivateBusMixer";
+import TimelineDawPrivateFreezePanel from "@/app/components/TimelineDawPrivateFreezePanel";
 import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBusGraph";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
@@ -49,7 +52,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [sends, setSends] = useState<DawPrivateSend[]>([]);
   const [inserts, setInserts] = useState<DawPrivateInsert[]>([]);
+  const [freezes, setFreezes] = useState<DawPrivateFreeze[]>([]);
   const audioRefs = useRef(new Map<string, HTMLAudioElement>());
+  const freezeAudioRefs = useRef(new Map<string, HTMLAudioElement>());
   const graphRefs = useRef(new Map<string, TimelineDawPrivateLaneMonitorGraph>());
   const contextRef = useRef<AudioContext | null>(null);
   const busGraphRefs = useRef(new Map<string, TimelineDawPrivateBusGraph>());
@@ -57,7 +62,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const audioCallbacksRef = useRef(new Map<string, (element: HTMLAudioElement | null) => void>());
   const playheadRef = useRef(0);
   const transportStateRef = useRef<"playing" | "paused" | "stopped">("stopped");
-  const audibility = useMemo(() => resolveTimelineDawPrivateRoutingAudibility(lanes.map((lane) => ({ id: lane.id, busId: lane.busId, muted: lane.mix.muted, soloed: lane.mix.soloed })), buses.map((bus) => ({ id: bus.id, muted: bus.mix.muted, soloed: bus.mix.soloed }))), [buses, lanes]);
+  const audibility = useMemo(() => {
+    const result = new Map(resolveTimelineDawPrivateRoutingAudibility(lanes.map((lane) => ({ id: lane.id, busId: lane.busId, muted: lane.mix.muted, soloed: lane.mix.soloed })), buses.map((bus) => ({ id: bus.id, muted: bus.mix.muted, soloed: bus.mix.soloed }))));
+    const active = freezes.filter((freeze) => freeze.active);
+    for (const lane of lanes) if (active.some((freeze) => freeze.sourceKind === "lane" ? freeze.sourceId === lane.id : freeze.sourceId === lane.busId)) result.set(lane.id, false);
+    return result;
+  }, [buses, freezes, lanes]);
   const crossfades = useMemo(() => detectTimelineDawPrivateLaneCrossfades(lanes), [lanes]);
   const timelineExtentSeconds = useMemo(() => Math.max(60, ...lanes.map((lane) => lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds)), [lanes]);
   const waveformSourceKey = useMemo(() => [...new Set(lanes.map((lane) => lane.source.checksum))].sort().join("|"), [lanes]);
@@ -91,7 +101,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       void graphRefs.current.get(lane.id)?.resume();
       if (audio.paused) void audio.play().catch(() => setError(`Playback could not start for ${lane.name}.`));
     }
-  }, [audibility, effectiveFades, lanes]);
+    for (const freeze of freezes.filter((item) => item.active)) {
+      const audio = freezeAudioRefs.current.get(freeze.id); if (!audio) continue; const duration = freeze.artifact.frameCount / freeze.artifact.sampleRate;
+      if (!playing || elapsed < 0 || elapsed >= duration) { audio.pause(); if (elapsed < 0) audio.currentTime = 0; continue; }
+      if (Math.abs(audio.currentTime - elapsed) > 0.08) audio.currentTime = elapsed; if (audio.paused) void audio.play().catch(() => setError("Frozen playback could not start."));
+    }
+  }, [audibility, effectiveFades, freezes, lanes]);
 
   useEffect(() => {
     for (const lane of lanes) {
@@ -99,7 +114,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       const fade = effectiveFades.get(lane.id) ?? lane.fade;
       graphRefs.current.get(lane.id)?.applyEnvelope(lane.mix, audibility.get(lane.id) ?? false, playheadRef.current - lane.timelineStartSeconds, duration, fade.inSeconds, fade.outSeconds);
     }
-  }, [audibility, effectiveFades, lanes]);
+  }, [audibility, effectiveFades, freezes, lanes]);
   useEffect(() => {
     if (!contextRef.current && (lanes.length || buses.length)) contextRef.current = new AudioContext();
     const context = contextRef.current;
@@ -148,7 +163,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     void loadDawPrivateBusProcessing(sessionId)
       .then((stored) => { if (active) { setSends(stored.sends); setInserts(stored.inserts); } })
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Private bus processing could not be loaded."); });
-    return () => { active = false; audioRefs.current.forEach((audio) => audio.pause()); graphRefs.current.forEach((graph) => graph.dispose()); busGraphRefs.current.forEach((graph) => graph.dispose()); if (contextRef.current) void contextRef.current.close(); saveTimersRef.current.forEach((timer) => clearTimeout(timer)); };
+    void loadDawPrivateFreezes(sessionId)
+      .then(({ freezes: stored }) => { if (active) setFreezes(stored); })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Private freezes could not be loaded."); });
+    return () => { active = false; audioRefs.current.forEach((audio) => audio.pause()); freezeAudioRefs.current.forEach((audio) => audio.pause()); graphRefs.current.forEach((graph) => graph.dispose()); busGraphRefs.current.forEach((graph) => graph.dispose()); if (contextRef.current) void contextRef.current.close(); saveTimersRef.current.forEach((timer) => clearTimeout(timer)); };
   }, [sessionId]);
 
   useEffect(() => {
@@ -355,9 +373,11 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <TimelineDawPrivateBusMixer buses={buses} sends={sends} inserts={inserts} meters={busMeters} busy={busy} onSave={(bus) => void saveBus(bus)} onDelete={(bus) => void deleteBus(bus)} onSend={(send) => void persistSend(send)} onInsert={(insert) => void persistInsert(insert)} />
+      <TimelineDawPrivateFreezePanel sessionId={sessionId} lanes={lanes} buses={buses} freezes={freezes} onChange={setFreezes} />
       <TimelineDawPrivateLaneGroupEditor lanes={lanes} selectedIds={selectedIds} busy={busy} onSelection={setSelectedIds} onApply={(edit) => void applyGroupEdit(edit)} />
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic equal-power transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} to {incoming?.name}: {crossfade.startSeconds.toFixed(2)}–{crossfade.endSeconds.toFixed(2)}s ({crossfade.durationSeconds.toFixed(2)}s)</p>; })}</div> : null}
-      {lanes.length ? (
+{freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}
+            {lanes.length ? (
         <ol className="mt-4 grid gap-2">
           {lanes.map((lane) => {
             const meter = meters[lane.id] ?? { peakAmplitude: 0, peakDbfs: -96, clipped: false };

@@ -1,0 +1,7 @@
+import { describe, expect, it } from "vitest";
+import { TimelineDawPrivateFreezeRenderer } from "../../lib/timeline/TimelineDawPrivateFreezeRenderer";
+const audio = { sourceArtifactId: "source", sourceFingerprint: "sum", sampleRate: 1000, channelCount: 1, frameCount: 4, durationSeconds: 0.004, channels: [new Float32Array([1, 0.5, -0.5, -1])], decodedAt: "now", decodedBy: "user" };
+describe("private freeze renderer", () => {
+  it("renders timeline-aligned stereo PCM without changing its source", () => { const before = [...audio.channels[0]]; const result = new TimelineDawPrivateFreezeRenderer().render([{ id: "lane", audio, timelineStartSeconds: 0.002, sourceInSeconds: 0, sourceOutSeconds: 0.004, gain: 1, pan: 0, inserts: [] }]); expect(result.frameCount).toBe(6); expect(result.channels[0][0]).toBe(0); expect(result.channels[0][2]).toBeCloseTo(Math.SQRT1_2); expect([...audio.channels[0]]).toEqual(before); });
+  it("applies gain inserts deterministically", () => { const insert = { id: "fx", sourceKind: "lane" as const, sourceId: "lane", slot: 0, effect: "gain" as const, bypassed: false, parameters: { gain: 0.5 } }; const result = new TimelineDawPrivateFreezeRenderer().render([{ id: "lane", audio, timelineStartSeconds: 0, sourceInSeconds: 0, sourceOutSeconds: 0.004, gain: 1, pan: -1, inserts: [insert] }]); expect(result.channels[0][0]).toBeCloseTo(0.5); expect(result.channels[1][0]).toBeCloseTo(0); });
+});

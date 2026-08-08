@@ -6,34 +6,34 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Bus Sends and Insert Effects
+## Latest completed milestone — Private Track Freeze and Processing Bounce
 
-Private lanes and buses now support durable parallel sends and shared non-destructive insert processing.
+Private lane and bus processing can now be rendered into reversible, checksum-verified private WAV artifacts.
 
-- Persist owner-scoped lane and bus sends with bounded levels, mute state, and pre-fader or post-fader mode.
-- Validate every source and destination and reject direct or transitive bus feedback cycles.
-- Persist three ordered insert slots per lane or bus with bypassable gain, low-pass filter, and compressor processing.
-- Apply inserts and pre/post send taps inside the shared session AudioContext without recreating media-element sources.
-- Expose lane send creation plus bus send levels, mute controls, insert bypass controls, and post-processing meters.
-- Keep processing state isolated by owner and DAW session under row-level security.
+- Snapshot durable owner-scoped freeze recipes from lane arrangement, routing, sends, inserts, and bus mix state.
+- Decode verified private WAV sources and render timeline-aligned stereo PCM with gain, pan, filter, compressor, and bus processing.
+- Store 32-bit WAV freeze artifacts in the existing private render-source store without modifying source masters.
+- Replace active live lane or bus graphs with transport-synchronized frozen playback.
+- Detect stale artifacts by recomputing canonical recipe checksums after processing changes.
+- Expose render progress state, artifact size, stale refresh, re-render, and reversible unfreeze controls.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawPrivateBusProcessingPolicy.ts`
-- `lib/timeline/TimelineDawPrivateBusGraph.ts`
-- `lib/timeline/TimelineDawPrivateLaneMonitorGraph.ts`
-- `engine/test/timeline-daw-private-bus-processing-policy.test.ts`
-- `supabase/migrations/20260809013000_timeline_daw_private_bus_processing.sql`
-- `app/api/timeline/daw-private-bus-processing/route.ts`
+- `lib/timeline/TimelineDawPrivateFreezePolicy.ts`
+- `lib/timeline/TimelineDawPrivateFreezeRenderer.ts`
+- `engine/test/timeline-daw-private-freeze-policy.test.ts`
+- `engine/test/timeline-daw-private-freeze-renderer.test.ts`
+- `supabase/migrations/20260809023000_timeline_daw_private_freezes.sql`
+- `app/api/timeline/daw-private-freezes/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
-- `app/components/TimelineDawPrivateBusMixer.tsx`
+- `app/components/TimelineDawPrivateFreezePanel.tsx`
 - `app/components/TimelineDawPrivateAudioLanes.tsx`
 
 ### Verification
 
-- Focused send, insert-validation, and feedback-cycle policy tests: 3 passed.
+- Focused freeze recipe, stale-detection, PCM rendering, and source-immutability tests: 5 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809013000`.
+- Supabase migrations applied successfully through `20260809023000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
@@ -63,17 +63,17 @@ Private lanes and buses now support durable parallel sends and shared non-destru
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Private Track Freeze and Processing Bounce
+## Next milestone — Private Mix Automation Envelopes
 
-Make larger processed sessions dependable by rendering selected lane and bus processing into reversible private audio artifacts.
+Add durable sample-aligned automation so lane and bus parameters can evolve across the session timeline.
 
 Planned outcome:
 
-1. Create durable owner-scoped freeze recipes from lane routing, sends, and insert settings.
-2. Render sample-aligned processed WAV artifacts without changing the source masters.
-3. Replace live processing with checksum-verified frozen playback while retaining a reversible unfreeze path.
-4. Detect stale freezes when routing or processing settings change.
-5. Expose freeze progress, artifact provenance, unfreeze, and refresh controls.
+1. Persist owner-scoped automation lanes and ordered control points for gain and pan.
+2. Validate monotonic sample positions, bounded values, and deterministic interpolation modes.
+3. Apply automation sample-aligned during live monitoring and offline freeze rendering.
+4. Provide direct timeline editing, point insertion, movement, deletion, and bypass controls.
+5. Integrate automation changes with stale-freeze detection and reversible edit history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
