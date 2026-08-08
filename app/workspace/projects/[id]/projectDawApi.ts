@@ -222,6 +222,44 @@ export function deleteDawRecordingTake(sessionId: string, takeId: string): Promi
   });
 }
 
+export type DawTakeCompRegion = {
+  takeId: string;
+  startSeconds: number;
+  endSeconds: number;
+};
+
+export type DawTakeComp = {
+  id: string;
+  sessionId: string;
+  name: string;
+  regions: DawTakeCompRegion[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function loadDawTakeComps(sessionId: string): Promise<{ comps: DawTakeComp[] }> {
+  return request(`/api/timeline/daw-take-comps?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export function saveDawTakeComp(input: {
+  sessionId: string;
+  compId?: string;
+  name: string;
+  regions: DawTakeCompRegion[];
+}): Promise<{ comp: DawTakeComp }> {
+  return request("/api/timeline/daw-take-comps", {
+    method: "POST",
+    body: JSON.stringify({ action: "save", ...input }),
+  });
+}
+
+export function deleteDawTakeComp(sessionId: string, compId: string): Promise<{ deletedCompId: string }> {
+  return request("/api/timeline/daw-take-comps", {
+    method: "POST",
+    body: JSON.stringify({ action: "delete", sessionId, compId }),
+  });
+}
+
 export function executeDawWavRender(input: {
   sessionId: string;
   jobId: string;

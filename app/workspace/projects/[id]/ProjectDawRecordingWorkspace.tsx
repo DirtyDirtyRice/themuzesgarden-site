@@ -19,6 +19,7 @@ import {
   type DawRecordingTake,
 } from "./projectDawApi";
 import type { DawSession } from "./projectDawTypes";
+import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWorkspace";
 
 export const DAW_RECORDED_SOURCE_EVENT = "the-muzes-garden:daw-recorded-source";
 
@@ -483,6 +484,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           ))}
         </ol>
       ) : null}
+      <TimelineDawTakeCompWorkspace sessionId={session.id} takes={takes} />
     </section>
   );
 }

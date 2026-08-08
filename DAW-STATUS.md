@@ -6,32 +6,32 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone ? Recording Take Review
+## Latest completed milestone ? Take Comping Workspace
 
-Musicians can now manage a durable review record for every privately stored recording take.
+Musicians can now build and audition durable, non-destructive comp recipes from their privately stored takes.
 
-- Rename a take after recording.
-- Add up to 1,000 characters of musician notes.
-- Assign a zero-to-five-star rating.
-- Display saved ratings and notes with the take.
-- Validate names, notes, and ratings on the server before persistence.
-- Restrict reads and writes to the authenticated owner through existing row-level security and owner-scoped API queries.
-- Preserve audition, preferred-take, MP3-copy, and deletion workflows.
+- Choose at least two reviewed takes for a comp.
+- Define and reorder bounded source regions without altering private masters.
+- Validate take ownership, duration bounds, multi-take membership, and illegal same-take overlaps on the server.
+- Save, update, load, and delete comp recipes with owner-only row-level security and owner-scoped API queries.
+- Preview the ordered edit-decision list through short-lived private audition URLs.
+- Preserve recording, review, preferred-take, MP3-copy, audition, and deletion workflows.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawTakeReviewPolicy.ts`
-- `engine/test/timeline-daw-take-review-policy.test.ts`
-- `supabase/migrations/20260801104500_timeline_daw_take_reviews.sql`
-- `app/api/timeline/daw-recording-takes/route.ts`
+- `lib/timeline/TimelineDawTakeCompPolicy.ts`
+- `engine/test/timeline-daw-take-comp-policy.test.ts`
+- `supabase/migrations/20260808123000_timeline_daw_take_comps.sql`
+- `app/api/timeline/daw-take-comps/route.ts`
 - `app/workspace/projects/[id]/projectDawApi.ts`
+- `app/components/TimelineDawTakeCompWorkspace.tsx`
 - `app/workspace/projects/[id]/ProjectDawRecordingWorkspace.tsx`
 
 ### Verification
 
-- Focused Take Review policy tests: 2 passed.
+- Focused Take Comp policy tests: 2 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260801104500`.
+- Supabase migrations applied successfully through `20260808123000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 
 ## Previously completed DAW foundation
@@ -50,19 +50,20 @@ Musicians can now manage a durable review record for every privately stored reco
 - AudioWorklet recording capture with compatibility fallback.
 - Input-level and clipping safety.
 - Preferred-take selection.
+- Recording take review, notes, ratings, and renaming.
 
-## Next milestone ? Take Comping Workspace
+## Next milestone ? Comp Render Delivery
 
-Create the first musician-facing comping workflow on top of the completed take system.
+Turn a saved comp recipe into a durable audio artifact while retaining the editable recipe.
 
 Planned outcome:
 
-1. Choose multiple reviewed takes for a comp session.
-2. Define ordered source regions without altering the private masters.
-3. Validate that regions stay within each take's duration and do not overlap illegally.
-4. Save the comp recipe durably with owner-only access.
-5. Preview the ordered comp as a non-destructive edit decision list.
-6. Add focused policy tests, run the production build, apply the migration, commit, and push.
+1. Decode the private WAV masters referenced by a saved comp.
+2. Assemble ordered regions with sample-accurate boundaries.
+3. Add short equal-power crossfades at edit points.
+4. Render and persist a private WAV comp artifact without replacing the source takes or recipe.
+5. Expose progress, audition, and download delivery in the comping workspace.
+6. Add focused render tests, run the production build, apply any reviewed migration, commit, and push.
 
 ## Working rules
 
