@@ -6,33 +6,35 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Musical Markers and Arrangement Sections
+## Latest completed milestone — Non-Destructive Time Stretch and Pitch
 
-Song structure is now durable, tempo-aware, navigable, loopable, and recoverable.
+Private regions can now change duration and tuning without modifying source masters.
 
-- Persist owner-scoped colored markers and ranged arrangement sections at musical ticks.
-- Resolve exact seconds through the active tempo map while preserving tick anchors across tempo changes.
-- Add, move, resize, rename, and delete items from the live transport.
-- Locate directly to markers and enable transport loops from arrangement sections.
-- Record before/after edit receipts with deterministic undo and redo.
-- Enforce ordered ticks, bounded names, colors, and valid section ranges.
+- Persist per-region stretch ratio, pitch offset, algorithm, and bypass state.
+- Validate 0.25x-4x stretch and -24 to +24 semitone bounds.
+- Synchronize transformed browser preview duration, source position, playback rate, and pitch-preservation mode.
+- Apply deterministic transformed PCM during offline freeze rendering without mutating decoded sources.
+- Include transform state in canonical freeze recipes for stale detection.
+- Expose direct save and reset controls backed by reversible lane edit history.
 
 ### Files delivered
 
-- `lib/timeline/TimelineDawArrangementMarkerPolicy.ts`
-- `engine/test/timeline-daw-arrangement-marker-policy.test.ts`
-- `supabase/migrations/20260809043000_timeline_daw_arrangement_items.sql`
-- `app/api/timeline/daw-arrangement-items/route.ts`
-- `app/components/TimelineDawArrangementEditor.tsx`
-- `app/workspace/projects/[id]/ProjectDawTransport.tsx`
+- `lib/timeline/TimelineDawPrivateLaneTransformPolicy.ts`
+- `engine/test/timeline-daw-private-lane-transform-policy.test.ts`
+- `supabase/migrations/20260809053000_timeline_daw_private_lane_transforms.sql`
+- `app/api/timeline/daw-private-audio-lanes/route.ts`
+- `app/workspace/projects/[id]/projectDawApi.ts`
+- `app/components/TimelineDawPrivateAudioLanes.tsx`
+- `lib/timeline/TimelineDawPrivateFreezeRenderer.ts`
+- `app/api/timeline/daw-private-freezes/route.ts`
 
 ### Verification
 
-- Focused marker, section, and tempo-map tests: 5 passed.
+- Focused transform, freeze-render, and history tests: 7 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809043000`.
-- Existing code-map broad-file-pattern build warning remains non-blocking and unrelated.
+- Supabase migrations applied successfully through `20260809053000`.
+- Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
 - Durable DAW workspaces and authenticated project sessions.
@@ -61,17 +63,17 @@ Song structure is now durable, tempo-aware, navigable, loopable, and recoverable
 - Durable private-lane edit receipts with atomic conflict-aware undo and redo.
 - Explicit multi-region selection with atomic reversible move, mixer, and fade edits.
 
-## Next milestone — Non-Destructive Time Stretch and Pitch
+## Next milestone — Transient-Aware Elastic Audio
 
-Add professional clip timing and tuning changes while preserving private source masters.
+Improve stretch quality and rhythmic editing with durable transient analysis.
 
 Planned outcome:
 
-1. Persist per-region stretch ratios, pitch offsets, and algorithms.
-2. Validate duration, sample boundaries, and safe parameter ranges.
-3. Apply synchronized preview and offline freeze rendering.
-4. Provide direct controls, reset, bypass, and conflict-aware history.
-5. Preserve fades, automation, arrangement anchors, and source provenance.
+1. Analyze and cache owner-scoped transient markers for private sources.
+2. Add transient-aware preserve-pitch stretching and selectable quality modes.
+3. Provide transient navigation, quantization, and protected anchor controls.
+4. Apply identical transforms during preview and offline freeze rendering.
+5. Integrate elastic edits with fades, automation, markers, and reversible history.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

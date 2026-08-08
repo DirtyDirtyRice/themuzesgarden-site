@@ -240,6 +240,7 @@ export type DawPrivateAudioLane = {
   busId: string | null;
   mix: { muted: boolean; soloed: boolean; gain: number; pan: number };
   fade: { inSeconds: number; outSeconds: number };
+  transform: { stretchRatio: number; pitchSemitones: number; algorithm: "preserve-pitch" | "resample"; bypassed: boolean };
   provenance: { compId: string; renderChecksum: string } | null;
   playbackUrl: string;
   createdAt: string;
@@ -362,6 +363,8 @@ export function updateDawPrivateAudioLaneMix(
     body: JSON.stringify({ action: "mix", sessionId, laneId, ...mix }),
   });
 }
+
+export function updateDawPrivateAudioLaneTransform(sessionId:string,laneId:string,transform:DawPrivateAudioLane["transform"]):Promise<{lane:DawPrivateAudioLane}>{return request("/api/timeline/daw-private-audio-lanes",{method:"POST",body:JSON.stringify({action:"transform",sessionId,laneId,...transform})});}
 
 export function updateDawPrivateAudioLaneFade(
   sessionId: string,

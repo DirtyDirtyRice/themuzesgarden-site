@@ -21,6 +21,7 @@ import {
   splitDawPrivateAudioLane,
   updateDawPrivateAudioLaneMix,
   updateDawPrivateAudioLaneFade,
+  updateDawPrivateAudioLaneTransform,
   type DawPrivateAudioLane,
   type DawPrivateBus,
   type DawPrivateSend,
@@ -92,7 +93,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       const audio = audioRefs.current.get(lane.id);
       if (!audio) continue;
       const localSeconds = elapsed - lane.timelineStartSeconds;
-      const arrangedDuration = lane.sourceOutSeconds - lane.sourceInSeconds;
+      const arrangedDuration = (lane.sourceOutSeconds - lane.sourceInSeconds) * (lane.transform.bypassed ? 1 : lane.transform.stretchRatio);
+      audio.preservesPitch = lane.transform.algorithm === "preserve-pitch"; audio.playbackRate = lane.transform.bypassed ? 1 : lane.transform.algorithm === "resample" ? (2 ** (lane.transform.pitchSemitones / 12)) / lane.transform.stretchRatio : 1 / lane.transform.stretchRatio;
       const active = localSeconds >= 0 && localSeconds < arrangedDuration;
       const fade = effectiveFades.get(lane.id) ?? lane.fade;
       const samplePosition=Math.max(0,Math.round(elapsed*lane.audio.sampleRate)),gain=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="gain"),samplePosition,lane.mix.gain),pan=timelineDawPrivateAutomationValue(automation.find((item)=>item.sourceKind==="lane"&&item.sourceId===lane.id&&item.parameter==="pan"),samplePosition,lane.mix.pan);
@@ -102,7 +104,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
         if (localSeconds < 0) audio.currentTime = lane.sourceInSeconds;
         continue;
       }
-      const sourceSeconds = lane.sourceInSeconds + localSeconds;
+      const sourceSeconds = lane.sourceInSeconds + localSeconds / (lane.transform.bypassed ? 1 : lane.transform.stretchRatio);
       if (Math.abs(audio.currentTime - sourceSeconds) > 0.08) audio.currentTime = sourceSeconds;
       void graphRefs.current.get(lane.id)?.resume();
       if (audio.paused) void audio.play().catch(() => setError(`Playback could not start for ${lane.name}.`));
@@ -412,6 +414,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <label className="text-xs font-black text-white/55">Fade out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.sourceOutSeconds - lane.sourceInSeconds} step={1 / lane.audio.sampleRate} value={lane.fade.outSeconds} onChange={(event) => editFade(lane.id, { outSeconds: Number(event.target.value) })} /></label>
                   <button type="button" className={`${button} self-end`} disabled={busy} onClick={() => void saveFade(lane)}>Save Fades</button>
                 </div>
+                <div className="mt-3 flex flex-wrap gap-2 rounded-xl border border-white/10 p-3"><label className="text-xs">Stretch<input className="ml-1 w-20 bg-black" type="number" min={0.25} max={4} step={0.01} value={lane.transform.stretchRatio} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,stretchRatio:Number(e.target.value)}}:y))}/></label><label className="text-xs">Pitch<input className="ml-1 w-20 bg-black" type="number" min={-24} max={24} step={0.1} value={lane.transform.pitchSemitones} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,pitchSemitones:Number(e.target.value)}}:y))}/></label><select className="bg-black" value={lane.transform.algorithm} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,algorithm:(e.target.value === "resample" ? "resample" : "preserve-pitch")}}:y))}><option value="preserve-pitch">Preserve pitch</option><option value="resample">Resample</option></select><button className={button} onClick={()=>void updateDawPrivateAudioLaneTransform(sessionId,lane.id,lane.transform).then(({lane:saved})=>{setLanes(x=>x.map(y=>y.id===saved.id?saved:y));setHistoryRevision(x=>x+1)})}>Save Transform</button><button className={button} onClick={()=>void updateDawPrivateAudioLaneTransform(sessionId,lane.id,{stretchRatio:1,pitchSemitones:0,algorithm:"preserve-pitch",bypassed:false}).then(({lane:saved})=>setLanes(x=>x.map(y=>y.id===saved.id?saved:y)))}>Reset</button></div>
                 <div className="mt-3 grid gap-3 md:grid-cols-[auto_auto_1fr_1fr]">
                   <button type="button" aria-pressed={lane.mix.muted} className={`${button} ${lane.mix.muted ? "!bg-red-300" : ""}`} onClick={() => queueMix(lane, { muted: !lane.mix.muted })}>{lane.mix.muted ? "Muted" : "Mute"}</button>
                   <button type="button" aria-pressed={lane.mix.soloed} className={`${button} ${lane.mix.soloed ? "!bg-amber-300" : ""}`} onClick={() => queueMix(lane, { soloed: !lane.mix.soloed })}>{lane.mix.soloed ? "Soloed" : "Solo"}</button>

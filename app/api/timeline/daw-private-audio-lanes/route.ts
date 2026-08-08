@@ -5,6 +5,7 @@ import { parseTimelineDawPrivateAudioLane } from "@/lib/timeline/TimelineDawPriv
 import { parseTimelineDawPrivateLaneMix } from "@/lib/timeline/TimelineDawPrivateLaneMixerPolicy";
 import { parseTimelineDawPrivateLaneArrangement } from "@/lib/timeline/TimelineDawPrivateLaneArrangementPolicy";
 import { parseTimelineDawPrivateLaneFade } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
+import { parseTimelineDawPrivateLaneTransform } from "@/lib/timeline/TimelineDawPrivateLaneTransformPolicy";
 import { parseTimelineDawPrivateLaneSplit } from "@/lib/timeline/TimelineDawPrivateLaneSplitPolicy";
 import { createTimelineDawPrivateLaneEditReceipt, type TimelineDawPrivateLaneEditOperation } from "@/lib/timeline/TimelineDawPrivateLaneEditHistoryPolicy";
 
@@ -52,6 +53,7 @@ function lane(row: Record<string, unknown>, playbackUrl: string) {
     sourceInSeconds: Number(row.source_in_seconds ?? 0),
     sourceOutSeconds: Number(row.source_out_seconds ?? row.duration_seconds),
     busId: row.bus_id ? String(row.bus_id) : null,
+    transform: { stretchRatio: Number(row.stretch_ratio ?? 1), pitchSemitones: Number(row.pitch_semitones ?? 0), algorithm: (row.transform_algorithm ?? "preserve-pitch") as "preserve-pitch" | "resample", bypassed: Boolean(row.transform_bypassed) },
     fade: { inSeconds: Number(row.fade_in_seconds ?? 0), outSeconds: Number(row.fade_out_seconds ?? 0) },
     mix: { muted: Boolean(row.muted), soloed: Boolean(row.soloed), gain: Number(row.gain), pan: Number(row.pan) },
     provenance: row.comp_id ? { compId: String(row.comp_id), renderChecksum: String(row.comp_render_checksum) } : null,
@@ -192,6 +194,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ lanes }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
 
+    if (body.action === "transform") { const laneId=typeof body.laneId==="string"?body.laneId.trim():"";const {data:stored}=await user.client.from(TABLE).select("*").eq("id",laneId).eq("owner_id",user.id).eq("session_id",sessionId).single();if(!stored)throw new ApiError("Private audio lane was not found.",404);const transform=parseTimelineDawPrivateLaneTransform(body);const {data,error}=await user.client.from(TABLE).update({stretch_ratio:transform.stretchRatio,pitch_semitones:transform.pitchSemitones,transform_algorithm:transform.algorithm,transform_bypassed:transform.bypassed,updated_at:new Date().toISOString()}).eq("id",laneId).eq("owner_id",user.id).select("*").single();if(error||!data)throw new ApiError("Lane transform could not be saved.",500);await recordEdit(user.client,user.id,sessionId,"transform",[stored],[data]);return NextResponse.json({lane:lane(data,await sign(user.client,user.id,sessionId,String(data.source_uri)))})}
     if (body.action === "mix") {
       const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
       if (!laneId) throw new ApiError("laneId is required.", 400);

@@ -1,11 +1,12 @@
 import type { TimelineDecodedAudioBuffer } from "./TimelineAudioDecodeEngine";
 import type { TimelineDawPrivateInsert } from "./TimelineDawPrivateBusProcessingPolicy";
+import { transformTimelineDawPrivateLanePcm, type TimelineDawPrivateLaneTransform } from "./TimelineDawPrivateLaneTransformPolicy";
 import { timelineDawPrivateAutomationValue, type TimelineDawPrivateAutomationEnvelope } from "./TimelineDawPrivateAutomationPolicy";
 
 export type TimelineDawPrivateFreezeLaneInput = {
   id: string; audio: TimelineDecodedAudioBuffer; timelineStartSeconds: number; sourceInSeconds: number; sourceOutSeconds: number;
   gain: number; pan: number; inserts: TimelineDawPrivateInsert[];
-  automation?: TimelineDawPrivateAutomationEnvelope[];
+  automation?: TimelineDawPrivateAutomationEnvelope[]; transform?: TimelineDawPrivateLaneTransform;
 };
 
 function process(channels: Float32Array[], sampleRate: number, inserts: TimelineDawPrivateInsert[]): void {
@@ -21,15 +22,15 @@ export class TimelineDawPrivateFreezeRenderer {
     if (!lanes.length) throw new Error("A private freeze requires at least one audible lane.");
     const sampleRate = lanes[0].audio.sampleRate;
     if (lanes.some((lane) => lane.audio.sampleRate !== sampleRate)) throw new Error("Private freeze lanes must use one sample rate.");
-    const frameCount = Math.max(...lanes.map((lane) => Math.round((lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds) * sampleRate)));
+    const frameCount = Math.max(...lanes.map((lane) => Math.round((lane.timelineStartSeconds + (lane.sourceOutSeconds - lane.sourceInSeconds) * (lane.transform?.bypassed === false ? lane.transform.stretchRatio : 1)) * sampleRate)));
     if (frameCount <= 0) throw new Error("Private freeze duration must contain audio frames.");
     const output = [new Float32Array(frameCount), new Float32Array(frameCount)];
     for (const lane of lanes) {
       const start = Math.round(lane.timelineStartSeconds * sampleRate), sourceStart = Math.round(lane.sourceInSeconds * sampleRate), count = Math.round((lane.sourceOutSeconds - lane.sourceInSeconds) * sampleRate);
       const local = [new Float32Array(count), new Float32Array(count)];
       for (let frame = 0; frame < count; frame += 1) { const left = lane.audio.channels[0]?.[sourceStart + frame] ?? 0; const right = lane.audio.channels[Math.min(1, lane.audio.channelCount - 1)]?.[sourceStart + frame] ?? left; local[0][frame] = left; local[1][frame] = right; }
-      process(local, sampleRate, lane.inserts);
-      for (let frame = 0; frame < count; frame += 1) { const timelineFrame=start+frame,gain=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="gain"),timelineFrame,lane.gain),pan=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="pan"),timelineFrame,lane.pan),leftGain=gain*Math.cos((pan+1)*Math.PI/4),rightGain=gain*Math.sin((pan+1)*Math.PI/4); output[0][timelineFrame] += local[0][frame] * leftGain; output[1][timelineFrame] += local[1][frame] * rightGain; }
+      const transformed=lane.transform?transformTimelineDawPrivateLanePcm(local,lane.transform):local; process(transformed, sampleRate, lane.inserts);
+      for (let frame = 0; frame < transformed[0].length; frame += 1) { const timelineFrame=start+frame,gain=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="gain"),timelineFrame,lane.gain),pan=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="pan"),timelineFrame,lane.pan),leftGain=gain*Math.cos((pan+1)*Math.PI/4),rightGain=gain*Math.sin((pan+1)*Math.PI/4); output[0][timelineFrame] += transformed[0][frame] * leftGain; output[1][timelineFrame] += transformed[1][frame] * rightGain; }
     }
     process(output, sampleRate, outputInserts); for(let frame=0;frame<frameCount;frame+=1){const gain=timelineDawPrivateAutomationValue(outputAutomation.find((item)=>item.parameter==="gain"),frame,1),pan=timelineDawPrivateAutomationValue(outputAutomation.find((item)=>item.parameter==="pan"),frame,0),left=gain*Math.cos((pan+1)*Math.PI/4)*Math.SQRT2,right=gain*Math.sin((pan+1)*Math.PI/4)*Math.SQRT2;output[0][frame]=Math.max(-1,Math.min(1,output[0][frame]*left));output[1][frame]=Math.max(-1,Math.min(1,output[1][frame]*right));}
     return { channels: output, sampleRate, frameCount };
