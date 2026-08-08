@@ -1,9 +1,11 @@
 import type { TimelineDecodedAudioBuffer } from "./TimelineAudioDecodeEngine";
 import type { TimelineDawPrivateInsert } from "./TimelineDawPrivateBusProcessingPolicy";
+import { timelineDawPrivateAutomationValue, type TimelineDawPrivateAutomationEnvelope } from "./TimelineDawPrivateAutomationPolicy";
 
 export type TimelineDawPrivateFreezeLaneInput = {
   id: string; audio: TimelineDecodedAudioBuffer; timelineStartSeconds: number; sourceInSeconds: number; sourceOutSeconds: number;
   gain: number; pan: number; inserts: TimelineDawPrivateInsert[];
+  automation?: TimelineDawPrivateAutomationEnvelope[];
 };
 
 function process(channels: Float32Array[], sampleRate: number, inserts: TimelineDawPrivateInsert[]): void {
@@ -15,7 +17,7 @@ function process(channels: Float32Array[], sampleRate: number, inserts: Timeline
 }
 
 export class TimelineDawPrivateFreezeRenderer {
-  render(lanes: TimelineDawPrivateFreezeLaneInput[], outputInserts: TimelineDawPrivateInsert[] = []): { channels: Float32Array[]; sampleRate: number; frameCount: number } {
+  render(lanes: TimelineDawPrivateFreezeLaneInput[], outputInserts: TimelineDawPrivateInsert[] = [], outputAutomation: TimelineDawPrivateAutomationEnvelope[] = []): { channels: Float32Array[]; sampleRate: number; frameCount: number } {
     if (!lanes.length) throw new Error("A private freeze requires at least one audible lane.");
     const sampleRate = lanes[0].audio.sampleRate;
     if (lanes.some((lane) => lane.audio.sampleRate !== sampleRate)) throw new Error("Private freeze lanes must use one sample rate.");
@@ -26,10 +28,10 @@ export class TimelineDawPrivateFreezeRenderer {
       const start = Math.round(lane.timelineStartSeconds * sampleRate), sourceStart = Math.round(lane.sourceInSeconds * sampleRate), count = Math.round((lane.sourceOutSeconds - lane.sourceInSeconds) * sampleRate);
       const local = [new Float32Array(count), new Float32Array(count)];
       for (let frame = 0; frame < count; frame += 1) { const left = lane.audio.channels[0]?.[sourceStart + frame] ?? 0; const right = lane.audio.channels[Math.min(1, lane.audio.channelCount - 1)]?.[sourceStart + frame] ?? left; local[0][frame] = left; local[1][frame] = right; }
-      process(local, sampleRate, lane.inserts); const leftGain = lane.gain * Math.cos((lane.pan + 1) * Math.PI / 4), rightGain = lane.gain * Math.sin((lane.pan + 1) * Math.PI / 4);
-      for (let frame = 0; frame < count; frame += 1) { output[0][start + frame] += local[0][frame] * leftGain; output[1][start + frame] += local[1][frame] * rightGain; }
+      process(local, sampleRate, lane.inserts);
+      for (let frame = 0; frame < count; frame += 1) { const timelineFrame=start+frame,gain=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="gain"),timelineFrame,lane.gain),pan=timelineDawPrivateAutomationValue(lane.automation?.find((item)=>item.parameter==="pan"),timelineFrame,lane.pan),leftGain=gain*Math.cos((pan+1)*Math.PI/4),rightGain=gain*Math.sin((pan+1)*Math.PI/4); output[0][timelineFrame] += local[0][frame] * leftGain; output[1][timelineFrame] += local[1][frame] * rightGain; }
     }
-    process(output, sampleRate, outputInserts); for (const channel of output) for (let frame = 0; frame < frameCount; frame += 1) channel[frame] = Math.max(-1, Math.min(1, channel[frame]));
+    process(output, sampleRate, outputInserts); for(let frame=0;frame<frameCount;frame+=1){const gain=timelineDawPrivateAutomationValue(outputAutomation.find((item)=>item.parameter==="gain"),frame,1),pan=timelineDawPrivateAutomationValue(outputAutomation.find((item)=>item.parameter==="pan"),frame,0),left=gain*Math.cos((pan+1)*Math.PI/4)*Math.SQRT2,right=gain*Math.sin((pan+1)*Math.PI/4)*Math.SQRT2;output[0][frame]=Math.max(-1,Math.min(1,output[0][frame]*left));output[1][frame]=Math.max(-1,Math.min(1,output[1][frame]*right));}
     return { channels: output, sampleRate, frameCount };
   }
 }

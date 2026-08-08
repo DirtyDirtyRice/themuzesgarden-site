@@ -7,6 +7,7 @@ export type TimelineDawPrivateFreezeRecipe = {
   routing: unknown;
   inserts: unknown[];
   sends: unknown[];
+  automation?: unknown[];
 };
 
 function canonical(value: unknown): string {

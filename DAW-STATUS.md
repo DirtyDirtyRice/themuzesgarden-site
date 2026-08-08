@@ -6,9 +6,9 @@ Last updated: August 8, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — Private Track Freeze and Processing Bounce
+## Latest completed milestone — Private Mix Automation Envelopes
 
-Private lane and bus processing can now be rendered into reversible, checksum-verified private WAV artifacts.
+Private lane and bus gain and pan can now evolve through durable, sample-aligned automation envelopes.
 
 - Snapshot durable owner-scoped freeze recipes from lane arrangement, routing, sends, inserts, and bus mix state.
 - Decode verified private WAV sources and render timeline-aligned stereo PCM with gain, pan, filter, compressor, and bus processing.
@@ -31,9 +31,9 @@ Private lane and bus processing can now be rendered into reversible, checksum-ve
 
 ### Verification
 
-- Focused freeze recipe, stale-detection, PCM rendering, and source-immutability tests: 5 passed.
+- Focused automation validation, interpolation, rendering, and source-immutability tests: 5 passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809023000`.
+- Supabase migrations applied successfully through `20260809033000`.
 - Existing code-map broad-file-pattern build warning remains non-blocking and is unrelated to the DAW milestone.
 ## Previously completed DAW foundation
 
