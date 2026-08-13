@@ -405,7 +405,7 @@ export default function ProjectDawTransport({
       }
       await ensureMediaPanner();
       await audio.play();
-      window.dispatchEvent(new CustomEvent("muzes:daw-transport-state", { detail: { sessionId: session.id, state: "playing", elapsed: audio.currentTime } }));
+      window.dispatchEvent(new CustomEvent("muzes:daw-transport-state", { detail: { sessionId: session.id, state: "playing", elapsed: audio.currentTime, tempoMap: nextTransport?.tempoMap ?? transportRef.current?.tempoMap ?? [{ tick: 0, bpm: 120 }] } }));
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Playback could not start.");
@@ -419,7 +419,7 @@ export default function ProjectDawTransport({
     void countInAudioRef.current?.close();
     countInAudioRef.current = null;
     audio.pause();
-    window.dispatchEvent(new CustomEvent("muzes:daw-transport-state", { detail: { sessionId: session.id, state: "paused", elapsed: audio.currentTime } }));
+    window.dispatchEvent(new CustomEvent("muzes:daw-transport-state", { detail: { sessionId: session.id, state: "paused", elapsed: audio.currentTime, tempoMap: transport.tempoMap } }));
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
     try {
       const tick = secondsToTick(audio.currentTime);
@@ -446,7 +446,7 @@ export default function ProjectDawTransport({
       ? timelineTickToTempoMappedSeconds(returnTick, current.ppq, current.tempoMap)
       : 0;
     audio.currentTime = returnSeconds;
-    window.dispatchEvent(new CustomEvent("muzes:daw-transport-state", { detail: { sessionId: session.id, state: "stopped", elapsed: returnSeconds } }));
+    window.dispatchEvent(new CustomEvent("muzes:daw-transport-state", { detail: { sessionId: session.id, state: "stopped", elapsed: returnSeconds, tempoMap: current?.tempoMap ?? [{ tick: 0, bpm: 120 }] } }));
     scrubSecondsRef.current = returnSeconds;
     scrubDirtyRef.current = false;
     setElapsed(returnSeconds);

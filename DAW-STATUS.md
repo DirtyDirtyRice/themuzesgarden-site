@@ -1,31 +1,31 @@
 # The Muzes Garden DAW ? Development Status
 
-Last updated: August 8, 2026
+Last updated: August 13, 2026
 
 ## Current objective
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone — MIDI Reversible History and Offline Bounce
+## Latest completed milestone - MIDI Mix Routing and Expressive Controllers
 
-Private MIDI clips now have studio-facing recovery controls and checksum-verified audio delivery.
+Private MIDI instruments now participate in the tempo-aware DAW mix and delivery workflow.
 
-- Add expected-revision-protected undo and redo backed by durable before/after MIDI history.
-- Restore notes, controllers, instruments, timing, routing metadata, and provenance as new revisions.
-- Import Standard MIDI files directly from the studio UI into owner-scoped session clips.
-- Render the deterministic bounded-polyphony instrument to stereo 48 kHz PCM.
-- Encode rendered instruments through the canonical WAV worker and private render-source store.
-- Persist artifact ID, URI, SHA-256 checksum, byte length, sample rate, frame count, and source revision.
-- Expose one-click MIDI export and offline WAV bounce controls beside piano-roll editing.
+- Route live and bounced instruments through assigned buses, inserts, sends, gain/pan automation, and master state.
+- Schedule MIDI against the active transport tempo map, including tempo changes and clip timeline offsets.
+- Persist and edit controller events, sustain-pedal behavior, pitch bends, and program changes.
+- Import and export pitch-bend and program-change events through Standard MIDI files.
+- Include MIDI expression, instrument state, tempo maps, and routing recipes in bounce freshness checks.
+- Create owner-scoped private audition URLs for current bounces.
+- Verify bounce checksums before promoting rendered MIDI into private audio lanes with preserved timing and routing provenance.
+- Synchronize live MIDI playback with the current DAW transport event and playhead.
 
 ### Verification
 
-- Focused private MIDI, arrangement, performance, and PCM WAV tests: 18 passed.
+- Focused MIDI, bus-processing, and automation tests: 16 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through `20260809183000`.
+- Supabase migrations applied successfully through 20260809193000.
 - Existing code-map warning remains non-blocking and unrelated.
-
 ## Previously completed DAW foundation
 
 - Durable DAW workspaces and authenticated project sessions.
@@ -58,19 +58,18 @@ Private MIDI clips now have studio-facing recovery controls and checksum-verifie
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
 
-## Next milestone — MIDI Mix Routing and Expressive Controllers
+## Next milestone - Virtual Instrument Rack and MIDI Automation
 
-Bring MIDI instrument playback fully into the tempo-aware mix graph.
+Turn the expressive MIDI foundation into a reusable studio instrument system.
 
 Planned outcome:
 
-1. Process bounced and live virtual instruments through buses, sends, inserts, automation, and master state.
-2. Add tempo-map-aware transport scheduling across tempo changes and clip offsets.
-3. Add editable controller lanes, sustain-pedal note extension, program changes, and pitch bend.
-4. Detect stale MIDI bounces after event, controller, instrument, tempo, or routing changes.
-5. Add private audition URLs and promote verified bounces into audio lanes.
+1. Add durable instrument-rack presets with layered oscillators, envelopes, filters, and per-layer gain/pan.
+2. Add real-time editable MIDI automation curves for expression, modulation, pitch bend, and instrument parameters.
+3. Add channel-aware program maps and reusable controller-lane templates.
+4. Add deterministic rack rendering with preset-version and automation freshness tracking.
+5. Add freeze/unfreeze workflow for MIDI instruments while preserving editable source clips.
 6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
-
 ## Working rules
 
 - Preserve existing architecture and user data.
