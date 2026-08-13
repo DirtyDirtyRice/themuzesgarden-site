@@ -1,0 +1,1 @@
+{"crons":[{"path":"/api/timeline/daw-normalization-worker","schedule":"*/5 * * * *"}]}

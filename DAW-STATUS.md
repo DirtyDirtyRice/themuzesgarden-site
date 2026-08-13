@@ -6,28 +6,30 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Automated Queue Runner and Normalization Approval Ledger
+## Latest completed milestone - Normalization Worker Scheduling and Approval Review UX
 
-The session can now drain normalization work automatically and record approval against the exact audible artifacts.
+Normalization queues can now wake unattended on deployment, while musicians get explicit approval and retention review controls.
 
-- Run a bounded authenticated queue drain that repeatedly claims one leased song job at a time.
-- Stop automatically when the current revision is drained or the execution/job budget is reached.
-- Continue safely on another wakeup because claims are leased and completed artifacts are idempotent.
-- Expose queued, running, failed, completed, and lease-recoverable counts in the DAW.
-- Persist musician approval against proof revision checksum, every recipe checksum, every artifact checksum, and master checksum.
-- Reuse approval only when every audible dependency still matches exactly.
-- Require a complete current render set and current rendered master before approval.
-- Record explicit retain or prune decisions in immutable owner-scoped receipts.
-- Protect current and approved revisions from artifact pruning.
-- Delete only verified session-private superseded storage paths after an explicit prune decision.
-- Preserve checksums and deleted paths in the retention audit ledger.
+- Add a Vercel cron wakeup every five minutes for bounded normalization work.
+- Authenticate scheduled calls with a rotating CRON_SECRET bearer credential.
+- Keep SUPABASE_SERVICE_ROLE_KEY exclusively inside the server worker route.
+- Discover eligible queues through a service-role-only global claim function that is revoked from browser roles.
+- Process at most three leased jobs or 240 seconds per scheduled invocation.
+- Persist worker-run timing, claimed/completed/failed counts, failures, and next-wakeup decisions.
+- Show the latest scheduled worker outcome and live queue health inside the owner session.
+- Display approval revision, decision, dependency fingerprint, reviewer notes, and history.
+- Support explicit approval revocation for another listening pass.
+- Provide signed private master download with checksum-backed provenance.
+- Preview artifact count and byte size before retention decisions.
+- Require an exact typed confirmation before pruning superseded private artifacts.
 
 ### Verification
 
 - Focused normalization approval, queue, and renderer tests passed.
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260813230000 applied successfully.
+- Supabase migration 20260814003000 applied successfully.
+- Deployment requires rotating CRON_SECRET and server-only SUPABASE_SERVICE_ROLE_KEY environment values.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -66,18 +68,18 @@ The session can now drain normalization work automatically and record approval a
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Worker Scheduling and Approval Review UX
+## Next milestone - Normalization Operations Dashboard and Worker Alerts
 
-Operationalize unattended queue wakeups and make audible approval/staleness unmistakable to musicians.
+Make unattended processing observable and actionable when anything stalls or fails.
 
 Planned outcome:
 
-1. Add a deployment-compatible scheduled wakeup with a narrowly scoped rotating worker credential.
-2. Discover and drain eligible owner queues without exposing service-role credentials to the browser.
-3. Persist worker-run summaries, timing, failures, and next-wakeup decisions.
-4. Show current approval, stale dependency details, reviewer notes, and revocation controls.
-5. Add master audition and downloadable delivery alongside the approval ledger.
-6. Add retention preview with byte counts and a confirmation checkpoint before pruning.
+1. Add an owner-scoped operations view for queue depth, lease age, throughput, failure rate, and storage use.
+2. Classify retryable versus terminal render failures and enforce bounded exponential backoff.
+3. Persist alerts for stale leases, repeated failures, approval invalidation, and storage-prune failures.
+4. Add acknowledge, retry, and resolve actions with immutable operator receipts.
+5. Show master delivery history and approval/retention timelines together.
+6. Add health checks for cron freshness and required deployment configuration without exposing secrets.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
