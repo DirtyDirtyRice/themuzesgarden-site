@@ -6,30 +6,27 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Worker Scheduling and Approval Review UX
+## Latest completed milestone - Normalization Operations Dashboard and Worker Alerts
 
-Normalization queues can now wake unattended on deployment, while musicians get explicit approval and retention review controls.
+Unattended normalization work is now observable, rate-limited, and actionable from the owner session.
 
-- Add a Vercel cron wakeup every five minutes for bounded normalization work.
-- Authenticate scheduled calls with a rotating CRON_SECRET bearer credential.
-- Keep SUPABASE_SERVICE_ROLE_KEY exclusively inside the server worker route.
-- Discover eligible queues through a service-role-only global claim function that is revoked from browser roles.
-- Process at most three leased jobs or 240 seconds per scheduled invocation.
-- Persist worker-run timing, claimed/completed/failed counts, failures, and next-wakeup decisions.
-- Show the latest scheduled worker outcome and live queue health inside the owner session.
-- Display approval revision, decision, dependency fingerprint, reviewer notes, and history.
-- Support explicit approval revocation for another listening pass.
-- Provide signed private master download with checksum-backed provenance.
-- Preview artifact count and byte size before retention decisions.
-- Require an exact typed confirmation before pruning superseded private artifacts.
+- Show queue depth, oldest active lease age, recent throughput, failure rate, and private artifact storage use.
+- Classify corrupt/invalid input failures as terminal and infrastructure failures as retryable.
+- Enforce exponential retry delays from 30 seconds up to one hour with a five-attempt ceiling.
+- Keep terminal and not-yet-due jobs out of every scheduled worker claim.
+- Create warning or critical alerts for repeated and terminal worker failures.
+- Persist owner-scoped alert state and immutable acknowledge, retry, and resolve receipts.
+- Requeue an alerted job explicitly while retaining the operator audit trail.
+- Report cron freshness and required configuration without returning or logging secret values.
+- Combine master deliveries, approval decisions, and retention receipts in one chronological view.
+- Add a dedicated normalization operations panel to the authenticated DAW session.
 
 ### Verification
 
-- Focused normalization approval, queue, and renderer tests passed.
+- Focused normalization operations, approval, and queue tests passed.
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814003000 applied successfully.
-- Deployment requires rotating CRON_SECRET and server-only SUPABASE_SERVICE_ROLE_KEY environment values.
+- Supabase migration 20260814023000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -68,18 +65,18 @@ Normalization queues can now wake unattended on deployment, while musicians get 
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Operations Dashboard and Worker Alerts
+## Next milestone - Normalization Alert Reconciliation and Storage Accounting
 
-Make unattended processing observable and actionable when anything stalls or fails.
+Close the remaining gaps between detected state, durable alerts, and exact storage lifecycle accounting.
 
 Planned outcome:
 
-1. Add an owner-scoped operations view for queue depth, lease age, throughput, failure rate, and storage use.
-2. Classify retryable versus terminal render failures and enforce bounded exponential backoff.
-3. Persist alerts for stale leases, repeated failures, approval invalidation, and storage-prune failures.
-4. Add acknowledge, retry, and resolve actions with immutable operator receipts.
-5. Show master delivery history and approval/retention timelines together.
-6. Add health checks for cron freshness and required deployment configuration without exposing secrets.
+1. Reconcile stale leases, stale approvals, cron freshness, and prune failures into idempotent alerts on every worker run.
+2. Resolve alerts automatically when their underlying condition clears while preserving operator history.
+3. Record source, lane-render, master, and retained artifact byte totals separately.
+4. Verify storage deletion after prune and record partial-failure recovery actions.
+5. Add per-revision operational drill-down with job attempts, lease history, and dependency checksums.
+6. Export an owner-readable normalization operations report for support review.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
