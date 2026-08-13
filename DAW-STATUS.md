@@ -6,34 +6,33 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Five-Song Tempo and Key Normalization Analysis
+## Latest completed milestone - Audible Five-Song Normalization and Proof Mix
 
-Track Matcher now uses real checksum-pinned stem evidence to show how five musically different songs can converge on one practical tempo and key.
+The verified five-song plan now has musician-reviewable before/after audio and a real normalized multitrack proof mix.
 
-- Inventory the authorized separated-stem library without uploading its audio.
-- Analyze drum stems with onset-envelope autocorrelation for BPM.
-- Analyze bass stems with FFT chroma and major/minor profile scoring for tonal center.
-- Preserve raw detector confidence so uncertain results remain visible for musician review.
-- Fold half/double-time tempo interpretations toward the group median before transformation planning.
-- Select a lowest-cost common target of 87.9 BPM and C-sharp minor.
-- Produce exact non-destructive stretch ratios and bounded pitch changes for all five songs.
-- Pin every analyzed drum and bass source to its SHA-256 checksum and retain a reproducible local analysis script.
-- Replace Track Matcher placeholder data with a real five-song normalization table and DAW transform recipe.
+- Render 12-second before/after WAV excerpts from each selected tonal stem.
+- Apply the exact 87.9 BPM / C-sharp minor plan with bypassable preserve-pitch, high-quality transforms.
+- Retain 10 recoverable working excerpts in the authorized stem workspace instead of committing audio to Git.
+- Render an eight-second proof mix from all five normalized sources at unity-compensated summing gain.
+- Pin every derived artifact to its output checksum, byte length, target, and transform recipe.
+- Add localhost-only, manifest-allowlisted audio streaming to prevent deployment from exposing workstation files.
+- Add Track Matcher before/after audition players and proof-mix playback.
+- Add explicit listening confirmation/correction controls for lower-confidence 5th Ave and All the Shadows key estimates.
+- Preserve source audio unchanged; all artifacts are reproducible through the committed render script.
 
-### Real source results
+### Artifact location
 
-- Sun Island Trilogy: 100.4 BPM, A-sharp minor -> 1.1422x, +3 semitones.
-- 5th Ave: 87.9 BPM, C-sharp minor -> 1.0000x, 0 semitones.
-- All the Shadows: 61.1 BPM detected / 122.2 BPM interpreted, C-sharp minor -> 1.3902x, 0 semitones.
-- Dark Window Funky: 200.9 BPM detected / 100.5 BPM interpreted, C-sharp minor -> 1.1428x, 0 semitones.
-- My Friend Rock Funk: 82.7 BPM, A-sharp minor -> 0.9408x, +3 semitones.
+`C:/Users/muzes/OneDrive/Pictures/SUNO/keepers stems no vocals/Codex Normalization Proof 87.9 BPM C-sharp minor`
+
+- Five-song proof mix checksum: `sha256:241382290f03f6cc0505c00912ed871ea017732d97a3716b4c7999bb27b1b3ed`.
+- Complete before/after checksums and transform provenance are stored in `TimelineDawFiveSongProofManifest.json`.
 
 ### Verification
 
-- Focused tempo, key, normalization, and elastic-transform tests: 9 passed.
+- Focused tempo/key and elastic-transform tests: 6 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- No database migration was required.
+- No database migration was required because proof audio remains local and private.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -69,20 +68,20 @@ Track Matcher now uses real checksum-pinned stem evidence to show how five music
 - Related-version alignment, private A/B comparison, timeline review decisions, and reversible alignment history.
 - Punch-range, tempo-aware count-in, and grouped multi-pass loop recording.
 - Reproducible checksum-pinned creative song experiments with private WAV/MP3 renders.
+- Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 
-## Next milestone - Audible Five-Song Normalization and Proof Mix
+## Next milestone - Durable Private Proof Sessions and Review Decisions
 
-Turn the verified analysis plan into musician-reviewable audio while retaining recoverable sources and exact transformation provenance.
+Promote local normalization proofs into authenticated DAW sessions once musician review confirms or corrects the lower-confidence key estimates.
 
 Planned outcome:
 
-1. Create normalized working copies for selected stems using the verified 87.9 BPM / C-sharp minor plan.
-2. Render short before/after audition pairs for every selected song.
-3. Route normalized stems into a real multitrack demonstration session with bypassable transforms.
-4. Add listening-based confirmation or correction for lower-confidence 5th Ave and All the Shadows key estimates.
-5. Render a private proof mix and expose it in Track Matcher and the DAW.
-6. Preserve source checksums, analyzer evidence, transform quality, and output checksums.
-7. Run focused tests, the production build, migration review, commit, and push.
+1. Persist normalization plans, source evidence, and listening decisions in owner-scoped database records.
+2. Upload reviewed proof artifacts through authenticated session storage rather than workstation-only delivery.
+3. Create a durable multitrack DAW session containing the five normalized stems and bypassable transform state.
+4. Support correction and re-render when a musician changes a detected key, tempo interpretation, or target.
+5. Compare revisions and retain the full before/after decision ledger.
+6. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.

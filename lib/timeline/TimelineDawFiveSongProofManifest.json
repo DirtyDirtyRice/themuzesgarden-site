@@ -1,0 +1,199 @@
+{
+  "generatedAt": "2026-08-13T19:27:11.921Z",
+  "outputRoot": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor",
+  "target": {
+    "bpm": 87.9,
+    "key": "C#",
+    "mode": "minor"
+  },
+  "artifacts": [
+    {
+      "id": "sun-island-trilogy-before",
+      "fileName": "sun-island-trilogy-before.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\sun-island-trilogy-before.wav",
+      "kind": "before",
+      "byteLength": 3456044,
+      "checksum": "sha256:397d9b7eff9b8a121b248f012cb88bf0cf297d32d706d4a50df7ebfc65d1c462",
+      "songId": "sun-island-trilogy",
+      "name": "Sun Island Trilogy",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": null
+    },
+    {
+      "id": "sun-island-trilogy-after",
+      "fileName": "sun-island-trilogy-after.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\sun-island-trilogy-after.wav",
+      "kind": "after",
+      "byteLength": 3947486,
+      "checksum": "sha256:59c50078a704c560aa823ddd8b69153ed07948508eb587f4346170622f97e548",
+      "songId": "sun-island-trilogy",
+      "name": "Sun Island Trilogy",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": {
+        "stretchRatio": 1.1422,
+        "pitchSemitones": 3,
+        "algorithm": "preserve-pitch",
+        "quality": "high"
+      }
+    },
+    {
+      "id": "fifth-ave-before",
+      "fileName": "fifth-ave-before.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\fifth-ave-before.wav",
+      "kind": "before",
+      "byteLength": 3456044,
+      "checksum": "sha256:0fed9771af7cb643fda5fc38203f24bb84f4bbb8a7d1fa4dd7c9c8fe07c30ceb",
+      "songId": "fifth-ave",
+      "name": "5th Ave",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": null
+    },
+    {
+      "id": "fifth-ave-after",
+      "fileName": "fifth-ave-after.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\fifth-ave-after.wav",
+      "kind": "after",
+      "byteLength": 3456044,
+      "checksum": "sha256:0fed9771af7cb643fda5fc38203f24bb84f4bbb8a7d1fa4dd7c9c8fe07c30ceb",
+      "songId": "fifth-ave",
+      "name": "5th Ave",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": {
+        "stretchRatio": 1,
+        "pitchSemitones": 0,
+        "algorithm": "preserve-pitch",
+        "quality": "high"
+      }
+    },
+    {
+      "id": "all-the-shadows-before",
+      "fileName": "all-the-shadows-before.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\all-the-shadows-before.wav",
+      "kind": "before",
+      "byteLength": 3456044,
+      "checksum": "sha256:580ac6b40ad6e0d4fcfbe2dbd2c09c88ded73c44a040e91876f8d91b455683c6",
+      "songId": "all-the-shadows",
+      "name": "All the Shadows",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": null
+    },
+    {
+      "id": "all-the-shadows-after",
+      "fileName": "all-the-shadows-after.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\all-the-shadows-after.wav",
+      "kind": "after",
+      "byteLength": 4804574,
+      "checksum": "sha256:a1b322424de11343739305632389510bc467f1951387360a4053e09fe66ef9f3",
+      "songId": "all-the-shadows",
+      "name": "All the Shadows",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": {
+        "stretchRatio": 1.3902,
+        "pitchSemitones": 0,
+        "algorithm": "preserve-pitch",
+        "quality": "high"
+      }
+    },
+    {
+      "id": "dark-window-funky-before",
+      "fileName": "dark-window-funky-before.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\dark-window-funky-before.wav",
+      "kind": "before",
+      "byteLength": 3456044,
+      "checksum": "sha256:ec65a7476501de7137b904cf12d8ed8293255ec4347220e38c1622d4598f6ce5",
+      "songId": "dark-window-funky",
+      "name": "Dark Window Funky",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": null
+    },
+    {
+      "id": "dark-window-funky-after",
+      "fileName": "dark-window-funky-after.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\dark-window-funky-after.wav",
+      "kind": "after",
+      "byteLength": 3949562,
+      "checksum": "sha256:efc7a301d64412b7ea601af76f5f72d87c124fcf2251d8ec8e1203021e8d8c4e",
+      "songId": "dark-window-funky",
+      "name": "Dark Window Funky",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": {
+        "stretchRatio": 1.1428,
+        "pitchSemitones": 0,
+        "algorithm": "preserve-pitch",
+        "quality": "high"
+      }
+    },
+    {
+      "id": "my-friend-rock-funk-before",
+      "fileName": "my-friend-rock-funk-before.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\my-friend-rock-funk-before.wav",
+      "kind": "before",
+      "byteLength": 3456044,
+      "checksum": "sha256:619da08e4e785b2f6b7f7bc821f5242b7550ea3ec584b623262a6591c42f6d43",
+      "songId": "my-friend-rock-funk",
+      "name": "My Friend Rock Funk",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": null
+    },
+    {
+      "id": "my-friend-rock-funk-after",
+      "fileName": "my-friend-rock-funk-after.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\my-friend-rock-funk-after.wav",
+      "kind": "after",
+      "byteLength": 3251450,
+      "checksum": "sha256:f3c589133c07b32402601c7eee41899c036453267c305fa58a97c2cd4489a9fe",
+      "songId": "my-friend-rock-funk",
+      "name": "My Friend Rock Funk",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": {
+        "stretchRatio": 0.9408,
+        "pitchSemitones": 3,
+        "algorithm": "preserve-pitch",
+        "quality": "high"
+      }
+    },
+    {
+      "id": "proof-mix",
+      "fileName": "five-song-normalized-proof-mix.wav",
+      "path": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Codex Normalization Proof 87.9 BPM C-sharp minor\\five-song-normalized-proof-mix.wav",
+      "kind": "mix",
+      "byteLength": 2304044,
+      "checksum": "sha256:241382290f03f6cc0505c00912ed871ea017732d97a3716b4c7999bb27b1b3ed",
+      "songId": null,
+      "name": "Five-song normalized proof mix",
+      "targetBpm": 87.9,
+      "targetKey": "C#",
+      "targetMode": "minor",
+      "transform": {
+        "sources": [
+          "sun-island-trilogy-after",
+          "fifth-ave-after",
+          "all-the-shadows-after",
+          "dark-window-funky-after",
+          "my-friend-rock-funk-after"
+        ],
+        "gain": 0.2
+      }
+    }
+  ]
+}
