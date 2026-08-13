@@ -1,4 +1,4 @@
-# The Muzes Garden DAW — Development Status
+# The Muzes Garden DAW - Development Status
 
 Last updated: August 13, 2026
 
@@ -6,27 +6,26 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Durable Private Proof Sessions and Review Decisions
+## Latest completed milestone - Session-Native Normalization Re-render and Revision Compare
 
-Five-song normalization evidence can now be promoted from local audition into an authenticated, revisioned DAW session.
+The five-song proof correction loop now runs inside the authenticated DAW session.
 
-- Persist owner-scoped normalization targets, source evidence, transform plans, listening reviews, and promoted lane IDs.
-- Create immutable before/after history entries for every saved review revision.
-- Require an existing authenticated DAW session ID before saving or promoting proof material.
-- Block promotion until every lower-confidence listening review is confirmed or corrected.
-- Recheck local proof source checksums immediately before authenticated upload.
-- Upload five reviewed source excerpts into the session-private render-source bucket.
-- Create five durable DAW audio lanes with exact preserve-pitch/high-quality stretch and pitch settings.
-- Keep every transform bypassable for direct original-versus-normalized comparison.
-- Link promoted lanes back to the proof revision and local render checksum.
-- Support correction by saving a new review revision before any subsequent promotion.
+- Load owner-scoped proof state, review history, and private master records directly in the studio.
+- Edit target tempo/key and each song's interpreted tempo/key without leaving the session.
+- Reject stale saves, restores, promotions, and master exports with optimistic revision checks.
+- Recalculate deterministic stretch and shortest-path pitch recipes from corrected decisions.
+- Reset musician approval whenever a corrected revision is saved or restored.
+- Promote fresh preserve-pitch/high-quality private lanes and mark prior proof lanes superseded.
+- Compare revisions by target and song-level changes and restore any prior state as a new auditable revision.
+- Refresh the private lane workspace after a corrected lane set is promoted.
+- Save an approved checksum-verified proof mix into session-private storage with revision provenance.
 
 ### Verification
 
-- Focused normalization review, tempo/key, and elastic-transform tests: 8 passed.
-- TypeScript validation: passed.
-- Next.js production build: passed.
-- Supabase migration 20260813143000 applied successfully.
+- Focused normalization review and private elastic-transform tests passed.
+- TypeScript validation passed.
+- Next.js production build passed.
+- Supabase migration 20260813173000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -65,18 +64,18 @@ Five-song normalization evidence can now be promoted from local audition into an
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Session-Native Normalization Re-render and Revision Compare
+## Next milestone - Private Normalization Render Execution and A/B Audition
 
-Complete the correction loop entirely inside the authenticated DAW after the first private proof promotion.
+Turn the revision recipes into server-rendered audio assets and provide direct authenticated revision audition.
 
 Planned outcome:
 
-1. Load durable normalization proof state and review history directly in the DAW session.
-2. Edit target tempo/key or per-song key/tempo interpretations with optimistic revision checks.
-3. Recalculate transform recipes from corrected musical decisions.
-4. Re-render affected private proof lanes and atomically supersede prior promoted lanes.
-5. Compare normalization revisions, audition old/new outputs, and restore a prior revision safely.
-6. Produce a session-private master proof render after musician approval.
+1. Render each corrected source to new PCM audio using the revision's elastic and pitch recipe.
+2. Persist per-lane render jobs, artifact checksums, failure state, and retry state.
+3. Stream signed old/new revision audio for direct A/B audition and loudness matching.
+4. Keep source, recipe, rendered artifact, and supersession provenance linked end to end.
+5. Build the approved master from the current rendered lane set instead of the local proof fixture.
+6. Add cancellation, progress, and recovery for long normalization renders.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 

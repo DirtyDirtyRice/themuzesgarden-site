@@ -11,6 +11,7 @@ import ProjectDawTransport from "../../ProjectDawTransport";
 import ProjectDawDeviceDiagnostics from "../../ProjectDawDeviceDiagnostics";
 import ProjectDawRecordingWorkspace from "../../ProjectDawRecordingWorkspace";
 import TimelineDawPrivateAudioLanes from "@/app/components/TimelineDawPrivateAudioLanes";
+import TimelineDawNormalizationRevisions from "@/app/components/TimelineDawNormalizationRevisions";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -37,6 +38,7 @@ export default function ProjectDawSessionPage() {
   });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [normalizationLaneRevision, setNormalizationLaneRevision] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const session = useMemo(
@@ -193,7 +195,9 @@ export default function ProjectDawSessionPage() {
         onWorkspaceRevision={handleWorkspaceRevision}
       />
 
-      <TimelineDawPrivateAudioLanes sessionId={session.id} />
+      <TimelineDawNormalizationRevisions sessionId={session.id} onLanesChanged={() => setNormalizationLaneRevision((value) => value + 1)} />
+
+      <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} />
 
       <ProjectDawDeviceDiagnostics />
       <ProjectDawRecordingWorkspace session={session} />
