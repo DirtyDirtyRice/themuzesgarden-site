@@ -6,28 +6,28 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Private Normalization Render Execution and A/B Audition
+## Latest completed milestone - Durable Background Normalization Queue and Live A/B Transport
 
-Normalization revisions now produce truthful session-private PCM artifacts instead of playback-only transform recipes.
+Normalization rendering now uses recoverable, owner-scoped leased jobs and synchronized DAW comparison playback.
 
-- Decode promoted WAV sources through the validated PCM decoder.
-- Apply the saved preserve-pitch/high-quality stretch and pitch recipe for every song revision.
-- Encode deterministic 32-bit WAV output through the existing PCM render worker.
-- Persist owner-scoped per-song job state, progress, attempts, failures, cancellation, recipes, and checksums.
-- Retry failed revision renders and cancel queued work without mutating source audio.
-- Store rendered artifacts in checksum-addressed session-private storage.
-- Generate one-hour signed audition URLs for completed artifacts across old and current revisions.
-- Display revision, song, progress, state, checksum, and authenticated audio controls in the DAW session.
-- Gate master creation on a complete current render set.
-- Build the approved private master by mixing current rendered lane artifacts rather than using the local proof fixture.
-- Link master provenance to the exact render-job identities.
+- Enqueue idempotent per-song jobs without performing the full render in the request that creates them.
+- Atomically claim one eligible job through a row-locked database function.
+- Attach bounded worker leases, worker identity, lease tokens, heartbeats, and attempt counts.
+- Reject stale completion when a lease expires, changes owner, or receives a cancellation request.
+- Reclaim interrupted rendering work after lease expiry without duplicating completed artifacts.
+- Keep completed artifact checksums immutable and exclude them from subsequent claims.
+- Persist artifact RMS for repeatable bounded loudness matching.
+- Process one song at a time and expose queue, worker, retry, and cancellation controls in the session.
+- Follow DAW play, pause, and locate events with two synchronized private revision players.
+- Switch A/B instantly by gain while preserving shared playback position.
+- Gate current master creation on a complete current-revision artifact set.
 
 ### Verification
 
-- Focused normalization renderer, review, and private elastic-transform tests passed.
+- Focused normalization queue, renderer, review, and elastic-transform tests passed.
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260813193000 applied successfully.
+- Supabase migration 20260813213000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -66,18 +66,18 @@ Normalization revisions now produce truthful session-private PCM artifacts inste
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Durable Background Normalization Queue and Live A/B Transport
+## Next milestone - Automated Queue Runner and Normalization Approval Ledger
 
-Move normalization work from request-bound execution into a recoverable background queue with synchronized comparison playback.
+Finish hands-off render processing and make musician approval cryptographically specific to the audible revision.
 
 Planned outcome:
 
-1. Claim queued render jobs with leases, heartbeats, and idempotent worker ownership.
-2. Process one song at a time with durable chunk progress and cooperative cancellation.
-3. Resume interrupted renders after lease expiry without duplicating completed artifacts.
-4. Audition old/new revisions through synchronized DAW transport with loudness matching and instant switching.
-5. Approve a revision only after all artifact checksums and render recipes are current.
-6. Retain or safely prune superseded artifacts according to explicit musician decisions.
+1. Add a protected worker endpoint that drains leased jobs within a bounded execution window.
+2. Schedule authenticated queue wakeups and continue automatically until the revision is drained.
+3. Persist approval decisions against proof revision, recipe checksums, artifact checksums, and master checksum.
+4. Invalidate approval automatically whenever any dependency becomes stale or is superseded.
+5. Add artifact retention decisions with safe storage deletion and immutable audit receipts.
+6. Show queue health, lease recovery, approval readiness, and retention state in the DAW.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
