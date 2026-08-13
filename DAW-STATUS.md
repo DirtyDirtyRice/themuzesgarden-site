@@ -6,26 +6,26 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Automation Worker and Escalation Receipts
+## Latest completed milestone - Normalization Support Notifications and Worker Schedule Hardening
 
-Support triage maintenance is now scheduled, retry-safe, and owner-visible.
+The support automation loop now reaches owners reliably and operates with deployment-safe scheduling.
 
-- Dedicated service-role cron worker for overdue detection and expired or revoked bundle cleanup.
-- Global expiring worker lease prevents overlapping support maintenance runs.
-- Deterministic idempotency keys prevent duplicate escalation receipts across retries.
-- Immutable owner-readable escalation receipts contain case references and due dates without diagnostic payload content.
-- Worker run ledger records processed, escalated, cleaned, failed, next-wakeup, and sanitized failure summaries.
-- Pending and acknowledged owner notification state stays separate from diagnostic data.
-- Authenticated owner reconciliation repairs stale automation outcomes safely.
-- Repeated cleanup failures raise operational alerts tied only to the case identifier.
-- DAW studio surfaces worker health, last-run counts, pending notifications, receipts, and manual reconciliation.
+- Durable per-case notification inbox entries with acknowledgement and case-evidence anchors.
+- Three escalation levels based on overdue age with level-specific cooldown-safe re-notification.
+- Idempotency keys prevent duplicate notifications within an escalation window.
+- Vercel schedules now run render maintenance, support cleanup, and notification escalation independently.
+- Environment and deployment-schedule readiness diagnostics are owner-visible.
+- Explicit token-guarded lease release and abandoned-lease observability.
+- Bounded worker failure details and immutable per-case reconciliation receipts.
+- Successful cleanup reconciliation resolves stale support cleanup alerts.
+- Notification records contain only case references, level, title, and timestamps; diagnostic payloads remain excluded.
 
 ### Verification
 
-- Focused automation, triage, and support-case tests passed (7 tests).
+- Focused notification, automation, and triage tests passed (7 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814093000 applied successfully.
+- Supabase migration 20260814103000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -65,18 +65,18 @@ Support triage maintenance is now scheduled, retry-safe, and owner-visible.
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Notifications and Worker Schedule Hardening
+## Next milestone - Normalization Support Operations Audit and Export
 
-Finish the operational loop with actionable owner notifications and deployment-safe scheduling.
+Make the complete support lifecycle independently reviewable and portable.
 
 Planned outcome:
 
-1. Add per-case notification inbox entries with acknowledgement and deep links to triage evidence.
-2. Add escalation levels and cooldown-safe re-notification for persistently overdue cases.
-3. Add deployment schedule configuration and environment readiness diagnostics.
-4. Add worker lease release and abandoned-lease observability.
-5. Add bounded failure detail and per-case reconciliation receipts.
-6. Add support automation alert resolution after successful recovery.
+1. Build a checksum-protected case audit export spanning case, triage, notifications, escalation, reconciliation, and cleanup history.
+2. Add schema validation and local read-only audit inspection.
+3. Add server-side date, event, priority, and case filters with pagination.
+4. Add completeness checks that identify missing lifecycle receipts or broken references.
+5. Add owner-controlled export revocation records without deleting underlying audit history.
+6. Add compact operational summary metrics and CSV export for case metadata only.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 
 ## Working rules
