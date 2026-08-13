@@ -1,0 +1,10 @@
+create table if not exists public.timeline_daw_normalization_proofs(
+ id text primary key,owner_id uuid not null references auth.users(id) on delete cascade,session_id text not null,
+ revision integer not null default 1 check(revision>0),target_bpm double precision not null check(target_bpm between 40 and 240),target_key text not null,target_mode text not null check(target_mode in('major','minor')),
+ source_evidence jsonb not null,transform_plan jsonb not null,reviews jsonb not null,proof_manifest_checksum text not null check(proof_manifest_checksum~'^sha256:[a-f0-9]{64}$'),revision_checksum text not null check(revision_checksum~'^sha256:[a-f0-9]{64}$'),promoted_lane_ids jsonb not null default '[]'::jsonb,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(owner_id,session_id)
+);
+create table if not exists public.timeline_daw_normalization_proof_history(id text primary key,owner_id uuid not null references auth.users(id) on delete cascade,session_id text not null,proof_id text not null references public.timeline_daw_normalization_proofs(id) on delete cascade,revision integer not null,before_state jsonb,after_state jsonb not null,created_at timestamptz not null default now());
+alter table public.timeline_daw_normalization_proofs enable row level security;alter table public.timeline_daw_normalization_proof_history enable row level security;
+create policy timeline_daw_normalization_proofs_owner on public.timeline_daw_normalization_proofs for all to authenticated using(owner_id=auth.uid()) with check(owner_id=auth.uid());
+create policy timeline_daw_normalization_proof_history_owner on public.timeline_daw_normalization_proof_history for all to authenticated using(owner_id=auth.uid()) with check(owner_id=auth.uid());
+create index if not exists timeline_daw_normalization_history_session on public.timeline_daw_normalization_proof_history(owner_id,session_id,revision desc);

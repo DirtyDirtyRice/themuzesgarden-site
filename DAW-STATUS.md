@@ -1,4 +1,4 @@
-# The Muzes Garden DAW ? Development Status
+# The Muzes Garden DAW — Development Status
 
 Last updated: August 13, 2026
 
@@ -6,33 +6,27 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Audible Five-Song Normalization and Proof Mix
+## Latest completed milestone - Durable Private Proof Sessions and Review Decisions
 
-The verified five-song plan now has musician-reviewable before/after audio and a real normalized multitrack proof mix.
+Five-song normalization evidence can now be promoted from local audition into an authenticated, revisioned DAW session.
 
-- Render 12-second before/after WAV excerpts from each selected tonal stem.
-- Apply the exact 87.9 BPM / C-sharp minor plan with bypassable preserve-pitch, high-quality transforms.
-- Retain 10 recoverable working excerpts in the authorized stem workspace instead of committing audio to Git.
-- Render an eight-second proof mix from all five normalized sources at unity-compensated summing gain.
-- Pin every derived artifact to its output checksum, byte length, target, and transform recipe.
-- Add localhost-only, manifest-allowlisted audio streaming to prevent deployment from exposing workstation files.
-- Add Track Matcher before/after audition players and proof-mix playback.
-- Add explicit listening confirmation/correction controls for lower-confidence 5th Ave and All the Shadows key estimates.
-- Preserve source audio unchanged; all artifacts are reproducible through the committed render script.
-
-### Artifact location
-
-`C:/Users/muzes/OneDrive/Pictures/SUNO/keepers stems no vocals/Codex Normalization Proof 87.9 BPM C-sharp minor`
-
-- Five-song proof mix checksum: `sha256:241382290f03f6cc0505c00912ed871ea017732d97a3716b4c7999bb27b1b3ed`.
-- Complete before/after checksums and transform provenance are stored in `TimelineDawFiveSongProofManifest.json`.
+- Persist owner-scoped normalization targets, source evidence, transform plans, listening reviews, and promoted lane IDs.
+- Create immutable before/after history entries for every saved review revision.
+- Require an existing authenticated DAW session ID before saving or promoting proof material.
+- Block promotion until every lower-confidence listening review is confirmed or corrected.
+- Recheck local proof source checksums immediately before authenticated upload.
+- Upload five reviewed source excerpts into the session-private render-source bucket.
+- Create five durable DAW audio lanes with exact preserve-pitch/high-quality stretch and pitch settings.
+- Keep every transform bypassable for direct original-versus-normalized comparison.
+- Link promoted lanes back to the proof revision and local render checksum.
+- Support correction by saving a new review revision before any subsequent promotion.
 
 ### Verification
 
-- Focused tempo/key and elastic-transform tests: 6 passed.
+- Focused normalization review, tempo/key, and elastic-transform tests: 8 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- No database migration was required because proof audio remains local and private.
+- Supabase migration 20260813143000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -69,19 +63,21 @@ The verified five-song plan now has musician-reviewable before/after audio and a
 - Punch-range, tempo-aware count-in, and grouped multi-pass loop recording.
 - Reproducible checksum-pinned creative song experiments with private WAV/MP3 renders.
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
+- Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Durable Private Proof Sessions and Review Decisions
+## Next milestone - Session-Native Normalization Re-render and Revision Compare
 
-Promote local normalization proofs into authenticated DAW sessions once musician review confirms or corrects the lower-confidence key estimates.
+Complete the correction loop entirely inside the authenticated DAW after the first private proof promotion.
 
 Planned outcome:
 
-1. Persist normalization plans, source evidence, and listening decisions in owner-scoped database records.
-2. Upload reviewed proof artifacts through authenticated session storage rather than workstation-only delivery.
-3. Create a durable multitrack DAW session containing the five normalized stems and bypassable transform state.
-4. Support correction and re-render when a musician changes a detected key, tempo interpretation, or target.
-5. Compare revisions and retain the full before/after decision ledger.
-6. Run focused tests, production build, reviewed migration, commit, and push.
+1. Load durable normalization proof state and review history directly in the DAW session.
+2. Edit target tempo/key or per-song key/tempo interpretations with optimistic revision checks.
+3. Recalculate transform recipes from corrected musical decisions.
+4. Re-render affected private proof lanes and atomically supersede prior promoted lanes.
+5. Compare normalization revisions, audition old/new outputs, and restore a prior revision safely.
+6. Produce a session-private master proof render after musician approval.
+7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
