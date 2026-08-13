@@ -6,26 +6,25 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Audio Version Families and Session Intake
+## Latest completed milestone - Version Alignment and Musical Comparison
 
-Large personal audio libraries can now be imported in bounded batches, organized into explicit song families, and placed into DAW sessions with durable provenance.
+Related song versions now have non-destructive alignment state, private comparison audition, and timeline-linked review decisions.
 
-- Add three-worker bounded WAV/MP3 batch intake with visible progress and cancellation.
-- Detect duplicates by canonical source checksum and report accepted, duplicate, and failed outcomes.
-- Add owner-scoped durable song families and audio version records.
-- Store explicit source role, version label, performer, origin, and relationship metadata without inferring ownership.
-- Support acapella, demo, stem, human-band, hybrid, and finished version roles.
-- Preserve canonical source ID, URI, checksum, audio geometry, and family provenance.
-- Create aligned comparison lanes or sequential listening lanes from selected families.
-- Refresh newly created family lanes immediately in the active studio.
-- Preserve source files and recover cleanly when individual mixed-library items fail.
+- Add waveform/onset-envelope correlation suggestions with explicit bounded confidence.
+- Support manual alignment offsets with confirmation and revisioned receipts.
+- Preserve original sources while normalizing version placement through non-destructive offsets.
+- Add private owner-scoped audition URLs for family-version A/B listening.
+- Add version-level timeline markers, notes, and keeper/alternate/reject decisions.
+- Persist reversible before/after alignment history.
+- Detect stale alignments when source checksums change.
+- Validate the supplied read-only library as four distinct strata: 21 acapellas, 6 full songs, 21 guitar-and-voice demos, and 7 hybrid Kompoz songs.
 
 ### Verification
 
-- Focused intake, import, and private-lane tests: 9 passed.
+- Focused alignment, family, and waveform tests: 10 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through 20260809213000.
+- Supabase migrations applied successfully through 20260809223000.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -59,18 +58,18 @@ Large personal audio libraries can now be imported in bounded batches, organized
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
 
-## Next milestone - Version Alignment and Musical Comparison
+## Next milestone - Creative Song Experiments and Hybrid Arrangements
 
-Make related song versions directly comparable by musical time and audible structure.
+Use musician-authorized source material as a real production library and create traceable alternate song experiments.
 
 Planned outcome:
 
-1. Add waveform/onset-assisted alignment suggestions with explicit confidence and manual confirmation.
-2. Normalize differing lead-in silence, sample rates, durations, and version offsets non-destructively.
-3. Add synchronized A/B and grouped audition across a selected song family.
-4. Add version-level markers, notes, and keeper decisions linked to aligned timeline positions.
-5. Add reversible alignment receipts and stale detection after source or alignment changes.
-6. Run focused tests and the production build, apply any reviewed migration, commit, and push.
+1. Build a read-only source catalog across acapella, full-song, guitar-and-voice, and hybrid Kompoz folders.
+2. Match same-title material into source families while requiring review for ambiguous matches.
+3. Create derived working copies only; never modify original MP3 files.
+4. Produce alternate arrangements using cuts, repeats, reordered sections, fades, effects, and compatible cross-version combinations.
+5. Persist exact source provenance and an edit recipe for every experiment so results are reproducible and reversible.
+6. Render clearly labeled private experiment WAV/MP3 outputs, run focused tests and the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
