@@ -6,26 +6,26 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Real-World Audio Import and Task Validation
+## Latest completed milestone - Audio Version Families and Session Intake
 
-The DAW now accepts musician-owned MP3 material through a non-destructive canonical import path and has a repeatable privacy-preserving acceptance inventory.
+Large personal audio libraries can now be imported in bounded batches, organized into explicit song families, and placed into DAW sessions with durable provenance.
 
-- Add WAV/MP3 selection to the private studio source workflow.
-- Decode MP3 files with the browser audio platform and convert decoded PCM to the canonical verified WAV contract.
-- Preserve original MP3 files without rewriting or uploading modified source media.
-- Reject unsupported formats, invalid audio geometry, oversized sources, and browser decoder failures with actionable errors.
-- Reuse the established private source, waveform, lane, processing, freeze, render, and export pipeline after canonicalization.
-- Add a repeatable aggregate MP3 acceptance inventory that excludes filenames and audio content.
-- Validate 89 real musician-owned MP3 containers across acapella, acoustic demo, human-band, stem, and finished-song categories.
-- Cover 44.1/48 kHz, mono/stereo, and 64-320 kbps source varieties.
+- Add three-worker bounded WAV/MP3 batch intake with visible progress and cancellation.
+- Detect duplicates by canonical source checksum and report accepted, duplicate, and failed outcomes.
+- Add owner-scoped durable song families and audio version records.
+- Store explicit source role, version label, performer, origin, and relationship metadata without inferring ownership.
+- Support acapella, demo, stem, human-band, hybrid, and finished version roles.
+- Preserve canonical source ID, URI, checksum, audio geometry, and family provenance.
+- Create aligned comparison lanes or sequential listening lanes from selected families.
+- Refresh newly created family lanes immediately in the active studio.
+- Preserve source files and recover cleanly when individual mixed-library items fail.
 
 ### Verification
 
-- Real-world aggregate MP3 inventory: 89 accepted, 0 rejected.
-- Focused import, decode, lane, waveform, and freeze tests: 16 passed.
+- Focused intake, import, and private-lane tests: 9 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- No database migration was required.
+- Supabase migrations applied successfully through 20260809213000.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -59,17 +59,17 @@ The DAW now accepts musician-owned MP3 material through a non-destructive canoni
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
 
-## Next milestone - Audio Version Families and Session Intake
+## Next milestone - Version Alignment and Musical Comparison
 
-Turn large personal song libraries into organized, comparable DAW session material.
+Make related song versions directly comparable by musical time and audible structure.
 
 Planned outcome:
 
-1. Add privacy-preserving batch intake with progress, cancellation, duplicate detection, and bounded concurrency.
-2. Group acapella, demo, stem, human-band, hybrid, and finished versions into explicit song families.
-3. Add durable source-role, version, performer, origin, and relationship metadata without inferring ownership claims.
-4. Create selected-family session lanes with preserved source provenance and normalized timeline placement.
-5. Add intake summaries and recoverable failure handling for mixed libraries.
+1. Add waveform/onset-assisted alignment suggestions with explicit confidence and manual confirmation.
+2. Normalize differing lead-in silence, sample rates, durations, and version offsets non-destructively.
+3. Add synchronized A/B and grouped audition across a selected song family.
+4. Add version-level markers, notes, and keeper decisions linked to aligned timeline positions.
+5. Add reversible alignment receipts and stale detection after source or alignment changes.
 6. Run focused tests and the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

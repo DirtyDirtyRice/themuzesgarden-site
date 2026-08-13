@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
@@ -53,6 +53,7 @@ import { timelineDawPrivateAutomationValue } from "@/lib/timeline/TimelineDawPri
 import { dispatchTimelineDawPrivateMixChange } from "@/lib/timeline/TimelineDawPrivateAutomationEvents";
 import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBusGraph";
 import TimelineDawPrivateClipRepairEditor from "@/app/components/TimelineDawPrivateClipRepairEditor";
+import TimelineDawAudioFamilyIntake from "@/app/components/TimelineDawAudioFamilyIntake";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 
@@ -219,6 +220,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
         .catch((cause) => setError(cause instanceof Error ? cause.message : "Private audio lane could not be added."))
         .finally(() => setBusy(false));
     };
+    const receiveFamilyLanes = (event: Event) => { const detail=(event as CustomEvent<{sessionId?:string}>).detail;if(detail?.sessionId!==sessionId)return;void loadDawPrivateAudioLanes(sessionId).then(result=>setLanes(result.lanes)).catch(cause=>setError(cause instanceof Error?cause.message:"Family lanes could not be loaded.")); };
     const receivePlayhead = (event: Event) => {
       const detail = (event as CustomEvent<{ sessionId?: string; elapsed?: number }>).detail;
       if (detail?.sessionId !== sessionId || !Number.isFinite(detail.elapsed)) return;
@@ -233,10 +235,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       synchronize(playheadRef.current, detail.state === "playing");
     };
     window.addEventListener(DAW_RECORDED_SOURCE_EVENT, receiveSource);
+    window.addEventListener("muzes:daw-family-lanes", receiveFamilyLanes);
     window.addEventListener("muzes:daw-playhead", receivePlayhead);
     window.addEventListener("muzes:daw-transport-state", receiveTransport);
     return () => {
       window.removeEventListener(DAW_RECORDED_SOURCE_EVENT, receiveSource);
+      window.removeEventListener("muzes:daw-family-lanes", receiveFamilyLanes);
       window.removeEventListener("muzes:daw-playhead", receivePlayhead);
       window.removeEventListener("muzes:daw-transport-state", receiveTransport);
     };
@@ -401,6 +405,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
+      <TimelineDawAudioFamilyIntake sessionId={sessionId} />
       <TimelineDawPrivateMidiSequencer sessionId={sessionId} />
       <TimelineDawPrivateSnapshots sessionId={sessionId} currentMaster={master} onAudition={setMaster} onRestored={()=>window.location.reload()} />
       <TimelineDawPrivateReviews sessionId={sessionId} sampleRate={lanes[0]?.audio.sampleRate??48000} targets={[...lanes.map(l=>({id:l.id,kind:"lane" as const,name:l.name,timelineStartSeconds:l.timelineStartSeconds,sourceInSeconds:l.sourceInSeconds})),...buses.map(b=>({id:b.id,kind:"bus" as const,name:b.name}))]} onNavigate={(seconds)=>{playheadRef.current=seconds;synchronize(seconds,false)}} onAudition={(start,end)=>{playheadRef.current=start;synchronize(start,true);window.setTimeout(()=>synchronize(end??start+2,false),Math.max(100,((end??start+2)-start)*1000))}} />
@@ -412,7 +417,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <TimelineDawPrivateFreezePanel sessionId={sessionId} lanes={lanes} buses={buses} freezes={freezes} onChange={setFreezes} />
       <TimelineDawPrivateAutomationEditor sessionId={sessionId} sources={[...lanes.map((lane)=>({id:lane.id,kind:"lane" as const,name:lane.name,sampleRate:lane.audio.sampleRate,baseGain:lane.mix.gain,basePan:lane.mix.pan})),...buses.map((bus)=>({id:bus.id,kind:"bus" as const,name:bus.name,sampleRate:lanes[0]?.audio.sampleRate??48000,baseGain:bus.mix.gain,basePan:bus.mix.pan}))]} envelopes={automation} onChange={setAutomation} />
       <TimelineDawPrivateLaneGroupEditor lanes={lanes} selectedIds={selectedIds} busy={busy} onSelection={setSelectedIds} onApply={(edit) => void applyGroupEdit(edit)} />
-      {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic equal-power transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} to {incoming?.name}: {crossfade.startSeconds.toFixed(2)}–{crossfade.endSeconds.toFixed(2)}s ({crossfade.durationSeconds.toFixed(2)}s)</p>; })}</div> : null}
+      {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic equal-power transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} to {incoming?.name}: {crossfade.startSeconds.toFixed(2)}â€“{crossfade.endSeconds.toFixed(2)}s ({crossfade.durationSeconds.toFixed(2)}s)</p>; })}</div> : null}
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}
             {lanes.length ? (
         <ol className="mt-4 grid gap-2">
@@ -421,14 +426,14 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
             return (
               <li key={lane.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s → {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
+                  <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s â†’ {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s Â· {lane.audio.channelCount}ch Â· {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` Â· comp ${lane.provenance.compId}` : " Â· recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
                 </div>
                 <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} />
                 <TimelineDawPrivateClipRepairEditor sessionId={sessionId} lane={lane} onChange={(repair) => setClipRepairs((current) => current[repair.laneId]?.checksum === repair.checksum ? current : { ...current, [repair.laneId]: repair })} />
                 <TimelineDawTransientEditor sessionId={sessionId} laneId={lane.id} sampleRate={lane.audio.sampleRate} onNavigate={(seconds) => { const audio=audioRefs.current.get(lane.id); if(audio) audio.currentTime=seconds; }} onAudition={(seconds)=>{const audio=audioRefs.current.get(lane.id);if(audio){audio.currentTime=seconds;void audio.play()}}} />
                 <TimelineDawWarpEditor sessionId={sessionId} laneId={lane.id} frameCount={lane.audio.frameCount} sampleRate={lane.audio.sampleRate} onChange={(markers)=>setWarpMaps(x=>({...x,[lane.id]:markers}))} />
-                <label className="mt-3 block text-xs font-black text-white/55">Output routing<select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={lane.busId ?? ""} onChange={(event) => void assignBus(lane, event.target.value || null)}><option value="">Master</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label><label className="ml-3 text-xs font-black text-white/55">Parallel send<select aria-label={`${lane.name} parallel send`} className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" defaultValue="" onChange={(event) => { if (event.target.value) void persistSend({ sourceKind: "lane", sourceId: lane.id, destinationBusId: event.target.value, level: 0.5, preFader: false, muted: false }); event.currentTarget.value = ""; }}><option value="">Add send…</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label>
+                <label className="mt-3 block text-xs font-black text-white/55">Output routing<select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={lane.busId ?? ""} onChange={(event) => void assignBus(lane, event.target.value || null)}><option value="">Master</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label><label className="ml-3 text-xs font-black text-white/55">Parallel send<select aria-label={`${lane.name} parallel send`} className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" defaultValue="" onChange={(event) => { if (event.target.value) void persistSend({ sourceKind: "lane", sourceId: lane.id, destinationBusId: event.target.value, level: 0.5, preFader: false, muted: false }); event.currentTarget.value = ""; }}><option value="">Add sendâ€¦</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-3">
                   <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>
@@ -444,7 +449,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                 <div className="mt-3 grid gap-3 md:grid-cols-[auto_auto_1fr_1fr]">
                   <button type="button" aria-pressed={lane.mix.muted} className={`${button} ${lane.mix.muted ? "!bg-red-300" : ""}`} onClick={() => queueMix(lane, { muted: !lane.mix.muted })}>{lane.mix.muted ? "Muted" : "Mute"}</button>
                   <button type="button" aria-pressed={lane.mix.soloed} className={`${button} ${lane.mix.soloed ? "!bg-amber-300" : ""}`} onClick={() => queueMix(lane, { soloed: !lane.mix.soloed })}>{lane.mix.soloed ? "Soloed" : "Solo"}</button>
-                  <label className="text-xs font-black text-white/55">Gain {lane.mix.gain.toFixed(2)}×<input className="mt-1 block w-full accent-violet-300" type="range" min={0} max={2} step={0.01} value={lane.mix.gain} onChange={(event) => queueMix(lane, { gain: Number(event.target.value) })} /></label>
+                  <label className="text-xs font-black text-white/55">Gain {lane.mix.gain.toFixed(2)}Ã—<input className="mt-1 block w-full accent-violet-300" type="range" min={0} max={2} step={0.01} value={lane.mix.gain} onChange={(event) => queueMix(lane, { gain: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Pan {lane.mix.pan === 0 ? "C" : lane.mix.pan < 0 ? `L${Math.round(Math.abs(lane.mix.pan) * 100)}` : `R${Math.round(lane.mix.pan * 100)}`}<input className="mt-1 block w-full accent-violet-300" type="range" min={-1} max={1} step={0.01} value={lane.mix.pan} onChange={(event) => queueMix(lane, { pan: Number(event.target.value) })} /></label>
                 </div>
                 <div className="mt-3"><div className="flex justify-between text-xs font-black"><span>Peak</span><span className={meter.clipped ? "text-red-300" : "text-emerald-200"}>{meter.clipped ? "CLIP" : `${meter.peakDbfs.toFixed(1)} dBFS`}</span></div><div className="mt-1 h-2 overflow-hidden rounded-full bg-black"><div className={`h-full transition-[width] duration-100 ${meter.clipped ? "bg-red-400" : "bg-emerald-400"}`} style={{ width: `${Math.max(0, Math.min(100, ((meter.peakDbfs + 60) / 60) * 100))}%` }} /></div></div>
