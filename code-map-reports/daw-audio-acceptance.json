@@ -1,0 +1,111 @@
+{
+  "generatedAt": "2026-08-13T16:12:14.512Z",
+  "sourceRoot": "Downloads",
+  "privacy": "Aggregate metadata only; source audio and filenames are excluded.",
+  "totalFiles": 89,
+  "accepted": 89,
+  "rejected": 0,
+  "categories": {
+    "acapella": {
+      "files": 48,
+      "accepted": 48,
+      "totalBytes": 191922615,
+      "sampleRates": [
+        44100,
+        48000
+      ],
+      "channels": [
+        1,
+        2
+      ],
+      "durationRangeSeconds": [
+        99.542,
+        1101.313
+      ],
+      "bitrateRangeKbps": [
+        64,
+        128
+      ]
+    },
+    "acoustic-demo": {
+      "files": 1,
+      "accepted": 1,
+      "totalBytes": 4640678,
+      "sampleRates": [
+        44100
+      ],
+      "channels": [
+        2
+      ],
+      "durationRangeSeconds": [
+        580.079,
+        580.079
+      ],
+      "bitrateRangeKbps": [
+        64,
+        64
+      ]
+    },
+    "finished-song": {
+      "files": 27,
+      "accepted": 27,
+      "totalBytes": 158367624,
+      "sampleRates": [
+        44100,
+        48000
+      ],
+      "channels": [
+        1,
+        2
+      ],
+      "durationRangeSeconds": [
+        235.598,
+        752.16
+      ],
+      "bitrateRangeKbps": [
+        64,
+        320
+      ]
+    },
+    "human-band": {
+      "files": 8,
+      "accepted": 8,
+      "totalBytes": 42353812,
+      "sampleRates": [
+        44100,
+        48000
+      ],
+      "channels": [
+        2
+      ],
+      "durationRangeSeconds": [
+        449.569,
+        1289.349
+      ],
+      "bitrateRangeKbps": [
+        64,
+        64
+      ]
+    },
+    "stem": {
+      "files": 5,
+      "accepted": 5,
+      "totalBytes": 23157525,
+      "sampleRates": [
+        44100,
+        48000
+      ],
+      "channels": [
+        2
+      ],
+      "durationRangeSeconds": [
+        202.886,
+        421.146
+      ],
+      "bitrateRangeKbps": [
+        64,
+        320
+      ]
+    }
+  }
+}

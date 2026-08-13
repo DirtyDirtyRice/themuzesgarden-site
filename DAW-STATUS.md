@@ -6,25 +6,26 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Virtual Instrument Rack and MIDI Automation
+## Latest completed milestone - Real-World Audio Import and Task Validation
 
-Virtual instruments now have reusable layered racks, editable expression automation, and reversible freeze workflows.
+The DAW now accepts musician-owned MP3 material through a non-destructive canonical import path and has a repeatable privacy-preserving acceptance inventory.
 
-- Add durable owner-scoped rack presets with versioned oscillator layers, envelopes, filters, gain, and pan.
-- Assign versioned rack presets to MIDI clips while preserving single-oscillator compatibility.
-- Add editable expression, modulation, pitch-bend, filter, and gain automation lanes.
-- Add channel-aware program-to-rack maps and reusable controller templates.
-- Render layered racks deterministically through the existing tempo-aware MIDI and mix pipeline.
-- Include rack versions, automation curves, and program maps in bounce freshness recipes.
-- Detect presets changed after clip assignment as stale.
-- Freeze current checksum-verified rack bounces while preserving editable MIDI source, then unfreeze safely.
+- Add WAV/MP3 selection to the private studio source workflow.
+- Decode MP3 files with the browser audio platform and convert decoded PCM to the canonical verified WAV contract.
+- Preserve original MP3 files without rewriting or uploading modified source media.
+- Reject unsupported formats, invalid audio geometry, oversized sources, and browser decoder failures with actionable errors.
+- Reuse the established private source, waveform, lane, processing, freeze, render, and export pipeline after canonicalization.
+- Add a repeatable aggregate MP3 acceptance inventory that excludes filenames and audio content.
+- Validate 89 real musician-owned MP3 containers across acapella, acoustic demo, human-band, stem, and finished-song categories.
+- Cover 44.1/48 kHz, mono/stereo, and 64-320 kbps source varieties.
 
 ### Verification
 
-- Focused rack, MIDI, and expression tests: 15 passed.
+- Real-world aggregate MP3 inventory: 89 accepted, 0 rejected.
+- Focused import, decode, lane, waveform, and freeze tests: 16 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through 20260809203000.
+- No database migration was required.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -58,17 +59,17 @@ Virtual instruments now have reusable layered racks, editable expression automat
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
 
-## Next milestone - Real-World Audio Import and Task Validation
+## Next milestone - Audio Version Families and Session Intake
 
-Validate the DAW against representative musician-owned MP3 material and close the highest-impact workflow gaps.
+Turn large personal song libraries into organized, comparable DAW session material.
 
 Planned outcome:
 
-1. Inventory a read-only representative MP3 test library across acapella ideas, acoustic demos, human bands, hybrid/Suno versions, and finished songs.
-2. Validate import, decode, waveform, transport, arrangement, processing, render, freeze, and export workflows against varied durations and production density.
-3. Add deterministic acceptance fixtures derived from metadata and non-copyright-sensitive signal properties.
-4. Fix discovered correctness, performance, and usability failures without modifying source media.
-5. Add a repeatable task-level DAW acceptance report.
+1. Add privacy-preserving batch intake with progress, cancellation, duplicate detection, and bounded concurrency.
+2. Group acapella, demo, stem, human-band, hybrid, and finished versions into explicit song families.
+3. Add durable source-role, version, performer, origin, and relationship metadata without inferring ownership claims.
+4. Create selected-family session lanes with preserved source provenance and normalized timeline placement.
+5. Add intake summaries and recoverable failure handling for mixed libraries.
 6. Run focused tests and the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 

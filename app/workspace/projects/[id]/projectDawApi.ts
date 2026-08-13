@@ -1,3 +1,4 @@
+﻿import { prepareTimelineDawAudioImport } from "../../../../lib/timeline/TimelineDawAudioImportPolicy";
 import { requireProjectSupabase } from "./projectSupabase";
 import type { DawSession, DawSessionAction, DawSnapshot } from "./projectDawTypes";
 import type {
@@ -160,10 +161,11 @@ export type DawRenderSource = {
   checksum: string;
 };
 
-export function uploadDawRenderSource(sessionId: string, file: File): Promise<{ source: DawRenderSource; audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number } }> {
+export async function uploadDawRenderSource(sessionId: string, file: File): Promise<{ source: DawRenderSource; audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number } }> {
+  const prepared = await prepareTimelineDawAudioImport(file);
   const body = new FormData();
   body.set("sessionId", sessionId);
-  body.set("file", file);
+  body.set("file", prepared.file);
   return request("/api/timeline/daw-render-sources", { method: "POST", body });
 }
 

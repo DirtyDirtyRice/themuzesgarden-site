@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import type {
@@ -90,16 +90,16 @@ export default function ProjectDawExportWorkspace({
       const sampleRates = new Set(uploaded.map((item) => item.audio.sampleRate));
       const channelCounts = new Set(uploaded.map((item) => item.audio.channelCount));
       if (sampleRates.size !== 1 || channelCounts.size !== 1) {
-        throw new Error("Uploaded WAV sources must share one sample rate and channel count.");
+        throw new Error("Uploaded audio sources must share one sample rate and channel count.");
       }
       setSampleRate(uploaded[0].audio.sampleRate);
       setChannels(uploaded[0].audio.channelCount);
       setDurationSeconds(Math.max(0.001, Math.floor(Math.min(...uploaded.map((item) => item.audio.durationSeconds)) * 1000) / 1000));
       setSources(uploaded.map((item) => item.source.uri).join(", "));
-      setNotice(`${uploaded.length} private WAV source${uploaded.length === 1 ? "" : "s"} uploaded at ${uploaded[0].audio.sampleRate.toLocaleString()} Hz.`);
+      setNotice(`${uploaded.length} private audio source${uploaded.length === 1 ? "" : "s"} uploaded at ${uploaded[0].audio.sampleRate.toLocaleString()} Hz.`);
       setSourceFiles([]);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "WAV sources could not be uploaded.");
+      setError(cause instanceof Error ? cause.message : "Audio sources could not be uploaded.");
     } finally {
       setUploading(false);
     }
@@ -210,11 +210,11 @@ export default function ProjectDawExportWorkspace({
         <select className={field} value={format === "mp3" ? 16 : bitDepth} disabled={format === "mp3"} onChange={(event) => setBitDepth(Number(event.target.value) as 16 | 24 | 32)} aria-label="Bit depth"><option value={16}>16-bit</option><option value={24}>24-bit</option><option value={32}>32-bit float</option></select>
         <input className={field} type="number" min={0.001} step={0.001} value={durationSeconds} onChange={(event) => setDurationSeconds(Number(event.target.value))} aria-label="Duration in seconds" />
         <input className={`${field} md:col-span-2 xl:col-span-3`} value={sources} readOnly aria-label="Private render source identifiers" placeholder="Upload one or more WAV sources below" />
-        <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,audio/wav" onChange={(event) => setSourceFiles(Array.from(event.target.files ?? []))} aria-label="WAV render source files" />
+        <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,.mp3,audio/wav,audio/mpeg" onChange={(event) => setSourceFiles(Array.from(event.target.files ?? []))} aria-label="WAV or MP3 render source files" />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploading…" : "Upload Private WAV Sources"}</button>
-        <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Working…" : "Validate & Save Render"}</button>
+        <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploadingâ€¦" : "Upload Private Audio Sources"}</button>
+        <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Workingâ€¦" : "Validate & Save Render"}</button>
         <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav"} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
       </div>
@@ -222,7 +222,7 @@ export default function ProjectDawExportWorkspace({
       {notice ? <p role="status" className="mt-4 text-sm text-emerald-200">{notice}</p> : null}
       <div className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-2">
-          <div><p className="text-xs font-black uppercase tracking-wider text-white/40">Saved render history</p><h3 className="mt-1 text-xl font-black">{loading ? "Loading…" : `${jobs.length} saved render${jobs.length === 1 ? "" : "s"}`}</h3></div>
+          <div><p className="text-xs font-black uppercase tracking-wider text-white/40">Saved render history</p><h3 className="mt-1 text-xl font-black">{loading ? "Loadingâ€¦" : `${jobs.length} saved render${jobs.length === 1 ? "" : "s"}`}</h3></div>
           <button type="button" className="text-sm font-bold text-white/60 hover:text-white disabled:opacity-40" disabled={loading || busy} onClick={() => void load()}>Reload history</button>
         </div>
         {!loading && jobs.length === 0 ? <p className="mt-3 text-sm text-white/50">No render specifications have been saved for this session.</p> : null}
@@ -232,8 +232,8 @@ export default function ProjectDawExportWorkspace({
               <div className={`rounded-2xl border p-4 ${selectedJob?.id === job.id ? "border-emerald-300/50 bg-emerald-300/[0.08]" : "border-white/10 bg-white/[0.03]"}`}>
                 <button type="button" onClick={() => setSelectedJob(job)} className="w-full text-left">
                 <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-black">{job.name}</span><span className="text-xs font-black uppercase text-emerald-200">{job.state}</span></div>
-                <p className="mt-1 text-sm text-white/55">{job.target} · {job.format.toUpperCase()} · {job.sampleRate.toLocaleString()} Hz · {job.bitDepth}-bit · {job.totalFrames.toLocaleString()} frames</p>
-                <p className="mt-1 text-xs text-white/35">{job.id} · {job.renderedFrames.toLocaleString()}/{job.totalFrames.toLocaleString()} frames</p>
+                <p className="mt-1 text-sm text-white/55">{job.target} Â· {job.format.toUpperCase()} Â· {job.sampleRate.toLocaleString()} Hz Â· {job.bitDepth}-bit Â· {job.totalFrames.toLocaleString()} frames</p>
+                <p className="mt-1 text-xs text-white/35">{job.id} Â· {job.renderedFrames.toLocaleString()}/{job.totalFrames.toLocaleString()} frames</p>
                 </button>
                 {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>{job.target === "stem" ? "Download private stem ZIP" : "Download private WAV"}</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>{job.target === "stem" ? "Create private ZIP link" : "Create private WAV link"}</button> : null}
               </div>
