@@ -6,29 +6,28 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Report Validation and Recovery Workflow
+## Latest completed milestone - Normalization Diagnostic Bundle and Support Case Ledger
 
-Normalization diagnostics can now be handed to support safely and partial storage failures can be recovered precisely.
+Normalization diagnostics now have a durable, consent-based owner support workflow.
 
-- Export reports with the versioned the-muzes-garden/normalization-operations/v1 schema.
-- Fingerprint the complete canonical report with a deterministic SHA-256 checksum.
-- Reject unsupported, incomplete, or modified reports during import.
-- Inspect valid imported reports locally in read-only mode without applying embedded state.
-- Retry only storage paths recorded as failed by a partial prune receipt.
-- Verify every retried deletion and update the original verification state.
-- Record before failures, remaining failures, and recovered paths in immutable recovery receipts.
-- Expose per-revision job attempts, lease outcomes, failure classes, and dependency checksums in the report.
-- Filter alerts by state and kind with server-side pagination.
-- Select and bulk-acknowledge up to 100 alerts while writing one operator receipt per alert.
-- Keep diagnostic exports free of signed delivery URLs, storage paths, tokens, and credentials.
+- Versioned privacy manifest with explicit included and excluded diagnostic fields.
+- Checksum-fingerprinted bundles containing sanitized reports and recovery outcomes without private audio or storage paths.
+- Explicit owner consent and meaningful summaries required before case creation.
+- Owner-scoped cases with report and bundle checksums, alert and recovery references, and 30-day retention dates.
+- Guarded open, investigating, resolved, and revoked lifecycle states.
+- Immutable creation, note, state-change, and revocation history receipts.
+- Linked operational alerts resolve with their support case.
+- Active bundle download and owner revocation that clears the stored payload.
+- DAW studio controls for creation, notes, lifecycle, retention, history, download, and revocation.
 
 ### Verification
 
-- Focused support-report, reconciliation, and operations tests passed.
+- Focused support-case policy and support-report tests passed (4 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814063000 applied successfully.
+- Supabase migration 20260814073000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
+
 ## Previously completed DAW foundation
 
 - Durable DAW workspaces and authenticated project sessions.
@@ -66,19 +65,20 @@ Normalization diagnostics can now be handed to support safely and partial storag
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Diagnostic Bundle and Support Case Ledger
+## Next milestone - Normalization Support Triage and Retention Automation
 
-Package validated diagnostics into a durable, consent-based support workflow.
+Turn the support ledger into an actionable, time-safe operating queue.
 
 Planned outcome:
 
-1. Create a privacy-reviewed diagnostic bundle manifest with explicit included and excluded fields.
-2. Persist owner-created support cases with report checksum, summary, consent, and lifecycle state.
-3. Attach sanitized reports and recovery receipts without duplicating private audio.
-4. Add support-case notes, status changes, and immutable history receipts.
-5. Link resolved cases back to alerts and verified recovery outcomes.
-6. Add download/revoke controls and retention dates for diagnostic bundles.
+1. Add deterministic severity and priority assignment from linked alert and recovery evidence.
+2. Add owner-visible triage queues with search, state, priority, and retention filters.
+3. Add due dates, assignment metadata, and service-level status without exposing private content.
+4. Add owner-controlled retention extension and automatic expiration eligibility.
+5. Record triage, assignment, and retention changes in immutable history.
+6. Add safe cleanup for expired or revoked bundle payloads while preserving audit metadata.
 7. Run focused tests, production build, reviewed migration, commit, and push.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
