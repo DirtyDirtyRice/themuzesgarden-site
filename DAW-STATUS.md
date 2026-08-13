@@ -6,26 +6,28 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Session-Native Normalization Re-render and Revision Compare
+## Latest completed milestone - Private Normalization Render Execution and A/B Audition
 
-The five-song proof correction loop now runs inside the authenticated DAW session.
+Normalization revisions now produce truthful session-private PCM artifacts instead of playback-only transform recipes.
 
-- Load owner-scoped proof state, review history, and private master records directly in the studio.
-- Edit target tempo/key and each song's interpreted tempo/key without leaving the session.
-- Reject stale saves, restores, promotions, and master exports with optimistic revision checks.
-- Recalculate deterministic stretch and shortest-path pitch recipes from corrected decisions.
-- Reset musician approval whenever a corrected revision is saved or restored.
-- Promote fresh preserve-pitch/high-quality private lanes and mark prior proof lanes superseded.
-- Compare revisions by target and song-level changes and restore any prior state as a new auditable revision.
-- Refresh the private lane workspace after a corrected lane set is promoted.
-- Save an approved checksum-verified proof mix into session-private storage with revision provenance.
+- Decode promoted WAV sources through the validated PCM decoder.
+- Apply the saved preserve-pitch/high-quality stretch and pitch recipe for every song revision.
+- Encode deterministic 32-bit WAV output through the existing PCM render worker.
+- Persist owner-scoped per-song job state, progress, attempts, failures, cancellation, recipes, and checksums.
+- Retry failed revision renders and cancel queued work without mutating source audio.
+- Store rendered artifacts in checksum-addressed session-private storage.
+- Generate one-hour signed audition URLs for completed artifacts across old and current revisions.
+- Display revision, song, progress, state, checksum, and authenticated audio controls in the DAW session.
+- Gate master creation on a complete current render set.
+- Build the approved private master by mixing current rendered lane artifacts rather than using the local proof fixture.
+- Link master provenance to the exact render-job identities.
 
 ### Verification
 
-- Focused normalization review and private elastic-transform tests passed.
+- Focused normalization renderer, review, and private elastic-transform tests passed.
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260813173000 applied successfully.
+- Supabase migration 20260813193000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -64,18 +66,18 @@ The five-song proof correction loop now runs inside the authenticated DAW sessio
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Private Normalization Render Execution and A/B Audition
+## Next milestone - Durable Background Normalization Queue and Live A/B Transport
 
-Turn the revision recipes into server-rendered audio assets and provide direct authenticated revision audition.
+Move normalization work from request-bound execution into a recoverable background queue with synchronized comparison playback.
 
 Planned outcome:
 
-1. Render each corrected source to new PCM audio using the revision's elastic and pitch recipe.
-2. Persist per-lane render jobs, artifact checksums, failure state, and retry state.
-3. Stream signed old/new revision audio for direct A/B audition and loudness matching.
-4. Keep source, recipe, rendered artifact, and supersession provenance linked end to end.
-5. Build the approved master from the current rendered lane set instead of the local proof fixture.
-6. Add cancellation, progress, and recovery for long normalization renders.
+1. Claim queued render jobs with leases, heartbeats, and idempotent worker ownership.
+2. Process one song at a time with durable chunk progress and cooperative cancellation.
+3. Resume interrupted renders after lease expiry without duplicating completed artifacts.
+4. Audition old/new revisions through synchronized DAW transport with loudness matching and instant switching.
+5. Approve a revision only after all artifact checksums and render recipes are current.
+6. Retain or safely prune superseded artifacts according to explicit musician decisions.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
