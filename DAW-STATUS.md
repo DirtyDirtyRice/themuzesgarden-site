@@ -65,19 +65,29 @@ Every support audit export and revocation can now be proven as part of the appen
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Evidence Chain Monitoring and Recovery
+## Completed milestone - Normalization Evidence Chain Monitoring and Recovery
 
-Detect evidence-chain trouble automatically and turn it into an actionable recovery workflow.
+- Authenticated manual scans and a CRON-protected worker inspect every durable DAW session every 15 minutes.
+- Immutable checksum-protected checkpoints record chain head, link count, coverage, verification result, issue class, and observation time.
+- System incidents distinguish coverage gaps, continuity failures, reconstructed-chain mismatch, subject-checksum mismatch, chronology failure, and unknown integrity failure.
+- Monitoring incidents contain no audio or private diagnostic bundle and do not falsely represent owner consent.
+- Missing evidence subjects can be append-only recovered through the authoritative coverage plan with exact confirmation and a post-recovery receipt.
+- Integrity failures are quarantined for manual investigation and cannot use the automatic append recovery path.
+- Incident acknowledgement, recovered state, checkpoint history, and receipt history are visible in each DAW studio.
+- Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814153000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
+
+## Next milestone - Evidence Incident Notifications and Escalation
+
+Deliver actionable evidence incidents to owners and operators without leaking protected diagnostic data.
 
 Planned outcome:
 
-1. Run authenticated scheduled coverage and integrity checks for active DAW sessions.
-2. Record immutable monitoring checkpoints with chain head and coverage checksums.
-3. Open support cases automatically when coverage regresses or a chain link fails verification.
-4. Distinguish missing subjects, broken continuity, checksum mismatch, and chronology failures.
-5. Generate conflict-safe recovery plans without rewriting original evidence.
-6. Track acknowledgement, recovery execution, and post-recovery verification receipts.
-7. Add visible monitoring history, focused tests, production build, migration, commit, and push.
+1. Queue idempotent owner notifications when a new evidence incident opens.
+2. Add delivery attempts, receipts, retry policy, and dead-letter handling.
+3. Escalate unresolved integrity incidents separately from safe coverage gaps.
+4. Link notifications directly to the affected DAW session and monitoring checkpoint.
+5. Add visible delivery history, tests, migration, build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
