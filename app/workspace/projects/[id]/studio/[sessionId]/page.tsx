@@ -14,6 +14,7 @@ import TimelineDawPrivateAudioLanes from "@/app/components/TimelineDawPrivateAud
 import TimelineDawNormalizationRevisions from "@/app/components/TimelineDawNormalizationRevisions";
 import TimelineDawNormalizationOperations from "@/app/components/TimelineDawNormalizationOperations";
 import TimelineDawNormalizationSupportCases from "@/app/components/TimelineDawNormalizationSupportCases";
+import TimelineDawNormalizationSupportTriage from "@/app/components/TimelineDawNormalizationSupportTriage";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -202,6 +203,8 @@ export default function ProjectDawSessionPage() {
       <TimelineDawNormalizationOperations sessionId={session.id} />
 
       <TimelineDawNormalizationSupportCases sessionId={session.id} alertIds={[]} recoveryReceiptIds={[]} />
+
+      <TimelineDawNormalizationSupportTriage sessionId={session.id} />
 
       <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} />
 

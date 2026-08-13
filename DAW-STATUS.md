@@ -6,26 +6,25 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Diagnostic Bundle and Support Case Ledger
+## Latest completed milestone - Normalization Support Triage and Retention Automation
 
-Normalization diagnostics now have a durable, consent-based owner support workflow.
+The owner support ledger is now an actionable, time-safe operations queue.
 
-- Versioned privacy manifest with explicit included and excluded diagnostic fields.
-- Checksum-fingerprinted bundles containing sanitized reports and recovery outcomes without private audio or storage paths.
-- Explicit owner consent and meaningful summaries required before case creation.
-- Owner-scoped cases with report and bundle checksums, alert and recovery references, and 30-day retention dates.
-- Guarded open, investigating, resolved, and revoked lifecycle states.
-- Immutable creation, note, state-change, and revocation history receipts.
-- Linked operational alerts resolve with their support case.
-- Active bundle download and owner revocation that clears the stored payload.
-- DAW studio controls for creation, notes, lifecycle, retention, history, download, and revocation.
+- Deterministic critical, high, normal, and low priority derived from alert severity, failure kind, and remaining recovery failures.
+- Priority-specific due dates and live on-track, at-risk, overdue, or stopped SLA state.
+- Owner-visible search plus state, priority, and retention filters.
+- Non-sensitive assignment labels and guarded 30-day retention extensions.
+- Cleanup eligibility for expired or revoked bundles.
+- Idempotent payload cleanup that preserves case checksums, lifecycle metadata, and audit history.
+- Immutable triage, assignment, retention-extension, and bundle-cleanup receipts.
+- Authenticated owner-scoped triage API and DAW studio queue controls.
 
 ### Verification
 
-- Focused support-case policy and support-report tests passed (4 tests).
+- Focused triage, support-case, and support-report tests passed (6 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814073000 applied successfully.
+- Supabase migration 20260814083000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -65,18 +64,18 @@ Normalization diagnostics now have a durable, consent-based owner support workfl
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Triage and Retention Automation
+## Next milestone - Normalization Support Automation Worker and Escalation Receipts
 
-Turn the support ledger into an actionable, time-safe operating queue.
+Automate safe triage maintenance and make overdue escalation auditable.
 
 Planned outcome:
 
-1. Add deterministic severity and priority assignment from linked alert and recovery evidence.
-2. Add owner-visible triage queues with search, state, priority, and retention filters.
-3. Add due dates, assignment metadata, and service-level status without exposing private content.
-4. Add owner-controlled retention extension and automatic expiration eligibility.
-5. Record triage, assignment, and retention changes in immutable history.
-6. Add safe cleanup for expired or revoked bundle payloads while preserving audit metadata.
+1. Add a service-role scheduled worker for overdue detection and expired payload cleanup.
+2. Add idempotent escalation receipts and retry-safe worker leases.
+3. Surface last-run health, processed counts, failures, and next wakeup.
+4. Add owner notification state without leaking diagnostic payload content.
+5. Add manual authenticated owner reconciliation for stale automation outcomes.
+6. Add operational alerts for stale workers and repeated cleanup failures.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 
 ## Working rules
