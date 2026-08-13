@@ -20,6 +20,7 @@ import TimelineDawNormalizationSupportNotifications from "@/app/components/Timel
 import TimelineDawNormalizationSupportAudit from "@/app/components/TimelineDawNormalizationSupportAudit";
 import TimelineDawNormalizationSupportAuditRepair from "@/app/components/TimelineDawNormalizationSupportAuditRepair";
 import TimelineDawNormalizationSupportEvidenceSeals from "@/app/components/TimelineDawNormalizationSupportEvidenceSeals";
+import TimelineDawNormalizationSupportCoverage from "@/app/components/TimelineDawNormalizationSupportCoverage";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -220,6 +221,8 @@ export default function ProjectDawSessionPage() {
       <TimelineDawNormalizationSupportAuditRepair sessionId={session.id} />
 
       <TimelineDawNormalizationSupportEvidenceSeals sessionId={session.id} />
+
+      <TimelineDawNormalizationSupportCoverage sessionId={session.id} />
 
       <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} />
 

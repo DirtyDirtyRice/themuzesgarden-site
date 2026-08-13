@@ -6,28 +6,28 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Evidence Verification and Chain Sealing
+## Latest completed milestone - Normalization Support Evidence Chain Coverage and Backfill
 
-The audit evidence chain can now be independently verified, sealed, revoked, and superseded.
+Every support audit export and revocation can now be proven as part of the append-only evidence chain.
 
-- Reconstruct and verify every chain hash from its stored previous hash and subject event.
-- Validate previous-link continuity, subject checksums, and chronological ordering.
-- Report chain health and the first failing link.
-- Authenticated owner attestations seal only complete, valid, current chain snapshots.
-- Expected-head conflict checks prevent sealing a stale snapshot.
-- Active seals can be revoked; new chain heads supersede prior seals without deleting them.
-- Immutable seal event history records creation, revocation, and supersession.
-- Checksum-protected portable verification manifests support local read-only validation.
-- The studio clearly distinguishes owner attestations from third-party digital signatures.
+- New audit exports and revocations enter the evidence chain automatically at creation time.
+- Historical exports and revocations are measured against existing chain links by event type.
+- The studio shows export coverage, revocation coverage, overall percentage, and every unchained subject.
+- Deterministic backfill plans sort subjects chronologically and bind them to the current chain head.
+- Server-side authoritative-plan comparison rejects stale, modified, incomplete, or client-invented plans.
+- Exact owner confirmation is required before an append-only backfill runs.
+- A unique subject constraint makes historical backfill idempotent and prevents duplicate chain entries.
+- Durable backfill receipts record before/after coverage, event counts, plan checksum, and final head hash.
+- Extending a sealed chain supersedes the old seal and records a chain-extended event without deleting history.
+- Checksum-protected portable coverage receipts can be downloaded and verified locally in the browser.
 
 ### Verification
 
-- Focused evidence-seal, repair, and audit tests passed (7 tests).
+- Focused normalization audit, repair, evidence-seal, and coverage tests passed (11 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814133000 applied successfully.
+- Supabase migration 20260814143000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
-
 ## Previously completed DAW foundation
 
 - Durable DAW workspaces and authenticated project sessions.
@@ -65,20 +65,19 @@ The audit evidence chain can now be independently verified, sealed, revoked, and
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Evidence Chain Coverage and Backfill
+## Next milestone - Normalization Evidence Chain Monitoring and Recovery
 
-Bring every historical audit event into the verified chain and make coverage measurable.
+Detect evidence-chain trouble automatically and turn it into an actionable recovery workflow.
 
 Planned outcome:
 
-1. Chain audit export issuance and revocation events in addition to repair events.
-2. Add idempotent backfill plans for historical exports and revocations.
-3. Add coverage metrics by event type and identify unchained subjects.
-4. Add owner-confirmed, conflict-safe backfill execution with receipts.
-5. Revoke or supersede seals automatically when the chain gains new events.
-6. Add portable coverage evidence and local validation.
-7. Run focused tests, production build, reviewed migration, commit, and push.
-
+1. Run authenticated scheduled coverage and integrity checks for active DAW sessions.
+2. Record immutable monitoring checkpoints with chain head and coverage checksums.
+3. Open support cases automatically when coverage regresses or a chain link fails verification.
+4. Distinguish missing subjects, broken continuity, checksum mismatch, and chronology failures.
+5. Generate conflict-safe recovery plans without rewriting original evidence.
+6. Track acknowledgement, recovery execution, and post-recovery verification receipts.
+7. Add visible monitoring history, focused tests, production build, migration, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
