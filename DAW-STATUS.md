@@ -6,26 +6,25 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Notifications and Worker Schedule Hardening
+## Latest completed milestone - Normalization Support Operations Audit and Export
 
-The support automation loop now reaches owners reliably and operates with deployment-safe scheduling.
+The complete normalization support lifecycle is now independently reviewable and portable.
 
-- Durable per-case notification inbox entries with acknowledgement and case-evidence anchors.
-- Three escalation levels based on overdue age with level-specific cooldown-safe re-notification.
-- Idempotency keys prevent duplicate notifications within an escalation window.
-- Vercel schedules now run render maintenance, support cleanup, and notification escalation independently.
-- Environment and deployment-schedule readiness diagnostics are owner-visible.
-- Explicit token-guarded lease release and abandoned-lease observability.
-- Bounded worker failure details and immutable per-case reconciliation receipts.
-- Successful cleanup reconciliation resolves stale support cleanup alerts.
-- Notification records contain only case references, level, title, and timestamps; diagnostic payloads remain excluded.
+- Versioned checksum-protected audit exports spanning cases, lifecycle history, notifications, escalations, and reconciliation receipts.
+- Strict schema and checksum validation with local read-only inspection.
+- Server-side case, priority, event, date-range, and page filters.
+- Deterministic completeness checks flag missing creation receipts and broken case references.
+- Owner-controlled export revocation receipts preserve all underlying audit history.
+- Compact totals for open cases, overdue cases, pending notifications, and cleaned payloads.
+- Metadata-only CSV export excludes diagnostic bundles and private audio.
+- Immutable export issuance records store checksum, schema, counts, completeness, and findings.
 
 ### Verification
 
-- Focused notification, automation, and triage tests passed (7 tests).
+- Focused audit, notification, and automation tests passed (8 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814103000 applied successfully.
+- Supabase migration 20260814113000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -65,18 +64,18 @@ The support automation loop now reaches owners reliably and operates with deploy
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Operations Audit and Export
+## Next milestone - Normalization Support Audit Repair and Evidence Chain
 
-Make the complete support lifecycle independently reviewable and portable.
+Make audit completeness findings actionable without rewriting immutable records.
 
 Planned outcome:
 
-1. Build a checksum-protected case audit export spanning case, triage, notifications, escalation, reconciliation, and cleanup history.
-2. Add schema validation and local read-only audit inspection.
-3. Add server-side date, event, priority, and case filters with pagination.
-4. Add completeness checks that identify missing lifecycle receipts or broken references.
-5. Add owner-controlled export revocation records without deleting underlying audit history.
-6. Add compact operational summary metrics and CSV export for case metadata only.
+1. Add repair plans for missing receipts and broken references with dry-run previews.
+2. Add owner-confirmed append-only repair receipts and explicit provenance.
+3. Add hash chaining across audit export, revocation, and repair events.
+4. Add before-and-after completeness comparison and repaired-case filters.
+5. Add conflict checks so stale repair plans cannot be applied.
+6. Add downloadable repair evidence packages without diagnostic payload duplication.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 
 ## Working rules
