@@ -6,25 +6,25 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - MIDI Mix Routing and Expressive Controllers
+## Latest completed milestone - Virtual Instrument Rack and MIDI Automation
 
-Private MIDI instruments now participate in the tempo-aware DAW mix and delivery workflow.
+Virtual instruments now have reusable layered racks, editable expression automation, and reversible freeze workflows.
 
-- Route live and bounced instruments through assigned buses, inserts, sends, gain/pan automation, and master state.
-- Schedule MIDI against the active transport tempo map, including tempo changes and clip timeline offsets.
-- Persist and edit controller events, sustain-pedal behavior, pitch bends, and program changes.
-- Import and export pitch-bend and program-change events through Standard MIDI files.
-- Include MIDI expression, instrument state, tempo maps, and routing recipes in bounce freshness checks.
-- Create owner-scoped private audition URLs for current bounces.
-- Verify bounce checksums before promoting rendered MIDI into private audio lanes with preserved timing and routing provenance.
-- Synchronize live MIDI playback with the current DAW transport event and playhead.
+- Add durable owner-scoped rack presets with versioned oscillator layers, envelopes, filters, gain, and pan.
+- Assign versioned rack presets to MIDI clips while preserving single-oscillator compatibility.
+- Add editable expression, modulation, pitch-bend, filter, and gain automation lanes.
+- Add channel-aware program-to-rack maps and reusable controller templates.
+- Render layered racks deterministically through the existing tempo-aware MIDI and mix pipeline.
+- Include rack versions, automation curves, and program maps in bounce freshness recipes.
+- Detect presets changed after clip assignment as stale.
+- Freeze current checksum-verified rack bounces while preserving editable MIDI source, then unfreeze safely.
 
 ### Verification
 
-- Focused MIDI, bus-processing, and automation tests: 16 passed.
+- Focused rack, MIDI, and expression tests: 15 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through 20260809193000.
+- Supabase migrations applied successfully through 20260809203000.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -58,18 +58,18 @@ Private MIDI instruments now participate in the tempo-aware DAW mix and delivery
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
 
-## Next milestone - Virtual Instrument Rack and MIDI Automation
+## Next milestone - Real-World Audio Import and Task Validation
 
-Turn the expressive MIDI foundation into a reusable studio instrument system.
+Validate the DAW against representative musician-owned MP3 material and close the highest-impact workflow gaps.
 
 Planned outcome:
 
-1. Add durable instrument-rack presets with layered oscillators, envelopes, filters, and per-layer gain/pan.
-2. Add real-time editable MIDI automation curves for expression, modulation, pitch bend, and instrument parameters.
-3. Add channel-aware program maps and reusable controller-lane templates.
-4. Add deterministic rack rendering with preset-version and automation freshness tracking.
-5. Add freeze/unfreeze workflow for MIDI instruments while preserving editable source clips.
-6. Add focused tests, run the production build, apply any reviewed migration, commit, and push.
+1. Inventory a read-only representative MP3 test library across acapella ideas, acoustic demos, human bands, hybrid/Suno versions, and finished songs.
+2. Validate import, decode, waveform, transport, arrangement, processing, render, freeze, and export workflows against varied durations and production density.
+3. Add deterministic acceptance fixtures derived from metadata and non-copyright-sensitive signal properties.
+4. Fix discovered correctness, performance, and usability failures without modifying source media.
+5. Add a repeatable task-level DAW acceptance report.
+6. Run focused tests and the production build, apply any reviewed migration, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
