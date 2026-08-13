@@ -6,27 +6,28 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Alert Reconciliation and Storage Accounting
+## Latest completed milestone - Normalization Support Report Validation and Recovery Workflow
 
-Operational state now reconciles into durable alerts and exact artifact lifecycle records.
+Normalization diagnostics can now be handed to support safely and partial storage failures can be recovered precisely.
 
-- Reconcile stale cron, expired leases, stale approval, and partial prune conditions through stable alert keys.
-- Prevent duplicate condition alerts across repeated dashboard and worker checks.
-- Resolve alerts automatically when their underlying condition clears without deleting history.
-- Record every scheduled lease claim, completion, and failure with attempt and worker provenance.
-- Track source, normalized lane render, private master, and retained artifact bytes separately.
-- Persist source and master byte lengths alongside existing rendered-artifact sizes.
-- Verify each storage deletion after pruning and distinguish verified from partial-failure receipts.
-- Preserve failed deletion paths and byte totals for recovery.
-- Provide per-revision drill-down with job states, attempts, failure class, recipe checksum, artifact checksum, and lease history.
-- Export an owner-readable JSON support report without signed URLs, storage paths, or credentials.
+- Export reports with the versioned the-muzes-garden/normalization-operations/v1 schema.
+- Fingerprint the complete canonical report with a deterministic SHA-256 checksum.
+- Reject unsupported, incomplete, or modified reports during import.
+- Inspect valid imported reports locally in read-only mode without applying embedded state.
+- Retry only storage paths recorded as failed by a partial prune receipt.
+- Verify every retried deletion and update the original verification state.
+- Record before failures, remaining failures, and recovered paths in immutable recovery receipts.
+- Expose per-revision job attempts, lease outcomes, failure classes, and dependency checksums in the report.
+- Filter alerts by state and kind with server-side pagination.
+- Select and bulk-acknowledge up to 100 alerts while writing one operator receipt per alert.
+- Keep diagnostic exports free of signed delivery URLs, storage paths, tokens, and credentials.
 
 ### Verification
 
-- Focused reconciliation, operations, approval, and queue tests: 10 passed.
+- Focused support-report, reconciliation, and operations tests passed.
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814043000 applied successfully.
+- Supabase migration 20260814063000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -65,18 +66,18 @@ Operational state now reconciles into durable alerts and exact artifact lifecycl
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Report Validation and Recovery Workflow
+## Next milestone - Normalization Diagnostic Bundle and Support Case Ledger
 
-Turn the operational report and partial-failure records into a guided recovery workflow.
+Package validated diagnostics into a durable, consent-based support workflow.
 
 Planned outcome:
 
-1. Validate exported support reports against a versioned schema and deterministic checksum.
-2. Add import/read-only inspection for support reports without trusting embedded state.
-3. Retry only failed prune paths and record recovery receipts with before/after verification.
-4. Add lease-attempt detail and dependency mismatch explanations in the session UI.
-5. Add alert filters, pagination, and bulk acknowledge for larger operational histories.
-6. Create a privacy-safe diagnostic bundle for musician support handoff.
+1. Create a privacy-reviewed diagnostic bundle manifest with explicit included and excluded fields.
+2. Persist owner-created support cases with report checksum, summary, consent, and lifecycle state.
+3. Attach sanitized reports and recovery receipts without duplicating private audio.
+4. Add support-case notes, status changes, and immutable history receipts.
+5. Link resolved cases back to alerts and verified recovery outcomes.
+6. Add download/revoke controls and retention dates for diagnostic bundles.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
