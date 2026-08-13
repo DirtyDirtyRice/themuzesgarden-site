@@ -1,0 +1,9 @@
+import { describe, expect, it } from "vitest";
+import { parseTimelineDawExperimentRecipe, suggestTimelineDawSourceFamily, timelineDawExperimentRecipeChecksum } from "../../lib/timeline/TimelineDawSongExperimentPolicy";
+import { renderTimelineDawSongExperiment } from "../../lib/timeline/TimelineDawSongExperimentRenderer";
+const checksum = "sha256:" + "a".repeat(64);
+describe("creative song experiments", () => {
+  it("validates reproducible cuts, repeats, fades, effects, and provenance", () => { const recipe=parseTimelineDawExperimentRecipe({name:"Chorus alternate",format:"wav",segments:[{versionId:"v1",sourceChecksum:checksum,startSeconds:0,endSeconds:1,repeats:2,gainDb:-6,fadeInSeconds:.1,fadeOutSeconds:.1,effect:{kind:"lowpass",cutoffHz:8000}}]},new Map([["v1",2]]));expect(recipe.segments[0].repeats).toBe(2);expect(timelineDawExperimentRecipeChecksum(recipe)).toMatch(/^sha256:[a-f0-9]{64}$/); });
+  it("renders ordered derived copies without mutating sources",()=>{const source=new Float32Array([1,1,1,1]),before=source.slice(),recipe=parseTimelineDawExperimentRecipe({name:"Reorder",format:"wav",segments:[{versionId:"v",sourceChecksum:checksum,startSeconds:0,endSeconds:.002,repeats:2,gainDb:0,fadeInSeconds:0,fadeOutSeconds:0,effect:{kind:"none"}}]},new Map([["v",.004]])),rendered=renderTimelineDawSongExperiment(recipe,new Map([["v",{sampleRate:1000,channelCount:1,frameCount:4,durationSeconds:.004,channels:[source]}]]));expect([...rendered.channels[0]]).toEqual([1,1,1,1]);expect(source).toEqual(before)});
+  it("requires review for ambiguous title matches",()=>{expect(suggestTimelineDawSourceFamily("My Song demo.mp3",[{id:"a",name:"My Song"},{id:"b",name:"My Song version"}])).toMatchObject({familyId:null,reviewRequired:true})});
+});

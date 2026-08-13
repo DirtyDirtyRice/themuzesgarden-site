@@ -6,24 +6,26 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Punch, Count-In, and Loop Recording
+## Latest completed milestone - Creative Song Experiments and Hybrid Arrangements
 
-The private live-capture workspace now supports musician-ready normal, punch-range, and multi-pass loop recording.
+Cataloged musician-authorized versions can now drive reproducible, non-destructive alternate arrangements and private renders.
 
-- Add tempo- and meter-aware count-in from zero through eight bars.
-- Keep count-in audio outside every saved take through sample-accurate source bounds.
-- Place punch and loop passes non-destructively at an exact timeline frame range.
-- Split loop capture into numbered take-group passes with a bounded pass count.
-- Persist recording mode, group, pass, placement, trim, and count-in metadata.
-- Preserve one immutable private capture across related passes and delete it only after the final reference is removed.
-- Expose recording mode, range, tempo, meter, count-in, and loop-pass controls in the DAW recording workspace.
+- Reuse the read-only audio-family catalog across acapella, demo, stem, human-band, hybrid, and finished sources.
+- Add normalized same-title family suggestions with mandatory review for ambiguous or unmatched material.
+- Build ordered recipes from cuts across compatible family versions without modifying source files.
+- Support section repeats, reordering, gain, fades, and deterministic low-pass treatment.
+- Pin every recipe segment to its exact source ID and SHA-256 checksum.
+- Reject rendering when source metadata or bytes no longer match saved provenance.
+- Persist recipe checksums, complete provenance, render metadata, and reversible derived-output deletion.
+- Render clearly labeled private WAV or 192 kbps MP3 experiment outputs with owner-scoped delivery.
+- Add an end-to-end experiment editor inside the Audio Version Families workspace.
 
 ### Verification
 
-- Focused punch/loop recording policy tests: 3 passed.
+- Focused experiment and audio-family policy tests: 7 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migration 20260813103000 applied successfully.
+- Supabase migration 20260813123000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -57,19 +59,21 @@ The private live-capture workspace now supports musician-ready normal, punch-ran
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
 - Related-version alignment, private A/B comparison, timeline review decisions, and reversible alignment history.
+- Punch-range, tempo-aware count-in, and grouped multi-pass loop recording.
 
-## Next milestone - Creative Song Experiments and Hybrid Arrangements
+## Next milestone - Five-Song Tempo and Key Normalization Demonstration
 
-Use musician-authorized source material as a real production library and create traceable alternate song experiments.
+Use the user-authorized separated-stem library under `C:/Users/muzes/OneDrive/Pictures/SUNO/keepers stems no vocals` to prove that Track Matcher and the multitrack workspace can reconcile musically different material.
 
 Planned outcome:
 
-1. Build a read-only source catalog across acapella, full-song, guitar-and-voice, and hybrid Kompoz folders.
-2. Match same-title material into source families while requiring review for ambiguous matches.
-3. Create derived working copies only; never modify original MP3 files.
-4. Produce alternate arrangements using cuts, repeats, reordered sections, fades, effects, and compatible cross-version combinations.
-5. Persist exact source provenance and an edit recipe for every experiment so results are reproducible and reversible.
-6. Render clearly labeled private experiment WAV/MP3 outputs, run focused tests and the production build, apply any reviewed migration, commit, and push.
+1. Inventory and classify the supplied stem folders, including repeated All the Shadows and Dark Window variants.
+2. Select five songs with meaningfully different detected BPM and keys.
+3. Preserve or create recoverable copies while using the user-authorized working folders for analysis and reorganization.
+4. Choose a musically defensible common target BPM and key.
+5. Apply non-destructive tempo mapping and pitch transposition with explicit source/target metadata and quality controls.
+6. Expose before/after comparison in Track Matcher and place normalized stems in a multitrack demonstration session.
+7. Render a private proof mix and retain exact transformation provenance, focused tests, build verification, migration review, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
