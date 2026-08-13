@@ -6,25 +6,26 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Audit Repair and Evidence Chain
+## Latest completed milestone - Normalization Support Evidence Verification and Chain Sealing
 
-Audit completeness findings can now be repaired through append-only, conflict-safe provenance.
+The audit evidence chain can now be independently verified, sealed, revoked, and superseded.
 
-- Deterministic dry-run plans translate missing receipts and broken references into explicit repair actions.
-- Exact owner confirmation is required before any repair receipt is appended.
-- Plan checksums and base audit checksums reject modified or stale repair plans.
-- Repairs never rewrite lifecycle history; they append provenance, actions, and before/after findings.
-- SHA-256 evidence chaining links each repair to the prior audit-chain event.
-- Before-and-after completeness comparison and fully-repaired or remaining-findings filters.
-- Downloadable metadata-only repair evidence packages include plan, provenance, and chain hashes.
-- Owner-scoped immutable repair and evidence-chain ledgers.
+- Reconstruct and verify every chain hash from its stored previous hash and subject event.
+- Validate previous-link continuity, subject checksums, and chronological ordering.
+- Report chain health and the first failing link.
+- Authenticated owner attestations seal only complete, valid, current chain snapshots.
+- Expected-head conflict checks prevent sealing a stale snapshot.
+- Active seals can be revoked; new chain heads supersede prior seals without deleting them.
+- Immutable seal event history records creation, revocation, and supersession.
+- Checksum-protected portable verification manifests support local read-only validation.
+- The studio clearly distinguishes owner attestations from third-party digital signatures.
 
 ### Verification
 
-- Focused repair, audit, and notification tests passed (7 tests).
+- Focused evidence-seal, repair, and audit tests passed (7 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814123000 applied successfully.
+- Supabase migration 20260814133000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -64,18 +65,18 @@ Audit completeness findings can now be repaired through append-only, conflict-sa
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Evidence Verification and Chain Sealing
+## Next milestone - Normalization Support Evidence Chain Coverage and Backfill
 
-Make the audit evidence chain independently verifiable and closeable.
+Bring every historical audit event into the verified chain and make coverage measurable.
 
 Planned outcome:
 
-1. Verify every chain link, previous hash, subject checksum, and chronological ordering.
-2. Add signed owner seal records for complete audit chains.
-3. Prevent sealing incomplete, broken, or stale chain snapshots.
-4. Add seal revocation and superseding seals without deleting prior evidence.
-5. Add portable verification manifests and local read-only verification.
-6. Surface chain health, seal state, and first failing link in the DAW studio.
+1. Chain audit export issuance and revocation events in addition to repair events.
+2. Add idempotent backfill plans for historical exports and revocations.
+3. Add coverage metrics by event type and identify unchained subjects.
+4. Add owner-confirmed, conflict-safe backfill execution with receipts.
+5. Revoke or supersede seals automatically when the chain gains new events.
+6. Add portable coverage evidence and local validation.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 
 ## Working rules
