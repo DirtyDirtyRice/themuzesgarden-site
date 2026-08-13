@@ -6,28 +6,28 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Durable Background Normalization Queue and Live A/B Transport
+## Latest completed milestone - Automated Queue Runner and Normalization Approval Ledger
 
-Normalization rendering now uses recoverable, owner-scoped leased jobs and synchronized DAW comparison playback.
+The session can now drain normalization work automatically and record approval against the exact audible artifacts.
 
-- Enqueue idempotent per-song jobs without performing the full render in the request that creates them.
-- Atomically claim one eligible job through a row-locked database function.
-- Attach bounded worker leases, worker identity, lease tokens, heartbeats, and attempt counts.
-- Reject stale completion when a lease expires, changes owner, or receives a cancellation request.
-- Reclaim interrupted rendering work after lease expiry without duplicating completed artifacts.
-- Keep completed artifact checksums immutable and exclude them from subsequent claims.
-- Persist artifact RMS for repeatable bounded loudness matching.
-- Process one song at a time and expose queue, worker, retry, and cancellation controls in the session.
-- Follow DAW play, pause, and locate events with two synchronized private revision players.
-- Switch A/B instantly by gain while preserving shared playback position.
-- Gate current master creation on a complete current-revision artifact set.
+- Run a bounded authenticated queue drain that repeatedly claims one leased song job at a time.
+- Stop automatically when the current revision is drained or the execution/job budget is reached.
+- Continue safely on another wakeup because claims are leased and completed artifacts are idempotent.
+- Expose queued, running, failed, completed, and lease-recoverable counts in the DAW.
+- Persist musician approval against proof revision checksum, every recipe checksum, every artifact checksum, and master checksum.
+- Reuse approval only when every audible dependency still matches exactly.
+- Require a complete current render set and current rendered master before approval.
+- Record explicit retain or prune decisions in immutable owner-scoped receipts.
+- Protect current and approved revisions from artifact pruning.
+- Delete only verified session-private superseded storage paths after an explicit prune decision.
+- Preserve checksums and deleted paths in the retention audit ledger.
 
 ### Verification
 
-- Focused normalization queue, renderer, review, and elastic-transform tests passed.
+- Focused normalization approval, queue, and renderer tests passed.
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260813213000 applied successfully.
+- Supabase migration 20260813230000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -66,18 +66,18 @@ Normalization rendering now uses recoverable, owner-scoped leased jobs and synch
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Automated Queue Runner and Normalization Approval Ledger
+## Next milestone - Normalization Worker Scheduling and Approval Review UX
 
-Finish hands-off render processing and make musician approval cryptographically specific to the audible revision.
+Operationalize unattended queue wakeups and make audible approval/staleness unmistakable to musicians.
 
 Planned outcome:
 
-1. Add a protected worker endpoint that drains leased jobs within a bounded execution window.
-2. Schedule authenticated queue wakeups and continue automatically until the revision is drained.
-3. Persist approval decisions against proof revision, recipe checksums, artifact checksums, and master checksum.
-4. Invalidate approval automatically whenever any dependency becomes stale or is superseded.
-5. Add artifact retention decisions with safe storage deletion and immutable audit receipts.
-6. Show queue health, lease recovery, approval readiness, and retention state in the DAW.
+1. Add a deployment-compatible scheduled wakeup with a narrowly scoped rotating worker credential.
+2. Discover and drain eligible owner queues without exposing service-role credentials to the browser.
+3. Persist worker-run summaries, timing, failures, and next-wakeup decisions.
+4. Show current approval, stale dependency details, reviewer notes, and revocation controls.
+5. Add master audition and downloadable delivery alongside the approval ledger.
+6. Add retention preview with byte counts and a confirmation checkpoint before pruning.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
