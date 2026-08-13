@@ -6,25 +6,26 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Triage and Retention Automation
+## Latest completed milestone - Normalization Support Automation Worker and Escalation Receipts
 
-The owner support ledger is now an actionable, time-safe operations queue.
+Support triage maintenance is now scheduled, retry-safe, and owner-visible.
 
-- Deterministic critical, high, normal, and low priority derived from alert severity, failure kind, and remaining recovery failures.
-- Priority-specific due dates and live on-track, at-risk, overdue, or stopped SLA state.
-- Owner-visible search plus state, priority, and retention filters.
-- Non-sensitive assignment labels and guarded 30-day retention extensions.
-- Cleanup eligibility for expired or revoked bundles.
-- Idempotent payload cleanup that preserves case checksums, lifecycle metadata, and audit history.
-- Immutable triage, assignment, retention-extension, and bundle-cleanup receipts.
-- Authenticated owner-scoped triage API and DAW studio queue controls.
+- Dedicated service-role cron worker for overdue detection and expired or revoked bundle cleanup.
+- Global expiring worker lease prevents overlapping support maintenance runs.
+- Deterministic idempotency keys prevent duplicate escalation receipts across retries.
+- Immutable owner-readable escalation receipts contain case references and due dates without diagnostic payload content.
+- Worker run ledger records processed, escalated, cleaned, failed, next-wakeup, and sanitized failure summaries.
+- Pending and acknowledged owner notification state stays separate from diagnostic data.
+- Authenticated owner reconciliation repairs stale automation outcomes safely.
+- Repeated cleanup failures raise operational alerts tied only to the case identifier.
+- DAW studio surfaces worker health, last-run counts, pending notifications, receipts, and manual reconciliation.
 
 ### Verification
 
-- Focused triage, support-case, and support-report tests passed (6 tests).
+- Focused automation, triage, and support-case tests passed (7 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814083000 applied successfully.
+- Supabase migration 20260814093000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -64,18 +65,18 @@ The owner support ledger is now an actionable, time-safe operations queue.
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Automation Worker and Escalation Receipts
+## Next milestone - Normalization Support Notifications and Worker Schedule Hardening
 
-Automate safe triage maintenance and make overdue escalation auditable.
+Finish the operational loop with actionable owner notifications and deployment-safe scheduling.
 
 Planned outcome:
 
-1. Add a service-role scheduled worker for overdue detection and expired payload cleanup.
-2. Add idempotent escalation receipts and retry-safe worker leases.
-3. Surface last-run health, processed counts, failures, and next wakeup.
-4. Add owner notification state without leaking diagnostic payload content.
-5. Add manual authenticated owner reconciliation for stale automation outcomes.
-6. Add operational alerts for stale workers and repeated cleanup failures.
+1. Add per-case notification inbox entries with acknowledgement and deep links to triage evidence.
+2. Add escalation levels and cooldown-safe re-notification for persistently overdue cases.
+3. Add deployment schedule configuration and environment readiness diagnostics.
+4. Add worker lease release and abandoned-lease observability.
+5. Add bounded failure detail and per-case reconciliation receipts.
+6. Add support automation alert resolution after successful recovery.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 
 ## Working rules
