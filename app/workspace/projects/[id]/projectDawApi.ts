@@ -178,6 +178,7 @@ export type DawRecordingTake = {
   rating: number;
   audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number };
   preferred: boolean;
+  recording: { mode: "normal" | "punch" | "loop"; groupId: string | null; passNumber: number; timelineStartFrame: number; sourceInFrame: number; sourceOutFrame: number; countInBars: number };
   createdAt: string;
 };
 
@@ -185,13 +186,16 @@ export function loadDawRecordingTakes(sessionId: string): Promise<{ takes: DawRe
   return request(`/api/timeline/daw-recording-takes?sessionId=${encodeURIComponent(sessionId)}`);
 }
 
+export type DawRecordingPlan = { mode: "normal" | "punch" | "loop"; countInBars: number; beatsPerBar: number; bpm: number; rangeStartFrame: number; rangeEndFrame: number | null; loopPasses: number; groupId?: string | null };
+
 export function registerDawRecordingTake(
   sessionId: string,
   recorded: { source: DawRenderSource; audio: DawRecordingTake["audio"] },
-): Promise<{ take: DawRecordingTake }> {
+  recordingPlan: DawRecordingPlan,
+): Promise<{ take: DawRecordingTake; takes: DawRecordingTake[] }> {
   return request("/api/timeline/daw-recording-takes", {
     method: "POST",
-    body: JSON.stringify({ action: "register", sessionId, ...recorded }),
+    body: JSON.stringify({ action: "register", sessionId, ...recorded, recordingPlan }),
   });
 }
 export function reviewDawRecordingTake(

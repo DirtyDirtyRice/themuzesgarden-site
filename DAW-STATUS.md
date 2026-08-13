@@ -6,25 +6,24 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Version Alignment and Musical Comparison
+## Latest completed milestone - Punch, Count-In, and Loop Recording
 
-Related song versions now have non-destructive alignment state, private comparison audition, and timeline-linked review decisions.
+The private live-capture workspace now supports musician-ready normal, punch-range, and multi-pass loop recording.
 
-- Add waveform/onset-envelope correlation suggestions with explicit bounded confidence.
-- Support manual alignment offsets with confirmation and revisioned receipts.
-- Preserve original sources while normalizing version placement through non-destructive offsets.
-- Add private owner-scoped audition URLs for family-version A/B listening.
-- Add version-level timeline markers, notes, and keeper/alternate/reject decisions.
-- Persist reversible before/after alignment history.
-- Detect stale alignments when source checksums change.
-- Validate the supplied read-only library as four distinct strata: 21 acapellas, 6 full songs, 21 guitar-and-voice demos, and 7 hybrid Kompoz songs.
+- Add tempo- and meter-aware count-in from zero through eight bars.
+- Keep count-in audio outside every saved take through sample-accurate source bounds.
+- Place punch and loop passes non-destructively at an exact timeline frame range.
+- Split loop capture into numbered take-group passes with a bounded pass count.
+- Persist recording mode, group, pass, placement, trim, and count-in metadata.
+- Preserve one immutable private capture across related passes and delete it only after the final reference is removed.
+- Expose recording mode, range, tempo, meter, count-in, and loop-pass controls in the DAW recording workspace.
 
 ### Verification
 
-- Focused alignment, family, and waveform tests: 10 passed.
+- Focused punch/loop recording policy tests: 3 passed.
 - TypeScript validation: passed.
 - Next.js production build: passed.
-- Supabase migrations applied successfully through 20260809223000.
+- Supabase migration 20260813103000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -57,6 +56,7 @@ Related song versions now have non-destructive alignment state, private comparis
 - Immutable versioned session snapshots with structural compare, A/B audition, and guarded restore.
 - Sample-aligned clip gain envelopes and non-destructive spectral repair recipes.
 - Persistent MIDI sequencing, controller events, quantization, virtual-instrument preview, SMF export, and snapshot coverage.
+- Related-version alignment, private A/B comparison, timeline review decisions, and reversible alignment history.
 
 ## Next milestone - Creative Song Experiments and Hybrid Arrangements
 

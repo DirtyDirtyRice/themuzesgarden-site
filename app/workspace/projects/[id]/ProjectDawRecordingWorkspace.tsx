@@ -16,6 +16,7 @@ import {
   preferDawRecordingTake,
   registerDawRecordingTake,
   reviewDawRecordingTake,
+  type DawRecordingPlan,
   type DawRecordingTake,
 } from "./projectDawApi";
 import type { DawSession } from "./projectDawTypes";
@@ -32,6 +33,13 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [deviceId, setDeviceId] = useState("");
   const [takeName, setTakeName] = useState(`${session.name} Take 1`);
   const [outputFormat, setOutputFormat] = useState<"wav" | "mp3">("wav");
+  const [recordingMode, setRecordingMode] = useState<DawRecordingPlan["mode"]>("normal");
+  const [countInBars, setCountInBars] = useState(0);
+  const [bpm, setBpm] = useState(120);
+  const [beatsPerBar, setBeatsPerBar] = useState(4);
+  const [rangeStartSeconds, setRangeStartSeconds] = useState(0);
+  const [rangeEndSeconds, setRangeEndSeconds] = useState(4);
+  const [loopPasses, setLoopPasses] = useState(3);
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [auditionUrls, setAuditionUrls] = useState<Record<string, string>>({});
@@ -233,13 +241,24 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       );
       const uploaded = await uploadDawRenderSource(session.id, file);
       const detail: DawRecordedSourceEventDetail = uploaded;
-      const { take } = await registerDawRecordingTake(session.id, uploaded);
+      const rangeStartFrame = Math.round(rangeStartSeconds * pcm.sampleRate);
+      const rangeEndFrame = recordingMode === "normal" ? null : Math.round(rangeEndSeconds * pcm.sampleRate);
+      const recordingPlan: DawRecordingPlan = {
+        mode: recordingMode,
+        countInBars,
+        beatsPerBar,
+        bpm,
+        rangeStartFrame,
+        rangeEndFrame,
+        loopPasses: recordingMode === "loop" ? loopPasses : 1,
+      };
+      const { takes: registeredTakes } = await registerDawRecordingTake(session.id, uploaded, recordingPlan);
       let mp3Url: string | undefined;
       if (mp3Bytes) {
         mp3Url = URL.createObjectURL(new Blob([mp3Bytes.slice().buffer], { type: "audio/mpeg" }));
         mp3UrlsRef.current.push(mp3Url);
       }
-      setTakes((current) => [{ ...take, mp3Url }, ...current]);
+      setTakes((current) => [...registeredTakes.map((take) => ({ ...take, mp3Url })), ...current]);
       window.dispatchEvent(new CustomEvent<DawRecordedSourceEventDetail>(
         DAW_RECORDED_SOURCE_EVENT,
         { detail },
@@ -376,8 +395,34 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           <option value="mp3">WAV master + MP3 copy</option>
         </select>
       </div>
+      <div className="mt-4 grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-4">
+        <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Mode
+          <select className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={recordingMode} onChange={(event) => setRecordingMode(event.target.value as DawRecordingPlan["mode"])} disabled={recording || uploading}>
+            <option value="normal">Normal</option><option value="punch">Punch range</option><option value="loop">Loop passes</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Count-in bars
+          <input type="number" min={0} max={8} className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={countInBars} onChange={(event) => setCountInBars(Number(event.target.value))} disabled={recording || uploading} />
+        </label>
+        <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Tempo
+          <input type="number" min={20} max={400} className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={bpm} onChange={(event) => setBpm(Number(event.target.value))} disabled={recording || uploading} />
+        </label>
+        <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Beats per bar
+          <input type="number" min={1} max={32} className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={beatsPerBar} onChange={(event) => setBeatsPerBar(Number(event.target.value))} disabled={recording || uploading} />
+        </label>
+        <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Timeline start (seconds)
+          <input type="number" min={0} step={0.01} className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={rangeStartSeconds} onChange={(event) => setRangeStartSeconds(Number(event.target.value))} disabled={recording || uploading} />
+        </label>
+        {recordingMode !== "normal" ? <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Range end (seconds)
+          <input type="number" min={0} step={0.01} className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={rangeEndSeconds} onChange={(event) => setRangeEndSeconds(Number(event.target.value))} disabled={recording || uploading} />
+        </label> : null}
+        {recordingMode === "loop" ? <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Passes
+          <input type="number" min={1} max={99} className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={loopPasses} onChange={(event) => setLoopPasses(Number(event.target.value))} disabled={recording || uploading} />
+        </label> : null}
+        <p className="self-end text-xs text-white/45">Count-in is excluded from every saved take. Punch and loop passes are placed at the exact range start.</p>
+      </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={recording || uploading || !devices.length} onClick={() => void startRecording()}>Start Recording</button>
+        <button type="button" className={button} disabled={recording || uploading || !devices.length || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
         <button type="button" className={button} disabled={!recording} onClick={() => void stopRecording()}>Stop &amp; Save</button>
         <button type="button" className={button} disabled={recording || uploading} onClick={() => void scanDevices()}>Rescan Inputs</button>
       </div>
@@ -406,9 +451,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-black">{take.name}</p>
                 {take.preferred ? <span className="rounded-full bg-emerald-400/15 px-2 py-1 text-xs font-black text-emerald-200">Preferred</span> : null}
+                {take.recording.mode !== "normal" ? <span className="rounded-full bg-violet-400/15 px-2 py-1 text-xs font-black text-violet-200">{take.recording.mode} pass {take.recording.passNumber}</span> : null}
               </div>
               <p className="mt-1 text-xs text-white/45">
-                {take.audio.channelCount} channel ? {take.audio.sampleRate.toLocaleString()} Hz ? {take.audio.durationSeconds.toFixed(2)}s ? privately uploaded
+                {take.audio.channelCount} channel ? {take.audio.sampleRate.toLocaleString()} Hz ? {((take.recording.sourceOutFrame - take.recording.sourceInFrame) / take.audio.sampleRate).toFixed(2)}s usable ? timeline { (take.recording.timelineStartFrame / take.audio.sampleRate).toFixed(2)}s
               </p>
               <p className="mt-2 text-sm font-black text-amber-200" aria-label={`${take.rating} out of 5 stars`}>
                 {take.rating ? `${take.rating}/5 rating` : "Not rated"}

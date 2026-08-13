@@ -7,6 +7,7 @@ import {
   TIMELINE_DAW_TAKE_DELIVERY_SECONDS,
 } from "@/lib/timeline/TimelineDawRecordingTakeDeliveryPolicy";
 import { parseTimelineDawTakeReview } from "@/lib/timeline/TimelineDawTakeReviewPolicy";
+import { createTimelineDawRecordingPasses, parseTimelineDawRecordingPlan } from "@/lib/timeline/TimelineDawPunchLoopRecordingPolicy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -75,6 +76,15 @@ function take(row: Record<string, unknown>) {
       durationSeconds: Number(row.duration_seconds),
     },
     preferred: Boolean(row.is_preferred),
+    recording: {
+      mode: String(row.recording_mode ?? "normal"),
+      groupId: row.take_group_id == null ? null : String(row.take_group_id),
+      passNumber: Number(row.pass_number ?? 1),
+      timelineStartFrame: Number(row.timeline_start_frame ?? 0),
+      sourceInFrame: Number(row.source_in_frame ?? 0),
+      sourceOutFrame: row.source_out_frame == null ? Number(row.frame_count) : Number(row.source_out_frame),
+      countInBars: Number(row.count_in_bars ?? 0),
+    },
     createdAt: String(row.created_at),
   };
 }
@@ -106,6 +116,7 @@ export async function POST(request: NextRequest) {
       takeId?: string;
       source?: { id?: string; name?: string; uri?: string; byteLength?: number; checksum?: string };
       audio?: { sampleRate?: number; channelCount?: number; frameCount?: number; durationSeconds?: number };
+      recordingPlan?: unknown;
     };
     const sessionId = body.sessionId?.trim() ?? "";
     await requireSession(user.id, user.token, sessionId);
@@ -119,13 +130,18 @@ export async function POST(request: NextRequest) {
       if (!audio || !Number.isFinite(audio.sampleRate) || !Number.isFinite(audio.channelCount) || !Number.isFinite(audio.frameCount) || !Number.isFinite(audio.durationSeconds)) {
         throw new ApiError("Recording audio metadata is invalid.", 400);
       }
-      const id = `timeline-daw-take-${crypto.randomUUID()}`;
-      const { data, error } = await user.client.from(TABLE).insert({
-        id,
+      const plan = parseTimelineDawRecordingPlan({
+        ...(body.recordingPlan && typeof body.recordingPlan === "object" ? body.recordingPlan : {}),
+        sampleRate: audio.sampleRate,
+      });
+      const passes = createTimelineDawRecordingPasses(plan, Math.round(Number(audio.frameCount)));
+      const groupId = plan.mode === "normal" ? null : (plan.groupId ?? `recording-group-${crypto.randomUUID()}`);
+      const rows = passes.map((pass) => ({
+        id: `timeline-daw-take-${crypto.randomUUID()}`,
         owner_id: user.id,
         session_id: sessionId,
         source_id: source.id,
-        name: source.name,
+        name: passes.length > 1 ? `${source.name} - Pass ${pass.passNumber}` : source.name,
         uri: source.uri,
         byte_length: source.byteLength,
         checksum: source.checksum,
@@ -133,9 +149,18 @@ export async function POST(request: NextRequest) {
         channel_count: audio.channelCount,
         frame_count: audio.frameCount,
         duration_seconds: audio.durationSeconds,
-      }).select("*").single();
-      if (error || !data) throw new ApiError(`Recording take could not be registered: ${error?.message ?? "missing row"}`, 500);
-      return NextResponse.json({ take: take(data) }, { status: 201, headers: { "Cache-Control": "no-store" } });
+        recording_mode: plan.mode,
+        take_group_id: groupId,
+        pass_number: pass.passNumber,
+        timeline_start_frame: pass.timelineStartFrame,
+        source_in_frame: pass.sourceInFrame,
+        source_out_frame: pass.sourceOutFrame,
+        count_in_bars: plan.countInBars,
+      }));
+      const { data, error } = await user.client.from(TABLE).insert(rows).select("*");
+      if (error || !data?.length) throw new ApiError(`Recording take could not be registered: ${error?.message ?? "missing rows"}`, 500);
+      const registered = data.map((row) => take(row));
+      return NextResponse.json({ take: registered[0], takes: registered }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
 
     if (body.action === "review") {
@@ -214,10 +239,14 @@ export async function POST(request: NextRequest) {
       const uri = String(data.uri);
       const ownerPrefix = `${PREFIX}${user.id}/${sessionId}/`;
       if (!uri.startsWith(ownerPrefix)) throw new ApiError("Recording source path is invalid.", 400);
-      const { error: storageError } = await user.client.storage.from(BUCKET).remove([uri.slice(PREFIX.length)]);
-      if (storageError) throw new ApiError(`Recording audio could not be deleted: ${storageError.message}`, 500);
       const { error: deleteError } = await user.client.from(TABLE).delete().eq("id", body.takeId).eq("owner_id", user.id);
       if (deleteError) throw new ApiError(`Recording take could not be deleted: ${deleteError.message}`, 500);
+      const { count, error: countError } = await user.client.from(TABLE).select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("session_id", sessionId).eq("uri", uri);
+      if (countError) throw new ApiError(`Recording source references could not be checked: ${countError.message}`, 500);
+      if (!count) {
+        const { error: storageError } = await user.client.storage.from(BUCKET).remove([uri.slice(PREFIX.length)]);
+        if (storageError) throw new ApiError(`Recording audio could not be deleted: ${storageError.message}`, 500);
+      }
       return NextResponse.json({ deletedTakeId: body.takeId }, { headers: { "Cache-Control": "no-store" } });
     }
 
