@@ -47,6 +47,7 @@ import { InfoCard, StatusPill, panelClass } from "./components/MultiTrackShared"
 import MultiTrackController from "./controller/MultiTrackController";
 import { MultiTrackEngineDashboard } from "./components/engine-dashboard/MultiTrackEngineDashboard";
 import MultiTrackTenTrackEditingSurface from "./components/MultiTrackTenTrackEditingSurface";
+import MultiTrackFiveSongNormalizationWorkspace from "./components/MultiTrackFiveSongNormalizationWorkspace";
 
 export default function MultiTrackAnalysisPage() {
   return (
@@ -102,6 +103,7 @@ export default function MultiTrackAnalysisPage() {
 
         <MultiTrackController />
         <MultiTrackTenTrackEditingSurface />
+        <MultiTrackFiveSongNormalizationWorkspace />
         <MultiTrackEngineDashboard />
 
         <TrackLoadRoutingWorkspace />

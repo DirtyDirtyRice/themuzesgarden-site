@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-08-13T19:04:15.492Z",
+  "analyzer": "timeline-daw-tempo-key-v1",
+  "readOnlySourceRoot": "C:/Users/muzes/OneDrive/Pictures/SUNO/keepers stems no vocals",
+  "songs": [
+    {
+      "id": "sun-island-trilogy",
+      "name": "Sun Island Trilogy",
+      "folder": "sun Island trilogy1 STEM (Instrumental) Stems 26",
+      "drums": "0 Drums.mp3",
+      "tonal": "1 Bass.mp3",
+      "drumPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\sun Island trilogy1 STEM (Instrumental) Stems 26\\0 Drums.mp3",
+      "tonalPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\sun Island trilogy1 STEM (Instrumental) Stems 26\\1 Bass.mp3",
+      "drumChecksum": "sha256:88b4439a1b349f6153791f846c8bef6f3624c7e97e76907512ea06039288bfda",
+      "tonalChecksum": "sha256:ffc5adc4cdfa818532f2853f163213fce7652109ce25a0c874a039d34b58ee1c",
+      "tempo": {
+        "bpm": 100.4,
+        "confidence": 1
+      },
+      "key": {
+        "key": "A#",
+        "mode": "minor",
+        "confidence": 0.904
+      }
+    },
+    {
+      "id": "fifth-ave",
+      "name": "5th Ave",
+      "folder": "5th ave SPECTRUM ALL Stems 4 39",
+      "drums": "2 Drums.mp3",
+      "tonal": "3 Bass.mp3",
+      "drumPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\5th ave SPECTRUM ALL Stems 4 39\\2 Drums.mp3",
+      "tonalPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\5th ave SPECTRUM ALL Stems 4 39\\3 Bass.mp3",
+      "drumChecksum": "sha256:4b88ceb1d7a73cbe6d201dad4664670dbe688b5d154317649a89bb2aa2e3a726",
+      "tonalChecksum": "sha256:bb51ac224ed3475be7271528ebdf8e01382641e6533f83d4687f4054d5fbefb9",
+      "tempo": {
+        "bpm": 87.9,
+        "confidence": 0.427
+      },
+      "key": {
+        "key": "C#",
+        "mode": "minor",
+        "confidence": 0.34
+      }
+    },
+    {
+      "id": "all-the-shadows",
+      "name": "All the Shadows",
+      "folder": "all the shadows stem(Instrumental) Stems",
+      "drums": "0 Drums.mp3",
+      "tonal": "1 Bass.mp3",
+      "drumPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\all the shadows stem(Instrumental) Stems\\0 Drums.mp3",
+      "tonalPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\all the shadows stem(Instrumental) Stems\\1 Bass.mp3",
+      "drumChecksum": "sha256:a0f3a8ac9ec5af8afc473a2bf0ef9649b36fd9611a9679b5afe105cc846cb269",
+      "tonalChecksum": "sha256:a0a424e24e39539baa15c9a7260b9cd60943fe7e3ae6db6aa350cada64bbbed0",
+      "tempo": {
+        "bpm": 61.1,
+        "confidence": 1
+      },
+      "key": {
+        "key": "C#",
+        "mode": "minor",
+        "confidence": 0.393
+      }
+    },
+    {
+      "id": "dark-window-funky",
+      "name": "Dark Window Funky",
+      "folder": "Dark Window1 FUNKY ALL Stems 3 34",
+      "drums": "1 Drums.mp3",
+      "tonal": "2 Bass.mp3",
+      "drumPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Dark Window1 FUNKY ALL Stems 3 34\\1 Drums.mp3",
+      "tonalPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\Dark Window1 FUNKY ALL Stems 3 34\\2 Bass.mp3",
+      "drumChecksum": "sha256:0756ec86b8dafd1c6ad8cfcd5b2f188e630485819b28805f9fd7c92fd49544a2",
+      "tonalChecksum": "sha256:9f62319ced6e2d3dd069a34dbcad6ea0467202ba59f1817193139c2fa80ff659",
+      "tempo": {
+        "bpm": 200.9,
+        "confidence": 0.522
+      },
+      "key": {
+        "key": "C#",
+        "mode": "minor",
+        "confidence": 0.715
+      }
+    },
+    {
+      "id": "my-friend-rock-funk",
+      "name": "My Friend Rock Funk",
+      "folder": "my friend ROCK FUNK STEM(Instrumental) Stems",
+      "drums": "0 Drums.mp3",
+      "tonal": "1 Bass.mp3",
+      "drumPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\my friend ROCK FUNK STEM(Instrumental) Stems\\0 Drums.mp3",
+      "tonalPath": "C:\\Users\\muzes\\OneDrive\\Pictures\\SUNO\\keepers stems no vocals\\my friend ROCK FUNK STEM(Instrumental) Stems\\1 Bass.mp3",
+      "drumChecksum": "sha256:f0f35748e0ff01e72a547a1ffda4885dba4841af48c72d5e67eaa9f25a8eb620",
+      "tonalChecksum": "sha256:3ada53ac76aa12d5bb2d00e121178499d30a5c2d918095a47bce8f44ab42617a",
+      "tempo": {
+        "bpm": 82.7,
+        "confidence": 1
+      },
+      "key": {
+        "key": "A#",
+        "mode": "minor",
+        "confidence": 0.656
+      }
+    }
+  ],
+  "plan": {
+    "targetBpm": 87.9,
+    "targetKey": "C#",
+    "targetMode": "minor",
+    "sources": [
+      {
+        "id": "sun-island-trilogy",
+        "name": "Sun Island Trilogy",
+        "bpm": 100.4,
+        "key": "A#",
+        "mode": "minor",
+        "stretchRatio": 1.1422,
+        "pitchSemitones": 3
+      },
+      {
+        "id": "fifth-ave",
+        "name": "5th Ave",
+        "bpm": 87.9,
+        "key": "C#",
+        "mode": "minor",
+        "stretchRatio": 1,
+        "pitchSemitones": 0
+      },
+      {
+        "id": "all-the-shadows",
+        "name": "All the Shadows",
+        "bpm": 122.2,
+        "key": "C#",
+        "mode": "minor",
+        "stretchRatio": 1.3902,
+        "pitchSemitones": 0
+      },
+      {
+        "id": "dark-window-funky",
+        "name": "Dark Window Funky",
+        "bpm": 100.5,
+        "key": "C#",
+        "mode": "minor",
+        "stretchRatio": 1.1428,
+        "pitchSemitones": 0
+      },
+      {
+        "id": "my-friend-rock-funk",
+        "name": "My Friend Rock Funk",
+        "bpm": 82.7,
+        "key": "A#",
+        "mode": "minor",
+        "stretchRatio": 0.9408,
+        "pitchSemitones": 3
+      }
+    ]
+  }
+}
