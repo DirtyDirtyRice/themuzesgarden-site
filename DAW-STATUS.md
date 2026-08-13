@@ -6,27 +6,27 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Operations Dashboard and Worker Alerts
+## Latest completed milestone - Normalization Alert Reconciliation and Storage Accounting
 
-Unattended normalization work is now observable, rate-limited, and actionable from the owner session.
+Operational state now reconciles into durable alerts and exact artifact lifecycle records.
 
-- Show queue depth, oldest active lease age, recent throughput, failure rate, and private artifact storage use.
-- Classify corrupt/invalid input failures as terminal and infrastructure failures as retryable.
-- Enforce exponential retry delays from 30 seconds up to one hour with a five-attempt ceiling.
-- Keep terminal and not-yet-due jobs out of every scheduled worker claim.
-- Create warning or critical alerts for repeated and terminal worker failures.
-- Persist owner-scoped alert state and immutable acknowledge, retry, and resolve receipts.
-- Requeue an alerted job explicitly while retaining the operator audit trail.
-- Report cron freshness and required configuration without returning or logging secret values.
-- Combine master deliveries, approval decisions, and retention receipts in one chronological view.
-- Add a dedicated normalization operations panel to the authenticated DAW session.
+- Reconcile stale cron, expired leases, stale approval, and partial prune conditions through stable alert keys.
+- Prevent duplicate condition alerts across repeated dashboard and worker checks.
+- Resolve alerts automatically when their underlying condition clears without deleting history.
+- Record every scheduled lease claim, completion, and failure with attempt and worker provenance.
+- Track source, normalized lane render, private master, and retained artifact bytes separately.
+- Persist source and master byte lengths alongside existing rendered-artifact sizes.
+- Verify each storage deletion after pruning and distinguish verified from partial-failure receipts.
+- Preserve failed deletion paths and byte totals for recovery.
+- Provide per-revision drill-down with job states, attempts, failure class, recipe checksum, artifact checksum, and lease history.
+- Export an owner-readable JSON support report without signed URLs, storage paths, or credentials.
 
 ### Verification
 
-- Focused normalization operations, approval, and queue tests passed.
+- Focused reconciliation, operations, approval, and queue tests: 10 passed.
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814023000 applied successfully.
+- Supabase migration 20260814043000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 ## Previously completed DAW foundation
 
@@ -65,18 +65,18 @@ Unattended normalization work is now observable, rate-limited, and actionable fr
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Alert Reconciliation and Storage Accounting
+## Next milestone - Normalization Support Report Validation and Recovery Workflow
 
-Close the remaining gaps between detected state, durable alerts, and exact storage lifecycle accounting.
+Turn the operational report and partial-failure records into a guided recovery workflow.
 
 Planned outcome:
 
-1. Reconcile stale leases, stale approvals, cron freshness, and prune failures into idempotent alerts on every worker run.
-2. Resolve alerts automatically when their underlying condition clears while preserving operator history.
-3. Record source, lane-render, master, and retained artifact byte totals separately.
-4. Verify storage deletion after prune and record partial-failure recovery actions.
-5. Add per-revision operational drill-down with job attempts, lease history, and dependency checksums.
-6. Export an owner-readable normalization operations report for support review.
+1. Validate exported support reports against a versioned schema and deterministic checksum.
+2. Add import/read-only inspection for support reports without trusting embedded state.
+3. Retry only failed prune paths and record recovery receipts with before/after verification.
+4. Add lease-attempt detail and dependency mismatch explanations in the session UI.
+5. Add alert filters, pagination, and bulk acknowledge for larger operational histories.
+6. Create a privacy-safe diagnostic bundle for musician support handoff.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 ## Working rules
 
