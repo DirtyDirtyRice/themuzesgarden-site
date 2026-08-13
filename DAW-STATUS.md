@@ -6,25 +6,25 @@ Last updated: August 13, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Operations Audit and Export
+## Latest completed milestone - Normalization Support Audit Repair and Evidence Chain
 
-The complete normalization support lifecycle is now independently reviewable and portable.
+Audit completeness findings can now be repaired through append-only, conflict-safe provenance.
 
-- Versioned checksum-protected audit exports spanning cases, lifecycle history, notifications, escalations, and reconciliation receipts.
-- Strict schema and checksum validation with local read-only inspection.
-- Server-side case, priority, event, date-range, and page filters.
-- Deterministic completeness checks flag missing creation receipts and broken case references.
-- Owner-controlled export revocation receipts preserve all underlying audit history.
-- Compact totals for open cases, overdue cases, pending notifications, and cleaned payloads.
-- Metadata-only CSV export excludes diagnostic bundles and private audio.
-- Immutable export issuance records store checksum, schema, counts, completeness, and findings.
+- Deterministic dry-run plans translate missing receipts and broken references into explicit repair actions.
+- Exact owner confirmation is required before any repair receipt is appended.
+- Plan checksums and base audit checksums reject modified or stale repair plans.
+- Repairs never rewrite lifecycle history; they append provenance, actions, and before/after findings.
+- SHA-256 evidence chaining links each repair to the prior audit-chain event.
+- Before-and-after completeness comparison and fully-repaired or remaining-findings filters.
+- Downloadable metadata-only repair evidence packages include plan, provenance, and chain hashes.
+- Owner-scoped immutable repair and evidence-chain ledgers.
 
 ### Verification
 
-- Focused audit, notification, and automation tests passed (8 tests).
+- Focused repair, audit, and notification tests passed (7 tests).
 - TypeScript validation passed.
 - Next.js production build passed.
-- Supabase migration 20260814113000 applied successfully.
+- Supabase migration 20260814123000 applied successfully.
 - Existing code-map warning remains non-blocking and unrelated.
 
 ## Previously completed DAW foundation
@@ -64,18 +64,18 @@ The complete normalization support lifecycle is now independently reviewable and
 - Real five-song tempo/key detection, normalization planning, local before/after auditions, and proof mixing.
 - Authenticated normalization review revisions and promotion into durable private DAW lanes.
 
-## Next milestone - Normalization Support Audit Repair and Evidence Chain
+## Next milestone - Normalization Support Evidence Verification and Chain Sealing
 
-Make audit completeness findings actionable without rewriting immutable records.
+Make the audit evidence chain independently verifiable and closeable.
 
 Planned outcome:
 
-1. Add repair plans for missing receipts and broken references with dry-run previews.
-2. Add owner-confirmed append-only repair receipts and explicit provenance.
-3. Add hash chaining across audit export, revocation, and repair events.
-4. Add before-and-after completeness comparison and repaired-case filters.
-5. Add conflict checks so stale repair plans cannot be applied.
-6. Add downloadable repair evidence packages without diagnostic payload duplication.
+1. Verify every chain link, previous hash, subject checksum, and chronological ordering.
+2. Add signed owner seal records for complete audit chains.
+3. Prevent sealing incomplete, broken, or stale chain snapshots.
+4. Add seal revocation and superseding seals without deleting prior evidence.
+5. Add portable verification manifests and local read-only verification.
+6. Surface chain health, seal state, and first failing link in the DAW studio.
 7. Run focused tests, production build, reviewed migration, commit, and push.
 
 ## Working rules
