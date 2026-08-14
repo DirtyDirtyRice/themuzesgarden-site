@@ -112,13 +112,25 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814183000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
 
-## Next milestone - Invited Musician Beta Onboarding and Release Gate
+## Completed milestone - Invited Musician Beta Onboarding and Release Gate
 
-1. Add a short guided setup check for browser, audio input/output, storage access, and supported file types.
-2. Require an explicit privacy and beta-risk acknowledgement before the first testing session.
-3. Create an owner-managed invitation and enrollment record with revocation.
-4. Add a release gate that combines workflow health, unresolved blocking reports, export success, and environment readiness.
-5. Add focused tests, migration, production build, commit, and push.
+- Owners can create labeled seven-day invitation codes; only SHA-256 hashes are stored and the raw code is shown once.
+- Authenticated musicians can redeem invitations through a dedicated beta enrollment page.
+- Testers must save an explicit privacy/beta-risk acknowledgement and run real browser, audio input/output, storage, File API, and supported-format checks.
+- Tester self-service writes use narrowly scoped security-definer functions and cannot alter ownership, identity, project, session, or enrollment state.
+- Owners can revoke invitations and related enrollment immediately.
+- The release gate combines active enrollment, acknowledgement, environment readiness, workflow completion, verified export readiness, unresolved blocking feedback, and integrity blockers.
+- Every release decision is preserved in a checksum-protected owner-scoped receipt.
+- Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814193000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
+
+## Next milestone - Collaborator Session Access Boundary
+
+1. Create one central authorization service for project owners and explicitly enrolled beta collaborators.
+2. Enforce per-session roles and capabilities without weakening owner-only administration.
+3. Route DAW read/write APIs through the central boundary incrementally and record access receipts.
+4. Add invitation-to-session entry for released musicians with revocation enforced immediately.
+5. Add focused security tests, migration if required, production build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
