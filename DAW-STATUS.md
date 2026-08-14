@@ -211,13 +211,26 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused launch tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
 - Supabase migration 20260815033000 applied successfully; the existing Code Map warning remains unrelated and non-blocking.
 
-## Next milestone - Musician Arrangement Editing Beta Surface
+## Completed milestone - Musician Arrangement Editing Beta Surface
 
-1. Put importing a musician's own full song, individual audio files, and multi-file stems directly into the DAW session workflow.
-2. Present real tracks and regions in one usable arrangement surface with selection, playhead, zoom, scrolling, and clear time/sample positions.
-3. Connect the existing non-destructive split, move, trim, fade, crossfade, gain, pan, mute, solo, undo, and redo engines to direct musician controls.
-4. Make edits immediately auditionable while preserving original source audio and durable edit history.
-5. Add focused interaction tests, production build, commit, and push before expanding effects and mixing UX.
+- A musician can choose Full Song, Stems, or Alternate Versions and import WAV/MP3 files directly into the arrangement without manually creating version-family records or lanes.
+- Full songs create one aligned finished-mix lane, stems create synchronized lanes at the same start time, and alternate versions create sequential comparison lanes.
+- Import validation holds missing, empty, incompatible, or incorrectly grouped files before upload; duplicate source checks remain enforced by the durable intake API.
+- Imports run with a bounded three-file concurrency limit, visible progress, safe cancellation, clear failure reporting, and automatic arrangement refresh.
+- Every upload creates a protected source artifact before editable lanes are created; arrangement removal and editing never overwrite the original source audio.
+- The durable private-lane editor supplies immediate transport audition, waveform positions, split-at-playhead, move, source trim, fades, automatic crossfades, gain, pan, mute, solo, group editing, restore history, snapshots, automation, buses, and protected bounce/export.
+- The multitrack arrangement supplies direct region selection, playhead, ruler, zoom, horizontal scrolling, waveform regions, drag movement, trim handles, fade handles, grouped edits, mixer undo/redo, and source-preserving clip history.
+- Advanced version-family tools remain available in a collapsed section while the plain-language musician import is the primary entry point.
+- Focused import and private-lane tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- The existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next milestone - Musician Effects and Mixing Beta Surface
+
+1. Present the most-used musician controls first: channel gain, pan, mute, solo, inserts, sends, buses, and master output.
+2. Add safe effect browsing and parameter editing with bypass, A/B comparison, presets, and immediate audition.
+3. Add clear level, clipping, routing, latency, and CPU feedback without exposing internal engine complexity.
+4. Preserve reversible mix history, original audio, snapshots, and recoverable renders throughout the workflow.
+5. Add focused tests, run the production build, commit, and push before the first guided musician session.
 ## Working rules
 
 - Preserve existing architecture and user data.

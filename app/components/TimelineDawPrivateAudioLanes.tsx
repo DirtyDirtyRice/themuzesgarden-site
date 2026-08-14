@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
@@ -54,6 +54,7 @@ import { dispatchTimelineDawPrivateMixChange } from "@/lib/timeline/TimelineDawP
 import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBusGraph";
 import TimelineDawPrivateClipRepairEditor from "@/app/components/TimelineDawPrivateClipRepairEditor";
 import TimelineDawAudioFamilyIntake from "@/app/components/TimelineDawAudioFamilyIntake";
+import TimelineDawMusicianImport from "@/app/components/TimelineDawMusicianImport";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 
@@ -405,7 +406,11 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
-      <TimelineDawAudioFamilyIntake sessionId={sessionId} />
+      <TimelineDawMusicianImport sessionId={sessionId} />
+      <details className="mt-3 rounded-xl border border-white/10 p-3">
+        <summary className="cursor-pointer text-sm font-black text-white/60">Advanced version-family tools</summary>
+        <TimelineDawAudioFamilyIntake sessionId={sessionId} />
+      </details>
       <TimelineDawPrivateMidiSequencer sessionId={sessionId} />
       <TimelineDawPrivateSnapshots sessionId={sessionId} currentMaster={master} onAudition={setMaster} onRestored={()=>window.location.reload()} />
       <TimelineDawPrivateReviews sessionId={sessionId} sampleRate={lanes[0]?.audio.sampleRate??48000} targets={[...lanes.map(l=>({id:l.id,kind:"lane" as const,name:l.name,timelineStartSeconds:l.timelineStartSeconds,sourceInSeconds:l.sourceInSeconds})),...buses.map(b=>({id:b.id,kind:"bus" as const,name:b.name}))]} onNavigate={(seconds)=>{playheadRef.current=seconds;synchronize(seconds,false)}} onAudition={(start,end)=>{playheadRef.current=start;synchronize(start,true);window.setTimeout(()=>synchronize(end??start+2,false),Math.max(100,((end??start+2)-start)*1000))}} />
