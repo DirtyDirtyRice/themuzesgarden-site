@@ -90,13 +90,24 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814163000 applied successfully.
 
-## Next milestone - DAW Beta Workflow Orchestrator
+## Completed milestone - DAW Beta Workflow Orchestrator
 
-1. Guide testers through project/session creation, import or recording, editing, mixing, and export.
-2. Save resumable workflow checkpoints and identify the exact next action.
-3. Validate readiness without exposing private dependencies or protected diagnostics.
-4. Add a beta dashboard for workflow health, unfinished work, recovery, and export readiness.
-5. Add focused tests, migration if required, production build, commit, and push.
+- A real six-stage tester path now coordinates Setup, Capture/Import, Edit, Mix, Protect, and Export.
+- Stage completion is calculated from durable DAW records rather than cosmetic checkboxes.
+- The studio identifies one exact next action and distinguishes upcoming, completed, export-ready, blocked, and complete states.
+- Failed renders and unresolved integrity incidents visibly block delivery without exposing audio or protected diagnostics.
+- Checksum-protected, owner-scoped workflow receipts preserve resumable progress history.
+- The beta panel is embedded at the top of every authenticated DAW session.
+- Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814173000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
+
+## Next milestone - DAW Beta Tester Feedback and Session Reports
+
+1. Let musicians submit structured stage-specific feedback, severity, expected behavior, and reproduction notes.
+2. Capture privacy-safe workflow context and the exact checkpoint receipt without including audio or protected diagnostics.
+3. Add issue states, owner responses, tester follow-up, and reproducibility tracking.
+4. Add a beta dashboard summarizing completion, blockers, feedback themes, and export success.
+5. Add focused tests, migration, production build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
