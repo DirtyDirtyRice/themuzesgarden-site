@@ -288,13 +288,22 @@ Every support audit export and revocation can now be proven as part of the appen
 - The automated runner sits beside the guided manual owner-musician test rather than replacing human listening and usability observations.
 - Focused technical, visual-guide, and owner-test policy tests passed, TypeScript passed, targeted lint passed, and Supabase migration 20260815063000 applied successfully.
 
-## Next milestone - Owner-Musician Test Report and Evidence Export
+## Completed milestone - Owner-Musician Test Report and Evidence Export
 
-1. Combine automated technical receipts and manual musician observations into one understandable session report.
-2. Keep technical proof, listening judgments, usability notes, screenshots, blockers, and unresolved holds clearly separated.
-3. Add a private print/download view suitable for Steve and future beta musicians without exposing private music or account data.
-4. Include direct links back to the exact visual lesson and Project Studio control involved in every finding.
-5. Add focused tests, run the production build, and preserve the existing runner and guided test paths.
+- Project Studio now combines the latest checksum-bearing technical receipt with the latest guided musician session and observations in one owner-authenticated report.
+- Every workflow finding keeps automated proof and human judgment in separate panels and reports verified-together, human-check-needed, or attention-required status without inventing listening opinions.
+- Notes, click counts, excessive-step flags, timestamps, blockers, and private screenshots remain attached to the exact step that produced them.
+- Each finding opens its exact accessible visual lesson or live Studio control, reducing search and memory load during testing.
+- The private report can be printed or downloaded as structured JSON; downloaded JSON records screenshot presence while deliberately omitting embedded private image data.
+- Focused technical, visual-guide, and report policy tests passed (9 tests), TypeScript passed, and targeted lint passed.
+
+## Next milestone - First Complete Owner-Musician Evidence Run
+
+1. Use the protected owner test workspace to create the minimum import, edit, Quick Mix, recovery, and export evidence needed by the automated runner.
+2. Run the technical checks and verify that the saved receipt has no technical holds before asking for listening judgments.
+3. Guide Steve through the seven short human checks with the accessible visual lessons and capture only useful notes, blockers, and screenshots.
+4. Generate the combined private report and verify print and JSON download behavior using real session evidence.
+5. Repair only problems revealed by the evidence run, then build and push the validated musician-test baseline.
 ## Working rules
 
 - Preserve existing architecture and user data.

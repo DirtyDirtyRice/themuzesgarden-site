@@ -26,6 +26,7 @@ import TimelineDawBetaWorkflow from "@/app/components/TimelineDawBetaWorkflow";
 import TimelineDawOwnerMusicianTest from "@/app/components/TimelineDawOwnerMusicianTest";
 import TimelineDawVisualGuide from "@/app/components/TimelineDawVisualGuide";
 import TimelineDawTechnicalTestRunner from "@/app/components/TimelineDawTechnicalTestRunner";
+import TimelineDawOwnerTestReport from "@/app/components/TimelineDawOwnerTestReport";
 import TimelineDawBetaFeedback from "@/app/components/TimelineDawBetaFeedback";
 import TimelineDawBetaOnboardingOwner from "@/app/components/TimelineDawBetaOnboardingOwner";
 import TimelineDawBetaCohort from "@/app/components/TimelineDawBetaCohort";
@@ -213,6 +214,8 @@ export default function ProjectDawSessionPage() {
       <TimelineDawVisualGuide sessionId={session.id} />
 
       <TimelineDawTechnicalTestRunner sessionId={session.id} />
+
+      <TimelineDawOwnerTestReport sessionId={session.id} />
 
       <TimelineDawOwnerMusicianTest sessionId={session.id} />
 
