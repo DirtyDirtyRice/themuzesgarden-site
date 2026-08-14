@@ -135,13 +135,25 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814203000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
 
-## Next milestone - Collaborator Beta Workflow and Feedback Access
+## Completed milestone - Collaborator Beta Workflow and Feedback Access
 
-1. Route beta workflow reads through the central session capability boundary while retaining owner-scoped data ownership.
-2. Add a narrow security-definer feedback submission path for released collaborators without granting table-wide writes.
-3. Preserve the collaborator actor identity and owner identity in every feedback event and access receipt.
-4. Add a usable guided workflow and feedback panel to the musician beta session page.
-5. Add focused authorization tests, migration, production build, commit, and push.
+- Released musicians can read the latest owner-scoped six-stage beta workflow through the central capability boundary.
+- Workflow reads use a security-definer function rather than opening owner tables to collaborators.
+- The musician session page now displays real setup, capture, edit, mix, protect, and export checkpoints with the current next action and blockers.
+- Collaborators can submit stage, severity, reproducibility, expected behavior, and exact reproduction steps tied to a real saved workflow checksum.
+- Feedback submission is narrowly constrained in the database and cannot update ownership, session identity, issue state, or unrelated reports.
+- Each report preserves both the project owner and actual collaborator actor in an immutable feedback event plus access receipts.
+- Collaborators see only reports they created; owners retain their full feedback dashboard.
+- Focused access and feedback tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814213000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
+
+## Next milestone - Two-Way Beta Review and Issue Closure
+
+1. Return owner responses and state changes to the correct collaborator without exposing other testers' reports.
+2. Add a capability-checked collaborator response operation while keeping issue state transitions owner-only.
+3. Display the full immutable conversation and state history for each tester-owned report.
+4. Add owner-visible unread/replied indicators and a clear test-again workflow for reopened issues.
+5. Add focused tests, migration, production build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
