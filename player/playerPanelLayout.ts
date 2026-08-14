@@ -8,10 +8,9 @@ const LS_COMPACT_KEY = "muzes.globalPlayer.compact.v1";
 
 export function usePlayerPanelLayout(open: boolean) {
   const [compact, setCompact] = useState(false);
-  const [viewportWidth, setViewportWidth] = useState<number>(() => {
-    if (typeof window === "undefined") return 1440;
-    return window.innerWidth;
-  });
+  // The first browser render must match the server render. The resize effect
+  // applies the real viewport immediately after hydration.
+  const [viewportWidth, setViewportWidth] = useState<number>(1440);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

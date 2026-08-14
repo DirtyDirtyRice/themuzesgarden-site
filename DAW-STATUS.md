@@ -248,13 +248,21 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused policy tests passed (6 tests across the new and existing guided policies), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
 - Supabase migration 20260815043000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next milestone - Steve's First Guided Musician Test Run
+## Completed milestone - First Guided Test Usability Repair
 
-1. Open one existing song session and start the private owner-musician test.
-2. Follow only the single action shown; Codex will explain that action in baby steps whenever needed.
-3. Use a protected copy of one of Steve's songs and record honest pass, failure, confusion, or blocked results.
-4. Fix any reproducible core-path failure before continuing to the next test action.
-5. Complete the seven-step evidence trail, review friction and excessive clicks, then choose the next DAW product milestone from real musician evidence.
+- Steve's first guided attempt correctly identified that the split-screen title bar could cover the Global Player header and make its Close control unreachable.
+- Global Player layering now remains above the sticky title bar in narrow and split-window layouts.
+- The player viewport width now uses a server-safe initial value, preventing the server/browser width mismatch that raised the hydration error.
+- The test process identified excessive live-instruction cognitive load; this is recorded as a workflow design issue, not a tester failure.
+- TypeScript passed and the production build passed with 75 generated pages; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next milestone - Automated Visual Musician Test Guide
+
+1. Run technical DAW workflow checks automatically without asking Steve to operate every control.
+2. Generate one annotated screenshot per human-facing step with the target control clearly marked.
+3. Pair every image with one short action and one “what you should see next” statement.
+4. Never record automated engineering checks as Steve's personal listening or usability opinion.
+5. Reserve human testing for short optional sound-quality and clarity judgments after the controls are visually familiar.
 ## Working rules
 
 - Preserve existing architecture and user data.

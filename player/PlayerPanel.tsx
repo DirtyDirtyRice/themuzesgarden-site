@@ -200,7 +200,7 @@ export default function PlayerPanel(props: {
 
   if (!open) {
     return (
-      <div className="fixed bottom-6 right-6 z-[80]">
+      <div className="fixed bottom-6 right-6 z-[1200]">
         <button
           onClick={() => setOpen(true)}
           className="rounded-xl border border-white/10 bg-black px-4 py-2 text-[color:var(--text-normal)] shadow"
@@ -214,7 +214,7 @@ export default function PlayerPanel(props: {
 
   return (
     <div
-      className="fixed bottom-6 right-6 z-[80]"
+      className="fixed bottom-6 right-6 z-[1200]"
       style={{
         width: `${playerPanelWidthPx}px`,
         maxWidth: "92vw",
