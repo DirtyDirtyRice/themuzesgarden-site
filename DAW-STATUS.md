@@ -178,12 +178,23 @@ Every support audit export and revocation can now be proven as part of the appen
 - Owners can review tester identity, playback position, event type, detail, and time from the studio audition panel.
 - Focused audition tests passed (6 tests), TypeScript passed, targeted lint passed, and Supabase migration 20260815003000 applied successfully.
 
-## Next milestone - Beta Release Packaging and Tester Operations
+## Completed milestone - Beta Release Packaging and Tester Operations
 
-1. Build an owner release package containing session entry links, environment requirements, current audition identity, workflow instructions, and privacy boundaries.
-2. Add per-tester operational controls for pause, resume, revoke, completion, and a clear reason/history without weakening the central access boundary.
-3. Generate a checksum-protected compatibility and testing summary that musicians can copy or download without private project data.
-4. Connect cohort, audition, feedback, and release-candidate evidence into one handoff-ready beta package receipt.
+- Owners can pause, resume, complete, or permanently revoke individual testers with guarded state transitions and a required written reason.
+- Paused, completed, and revoked states immediately fail the central active-enrollment access requirement; resuming deliberately restores eligibility for live checks.
+- Every state change is atomic and preserved in immutable, checksum-protected participant-readable operation history.
+- The cohort dashboard now derives paused testers as blocked and owner-completed testers as completed.
+- Owners can generate a handoff package containing the exact tester entry link, environment requirements, privacy boundaries, current workflow evidence, approved audition identity, and release-candidate receipt reference.
+- Every generated package, including a held package, preserves its evidence and blockers in an owner-scoped checksum receipt.
+- A copyable package and downloadable plain-text compatibility summary exclude private tracks, storage paths, credentials, and protected project data.
+- Focused beta tests passed (10 initial tests and 7 final integration tests), TypeScript passed, targeted lint passed, and Supabase migration 20260815013000 applied successfully.
+
+## Next milestone - Tester Portal and End-to-End Beta Readiness Certification
+
+1. Give each signed-in musician a safe portal listing only their own enrolled beta sessions, current state, readiness, and permitted entry link.
+2. Deliver the owner-generated instructions and compatibility requirements to the intended tester without exposing owner-only evidence or other testers.
+3. Add an end-to-end readiness audit for enrollment, release, session authorization, published audition, workflow, feedback, and operation enforcement.
+4. Preserve each readiness certification and its exact checks in a checksum-protected receipt suitable for the first external musician cohort.
 5. Add focused tests, reviewed migration, production build, commit, and push.
 ## Working rules
 

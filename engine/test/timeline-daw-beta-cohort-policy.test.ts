@@ -9,6 +9,8 @@ describe("DAW beta cohort policy", () => {
     expect(deriveTimelineDawBetaCohortStatus({ ...evidence, allowedAccessCount: 0, reportCount: 0 })).toBe("released");
     expect(deriveTimelineDawBetaCohortStatus({ ...evidence, workflowComplete: false })).toBe("actively-testing");
     expect(deriveTimelineDawBetaCohortStatus({ ...evidence, unresolvedMajorOrBlocking: 1 })).toBe("blocked");
+    expect(deriveTimelineDawBetaCohortStatus({ ...evidence, enrollmentState: "paused" })).toBe("blocked");
+    expect(deriveTimelineDawBetaCohortStatus({ ...evidence, enrollmentState: "completed", released: false, allowedAccessCount: 0, reportCount: 0 })).toBe("completed");
     expect(deriveTimelineDawBetaCohortStatus(evidence)).toBe("completed");
   });
   it("holds a candidate until tester, severity, integrity, workflow, and export gates pass", () => {

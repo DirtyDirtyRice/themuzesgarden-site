@@ -19,6 +19,8 @@ export type TimelineDawBetaTesterEvidence = {
 };
 
 export function deriveTimelineDawBetaCohortStatus(evidence: TimelineDawBetaTesterEvidence): TimelineDawBetaCohortStatus {
+  if (evidence.enrollmentState === "paused" || evidence.enrollmentState === "revoked") return "blocked";
+  if (evidence.enrollmentState === "completed") return "completed";
   if (evidence.unresolvedMajorOrBlocking > 0 || evidence.replyNeededCount > 0 || evidence.testAgainCount > evidence.completedTestAgainCount) return "blocked";
   const hasTested = evidence.allowedAccessCount > 0 || evidence.reportCount > 0;
   if (evidence.released && hasTested && evidence.workflowComplete && evidence.exportReady) return "completed";
