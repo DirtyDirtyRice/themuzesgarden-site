@@ -28,6 +28,7 @@ import TimelineDawBetaOnboardingOwner from "@/app/components/TimelineDawBetaOnbo
 import TimelineDawBetaCohort from "@/app/components/TimelineDawBetaCohort";
 import TimelineDawBetaAuditionOwner from "@/app/components/TimelineDawBetaAuditionOwner";
 import TimelineDawBetaReleasePackage from "@/app/components/TimelineDawBetaReleasePackage";
+import TimelineDawBetaReadinessCertification from "@/app/components/TimelineDawBetaReadinessCertification";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -216,6 +217,7 @@ export default function ProjectDawSessionPage() {
       <TimelineDawBetaAuditionOwner sessionId={session.id} />
 
       <TimelineDawBetaReleasePackage sessionId={session.id} />
+      <TimelineDawBetaReadinessCertification sessionId={session.id} />
 
       <ProjectDawTransport
         session={session}
