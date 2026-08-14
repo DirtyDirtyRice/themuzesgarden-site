@@ -18,7 +18,14 @@ export async function GET(request: NextRequest) {
 }
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as Record<string, unknown>, sessionId = String(body.sessionId ?? "").trim(), input = parseTimelineDawBetaFeedback(body), database = await client(request);
+    const body = await request.json() as Record<string, unknown>, sessionId = String(body.sessionId ?? "").trim(), database = await client(request);
+    if (body.action === "respond") {
+      const response = String(body.response ?? "").trim();
+      if (response.length < 2 || response.length > 4000) throw new Error("Response must contain 2-4000 characters.");
+      const { data, error } = await database.rpc("respond_timeline_daw_beta_collaborator_feedback", { p_session_id: sessionId, p_feedback_id: String(body.feedbackId ?? ""), p_response: response });
+      if (error) throw new Error(error.message); return NextResponse.json({ event: data }, { status: 201 });
+    }
+    const input = parseTimelineDawBetaFeedback(body);
     const { data, error } = await database.rpc("submit_timeline_daw_beta_collaborator_feedback", { p_session_id: sessionId, p_checkpoint_checksum: input.checkpointChecksum, p_stage: input.stage, p_severity: input.severity, p_reproducibility: input.reproducibility, p_summary: input.summary, p_expected_behavior: input.expectedBehavior, p_reproduction_notes: input.reproductionNotes });
     if (error) throw new Error(error.message); return NextResponse.json({ feedback: data }, { status: 201 });
   } catch (error) { return fail(error); }

@@ -147,12 +147,23 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused access and feedback tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814213000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
 
-## Next milestone - Two-Way Beta Review and Issue Closure
+## Completed milestone - Two-Way Beta Review and Issue Closure
 
-1. Return owner responses and state changes to the correct collaborator without exposing other testers' reports.
-2. Add a capability-checked collaborator response operation while keeping issue state transitions owner-only.
-3. Display the full immutable conversation and state history for each tester-owned report.
-4. Add owner-visible unread/replied indicators and a clear test-again workflow for reopened issues.
+- Owner responses and owner-controlled issue state changes now return only to the collaborator who created the report.
+- Released collaborators can add capability-checked follow-up responses but cannot change issue state, ownership, project, session, or another tester's report.
+- Each report displays its complete immutable created, responded, and state-change history with the actual owner/tester actor identity.
+- Both owner and collaborator views identify when the other participant has supplied the latest response.
+- Reopened reports enter an explicit test-again state so the musician knows to verify the fix against the current workflow.
+- Owner dashboards show reply-needed and test-again indicators while retaining exclusive investigate, resolve, and reopen controls.
+- The shared review-status policy is unit-tested; focused access/feedback tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814223000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
+
+## Next milestone - Beta Cohort Dashboard and Release Candidate Gate
+
+1. Aggregate active testers, environment readiness, workflow progress, open blockers, reply status, and completed test-again cycles per session.
+2. Add an owner dashboard that distinguishes invited, enrolled, released, actively testing, blocked, and completed musicians.
+3. Define a release-candidate gate based on minimum completed testers, unresolved severity, integrity status, and export verification.
+4. Preserve every release-candidate evaluation in a checksum-protected receipt with the evidence used.
 5. Add focused tests, migration, production build, commit, and push.
 ## Working rules
 

@@ -33,6 +33,11 @@ export function transitionTimelineDawBetaIssue(current: TimelineDawBetaIssueStat
 export function createTimelineDawBetaFeedbackChecksum(input: Record<string, unknown>) {
   return `sha256:${createHash("sha256").update(JSON.stringify(input)).digest("hex")}`;
 }
+export function deriveTimelineDawBetaReviewStatus(state: TimelineDawBetaIssueState, events: Array<{ event: string; actorId: string; createdAt: string }>, currentActorId: string) {
+  if (state === "reopened") return "test-again" as const;
+  const latestResponse = events.filter((event) => event.event === "responded").sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+  return latestResponse && latestResponse.actorId !== currentActorId ? "reply-needed" as const : "current" as const;
+}
 
 export function summarizeTimelineDawBetaFeedback(rows: Array<{ stage: string; severity: string; state: string; reproducibility: string }>, workflow: { percent: number; blockers: string[]; complete: boolean; exportReady: boolean }) {
   const count = (key: "stage" | "severity" | "state" | "reproducibility") => Object.fromEntries([...new Set(rows.map((row) => row[key]))].sort().map((value) => [value, rows.filter((row) => row[key] === value).length]));
