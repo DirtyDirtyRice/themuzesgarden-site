@@ -1,0 +1,51 @@
+export const TIMELINE_DAW_OWNER_TEST_STEPS = ["protect", "import", "audition", "edit", "mix", "recover", "export"] as const;
+export type TimelineDawOwnerTestStep = (typeof TIMELINE_DAW_OWNER_TEST_STEPS)[number];
+export type TimelineDawOwnerTestOutcome = "pass" | "fail" | "confusing" | "blocked";
+
+export type TimelineDawOwnerTestEvidence = {
+  audioSourceCount: number;
+  editCount: number;
+  mixControlCount: number;
+  snapshotCount: number;
+  completedExportCount: number;
+};
+
+export type TimelineDawOwnerTestObservation = {
+  step: TimelineDawOwnerTestStep;
+  outcome: TimelineDawOwnerTestOutcome;
+};
+
+export type TimelineDawOwnerTestDefinition = {
+  step: TimelineDawOwnerTestStep;
+  title: string;
+  instruction: string;
+  destination: string;
+  proof: keyof TimelineDawOwnerTestEvidence | null;
+};
+
+export const TIMELINE_DAW_OWNER_TEST_DEFINITIONS: TimelineDawOwnerTestDefinition[] = [
+  { step: "protect", title: "Protect the original", instruction: "Confirm that this test uses a copy of your song and never replaces the original.", destination: "#owner-test-workspace", proof: null },
+  { step: "import", title: "Import your song", instruction: "Import a full song, stems, or alternate versions into protected lanes.", destination: "#musician-audio-import", proof: "audioSourceCount" },
+  { step: "audition", title: "Listen before editing", instruction: "Play the imported audio and confirm that it is the song you expected.", destination: "#timeline-daw-transport", proof: null },
+  { step: "edit", title: "Make one reversible edit", instruction: "Move, trim, split, or arrange one item, then listen to the change.", destination: "#beta-workflow-edit", proof: "editCount" },
+  { step: "mix", title: "Make one Quick Mix decision", instruction: "Change one level, pan, mute, solo, send, route, or native mix preset.", destination: "#musician-quick-mix", proof: "mixControlCount" },
+  { step: "recover", title: "Prove recovery works", instruction: "Create a named recovery snapshot before export.", destination: "#beta-workflow-protect", proof: "snapshotCount" },
+  { step: "export", title: "Verify the delivered file", instruction: "Create and download one completed, checksum-protected export.", destination: "#beta-workflow-export", proof: "completedExportCount" },
+];
+
+export function evaluateTimelineDawOwnerTest(observations: TimelineDawOwnerTestObservation[], evidence: TimelineDawOwnerTestEvidence) {
+  const latest = new Map<TimelineDawOwnerTestStep, TimelineDawOwnerTestObservation>();
+  for (const observation of observations) latest.set(observation.step, observation);
+  const completedSteps = TIMELINE_DAW_OWNER_TEST_STEPS.filter((step) => latest.get(step)?.outcome === "pass");
+  const current = TIMELINE_DAW_OWNER_TEST_DEFINITIONS.find((definition) => latest.get(definition.step)?.outcome !== "pass") ?? null;
+  return { completed: completedSteps.length, required: TIMELINE_DAW_OWNER_TEST_STEPS.length, current, complete: completedSteps.length === TIMELINE_DAW_OWNER_TEST_STEPS.length, evidence };
+}
+
+export function validateTimelineDawOwnerTestResult(input: { step: TimelineDawOwnerTestStep; outcome: TimelineDawOwnerTestOutcome; evidence: TimelineDawOwnerTestEvidence }) {
+  const definition = TIMELINE_DAW_OWNER_TEST_DEFINITIONS.find((item) => item.step === input.step);
+  if (!definition) throw new Error("The guided-test step is invalid.");
+  if (input.outcome === "pass" && definition.proof && input.evidence[definition.proof] < 1) {
+    throw new Error(`The DAW has not recorded the required proof for “${definition.title}” yet.`);
+  }
+  return definition;
+}

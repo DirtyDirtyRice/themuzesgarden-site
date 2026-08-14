@@ -23,6 +23,7 @@ import TimelineDawNormalizationSupportEvidenceSeals from "@/app/components/Timel
 import TimelineDawNormalizationSupportCoverage from "@/app/components/TimelineDawNormalizationSupportCoverage";
 import TimelineDawNormalizationEvidenceMonitoring from "@/app/components/TimelineDawNormalizationEvidenceMonitoring";
 import TimelineDawBetaWorkflow from "@/app/components/TimelineDawBetaWorkflow";
+import TimelineDawOwnerMusicianTest from "@/app/components/TimelineDawOwnerMusicianTest";
 import TimelineDawBetaFeedback from "@/app/components/TimelineDawBetaFeedback";
 import TimelineDawBetaOnboardingOwner from "@/app/components/TimelineDawBetaOnboardingOwner";
 import TimelineDawBetaCohort from "@/app/components/TimelineDawBetaCohort";
@@ -206,6 +207,8 @@ export default function ProjectDawSessionPage() {
           {error}
         </div>
       ) : null}
+
+      <TimelineDawOwnerMusicianTest sessionId={session.id} />
 
       <TimelineDawBetaWorkflow sessionId={session.id} />
 

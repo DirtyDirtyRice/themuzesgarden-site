@@ -236,13 +236,25 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused mixer, bus-processing, master/PDC, and snapshot tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
 - The existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next milestone - Guided First-Musician Test Session
+## Completed milestone - Guided First Owner-Musician Test Session
 
-1. Add a private owner-musician test path that does not require pretending to be six different testers.
-2. Guide one safe action at a time through import, arrangement, audition, editing, quick mixing, history recovery, and export verification.
-3. Capture pass/fail, confusion, excessive steps, screenshots/notes, and reproducible failure context after each action.
-4. Keep every test on protected copies of the musician's songs and clearly identify which advanced features are not ready for evaluation.
-5. Run focused tests and the production build, then commit and push before beginning Steve's first guided session.
+- A private owner-musician test now guides Steve through exactly seven ordered checks without pretending to be six external testers.
+- Only one action is visible at a time: protect the original, import audio, audition it, make a reversible edit, make a Quick Mix decision, save a recovery snapshot, and verify an export.
+- The protected-copy acknowledgement is mandatory before the test can advance.
+- Import, edit, mix, recovery, and export passes are independently rejected unless their required durable DAW records exist.
+- Every pass, failure, confusing result, and blocker is retained with notes, click count, excessive-step marking, automatic browser context, time, and an optional compressed screenshot.
+- Test sessions and observations are private under owner-only row-level security; screenshots are never public assets.
+- The UI clearly separates advanced collaboration, cohort, mastering-delivery, and unsupported device-chain testing from this first core musician path.
+- Focused policy tests passed (6 tests across the new and existing guided policies), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- Supabase migration 20260815043000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next milestone - Steve's First Guided Musician Test Run
+
+1. Open one existing song session and start the private owner-musician test.
+2. Follow only the single action shown; Codex will explain that action in baby steps whenever needed.
+3. Use a protected copy of one of Steve's songs and record honest pass, failure, confusion, or blocked results.
+4. Fix any reproducible core-path failure before continuing to the next test action.
+5. Complete the seven-step evidence trail, review friction and excessive clicks, then choose the next DAW product milestone from real musician evidence.
 ## Working rules
 
 - Preserve existing architecture and user data.
