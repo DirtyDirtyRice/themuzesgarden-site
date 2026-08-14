@@ -224,13 +224,25 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused import and private-lane tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
 - The existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next milestone - Musician Effects and Mixing Beta Surface
+## Completed milestone - Musician Effects and Mixing Beta Surface
 
-1. Present the most-used musician controls first: channel gain, pan, mute, solo, inserts, sends, buses, and master output.
-2. Add safe effect browsing and parameter editing with bypass, A/B comparison, presets, and immediate audition.
-3. Add clear level, clipping, routing, latency, and CPU feedback without exposing internal engine complexity.
-4. Preserve reversible mix history, original audio, snapshots, and recoverable renders throughout the workflow.
-5. Add focused tests, run the production build, commit, and push before the first guided musician session.
+- A compact Quick Mix surface now appears immediately after musician audio import and controls the existing durable lane, insert, send, bus-routing, monitoring, and persistence engines.
+- Every imported lane exposes immediate mute, solo, gain, pan, output routing, parallel sends, and live peak/clip feedback in plain musician language.
+- Clean, Vocal, Punch, and Warm starting sounds create bounded native effect chains; Clean safely bypasses the active chain rather than deleting its history.
+- A/B Effects bypasses and restores the lane's persisted effects for immediate comparison without changing source audio.
+- Each channel reports safe, hot, or clip state, effect latency in milliseconds, light/medium/high processing-load guidance, and one concrete recommendation.
+- The Master Bus remains first in the signal path with gain, mute, undo, redo, and freeze-time peak/RMS/true-peak/clip evidence.
+- Existing buses, parameter-level inserts, sidechains, delay compensation, automation, snapshots, collaboration, recovery history, freeze, and bounce remain available under one collapsed Advanced section.
+- Focused mixer, bus-processing, master/PDC, and snapshot tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- The existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next milestone - Guided First-Musician Test Session
+
+1. Add a private owner-musician test path that does not require pretending to be six different testers.
+2. Guide one safe action at a time through import, arrangement, audition, editing, quick mixing, history recovery, and export verification.
+3. Capture pass/fail, confusion, excessive steps, screenshots/notes, and reproducible failure context after each action.
+4. Keep every test on protected copies of the musician's songs and clearly identify which advanced features are not ready for evaluation.
+5. Run focused tests and the production build, then commit and push before beginning Steve's first guided session.
 ## Working rules
 
 - Preserve existing architecture and user data.
