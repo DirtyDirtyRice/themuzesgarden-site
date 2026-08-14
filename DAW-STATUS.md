@@ -267,13 +267,25 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused visual-guide and owner-test policy tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
 - The existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next milestone - Library and Global Player Read-Only Recovery Audit
+## Completed milestone - Library and Global Player Read-Only Recovery
 
-1. Determine why the Library and Global Player currently report zero songs without deleting, rewriting, or re-uploading audio.
-2. Verify authentication, Supabase environment selection, privacy filters, query results, and public-playback policy in that order.
-3. Separate missing display data from actual missing storage or database records before making any repair.
-4. Restore the correct authorized song lists while preserving the rule that the Global Player plays public songs only.
-5. Add focused regression tests, run the production build, and document the verified cause and repair.
+- A read-only live audit verified that all 462 MP3 files remain intact in the linked Supabase audio bucket; no audio was deleted, rewritten, or re-uploaded.
+- The audit also verified 794 intact project-track rows, including 463 storage-track links and 331 database track IDs.
+- The zero-song state was caused by project row-level security hiding every project from anonymous public-catalog queries, not by missing music.
+- A narrow row-level security policy now exposes only project rows whose visibility is explicitly public; private and shared projects remain protected.
+- Live anonymous verification now returns four public projects, 329 distinct public-project track links, and 226 matching public storage MP3s.
+- The remaining 236 storage MP3s remain excluded because they are private or are not assigned to a public project.
+- The Global Player still rejects private, shared, and unknown songs unless a stable track key proves membership in an explicitly public project.
+- Focused Global Player privacy tests passed (5 tests), TypeScript passed, and the production build passed with 75 generated pages.
+- Supabase migration 20260815053000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next milestone - Automated DAW Technical Test Runner
+
+1. Run the protected-copy, import, audition, reversible-edit, Quick Mix, recovery, and export evidence checks from one owner action.
+2. Report each check as verified, held, or human judgment required without inventing musician opinions.
+3. Preserve a durable technical-test receipt with exact evidence references and blockers.
+4. Connect each result to the matching accessible visual-guide lesson and live studio control.
+5. Add focused tests, run the production build, and keep the guided manual path available as a fallback.
 ## Working rules
 
 - Preserve existing architecture and user data.
