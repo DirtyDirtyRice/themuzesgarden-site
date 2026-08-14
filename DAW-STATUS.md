@@ -279,13 +279,22 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused Global Player privacy tests passed (5 tests), TypeScript passed, and the production build passed with 75 generated pages.
 - Supabase migration 20260815053000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next milestone - Automated DAW Technical Test Runner
+## Completed milestone - Automated DAW Technical Test Runner
 
-1. Run the protected-copy, import, audition, reversible-edit, Quick Mix, recovery, and export evidence checks from one owner action.
-2. Report each check as verified, held, or human judgment required without inventing musician opinions.
-3. Preserve a durable technical-test receipt with exact evidence references and blockers.
-4. Connect each result to the matching accessible visual-guide lesson and live studio control.
-5. Add focused tests, run the production build, and keep the guided manual path available as a fallback.
+- One owner action now checks protected-copy confirmation, imported audio, reversible editing, Quick Mix activity, recovery snapshots, and completed exports against durable DAW records.
+- Audition remains explicitly human-required because software cannot honestly decide whether Steve heard the right sound or found playback understandable.
+- Every result is classified as verified, held, or human-required and links directly to its accessible visual-guide lesson and live studio control.
+- Each run creates an owner-only Supabase receipt containing the exact evidence counts, blockers, result set, readiness state, timestamp, and SHA-256 checksum.
+- The automated runner sits beside the guided manual owner-musician test rather than replacing human listening and usability observations.
+- Focused technical, visual-guide, and owner-test policy tests passed, TypeScript passed, targeted lint passed, and Supabase migration 20260815063000 applied successfully.
+
+## Next milestone - Owner-Musician Test Report and Evidence Export
+
+1. Combine automated technical receipts and manual musician observations into one understandable session report.
+2. Keep technical proof, listening judgments, usability notes, screenshots, blockers, and unresolved holds clearly separated.
+3. Add a private print/download view suitable for Steve and future beta musicians without exposing private music or account data.
+4. Include direct links back to the exact visual lesson and Project Studio control involved in every finding.
+5. Add focused tests, run the production build, and preserve the existing runner and guided test paths.
 ## Working rules
 
 - Preserve existing architecture and user data.

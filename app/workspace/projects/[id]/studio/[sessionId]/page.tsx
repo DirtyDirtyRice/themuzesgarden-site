@@ -25,6 +25,7 @@ import TimelineDawNormalizationEvidenceMonitoring from "@/app/components/Timelin
 import TimelineDawBetaWorkflow from "@/app/components/TimelineDawBetaWorkflow";
 import TimelineDawOwnerMusicianTest from "@/app/components/TimelineDawOwnerMusicianTest";
 import TimelineDawVisualGuide from "@/app/components/TimelineDawVisualGuide";
+import TimelineDawTechnicalTestRunner from "@/app/components/TimelineDawTechnicalTestRunner";
 import TimelineDawBetaFeedback from "@/app/components/TimelineDawBetaFeedback";
 import TimelineDawBetaOnboardingOwner from "@/app/components/TimelineDawBetaOnboardingOwner";
 import TimelineDawBetaCohort from "@/app/components/TimelineDawBetaCohort";
@@ -88,7 +89,7 @@ export default function ProjectDawSessionPage() {
   }, []);
 
   useEffect(() => {
-    void load();
+    queueMicrotask(() => void load());
   }, [load]);
 
   async function runAction(current: DawSession, action: DawSessionAction) {
@@ -210,6 +211,8 @@ export default function ProjectDawSessionPage() {
       ) : null}
 
       <TimelineDawVisualGuide sessionId={session.id} />
+
+      <TimelineDawTechnicalTestRunner sessionId={session.id} />
 
       <TimelineDawOwnerMusicianTest sessionId={session.id} />
 
