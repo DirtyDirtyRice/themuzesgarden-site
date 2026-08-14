@@ -200,13 +200,24 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused beta tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
 - Supabase migration 20260815023000 applied successfully; the existing Code Map warning remains unrelated and non-blocking.
 
-## Next milestone - Controlled Beta Launch Operations and Cohort Telemetry
+## Completed milestone - Controlled Beta Launch Operations and Cohort Telemetry
 
-1. Create an owner launch manifest that selects only currently certified testers and records the exact release package and certification receipts used.
-2. Add privacy-safe cohort telemetry for portal entry, authorization, audition completion, workflow progress, feedback activity, and tester completion without collecting audio or protected diagnostics.
-3. Detect stalled testers and failed launch paths with actionable owner alerts and direct links to the correct session operation.
-4. Preserve launch, pause, completion, and cohort-close receipts so the first external beta can be measured and reproduced safely.
-5. Add focused tests, reviewed migration, production build, commit, and push.
+- Owners can atomically launch all currently active, certified musicians against the exact ready release package and certification receipts.
+- The database rejects inactive, uncertified, stale, mismatched, or empty launch manifests before any partial cohort can be created.
+- Launches support guarded active, paused, resumed, and permanently closed lifecycle transitions with required written reasons.
+- Privacy-safe telemetry derives portal entry, allowed authorization, audition completion, workflow progress, feedback activity, tester completion, and last activity from existing receipts.
+- Testers inactive for 72 hours are identified as stalled with one concrete next action; no audio, storage paths, or protected diagnostics are collected.
+- Launch creation and every lifecycle operation preserve checksum-protected evidence.
+- Focused launch tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- Supabase migration 20260815033000 applied successfully; the existing Code Map warning remains unrelated and non-blocking.
+
+## Next milestone - Musician Arrangement Editing Beta Surface
+
+1. Put importing a musician's own full song, individual audio files, and multi-file stems directly into the DAW session workflow.
+2. Present real tracks and regions in one usable arrangement surface with selection, playhead, zoom, scrolling, and clear time/sample positions.
+3. Connect the existing non-destructive split, move, trim, fade, crossfade, gain, pan, mute, solo, undo, and redo engines to direct musician controls.
+4. Make edits immediately auditionable while preserving original source audio and durable edit history.
+5. Add focused interaction tests, production build, commit, and push before expanding effects and mixing UX.
 ## Working rules
 
 - Preserve existing architecture and user data.
