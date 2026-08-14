@@ -124,13 +124,24 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814193000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
 
-## Next milestone - Collaborator Session Access Boundary
+## Completed milestone - Collaborator Session Access Boundary
 
-1. Create one central authorization service for project owners and explicitly enrolled beta collaborators.
-2. Enforce per-session roles and capabilities without weakening owner-only administration.
-3. Route DAW read/write APIs through the central boundary incrementally and record access receipts.
-4. Add invitation-to-session entry for released musicians with revocation enforced immediately.
-5. Add focused security tests, migration if required, production build, commit, and push.
+- A central server authorization service now resolves project owners and explicitly enrolled beta collaborators through one capability boundary.
+- Collaborator access requires a currently active enrollment, saved beta acknowledgement, passing browser/audio environment report, and a successful owner release receipt.
+- Every access attempt is checked live, so owner revocation takes effect on the next request without relying on cached permission.
+- Capabilities are explicit and limited to session read, workflow read, feedback create/respond, and transport read; administration and destructive operations remain owner-only.
+- Allowed and denied access decisions are stored as participant-readable, checksum-protected receipts.
+- Released musicians now have a dedicated session-entry page that displays granted capabilities and recent access receipts.
+- Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814203000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
+
+## Next milestone - Collaborator Beta Workflow and Feedback Access
+
+1. Route beta workflow reads through the central session capability boundary while retaining owner-scoped data ownership.
+2. Add a narrow security-definer feedback submission path for released collaborators without granting table-wide writes.
+3. Preserve the collaborator actor identity and owner identity in every feedback event and access receipt.
+4. Add a usable guided workflow and feedback panel to the musician beta session page.
+5. Add focused authorization tests, migration, production build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
