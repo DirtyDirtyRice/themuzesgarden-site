@@ -256,13 +256,24 @@ Every support audit export and revocation can now be proven as part of the appen
 - The test process identified excessive live-instruction cognitive load; this is recorded as a workflow design issue, not a tester failure.
 - TypeScript passed and the production build passed with 75 generated pages; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next milestone - Automated Visual Musician Test Guide
+## Completed milestone - Accessible Visual Musician Test Guide
 
-1. Run technical DAW workflow checks automatically without asking Steve to operate every control.
-2. Generate one annotated screenshot per human-facing step with the target control clearly marked.
-3. Pair every image with one short action and one “what you should see next” statement.
-4. Never record automated engineering checks as Steve's personal listening or usability opinion.
-5. Reserve human testing for short optional sound-quality and clarity judgments after the controls are visually familiar.
+- The Project Studio now includes an eight-lesson, one-picture/one-action walkthrough for opening the studio, protecting the original, importing, auditioning, editing, quick mixing, recovering, and exporting.
+- Every lesson uses a stable DAW-style visual preview with a numbered yellow spotlight, the exact live control label, one short action, and one "what you should see next" statement.
+- Previous and Next controls save progress in the browser so a musician can stop and resume without remembering the last step.
+- Read This Aloud uses browser speech when available, and Show Live Control jumps to the matching real studio section.
+- Durable project evidence is evaluated independently and displayed as verified or not yet verified; automated checks are never presented as Steve's personal listening or usability opinion.
+- Optional human judgments remain short and limited to sound quality or clarity after the relevant controls are visually familiar.
+- Focused visual-guide and owner-test policy tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- The existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next milestone - Library and Global Player Read-Only Recovery Audit
+
+1. Determine why the Library and Global Player currently report zero songs without deleting, rewriting, or re-uploading audio.
+2. Verify authentication, Supabase environment selection, privacy filters, query results, and public-playback policy in that order.
+3. Separate missing display data from actual missing storage or database records before making any repair.
+4. Restore the correct authorized song lists while preserving the rule that the Global Player plays public songs only.
+5. Add focused regression tests, run the production build, and document the verified cause and repair.
 ## Working rules
 
 - Preserve existing architecture and user data.
