@@ -101,12 +101,23 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814173000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
 
-## Next milestone - DAW Beta Tester Feedback and Session Reports
+## Completed milestone - DAW Beta Tester Feedback and Session Reports
 
-1. Let musicians submit structured stage-specific feedback, severity, expected behavior, and reproduction notes.
-2. Capture privacy-safe workflow context and the exact checkpoint receipt without including audio or protected diagnostics.
-3. Add issue states, owner responses, tester follow-up, and reproducibility tracking.
-4. Add a beta dashboard summarizing completion, blockers, feedback themes, and export success.
+- Musicians can submit structured stage-specific feedback with severity, reproducibility, expected behavior, and exact reproduction steps.
+- Every report is bound to a real checksum-protected workflow checkpoint; unsaved or invented checkpoints are rejected.
+- Reports exclude audio, storage paths, credentials, tokens, and protected diagnostics.
+- Issue lifecycle supports open, investigating, resolved, and reopened states with guarded transitions.
+- Owner and tester responses are preserved as immutable checksum-protected events.
+- The studio dashboard summarizes workflow completion, blockers, export readiness, report totals, and unresolved reports.
+- Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814183000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
+
+## Next milestone - Invited Musician Beta Onboarding and Release Gate
+
+1. Add a short guided setup check for browser, audio input/output, storage access, and supported file types.
+2. Require an explicit privacy and beta-risk acknowledgement before the first testing session.
+3. Create an owner-managed invitation and enrollment record with revocation.
+4. Add a release gate that combines workflow health, unresolved blocking reports, export success, and environment readiness.
 5. Add focused tests, migration, production build, commit, and push.
 ## Working rules
 
