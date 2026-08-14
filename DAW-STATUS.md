@@ -77,17 +77,26 @@ Every support audit export and revocation can now be proven as part of the appen
 - Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814153000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
 
-## Next milestone - Evidence Incident Notifications and Escalation
+## Completed milestone - Evidence Incident Notifications and Escalation
 
-Deliver actionable evidence incidents to owners and operators without leaking protected diagnostic data.
+- Unresolved evidence incidents queue idempotent, privacy-safe in-app notifications.
+- Integrity incidents escalate after 4 and 24 hours; safe coverage gaps escalate after 24 and 72 hours.
+- Every notification links directly to the exact project and DAW session requiring attention.
+- Durable delivery attempts and checksum-protected receipts preserve notification evidence.
+- Exponential retry delays are capped at four hours, with dead-letter handling after the fifth failed attempt.
+- Owners can acknowledge delivered notifications and manually retry dead-lettered notifications.
+- The DAW studio displays notification state, severity, escalation level, attempts, and delivery errors.
+- A CRON-protected worker processes notifications every 10 minutes.
+- Focused policy tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed.
+- Supabase migration 20260814163000 applied successfully.
 
-Planned outcome:
+## Next milestone - DAW Beta Workflow Orchestrator
 
-1. Queue idempotent owner notifications when a new evidence incident opens.
-2. Add delivery attempts, receipts, retry policy, and dead-letter handling.
-3. Escalate unresolved integrity incidents separately from safe coverage gaps.
-4. Link notifications directly to the affected DAW session and monitoring checkpoint.
-5. Add visible delivery history, tests, migration, build, commit, and push.
+1. Guide testers through project/session creation, import or recording, editing, mixing, and export.
+2. Save resumable workflow checkpoints and identify the exact next action.
+3. Validate readiness without exposing private dependencies or protected diagnostics.
+4. Add a beta dashboard for workflow health, unfinished work, recovery, and export readiness.
+5. Add focused tests, migration if required, production build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
