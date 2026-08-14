@@ -167,13 +167,24 @@ Every support audit export and revocation can now be proven as part of the appen
 - Every candidate evaluation stores the complete evidence snapshot and a SHA-256 receipt checksum in an owner-scoped table.
 - Focused beta tests passed (10 tests), TypeScript passed, targeted lint passed, and Supabase migration 20260814233000 applied successfully.
 
-## Next milestone - Secure Beta Audition and Read-Only Transport
+## Completed milestone - Secure Beta Audition and Read-Only Transport
 
-1. Let the owner select a verified mix or export artifact as the beta audition source without exposing private source lanes.
-2. Authorize released testers through the existing transport-read capability and issue short-lived, narrowly scoped playback access.
-3. Keep edit, upload, destructive transport, and download operations denied unless a future explicit owner grant is added.
-4. Preserve audition-start, playback-complete, failure, and feedback-checkpoint evidence in checksum-protected receipts.
-5. Add the collaborator audition controls, focused tests, reviewed migration, production build, commit, and push.
+- Owners can publish exactly one active beta audition source from checksum-matching, currently approved normalization masters.
+- Publishing automatically revokes the previously selected source and never exposes private source lanes, buses, edits, uploads, or project administration.
+- Released musicians receive a five-minute signed playback URL only after the existing transport-read capability boundary passes live.
+- The storage policy permits access only to the active selected master object for the owner or a currently active, released tester.
+- The collaborator player suppresses download and playback-rate controls while clearly explaining that it is a read-only beta audition.
+- Audition-opened, playback-started, playback-completed, playback-failed, and feedback-checkpoint events are stored as checksum-protected participant receipts.
+- Owners can review tester identity, playback position, event type, detail, and time from the studio audition panel.
+- Focused audition tests passed (6 tests), TypeScript passed, targeted lint passed, and Supabase migration 20260815003000 applied successfully.
+
+## Next milestone - Beta Release Packaging and Tester Operations
+
+1. Build an owner release package containing session entry links, environment requirements, current audition identity, workflow instructions, and privacy boundaries.
+2. Add per-tester operational controls for pause, resume, revoke, completion, and a clear reason/history without weakening the central access boundary.
+3. Generate a checksum-protected compatibility and testing summary that musicians can copy or download without private project data.
+4. Connect cohort, audition, feedback, and release-candidate evidence into one handoff-ready beta package receipt.
+5. Add focused tests, reviewed migration, production build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.
