@@ -158,13 +158,22 @@ Every support audit export and revocation can now be proven as part of the appen
 - The shared review-status policy is unit-tested; focused access/feedback tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed.
 - Supabase migration 20260814223000 applied successfully; the existing code-map warning remains unrelated and non-blocking.
 
-## Next milestone - Beta Cohort Dashboard and Release Candidate Gate
+## Completed milestone - Beta Cohort Dashboard and Release Candidate Gate
 
-1. Aggregate active testers, environment readiness, workflow progress, open blockers, reply status, and completed test-again cycles per session.
-2. Add an owner dashboard that distinguishes invited, enrolled, released, actively testing, blocked, and completed musicians.
-3. Define a release-candidate gate based on minimum completed testers, unresolved severity, integrity status, and export verification.
-4. Preserve every release-candidate evaluation in a checksum-protected receipt with the evidence used.
-5. Add focused tests, migration, production build, commit, and push.
+- The owner command center aggregates invitations, enrollments, release decisions, allowed access, tester reports, reply state, test-again cycles, workflow completion, export readiness, and integrity incidents.
+- Musicians are derived into invited, enrolled, released, actively testing, blocked, and completed states from durable evidence rather than editable labels.
+- Each tester row shows acknowledgement and environment readiness, release status, allowed access count, report count, unresolved severity, reply requirements, and completed test-again cycles.
+- The release-candidate gate requires an owner-selected minimum number of completed testers, no unresolved major or blocking reports, no integrity blockers, a complete workflow, and a verified export.
+- Every candidate evaluation stores the complete evidence snapshot and a SHA-256 receipt checksum in an owner-scoped table.
+- Focused beta tests passed (10 tests), TypeScript passed, targeted lint passed, and Supabase migration 20260814233000 applied successfully.
+
+## Next milestone - Secure Beta Audition and Read-Only Transport
+
+1. Let the owner select a verified mix or export artifact as the beta audition source without exposing private source lanes.
+2. Authorize released testers through the existing transport-read capability and issue short-lived, narrowly scoped playback access.
+3. Keep edit, upload, destructive transport, and download operations denied unless a future explicit owner grant is added.
+4. Preserve audition-start, playback-complete, failure, and feedback-checkpoint evidence in checksum-protected receipts.
+5. Add the collaborator audition controls, focused tests, reviewed migration, production build, commit, and push.
 ## Working rules
 
 - Preserve existing architecture and user data.

@@ -25,6 +25,7 @@ import TimelineDawNormalizationEvidenceMonitoring from "@/app/components/Timelin
 import TimelineDawBetaWorkflow from "@/app/components/TimelineDawBetaWorkflow";
 import TimelineDawBetaFeedback from "@/app/components/TimelineDawBetaFeedback";
 import TimelineDawBetaOnboardingOwner from "@/app/components/TimelineDawBetaOnboardingOwner";
+import TimelineDawBetaCohort from "@/app/components/TimelineDawBetaCohort";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -207,6 +208,8 @@ export default function ProjectDawSessionPage() {
       <TimelineDawBetaFeedback sessionId={session.id} />
 
       <TimelineDawBetaOnboardingOwner sessionId={session.id} />
+
+      <TimelineDawBetaCohort sessionId={session.id} />
 
       <ProjectDawTransport
         session={session}
