@@ -524,11 +524,11 @@ Every support audit export and revocation can now be proven as part of the appen
 - The private report can be printed or downloaded as structured JSON; downloaded JSON records screenshot presence while deliberately omitting embedded private image data.
 - Focused technical, visual-guide, and report policy tests passed (9 tests), TypeScript passed, and targeted lint passed.
 
-## Back Burner - Intentionally skipped
+## Back Burner - Blocked
 
 ### First Complete Owner-Musician Evidence Run
 
-The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
+Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
 ## Next eligible milestone - Recent Session Preference Hydration Stability
 
