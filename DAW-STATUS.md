@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Safe Studio Exit and Return
+## Latest completed milestone - Session Save Health
+
+- The Studio exit control now distinguishes Saved, Saving, Save State Needs Checking, and Newer Changes Found rather than implying every browser state is durable.
+- Revision-safe session commands enter Saving before the request and become Saved only after the authoritative workspace revision returns.
+- HTTP 409 revision conflicts receive a dedicated conflict state; other failed workspace requests are marked stale.
+- Exit is disabled unless workspace state is confirmed saved, preventing a failed or conflicted request from being presented as safely persisted.
+- Stale and conflicted states offer one authoritative refresh action without automatically overwriting the musician's current view.
+- Refresh remains disabled while browser-local recording or take upload is active, preserving the Safe Studio Exit protections.
+- Focused save-health and safe-exit tests passed (4 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Safe Studio Exit and Return
 
 - Studio now has one explicit Save State and Return action that reports the current authoritative durable workspace revision before exit.
 - The recording workspace publishes privacy-safe local activity state for active capture and take upload without exposing audio buffers or file data.
@@ -344,11 +355,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Session Save Health
+## Next eligible milestone - Recent Session Health at Song Start
 
-1. Distinguish saved, saving, stale, and conflicted session state in one musician-readable indicator.
-2. Bind the indicator to existing revision-safe API activity rather than cosmetic timers.
-3. Provide a safe refresh path after a revision conflict without discarding browser-local recording work.
+1. Show whether each resumable session has valid transport context and complete engine readiness before entry.
+2. Give held sessions one concrete next action without hiding or auto-changing their state.
+3. Keep closed sessions excluded and preserve the deterministic active/recent recommendation rules.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

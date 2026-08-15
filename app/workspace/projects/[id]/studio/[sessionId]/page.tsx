@@ -40,6 +40,7 @@ import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/
 import {
   changeDawSession,
   loadDawSnapshot,
+  ProjectDawApiError,
 } from "../../projectDawApi";
 import {
   dawActionsByState,
@@ -47,6 +48,7 @@ import {
   type DawSessionAction,
   type DawSnapshot,
 } from "../../projectDawTypes";
+import type { TimelineDawSaveHealth } from "@/lib/timeline/TimelineDawSaveHealthPolicy";
 
 const buttonClass =
   "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
@@ -64,6 +66,7 @@ export default function ProjectDawSessionPage() {
   const [busy, setBusy] = useState(false);
   const [normalizationLaneRevision, setNormalizationLaneRevision] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [saveHealth, setSaveHealth] = useState<TimelineDawSaveHealth>("saved");
 
   const session = useMemo(
     () => snapshot.sessions.find((item) => item.id === sessionId) ?? null,
@@ -80,7 +83,9 @@ export default function ProjectDawSessionPage() {
     setError(null);
     try {
       setSnapshot(await loadDawSnapshot(projectId));
+      setSaveHealth("saved");
     } catch (cause) {
+      setSaveHealth("stale");
       setError(cause instanceof Error ? cause.message : "DAW workspace could not be loaded.");
     } finally {
       setLoading(false);
@@ -89,6 +94,7 @@ export default function ProjectDawSessionPage() {
 
   const handleWorkspaceRevision = useCallback((revision: number) => {
     setSnapshot((value) => ({ ...value, workspaceRevision: revision }));
+    setSaveHealth("saved");
   }, []);
 
   useEffect(() => {
@@ -97,6 +103,7 @@ export default function ProjectDawSessionPage() {
 
   async function runAction(current: DawSession, action: DawSessionAction) {
     setBusy(true);
+    setSaveHealth("saving");
     setError(null);
     try {
       const result = await changeDawSession({
@@ -111,9 +118,10 @@ export default function ProjectDawSessionPage() {
           item.id === current.id ? result.receipt.session : item,
         ),
       }));
+      setSaveHealth("saved");
     } catch (cause) {
+      setSaveHealth(cause instanceof ProjectDawApiError && cause.status === 409 ? "conflicted" : "stale");
       setError(cause instanceof Error ? cause.message : "DAW session could not be changed.");
-      await load();
     } finally {
       setBusy(false);
     }
@@ -151,7 +159,7 @@ export default function ProjectDawSessionPage() {
     <main className="mx-auto max-w-6xl space-y-6 p-4 text-white sm:p-6">
       <nav className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm font-bold text-white/65">Project Studio · protected session</span>
-        <TimelineDawSafeExit projectId={projectId} sessionId={session.id} workspaceRevision={snapshot.workspaceRevision} />
+        <TimelineDawSafeExit projectId={projectId} sessionId={session.id} workspaceRevision={snapshot.workspaceRevision} saveHealth={saveHealth} onRefresh={load} />
       </nav>
 
       <header className="rounded-3xl border border-white/15 bg-[#080808] p-5 sm:p-7">
