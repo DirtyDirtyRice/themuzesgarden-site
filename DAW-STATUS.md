@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Health at Song Start
+## Latest completed milestone - One-Action Session Readiness Repair
+
+- Held draft sessions now expose Run Engine Validation directly from both global and project Song Start cards.
+- The action uses the existing revision-safe workspace command with the exact current session revision and workspace revision.
+- Authoritative project/session readiness is reloaded after success and after any failure, including revision conflicts.
+- Validation is offered only when the state machine permits it; non-draft held sessions direct the musician to review blockers inside Studio.
+- The repair never auto-activates a session, starts transport, records audio, or suppresses a blocking engine result.
+- Project cards no longer duplicate the generic Validate control alongside the musician-readable repair action.
+- Focused Song Start and workspace-service tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session Health at Song Start
 
 - Every open session on the global and project Song Start surfaces now combines real engine readiness with validated durable transport context.
 - Ready sessions show their saved bar/beat and whether they are ready to continue or resume.
@@ -366,11 +377,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - One-Action Session Readiness Repair
+## Next eligible milestone - One-Action Transport Initialization
 
-1. Let an owner run the existing revision-safe Validate command directly from a held recent-session card.
-2. Refresh authoritative readiness after validation and preserve conflict handling.
-3. Never auto-activate, auto-record, or bypass a blocking engine result.
+1. Let an engine-ready session without transport context initialize its durable transport from the recent-session card.
+2. Preserve revision safety and reload authoritative transport context after initialization.
+3. Never auto-play, auto-record, or invent a saved playhead position.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

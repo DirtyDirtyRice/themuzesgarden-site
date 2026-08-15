@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawResumePositionLabel } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -47,5 +47,11 @@ describe("DAW song start policy", () => {
     expect(createTimelineDawRecentSessionHealth(session({ readinessReady: false }), { tick: 0, ppq: 960 })).toMatchObject({ state: "held", transportReady: true });
     expect(createTimelineDawRecentSessionHealth(session(), undefined)).toMatchObject({ state: "setup", transportReady: false });
     expect(createTimelineDawRecentSessionHealth(session({ state: "suspended" }), { tick: 960, ppq: 960 })).toMatchObject({ state: "ready", label: "Ready to resume" });
+  });
+
+  it("offers direct validation only to an eligible held draft", () => {
+    expect(timelineDawReadinessRepairAction(session({ state: "draft", readinessReady: false }))).toEqual({ action: "validate", label: "Run engine validation" });
+    expect(timelineDawReadinessRepairAction(session({ state: "suspended", readinessReady: false }))).toEqual({ action: "enter-studio", label: "Review engine blockers" });
+    expect(timelineDawReadinessRepairAction(session({ readinessReady: true }))).toBeNull();
   });
 });

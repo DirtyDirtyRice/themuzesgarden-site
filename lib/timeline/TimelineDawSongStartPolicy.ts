@@ -68,3 +68,10 @@ export function createTimelineDawRecentSessionHealth(
     transportReady,
   };
 }
+
+export function timelineDawReadinessRepairAction(session: Pick<TimelineDawResumeSession, "state" | "readinessReady">) {
+  if (session.readinessReady) return null;
+  return session.state === "draft"
+    ? { action: "validate" as const, label: "Run engine validation" }
+    : { action: "enter-studio" as const, label: "Review engine blockers" };
+}

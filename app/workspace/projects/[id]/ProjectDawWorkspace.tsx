@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { changeDawSession, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
   dawActionsByState,
@@ -228,6 +228,7 @@ export default function ProjectDawWorkspace({
           const session = snapshot.sessions.find((item) => item.id === summary.id)!;
           const track = trackById.get(session.songId);
           const health = createTimelineDawRecentSessionHealth(summary, snapshot.resumeBySessionId?.[session.id]);
+          const repair = timelineDawReadinessRepairAction(summary);
           return (
             <article key={session.id} className="rounded-2xl border border-white/15 bg-black p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -252,6 +253,7 @@ export default function ProjectDawWorkspace({
                 </ul>
               ) : null}
               <div className="mt-4 flex flex-wrap gap-2">
+                {repair?.action === "validate" ? <button type="button" className={buttonClass} disabled={busy !== null} onClick={() => void runAction(session, "validate")}>{busy === session.id ? "Validating…" : repair.label}</button> : null}
                 {session.state !== "closed" ? (
                   <Link
                     href={`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(session.id)}`}
@@ -260,7 +262,7 @@ export default function ProjectDawWorkspace({
                     Enter Workspace
                   </Link>
                 ) : null}
-                {dawActionsByState[session.state].map((action) => (
+                {dawActionsByState[session.state].filter((action) => action !== "validate").map((action) => (
                   <button
                     key={action}
                     type="button"
