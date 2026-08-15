@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Search and Open Count Integrity
+## Latest completed milestone - Recent Session State Filters
+
+- Global and project Song Start surfaces now provide All, Needs Setup, Ready, Active, and Suspended filters alongside open-session search.
+- Filtering is browser-local and operates only on the already owner-scoped workspace snapshots; no new data exposure or server mutation is introduced.
+- The shared policy assigns every open session to one mutually exclusive health-aware state: held or transport-incomplete work needs setup, while healthy work is separated by lifecycle state.
+- Search and state filters compose without changing the independently calculated recommended session.
+- Displayed, matching, and total-open counts remain distinct, and visible results remain capped at six in deterministic recent order.
+- Both surfaces provide explicit zero-result feedback without hiding the recommendation or changing its action.
+- Focused Song Start policy tests passed (15 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session Search and Open Count Integrity
 
 - Global and project Song Start surfaces now support local search by session name, song ID, and project title where available.
 - Search input is bounded to 100 characters and never changes the independently calculated recommended session.
@@ -464,11 +475,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session State Filters
+## Next eligible milestone - Recent Session Filter Recovery
 
-1. Add All, Needs Setup, Ready, Active, and Suspended filters to open-session search.
-2. Keep filters local, mutually exclusive, and independent from the recommended session.
-3. Preserve total/matching/display counts and the six-card result limit.
+1. Add one clear-filter action when search or state filtering is active.
+2. Restore the full recent list atomically without changing the recommended session.
+3. Keep the action local, keyboard accessible, and absent when filters are already clear.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

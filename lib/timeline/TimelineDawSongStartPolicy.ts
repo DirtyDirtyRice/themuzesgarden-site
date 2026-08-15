@@ -9,6 +9,8 @@ export type TimelineDawResumeSession = {
   readinessReady: boolean;
 };
 
+export type TimelineDawOpenSessionFilter = "all" | "needs-setup" | "ready" | "active" | "suspended";
+
 export function createTimelineDawSongStartView(sessions: TimelineDawResumeSession[]) {
   const recent = [...sessions]
     .filter((session) => session.state !== "closed")
@@ -36,13 +38,22 @@ export function createTimelineDawSongStartView(sessions: TimelineDawResumeSessio
 export function filterTimelineDawOpenSessions(
   sessions: TimelineDawResumeSession[],
   query: string,
+  stateFilter: TimelineDawOpenSessionFilter = "all",
+  resumeBySessionId: Record<string, { tick: number; ppq: number } | null | undefined> = {},
   limit = 6,
 ) {
   const open = sessions.filter((session) => session.state !== "closed");
   const normalized = query.trim().toLocaleLowerCase().slice(0, 100);
-  const matches = normalized
+  const searchMatches = normalized
     ? open.filter((session) => session.name.toLocaleLowerCase().includes(normalized) || session.songId.toLocaleLowerCase().includes(normalized) || session.projectTitle.toLocaleLowerCase().includes(normalized))
     : open;
+  const matches = stateFilter === "all" ? searchMatches : searchMatches.filter((session) => {
+    const health = createTimelineDawRecentSessionHealth(session, resumeBySessionId[session.id]);
+    if (stateFilter === "needs-setup") return health.state !== "ready";
+    if (health.state !== "ready") return false;
+    if (stateFilter === "ready") return session.state === "draft" || session.state === "ready";
+    return session.state === stateFilter;
+  });
   return {
     totalOpenCount: open.length,
     matchingCount: matches.length,

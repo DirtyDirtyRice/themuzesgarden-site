@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, type TimelineDawOpenSessionFilter } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
@@ -40,6 +40,7 @@ export default function ProjectDawWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [archiveQuery, setArchiveQuery] = useState("");
   const [recentQuery, setRecentQuery] = useState("");
+  const [recentStateFilter, setRecentStateFilter] = useState<TimelineDawOpenSessionFilter>("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,7 +93,7 @@ export default function ProjectDawWorkspace({
     state: session.state, updatedAt: session.updatedAt, readinessReady: session.readiness.ready,
   }))), [projectId, projectTitle, snapshot.sessions]);
   const filteredArchive = useMemo(() => filterTimelineDawClosedSessionArchive(closedArchive, archiveQuery), [archiveQuery, closedArchive]);
-  const filteredRecent = useMemo(() => filterTimelineDawOpenSessions(songStart.open, recentQuery), [recentQuery, songStart.open]);
+  const filteredRecent = useMemo(() => filterTimelineDawOpenSessions(songStart.open, recentQuery, recentStateFilter, snapshot.resumeBySessionId), [recentQuery, recentStateFilter, snapshot.resumeBySessionId, songStart.open]);
 
   function selectSong(nextSongId: string) {
     setSongId(nextSongId);
@@ -252,7 +253,7 @@ export default function ProjectDawWorkspace({
         <div className="mb-3">
           <h3 className="font-black text-white">Recent sessions</h3>
           <p className="text-xs text-white/50">Showing {filteredRecent.sessions.length} of {filteredRecent.matchingCount} matches · {filteredRecent.totalOpenCount} total open</p>
-          <input type="search" maxLength={100} value={recentQuery} onChange={(event) => setRecentQuery(event.target.value)} placeholder="Search open session or song" className="mt-2 w-full rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"/>
+          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]"><input type="search" maxLength={100} value={recentQuery} onChange={(event) => setRecentQuery(event.target.value)} placeholder="Search open session or song" className="w-full rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"/><select aria-label="Filter open sessions by state" value={recentStateFilter} onChange={(event) => setRecentStateFilter(event.target.value as TimelineDawOpenSessionFilter)} className="rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"><option value="all">All</option><option value="needs-setup">Needs Setup</option><option value="ready">Ready</option><option value="active">Active</option><option value="suspended">Suspended</option></select></div>
         </div>
       <div className="space-y-3">
         {filteredRecent.sessions.map((summary) => {
@@ -307,7 +308,7 @@ export default function ProjectDawWorkspace({
             </article>
           );
         })}
-        {filteredRecent.matchingCount === 0 ? <p className="rounded-xl border border-dashed border-white/15 p-4 text-sm text-white/45">No open sessions match this search.</p> : null}
+        {filteredRecent.matchingCount === 0 ? <p className="rounded-xl border border-dashed border-white/15 p-4 text-sm text-white/45">No open sessions match this search and state filter.</p> : null}
       </div>
       </div> : null}
       {closedArchive.count ? <details className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><summary className="cursor-pointer font-black text-white/70">Closed session archive · {closedArchive.count}</summary><p className="mt-2 text-sm text-white/45">Read-only lifecycle history. Closing a session does not delete its saved audio or source artifacts.</p><input type="search" maxLength={100} value={archiveQuery} onChange={(event) => setArchiveQuery(event.target.value)} placeholder="Search closed session or song" className="mt-3 w-full rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"/><p className="mt-2 text-xs text-white/45">Showing {filteredArchive.sessions.length} of {filteredArchive.matchingCount} matches · {filteredArchive.totalCount} total closed</p><div className="mt-3 space-y-2">{filteredArchive.sessions.map((archived) => { const source = snapshot.sessions.find((item) => item.id === archived.id)!; return <article key={archived.id} className="rounded-xl border border-white/10 bg-black p-3"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-bold">{archived.name}</p><p className="text-xs text-white/45">Song {archived.songId}</p></div><p className="text-xs text-white/45">Revision {source.revision} · closed {new Date(archived.updatedAt).toLocaleString()}</p></div></article>; })}{filteredArchive.matchingCount === 0 ? <p className="rounded-xl border border-dashed border-white/15 p-3 text-sm text-white/45">No closed sessions match this search.</p> : null}</div></details> : null}

@@ -113,4 +113,22 @@ describe("DAW song start policy", () => {
     expect(filterTimelineDawOpenSessions(view.open, "mix")).toMatchObject({ totalOpenCount: 8, matchingCount: 7 });
     expect(filterTimelineDawOpenSessions(view.open, "mix").sessions).toHaveLength(6);
   });
+
+  it("applies mutually exclusive health-aware open-session state filters", () => {
+    const sessions = [
+      session({ id: "held", state: "draft", readinessReady: false }),
+      session({ id: "transport", state: "ready" }),
+      session({ id: "ready", state: "ready" }),
+      session({ id: "active", state: "active" }),
+      session({ id: "suspended", state: "suspended" }),
+    ];
+    const positions = {
+      ready: { tick: 0, ppq: 960 }, active: { tick: 960, ppq: 960 }, suspended: { tick: 1920, ppq: 960 },
+    };
+    expect(filterTimelineDawOpenSessions(sessions, "", "needs-setup", positions).sessions.map((item) => item.id).sort()).toEqual(["held", "transport"]);
+    expect(filterTimelineDawOpenSessions(sessions, "", "ready", positions).sessions.map((item) => item.id)).toEqual(["ready"]);
+    expect(filterTimelineDawOpenSessions(sessions, "", "active", positions).sessions.map((item) => item.id)).toEqual(["active"]);
+    expect(filterTimelineDawOpenSessions(sessions, "", "suspended", positions).sessions.map((item) => item.id)).toEqual(["suspended"]);
+    expect(filterTimelineDawOpenSessions(sessions, "ready", "active", positions)).toMatchObject({ totalOpenCount: 5, matchingCount: 0 });
+  });
 });
