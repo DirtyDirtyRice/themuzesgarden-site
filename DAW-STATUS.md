@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Public Library Guest Access Clarity
+## Latest completed milestone - Recent Session Empty-State Actions
+
+- Global and project Song Start surfaces now use one shared accessible empty-state component for filtered-zero and no-session conditions.
+- A filtered-zero result offers one local Clear Search and State Filter action while deliberately preserving the musician's selected sort order.
+- A global owner with no projects receives one route-only Open Projects action; no project or session is created implicitly.
+- A project with no sessions receives one anchor action back to the existing song starter, where the musician must explicitly choose music and start the protected workflow.
+- Empty-state actions do not change recommendation selection, owner scoping, session state, transport, or durable DAW data.
+- Focused empty-state, shared-control, and Song Start policy tests passed (26 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Public Library Guest Access Clarity
 
 - Signed-out Members and protected Projects surfaces now provide a prominent direct path to the public Library without requesting owner credentials.
 - The UI clearly separates existing-owner password access for private Projects from anonymous access to the public song catalog.
@@ -603,12 +613,12 @@ Every support audit export and revocation can now be proven as part of the appen
 
 Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
-## Next eligible milestone - Recent Session Empty-State Actions
+## Next eligible milestone - Recent Session Control Focus Recovery
 
-1. Give every no-result and no-session Song Start state one clear, policy-safe next action.
-2. Preserve recommendation independence, owner scoping, and the existing search/filter/sort state.
-3. Keep actions local or route-only unless the musician explicitly starts a protected workflow.
-4. Verify focused policy and accessibility behavior, then run the full production build.
+1. Return keyboard focus to the shared search control after local empty-state recovery.
+2. Preserve global/project labels, hydration gates, and current filter/sort semantics.
+3. Avoid scroll jumps or focus changes during preference hydration and ordinary filtering.
+4. Verify focused accessibility behavior and the full production build.
 ## Working rules
 
 - Preserve existing architecture and user data.

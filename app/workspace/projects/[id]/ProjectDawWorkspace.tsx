@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import RecentSessionViewControls from "../../daw/RecentSessionViewControls";
 import { useRecentSessionViewPreferences } from "../../daw/useRecentSessionViewPreferences";
+import RecentSessionEmptyState from "../../daw/RecentSessionEmptyState";
 import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
@@ -208,7 +209,7 @@ export default function ProjectDawWorkspace({
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div id="project-song-start" className="scroll-mt-24 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <h3 className="font-black text-white">Start a song</h3>
         <p className="mt-1 text-sm text-white/55">Choose linked music, name the working session, and go straight into Studio.</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
@@ -252,9 +253,7 @@ export default function ProjectDawWorkspace({
 
       {loading ? <p className="text-sm text-white/55">Loading Studio sessions…</p> : null}
       {!loading && snapshot.sessions.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-white/20 p-5 text-sm text-white/55">
-          No DAW sessions yet. Choose a linked song and open the first session.
-        </p>
+        <RecentSessionEmptyState title="No DAW sessions yet" message="Choose linked music above, name the working session, and start the first protected Studio session." actionLabel="Choose a Song Above" buttonClassName={buttonClass} href="#project-song-start" />
       ) : null}
 
       {songStart.recent.length ? <div>
@@ -315,7 +314,7 @@ export default function ProjectDawWorkspace({
             </article>
           );
         })}
-        {filteredRecent.matchingCount === 0 ? <p className="rounded-xl border border-dashed border-white/15 p-4 text-sm text-white/45">No open sessions match this search and state filter.</p> : null}
+        {filteredRecent.matchingCount === 0 ? <RecentSessionEmptyState title="No matching open sessions" message="The current search and state filter hide every open session. Your selected sort order will stay unchanged." actionLabel="Clear Search and State Filter" buttonClassName={buttonClass} onAction={() => { setRecentQuery(""); setRecentStateFilter("all"); }} /> : null}
       </div>
       </div> : null}
       {closedArchive.count ? <details className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><summary className="cursor-pointer font-black text-white/70">Closed session archive · {closedArchive.count}</summary><p className="mt-2 text-sm text-white/45">Read-only lifecycle history. Closing a session does not delete its saved audio or source artifacts.</p><input type="search" maxLength={100} value={archiveQuery} onChange={(event) => setArchiveQuery(event.target.value)} placeholder="Search closed session or song" className="mt-3 w-full rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"/><p className="mt-2 text-xs text-white/45">Showing {filteredArchive.sessions.length} of {filteredArchive.matchingCount} matches · {filteredArchive.totalCount} total closed</p><div className="mt-3 space-y-2">{filteredArchive.sessions.map((archived) => { const source = snapshot.sessions.find((item) => item.id === archived.id)!; return <article key={archived.id} className="rounded-xl border border-white/10 bg-black p-3"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-bold">{archived.name}</p><p className="text-xs text-white/45">Song {archived.songId}</p></div><p className="text-xs text-white/45">Revision {source.revision} · closed {new Date(archived.updatedAt).toLocaleString()}</p></div></article>; })}{filteredArchive.matchingCount === 0 ? <p className="rounded-xl border border-dashed border-white/15 p-3 text-sm text-white/45">No closed sessions match this search.</p> : null}</div></details> : null}
