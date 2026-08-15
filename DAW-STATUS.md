@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Empty-State Actions
+## Latest completed milestone - Owner Password Recovery
+
+- Member Access now includes a complete Forgot Your Password flow for the existing owner account.
+- The owner enters an email and Supabase sends a secure recovery link without the UI revealing whether that address is registered.
+- Recovery links return to an origin-bound `/members/reset-password` page on localhost or production, preventing an external redirect.
+- The recovery page rejects missing or expired sessions, requires two matching password entries of at least eight characters, and updates the authenticated owner through Supabase Auth.
+- Successful recovery provides one direct route to the owner's private Projects; account creation and email-code sign-in remain absent.
+- Focused recovery and redirect policy tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; email delivery and recovery-token validation remain Supabase Auth responsibilities.
+
+## Previously completed milestone - Recent Session Empty-State Actions
 
 - Global and project Song Start surfaces now use one shared accessible empty-state component for filtered-zero and no-session conditions.
 - A filtered-zero result offers one local Clear Search and State Filter action while deliberately preserving the musician's selected sort order.
@@ -613,12 +623,12 @@ Every support audit export and revocation can now be proven as part of the appen
 
 Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
-## Next eligible milestone - Recent Session Control Focus Recovery
+## Next eligible milestone - Project Folder and Song Privacy Editing
 
-1. Return keyboard focus to the shared search control after local empty-state recovery.
-2. Preserve global/project labels, hydration gates, and current filter/sort semantics.
-3. Avoid scroll jumps or focus changes during preference hydration and ordinary filtering.
-4. Verify focused accessibility behavior and the full production build.
+1. Present owner projects as editable song folders with explicit public/private state.
+2. Let the owner decide which Suno project songs are public while keeping other project songs private.
+3. Ensure anonymous Library and Global Player queries derive only from current public project/song decisions.
+4. Preserve audio, project links, and private data while verifying owner edits and anonymous reads end to end.
 ## Working rules
 
 - Preserve existing architecture and user data.

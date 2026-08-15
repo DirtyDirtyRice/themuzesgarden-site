@@ -15,3 +15,24 @@ export function memberSignInErrorMessage(message: string): string {
   }
   return message.trim() || "Member authentication failed.";
 }
+
+export function memberRecoveryEmailError(email: string): string | null {
+  const cleanEmail = email.trim();
+  return cleanEmail && cleanEmail.includes("@")
+    ? null
+    : "Enter the email address for your existing owner account.";
+}
+
+export function memberRecoveryRedirect(origin: string): string {
+  const url = new URL(origin);
+  return `${url.origin}/members/reset-password`;
+}
+
+export function memberNewPasswordError(
+  password: string,
+  confirmation: string,
+): string | null {
+  if (password.length < 8) return "New password must contain at least 8 characters.";
+  if (password !== confirmation) return "The two new-password entries do not match.";
+  return null;
+}

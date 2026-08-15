@@ -9,6 +9,8 @@ import { supabase } from "../../lib/supabaseClient";
 import {
   memberSignInDestination,
   memberSignInErrorMessage,
+  memberRecoveryEmailError,
+  memberRecoveryRedirect,
 } from "../../lib/auth/memberSignInPolicy";
 
 function credentialsError(email: string, password: string): string | null {
@@ -25,6 +27,7 @@ export default function MembersPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [recovering, setRecovering] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,6 +56,37 @@ export default function MembersPage() {
         memberSignInErrorMessage(
           cause instanceof Error ? cause.message : "Member authentication failed.",
         ),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRecovery(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const validation = memberRecoveryEmailError(email);
+    if (validation) {
+      setError(validation);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    setMessage("Sending a secure password-reset link...");
+    try {
+      const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        { redirectTo: memberRecoveryRedirect(window.location.origin) },
+      );
+      if (recoveryError) throw recoveryError;
+      setMessage(
+        "If that email belongs to the owner account, a secure reset link has been sent. Check Inbox and Spam, then open the link to choose a new password.",
+      );
+    } catch (cause) {
+      setMessage("");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The password-reset email could not be requested.",
       );
     } finally {
       setBusy(false);
@@ -90,11 +124,12 @@ export default function MembersPage() {
           {!loading && !user ? <>
             <p className="mb-5 rounded-xl border border-cyan-300/25 bg-cyan-300/10 p-3 text-sm text-cyan-100">Use the password for your existing owner account. No email code or new-account verification is required.</p>
             <Link href="/library" className="mb-5 block rounded-lg border border-emerald-300/40 bg-emerald-300/10 px-4 py-3 text-center font-black text-emerald-100">Open Public Library — no sign-in required</Link>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={recovering ? handleRecovery : handleSubmit} className="space-y-4">
               <div><label htmlFor="member-email" className="text-sm font-bold text-white/80">Email</label><input id="member-email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} disabled={busy} className="mt-1 w-full rounded-lg border border-white/20 bg-black/40 px-3 py-3 text-white outline-none focus:border-cyan-300 disabled:opacity-50" placeholder="you@example.com" /></div>
-              <div><label htmlFor="member-password" className="text-sm font-bold text-white/80">Password</label><input id="member-password" type="password" required minLength={6} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={busy} className="mt-1 w-full rounded-lg border border-white/20 bg-black/40 px-3 py-3 text-white outline-none focus:border-cyan-300 disabled:opacity-50" placeholder="Your existing password" /></div>
-              <button type="submit" disabled={busy} className="w-full rounded-lg bg-cyan-300 px-4 py-3 font-black text-black hover:bg-cyan-200 disabled:opacity-50">{busy ? "Please wait..." : "Sign in and open workspace"}</button>
+              {!recovering ? <div><label htmlFor="member-password" className="text-sm font-bold text-white/80">Password</label><input id="member-password" type="password" required minLength={6} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={busy} className="mt-1 w-full rounded-lg border border-white/20 bg-black/40 px-3 py-3 text-white outline-none focus:border-cyan-300 disabled:opacity-50" placeholder="Your existing password" /></div> : <p className="text-sm text-white/65">Enter the owner email above. We will send a secure link for choosing a new password.</p>}
+              <button type="submit" disabled={busy} className="w-full rounded-lg bg-cyan-300 px-4 py-3 font-black text-black hover:bg-cyan-200 disabled:opacity-50">{busy ? "Please wait..." : recovering ? "Send Password Reset Email" : "Sign in and open workspace"}</button>
             </form>
+            <button type="button" disabled={busy} onClick={() => { setRecovering((current) => !current); setError(""); setMessage(""); setPassword(""); }} className="mt-4 w-full rounded-lg border border-white/20 px-4 py-3 font-black text-white">{recovering ? "Back to Sign In" : "Forgot your password?"}</button>
           </> : null}
 
           {!loading && user ? <div className="space-y-5"><div className="rounded-xl border border-emerald-300/30 bg-emerald-300/10 p-4"><div className="text-xs font-black uppercase tracking-wider text-emerald-200">Signed in</div><div className="mt-1 font-bold">{user.email}</div></div><div className="grid gap-2 sm:grid-cols-2"><Link href="/workspace" className="rounded-lg bg-cyan-300 px-4 py-3 text-center font-black text-black">Open Workspace</Link><Link href="/library" className="rounded-lg border border-white/20 px-4 py-3 text-center font-bold">Open Music Library</Link></div><button type="button" onClick={() => void handleSignOut()} disabled={busy} className="w-full rounded-lg border border-red-400/40 px-4 py-3 font-bold text-red-100 disabled:opacity-50">{busy ? "Signing out..." : "Sign out"}</button></div> : null}

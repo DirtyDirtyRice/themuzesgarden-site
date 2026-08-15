@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   memberSignInDestination,
   memberSignInErrorMessage,
+  memberNewPasswordError,
+  memberRecoveryEmailError,
+  memberRecoveryRedirect,
 } from "../../lib/auth/memberSignInPolicy";
 
 describe("member sign-in destination", () => {
@@ -32,5 +35,22 @@ describe("member sign-in destination", () => {
     expect(memberSignInErrorMessage("Network unavailable")).toBe(
       "Network unavailable",
     );
+  });
+
+  it("validates recovery email and keeps the redirect on the current origin", () => {
+    expect(memberRecoveryEmailError("")).toContain("owner account");
+    expect(memberRecoveryEmailError("owner@example.com")).toBeNull();
+    expect(memberRecoveryRedirect("https://www.themuzesgarden.com")).toBe(
+      "https://www.themuzesgarden.com/members/reset-password",
+    );
+    expect(memberRecoveryRedirect("http://localhost:3000")).toBe(
+      "http://localhost:3000/members/reset-password",
+    );
+  });
+
+  it("requires a matching eight-character replacement password", () => {
+    expect(memberNewPasswordError("short", "short")).toContain("8 characters");
+    expect(memberNewPasswordError("new-password", "different-password")).toContain("do not match");
+    expect(memberNewPasswordError("new-password", "new-password")).toBeNull();
   });
 });
