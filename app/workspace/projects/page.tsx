@@ -457,9 +457,14 @@ export default function WorkspaceProjectsPage() {
               them here. This page no longer shows a misleading empty project
               list while you are signed out.
             </p>
-            <Link className={`${buttonClass} mt-5 inline-block`} href="/members?next=/workspace/projects">
-              Go to Members Sign In
-            </Link>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link className={buttonClass} href="/members?next=/workspace/projects">
+                Sign In for Private Projects
+              </Link>
+              <Link className={buttonClass} href="/library">
+                Open Public Library — no sign-in required
+              </Link>
+            </div>
           </div>
         </section>
       </main>

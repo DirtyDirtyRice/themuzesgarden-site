@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Preference Storage Consolidation
+## Latest completed milestone - Public Library Guest Access Clarity
+
+- Signed-out Members and protected Projects surfaces now provide a prominent direct path to the public Library without requesting owner credentials.
+- The UI clearly separates existing-owner password access for private Projects from anonymous access to the public song catalog.
+- Invalid owner credentials now produce a recoverable explanation instead of the raw Supabase message and repeat the public-Library action.
+- Private Projects remain owner-protected; no authentication, row-level-security, or Global Player privacy boundary was weakened.
+- The public Library and Global Player continue to expose only public-authorized songs, with the live catalog retaining 226 songs.
+- Focused sign-in recovery, Library access, and Global Player privacy tests passed (13 tests), TypeScript passed, and the production build passed with 75 generated pages.
+- Targeted lint reported only the previously recorded legacy Projects-page debt; no database migration was required.
+
+## Previously completed milestone - Recent Session Preference Storage Consolidation
 
 - Replaced duplicated global and project preference hydration and persistence effects with one shared Song Start hook.
 - The shared hook derives and tracks the exact global or encoded project key, so a scope change immediately returns to the loading gate until that exact key hydrates.
@@ -593,12 +603,12 @@ Every support audit export and revocation can now be proven as part of the appen
 
 Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
-## Next eligible milestone - Public Library Guest Access Clarity
+## Next eligible milestone - Recent Session Empty-State Actions
 
-1. Give signed-out visitors one direct path to the complete public Library without entering owner credentials.
-2. Explain that private Projects require the existing owner account while public playback does not.
-3. Replace raw invalid-credential wording with a clear recoverable message and public-Library action.
-4. Verify guest access, privacy boundaries, and the full production release.
+1. Give every no-result and no-session Song Start state one clear, policy-safe next action.
+2. Preserve recommendation independence, owner scoping, and the existing search/filter/sort state.
+3. Keep actions local or route-only unless the musician explicitly starts a protected workflow.
+4. Verify focused policy and accessibility behavior, then run the full production build.
 ## Working rules
 
 - Preserve existing architecture and user data.

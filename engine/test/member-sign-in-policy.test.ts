@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { memberSignInDestination } from "../../lib/auth/memberSignInPolicy";
+import {
+  memberSignInDestination,
+  memberSignInErrorMessage,
+} from "../../lib/auth/memberSignInPolicy";
 
 describe("member sign-in destination", () => {
   it("returns protected project sign-ins to Projects", () => {
@@ -17,5 +20,17 @@ describe("member sign-in destination", () => {
       "/workspace",
     );
     expect(memberSignInDestination("?next=/admin")).toBe("/workspace");
+  });
+
+  it("turns invalid credentials into a recoverable owner/public choice", () => {
+    expect(memberSignInErrorMessage("Invalid login credentials")).toContain(
+      "existing owner account",
+    );
+    expect(memberSignInErrorMessage("Invalid login credentials")).toContain(
+      "public Library",
+    );
+    expect(memberSignInErrorMessage("Network unavailable")).toBe(
+      "Network unavailable",
+    );
   });
 });
