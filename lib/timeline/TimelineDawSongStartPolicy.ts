@@ -128,3 +128,19 @@ export function createTimelineDawClosedSessionArchive(sessions: TimelineDawResum
     .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt) || left.name.localeCompare(right.name) || left.id.localeCompare(right.id));
   return { count: closed.length, sessions: closed };
 }
+
+export function filterTimelineDawClosedSessionArchive(
+  archive: ReturnType<typeof createTimelineDawClosedSessionArchive>,
+  query: string,
+  limit = 50,
+) {
+  const normalized = query.trim().toLocaleLowerCase().slice(0, 100);
+  const matches = normalized
+    ? archive.sessions.filter((session) => session.name.toLocaleLowerCase().includes(normalized) || session.songId.toLocaleLowerCase().includes(normalized))
+    : archive.sessions;
+  return {
+    totalCount: archive.count,
+    matchingCount: matches.length,
+    sessions: matches.slice(0, Math.max(1, Math.min(100, Math.floor(limit)))),
+  };
+}

@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Closed Session Archive Visibility
+## Latest completed milestone - Session Archive Search and Count Integrity
+
+- Both owner archive surfaces now support local name and song-ID search across closed sessions.
+- Search input is bounded to 100 characters and filtering remains entirely in the browser against already owner-scoped snapshot data.
+- The archive reports displayed rows, total matching rows, and total closed-session count separately, so filtering never changes historical totals.
+- Results preserve the archive's deterministic newest-first ordering and are capped to a bounded visible list.
+- Empty searches restore the complete ordered archive; zero-match searches show an explicit read-only empty result.
+- Closed sessions remain excluded from recommendations and no reopen or mutation action is introduced.
+- Focused Song Start policy tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Closed Session Archive Visibility
 
 - Global and project owner surfaces now show a collapsed read-only archive count when closed sessions exist.
 - Archived entries expose only session name, song identity where appropriate, final session revision, and closure update time.
@@ -442,11 +453,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Session Archive Search and Count Integrity
+## Next eligible milestone - Recent Session Search and Open Count Integrity
 
-1. Add a bounded local name/song search for owners with many closed sessions.
-2. Keep the total archive count independent from the filtered visible count.
-3. Preserve read-only behavior and deterministic newest-first ordering.
+1. Add bounded local search to open recent sessions without changing the deterministic recommendation.
+2. Keep total open count, matching count, and six-session display limit distinct.
+3. Preserve the single primary action and closed-session separation for every result.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

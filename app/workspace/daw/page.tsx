@@ -6,7 +6,7 @@ import { useAuth } from "../../components/AuthProvider";
 import { getSupabaseProjects, type ProjectRow } from "../../../lib/getSupabaseProjects";
 import { changeDawSession, changeDawTransport, loadDawSnapshot } from "../projects/[id]/projectDawApi";
 import type { DawSnapshot } from "../projects/[id]/projectDawTypes";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView } from "../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive } from "../../../lib/timeline/TimelineDawSongStartPolicy";
 
 type Studio = { project: ProjectRow; snapshot: DawSnapshot | null; error: string | null };
 const button = "inline-flex rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:opacity-40";
@@ -19,9 +19,11 @@ function SessionHealth({ projectId, session, snapshot, busy, onValidate, onIniti
 }
 
 function ClosedSessionArchive({ project, snapshot }: { project: ProjectRow; snapshot: DawSnapshot }) {
+  const [query, setQuery] = useState("");
   const archive = createTimelineDawClosedSessionArchive(snapshot.sessions.map((session) => ({ id: session.id, projectId: project.id, projectTitle: project.title || "Untitled Project", name: session.name, songId: session.songId, state: session.state, updatedAt: session.updatedAt, readinessReady: session.readiness.ready })));
+  const filtered = filterTimelineDawClosedSessionArchive(archive, query);
   if (!archive.count) return null;
-  return <details className="mt-4 rounded-2xl border border-white/10 p-3"><summary className="cursor-pointer font-black text-white/65">Closed session archive · {archive.count}</summary><p className="mt-2 text-xs text-white/45">Read-only history; no reopen action is available.</p>{archive.sessions.map((archived) => { const source = snapshot.sessions.find((session) => session.id === archived.id)!; return <p key={archived.id} className="mt-2 border-t border-white/10 pt-2 text-sm"><b>{archived.name}</b><span className="ml-2 text-white/45">revision {source.revision} · {new Date(archived.updatedAt).toLocaleString()}</span></p>; })}</details>;
+  return <details className="mt-4 rounded-2xl border border-white/10 p-3"><summary className="cursor-pointer font-black text-white/65">Closed session archive · {archive.count}</summary><p className="mt-2 text-xs text-white/45">Read-only history; no reopen action is available.</p><input type="search" maxLength={100} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search closed session or song" className="mt-3 w-full rounded-lg border border-white/15 bg-black px-3 py-2 text-sm"/><p className="mt-2 text-xs text-white/45">Showing {filtered.sessions.length} of {filtered.matchingCount} matches · {filtered.totalCount} total closed</p>{filtered.sessions.map((archived) => { const source = snapshot.sessions.find((session) => session.id === archived.id)!; return <p key={archived.id} className="mt-2 border-t border-white/10 pt-2 text-sm"><b>{archived.name}</b><span className="ml-2 text-white/45">revision {source.revision} · {new Date(archived.updatedAt).toLocaleString()}</span></p>; })}{filtered.matchingCount === 0 ? <p className="mt-2 text-sm text-white/45">No closed sessions match this search.</p> : null}</details>;
 }
 
 export default function DawPage() {

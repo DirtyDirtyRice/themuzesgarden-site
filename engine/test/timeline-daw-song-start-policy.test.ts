@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -95,5 +95,14 @@ describe("DAW song start policy", () => {
     ]);
     expect(archive.count).toBe(2);
     expect(archive.sessions.map((item) => item.id)).toEqual(["newer", "older"]);
+  });
+
+  it("filters the archive locally without changing its total count or order", () => {
+    const archive = createTimelineDawClosedSessionArchive([
+      session({ id: "vocal", name: "Vocal Mix", songId: "song-a", state: "closed", updatedAt: "2026-08-15T09:00:00.000Z" }),
+      session({ id: "drums", name: "Drum Mix", songId: "song-b", state: "closed", updatedAt: "2026-08-15T08:00:00.000Z" }),
+    ]);
+    expect(filterTimelineDawClosedSessionArchive(archive, "song-a")).toMatchObject({ totalCount: 2, matchingCount: 1, sessions: [{ id: "vocal" }] });
+    expect(filterTimelineDawClosedSessionArchive(archive, "").sessions.map((item) => item.id)).toEqual(["vocal", "drums"]);
   });
 });

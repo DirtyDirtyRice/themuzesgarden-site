@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
@@ -38,6 +38,7 @@ export default function ProjectDawWorkspace({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [archiveQuery, setArchiveQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,6 +90,7 @@ export default function ProjectDawWorkspace({
     id: session.id, projectId, projectTitle, name: session.name, songId: session.songId,
     state: session.state, updatedAt: session.updatedAt, readinessReady: session.readiness.ready,
   }))), [projectId, projectTitle, snapshot.sessions]);
+  const filteredArchive = useMemo(() => filterTimelineDawClosedSessionArchive(closedArchive, archiveQuery), [archiveQuery, closedArchive]);
 
   function selectSong(nextSongId: string) {
     setSongId(nextSongId);
@@ -304,7 +306,7 @@ export default function ProjectDawWorkspace({
         })}
       </div>
       </div> : null}
-      {closedArchive.count ? <details className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><summary className="cursor-pointer font-black text-white/70">Closed session archive · {closedArchive.count}</summary><p className="mt-2 text-sm text-white/45">Read-only lifecycle history. Closing a session does not delete its saved audio or source artifacts.</p><div className="mt-3 space-y-2">{closedArchive.sessions.map((archived) => { const source = snapshot.sessions.find((item) => item.id === archived.id)!; return <article key={archived.id} className="rounded-xl border border-white/10 bg-black p-3"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-bold">{archived.name}</p><p className="text-xs text-white/45">Song {archived.songId}</p></div><p className="text-xs text-white/45">Revision {source.revision} · closed {new Date(archived.updatedAt).toLocaleString()}</p></div></article>; })}</div></details> : null}
+      {closedArchive.count ? <details className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><summary className="cursor-pointer font-black text-white/70">Closed session archive · {closedArchive.count}</summary><p className="mt-2 text-sm text-white/45">Read-only lifecycle history. Closing a session does not delete its saved audio or source artifacts.</p><input type="search" maxLength={100} value={archiveQuery} onChange={(event) => setArchiveQuery(event.target.value)} placeholder="Search closed session or song" className="mt-3 w-full rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"/><p className="mt-2 text-xs text-white/45">Showing {filteredArchive.sessions.length} of {filteredArchive.matchingCount} matches · {filteredArchive.totalCount} total closed</p><div className="mt-3 space-y-2">{filteredArchive.sessions.map((archived) => { const source = snapshot.sessions.find((item) => item.id === archived.id)!; return <article key={archived.id} className="rounded-xl border border-white/10 bg-black p-3"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-bold">{archived.name}</p><p className="text-xs text-white/45">Song {archived.songId}</p></div><p className="text-xs text-white/45">Revision {source.revision} · closed {new Date(archived.updatedAt).toLocaleString()}</p></div></article>; })}{filteredArchive.matchingCount === 0 ? <p className="rounded-xl border border-dashed border-white/15 p-3 text-sm text-white/45">No closed sessions match this search.</p> : null}</div></details> : null}
     </section>
   );
 }
