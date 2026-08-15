@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Result Announcements
+## Latest completed milestone - Recent Session View Preferences
+
+- Global and project Song Start surfaces now restore the musician's last state filter and sort order across browser return visits.
+- Global preferences use a dedicated global key; project preferences use an encoded exact-project key and cannot bleed into another project view.
+- Stored values are parsed through strict allowlists, with malformed, stale, partial, or invented values falling back independently to All and Newest.
+- Search text remains ephemeral and is never written to browser storage.
+- Preference storage contains only the filter and sort identifiers—never session names, song IDs, project titles, audio, private notes, or storage paths.
+- Storage failures are non-blocking, and restored preferences do not affect the independently calculated recommendation or policy-selected primary actions.
+- Focused Song Start policy tests passed (19 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session Result Announcements
 
 - Open-session result summaries on both owner surfaces are now polite, atomic live-status regions for assistive technology.
 - Every summary reports displayed cards, matching sessions, total open sessions, the active state filter, and the current sort order.
@@ -508,11 +519,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session View Preferences
+## Next eligible milestone - Recent Session Default View Recovery
 
-1. Preserve the state filter and sort preference locally across return visits without retaining search text.
-2. Scope project preferences to the exact project and global preferences to the global DAW surface.
-3. Reject stale or invented preference values and preserve recommendation independence.
+1. Add one Reset View action when search, state, or sorting differs from the default view.
+2. Restore empty search, All states, and Newest ordering together and persist the safe defaults.
+3. Keep the action absent for the default view and preserve recommendation independence.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

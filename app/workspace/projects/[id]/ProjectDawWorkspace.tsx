@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawOpenSessionFiltersActive, timelineDawOpenSessionResultSummary, type TimelineDawOpenSessionFilter, type TimelineDawOpenSessionSort } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, parseTimelineDawOpenSessionPreferences, timelineDawOpenSessionFiltersActive, timelineDawOpenSessionPreferenceKey, timelineDawOpenSessionResultSummary, type TimelineDawOpenSessionFilter, type TimelineDawOpenSessionSort } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
@@ -42,6 +42,7 @@ export default function ProjectDawWorkspace({
   const [recentQuery, setRecentQuery] = useState("");
   const [recentStateFilter, setRecentStateFilter] = useState<TimelineDawOpenSessionFilter>("all");
   const [recentSort, setRecentSort] = useState<TimelineDawOpenSessionSort>("newest");
+  const [recentPreferencesLoaded, setRecentPreferencesLoaded] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,6 +60,8 @@ export default function ProjectDawWorkspace({
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
+  useEffect(() => { queueMicrotask(() => { try { const saved = parseTimelineDawOpenSessionPreferences(window.localStorage.getItem(timelineDawOpenSessionPreferenceKey({ projectId }))); setRecentStateFilter(saved.stateFilter); setRecentSort(saved.sort); } catch {} setRecentPreferencesLoaded(true); }); }, [projectId]);
+  useEffect(() => { if (!recentPreferencesLoaded) return; try { window.localStorage.setItem(timelineDawOpenSessionPreferenceKey({ projectId }), JSON.stringify({ stateFilter: recentStateFilter, sort: recentSort })); } catch {} }, [projectId, recentPreferencesLoaded, recentSort, recentStateFilter]);
 
   useEffect(() => {
     if (!songId && tracks[0]) {

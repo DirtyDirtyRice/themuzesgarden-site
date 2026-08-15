@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawOpenSessionFiltersActive, timelineDawOpenSessionResultSummary, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, parseTimelineDawOpenSessionPreferences, timelineDawOpenSessionFiltersActive, timelineDawOpenSessionPreferenceKey, timelineDawOpenSessionResultSummary, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -157,5 +157,13 @@ describe("DAW song start policy", () => {
   it("summarizes result counts, state filter, and sort order for polite announcements", () => {
     const result = filterTimelineDawOpenSessions([session()], "", "ready", { "session-1": { tick: 0, ppq: 960 } }, "session-name");
     expect(timelineDawOpenSessionResultSummary(result, "ready", "session-name")).toBe("Showing 1 of 1 matches. 1 total open. Filter: Ready. Sort: Session Name.");
+  });
+
+  it("restores only allowlisted scoped view preferences", () => {
+    expect(timelineDawOpenSessionPreferenceKey("global")).toBe("muzes.daw.song-start-view.global");
+    expect(timelineDawOpenSessionPreferenceKey({ projectId: "project/one" })).toBe("muzes.daw.song-start-view.project.project%2Fone");
+    expect(parseTimelineDawOpenSessionPreferences('{"stateFilter":"active","sort":"project-name","query":"private"}')).toEqual({ stateFilter: "active", sort: "project-name" });
+    expect(parseTimelineDawOpenSessionPreferences('{"stateFilter":"invented","sort":"oldest"}')).toEqual({ stateFilter: "all", sort: "newest" });
+    expect(parseTimelineDawOpenSessionPreferences("broken")).toEqual({ stateFilter: "all", sort: "newest" });
   });
 });

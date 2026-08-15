@@ -12,6 +12,28 @@ export type TimelineDawResumeSession = {
 export type TimelineDawOpenSessionFilter = "all" | "needs-setup" | "ready" | "active" | "suspended";
 export type TimelineDawOpenSessionSort = "newest" | "session-name" | "project-name";
 
+export function timelineDawOpenSessionPreferenceKey(scope: "global" | { projectId: string }) {
+  return scope === "global" ? "muzes.daw.song-start-view.global" : `muzes.daw.song-start-view.project.${encodeURIComponent(scope.projectId)}`;
+}
+
+export function parseTimelineDawOpenSessionPreferences(raw: string | null): { stateFilter: TimelineDawOpenSessionFilter; sort: TimelineDawOpenSessionSort } {
+  const fallback = { stateFilter: "all" as const, sort: "newest" as const };
+  if (!raw) return fallback;
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object") return fallback;
+    const candidate = value as Record<string, unknown>;
+    const filters: TimelineDawOpenSessionFilter[] = ["all", "needs-setup", "ready", "active", "suspended"];
+    const sorts: TimelineDawOpenSessionSort[] = ["newest", "session-name", "project-name"];
+    return {
+      stateFilter: filters.includes(candidate.stateFilter as TimelineDawOpenSessionFilter) ? candidate.stateFilter as TimelineDawOpenSessionFilter : fallback.stateFilter,
+      sort: sorts.includes(candidate.sort as TimelineDawOpenSessionSort) ? candidate.sort as TimelineDawOpenSessionSort : fallback.sort,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 export function timelineDawOpenSessionFiltersActive(query: string, stateFilter: TimelineDawOpenSessionFilter) {
   return query.trim().length > 0 || stateFilter !== "all";
 }
