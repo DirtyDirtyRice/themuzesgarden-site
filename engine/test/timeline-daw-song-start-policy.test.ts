@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawOpenSessionFiltersActive, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawOpenSessionFiltersActive, timelineDawOpenSessionResultSummary, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -152,5 +152,10 @@ describe("DAW song start policy", () => {
     expect(filterTimelineDawOpenSessions(view.open, "", "all", {}, "session-name").sessions.map((item) => item.id)).toEqual(["alpha", "bravo", "zulu"]);
     expect(filterTimelineDawOpenSessions(view.open, "", "all", {}, "project-name").sessions.map((item) => item.id)).toEqual(["bravo", "zulu", "alpha"]);
     expect(view.recommended?.id).toBe("alpha");
+  });
+
+  it("summarizes result counts, state filter, and sort order for polite announcements", () => {
+    const result = filterTimelineDawOpenSessions([session()], "", "ready", { "session-1": { tick: 0, ppq: 960 } }, "session-name");
+    expect(timelineDawOpenSessionResultSummary(result, "ready", "session-name")).toBe("Showing 1 of 1 matches. 1 total open. Filter: Ready. Sort: Session Name.");
   });
 });

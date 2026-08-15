@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Sort Controls
+## Latest completed milestone - Recent Session Result Announcements
+
+- Open-session result summaries on both owner surfaces are now polite, atomic live-status regions for assistive technology.
+- Every summary reports displayed cards, matching sessions, total open sessions, the active state filter, and the current sort order.
+- Search-result count changes are announced without interrupting the musician, while filter and sort labels ensure control changes remain distinguishable even when counts do not change.
+- A shared formatter keeps spoken and visible result context identical across the global and project Song Start surfaces.
+- Announcements contain no audio data, storage paths, private notes, or session names and remain entirely browser-local.
+- Recommendation selection, primary actions, current visual counts, filters, sorting, and the six-card limit remain unchanged.
+- Focused Song Start policy tests passed (18 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session Sort Controls
 
 - Global and project Song Start surfaces now provide deterministic Newest, Session Name, and Project Name ordering for open-session results.
 - Newest remains the default and preserves the existing updated-time, session-name, and stable-ID tie-breakers.
@@ -497,11 +508,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session Result Announcements
+## Next eligible milestone - Recent Session View Preferences
 
-1. Announce updated open-session result counts when search, filters, or sorting changes.
-2. Keep announcements concise, non-interruptive, and consistent across both owner surfaces.
-3. Preserve current visual counts, recommendation independence, and all local-only controls.
+1. Preserve the state filter and sort preference locally across return visits without retaining search text.
+2. Scope project preferences to the exact project and global preferences to the global DAW surface.
+3. Reject stale or invented preference values and preserve recommendation independence.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

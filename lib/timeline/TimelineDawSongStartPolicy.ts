@@ -16,6 +16,16 @@ export function timelineDawOpenSessionFiltersActive(query: string, stateFilter: 
   return query.trim().length > 0 || stateFilter !== "all";
 }
 
+export function timelineDawOpenSessionResultSummary(
+  result: { sessions: TimelineDawResumeSession[]; matchingCount: number; totalOpenCount: number },
+  stateFilter: TimelineDawOpenSessionFilter,
+  sort: TimelineDawOpenSessionSort,
+) {
+  const filterLabel = { all: "All states", "needs-setup": "Needs Setup", ready: "Ready", active: "Active", suspended: "Suspended" }[stateFilter];
+  const sortLabel = { newest: "Newest", "session-name": "Session Name", "project-name": "Project Name" }[sort];
+  return `Showing ${result.sessions.length} of ${result.matchingCount} matches. ${result.totalOpenCount} total open. Filter: ${filterLabel}. Sort: ${sortLabel}.`;
+}
+
 export function createTimelineDawSongStartView(sessions: TimelineDawResumeSession[]) {
   const recent = [...sessions]
     .filter((session) => session.state !== "closed")
