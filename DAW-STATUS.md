@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - One-Action Transport Initialization
+## Latest completed milestone - One-Action Session Activation
+
+- Fully validated ready sessions with valid durable transport now expose Activate Session on both global and project Song Start cards.
+- Activation eligibility is centralized in the shared Song Start policy and requires state `ready`, passing engine readiness, and valid transport context.
+- The action uses the existing state-machine command with exact expected session and workspace revisions.
+- Authoritative session state is reloaded after success and after conflicts or other failures.
+- Draft, held, active, suspended, closed, and transport-incomplete sessions never receive the action.
+- Project cards no longer duplicate the generic Activate control alongside the musician-readable one-action path.
+- Focused Song Start and session-coordinator tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - One-Action Transport Initialization
 
 - Engine-ready sessions without valid durable transport context now expose Initialize Transport on both global and project Song Start cards.
 - Eligibility is derived from the same shared recent-session health policy, so held engines and sessions with an existing valid transport never receive the action.
@@ -387,11 +398,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - One-Action Session Activation
+## Next eligible milestone - One-Action Suspended Session Resume
 
-1. Let a fully validated ready session activate directly from its recent-session card.
+1. Let a readiness-valid suspended session resume directly from its recent-session card.
 2. Preserve state-machine and revision safety, then reload authoritative session state.
-3. Never activate held, draft, suspended, closed, or transport-incomplete sessions.
+3. Never resume draft, ready, active, held, closed, or transport-incomplete sessions.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

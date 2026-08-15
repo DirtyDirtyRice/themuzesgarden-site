@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -59,5 +59,13 @@ describe("DAW song start policy", () => {
     expect(timelineDawTransportInitializationAction(session({ readinessReady: true }), undefined)).toEqual({ action: "initialize-transport", label: "Initialize transport" });
     expect(timelineDawTransportInitializationAction(session({ readinessReady: false }), undefined)).toBeNull();
     expect(timelineDawTransportInitializationAction(session(), { tick: 0, ppq: 960 })).toBeNull();
+  });
+
+  it("offers activation only to a fully ready session with durable transport", () => {
+    const position = { tick: 0, ppq: 960 };
+    expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: true }), position)).toEqual({ action: "activate", label: "Activate session" });
+    expect(timelineDawSessionActivationAction(session({ state: "draft", readinessReady: true }), position)).toBeNull();
+    expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: false }), position)).toBeNull();
+    expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: true }), undefined)).toBeNull();
   });
 });

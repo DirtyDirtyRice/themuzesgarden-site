@@ -85,3 +85,13 @@ export function timelineDawTransportInitializationAction(
     ? { action: "initialize-transport" as const, label: "Initialize transport" }
     : null;
 }
+
+export function timelineDawSessionActivationAction(
+  session: Pick<TimelineDawResumeSession, "state" | "readinessReady">,
+  position: { tick: number; ppq: number } | null | undefined,
+) {
+  const health = createTimelineDawRecentSessionHealth(session, position);
+  return session.state === "ready" && health.state === "ready"
+    ? { action: "activate" as const, label: "Activate session" }
+    : null;
+}
