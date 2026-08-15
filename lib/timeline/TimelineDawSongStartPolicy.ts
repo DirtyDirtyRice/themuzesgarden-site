@@ -43,3 +43,28 @@ export function timelineDawResumePositionLabel(position: { tick: number; ppq: nu
     ? "Playhead saved at song start."
     : `Playhead saved at bar ${bar}, beat ${beatInBar}.`;
 }
+
+export function createTimelineDawRecentSessionHealth(
+  session: Pick<TimelineDawResumeSession, "state" | "readinessReady">,
+  position: { tick: number; ppq: number } | null | undefined,
+) {
+  const transportReady = Boolean(position && Number.isSafeInteger(position.tick) && position.tick >= 0 && Number.isSafeInteger(position.ppq) && position.ppq > 0);
+  if (!session.readinessReady) return {
+    state: "held" as const,
+    label: "Engine checks needed",
+    nextAction: "Open Studio and run Validate before recording or playback.",
+    transportReady,
+  };
+  if (!transportReady) return {
+    state: "setup" as const,
+    label: "Transport setup needed",
+    nextAction: "Open Studio once to initialize the durable transport.",
+    transportReady,
+  };
+  return {
+    state: "ready" as const,
+    label: session.state === "suspended" ? "Ready to resume" : "Ready to continue",
+    nextAction: timelineDawResumePositionLabel(position),
+    transportReady,
+  };
+}

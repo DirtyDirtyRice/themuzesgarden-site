@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawSongStartView, timelineDawResumePositionLabel } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { changeDawSession, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
   dawActionsByState,
@@ -81,6 +81,9 @@ export default function ProjectDawWorkspace({
     }))),
     [projectId, projectTitle, snapshot.sessions],
   );
+  const recommendedHealth = songStart.recommended
+    ? createTimelineDawRecentSessionHealth(songStart.recommended, snapshot.resumeBySessionId?.[songStart.recommended.id])
+    : null;
 
   function selectSong(nextSongId: string) {
     setSongId(nextSongId);
@@ -157,7 +160,7 @@ export default function ProjectDawWorkspace({
             <div>
               <h3 className="text-xl font-black text-white">{songStart.recommended.name}</h3>
               <p className="mt-1 text-sm text-white/65">{songStart.message} Last saved {new Date(songStart.recommended.updatedAt).toLocaleString()}.</p>
-              <p className="mt-1 text-sm font-semibold text-emerald-100">{timelineDawResumePositionLabel(snapshot.resumeBySessionId?.[songStart.recommended.id])}</p>
+              <p className={`mt-1 text-sm font-semibold ${recommendedHealth?.state === "held" ? "text-amber-200" : "text-emerald-100"}`}>{recommendedHealth?.label} · {recommendedHealth?.nextAction}</p>
             </div>
             <Link className={buttonClass} href={`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(songStart.recommended.id)}`}>
               {songStart.resumeLabel}
@@ -224,6 +227,7 @@ export default function ProjectDawWorkspace({
         {songStart.recent.map((summary) => {
           const session = snapshot.sessions.find((item) => item.id === summary.id)!;
           const track = trackById.get(session.songId);
+          const health = createTimelineDawRecentSessionHealth(summary, snapshot.resumeBySessionId?.[session.id]);
           return (
             <article key={session.id} className="rounded-2xl border border-white/15 bg-black p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -241,6 +245,7 @@ export default function ProjectDawWorkspace({
                 Engines ready: {session.readiness.completed}/{session.readiness.required}
                 {" · "}Session revision {session.revision}
               </p>
+              <p className={`mt-2 text-sm font-semibold ${health.state === "ready" ? "text-emerald-200" : "text-amber-200"}`}>{health.label} · {health.nextAction}</p>
               {session.readiness.errors?.length ? (
                 <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-amber-200">
                   {session.readiness.errors.map((item) => <li key={item}>{item}</li>)}

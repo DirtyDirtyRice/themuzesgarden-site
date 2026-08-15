@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Session Save Health
+## Latest completed milestone - Recent Session Health at Song Start
+
+- Every open session on the global and project Song Start surfaces now combines real engine readiness with validated durable transport context.
+- Ready sessions show their saved bar/beat and whether they are ready to continue or resume.
+- Engine-held sessions show one concrete Validate action before recording or playback rather than appearing healthy from recency alone.
+- Engine-ready sessions without a valid transport record show one concrete initialization action and never fabricate a saved playhead.
+- Closed sessions are excluded consistently from recommendations and project lists.
+- The deterministic recommendation rule remains unchanged: prefer the active session, then the most recently updated open session.
+- Focused Song Start policy tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Session Save Health
 
 - The Studio exit control now distinguishes Saved, Saving, Save State Needs Checking, and Newer Changes Found rather than implying every browser state is durable.
 - Revision-safe session commands enter Saving before the request and become Saved only after the authoritative workspace revision returns.
@@ -355,11 +366,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session Health at Song Start
+## Next eligible milestone - One-Action Session Readiness Repair
 
-1. Show whether each resumable session has valid transport context and complete engine readiness before entry.
-2. Give held sessions one concrete next action without hiding or auto-changing their state.
-3. Keep closed sessions excluded and preserve the deterministic active/recent recommendation rules.
+1. Let an owner run the existing revision-safe Validate command directly from a held recent-session card.
+2. Refresh authoritative readiness after validation and preserve conflict handling.
+3. Never auto-activate, auto-record, or bypass a blocking engine result.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

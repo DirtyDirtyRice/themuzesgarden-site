@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSongStartView, timelineDawResumePositionLabel } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawResumePositionLabel } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -41,5 +41,11 @@ describe("DAW song start policy", () => {
     expect(timelineDawResumePositionLabel({ tick: 5 * 960, ppq: 960 })).toBe("Playhead saved at bar 2, beat 2.");
     expect(timelineDawResumePositionLabel({ tick: 0, ppq: 960 })).toBe("Playhead saved at song start.");
     expect(timelineDawResumePositionLabel(undefined)).toBe("Playhead will open at song start.");
+  });
+
+  it("gives every recent session one readiness-based next action", () => {
+    expect(createTimelineDawRecentSessionHealth(session({ readinessReady: false }), { tick: 0, ppq: 960 })).toMatchObject({ state: "held", transportReady: true });
+    expect(createTimelineDawRecentSessionHealth(session(), undefined)).toMatchObject({ state: "setup", transportReady: false });
+    expect(createTimelineDawRecentSessionHealth(session({ state: "suspended" }), { tick: 960, ppq: 960 })).toMatchObject({ state: "ready", label: "Ready to resume" });
   });
 });
