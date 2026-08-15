@@ -16,7 +16,7 @@ export async function getPublicProjectTrackIds(): Promise<string[]> {
 
   const { data: links, error: linkError } = await supabase
     .from("project_tracks")
-    .select("track_id")
+    .select("track_id, visibility")
     .in("project_id", projectIds);
 
   if (linkError) throw new Error(linkError.message);
@@ -24,6 +24,7 @@ export async function getPublicProjectTrackIds(): Promise<string[]> {
   return Array.from(
     new Set(
       (links ?? [])
+        .filter((link) => String(link.visibility ?? "").toLowerCase() === "public")
         .map((link) => String(link.track_id ?? "").trim())
         .filter(Boolean),
     ),

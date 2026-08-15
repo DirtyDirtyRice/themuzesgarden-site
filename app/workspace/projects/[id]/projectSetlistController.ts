@@ -242,6 +242,12 @@ export function useProjectSetlistController({
     handleLinkTrack: (trackId: string) => {
       void projectLibrary.linkTrack(trackId);
     },
+    handleSetTrackVisibility: (
+      trackId: string,
+      visibility: "private" | "public",
+    ) => {
+      void projectLibrary.setTrackVisibility(trackId, visibility);
+    },
     handleTrySwitchNote: (note: unknown) => {
       void projectNotes.trySwitchNote(note as any);
     },

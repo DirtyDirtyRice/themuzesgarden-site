@@ -7,11 +7,9 @@ import ProjectLibraryPanelList from "./ProjectLibraryPanelList";
 import type {
   AnyTrack,
   FilterMode,
-  LocalVisibility,
 } from "./projectLibraryPanelTypes";
 import {
   filterTracks,
-  getBaseVisibility,
   hasPlayableSource,
 } from "./projectLibraryPanelUtils";
 
@@ -21,9 +19,12 @@ export default function ProjectLibraryPanel(props: {
   linkedTrackIds: Set<string>;
   loadingLibrary: boolean;
   linkBusyId: string | null;
+  visibilityBusyId: string | null;
+  linkedTrackVisibility: Record<string, "private" | "public">;
   linkTrack: (trackId: string) => void;
   unlinkTrack: (trackId: string) => void;
   onPlayTrackById: (trackId: string) => void;
+  onSetTrackVisibility: (trackId: string, visibility: "private" | "public") => void;
 }) {
   const {
     allTracks,
@@ -31,17 +32,17 @@ export default function ProjectLibraryPanel(props: {
     linkedTrackIds,
     loadingLibrary,
     linkBusyId,
+    visibilityBusyId,
+    linkedTrackVisibility,
     linkTrack,
     unlinkTrack,
     onPlayTrackById,
+    onSetTrackVisibility,
   } = props;
 
   const [q, setQ] = useState("");
   const [mode, setMode] = useState<FilterMode>("all");
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const [visibilityOverrides, setVisibilityOverrides] = useState<
-    Record<string, LocalVisibility>
-  >({});
 
   const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -81,21 +82,11 @@ export default function ProjectLibraryPanel(props: {
     const tid = String(track?.id ?? "");
     if (!tid) return;
 
-    setVisibilityOverrides((current) => {
-      const existing = current[tid];
-      const currentVisibility =
-        existing === "private" || existing === "public"
-          ? existing
-          : getBaseVisibility(track);
-
-      const nextVisibility: LocalVisibility =
-        currentVisibility === "private" ? "public" : "private";
-
-      return {
-        ...current,
-        [tid]: nextVisibility,
-      };
-    });
+    if (!linkedTrackIds.has(tid)) return;
+    onSetTrackVisibility(
+      tid,
+      linkedTrackVisibility[tid] === "public" ? "private" : "public",
+    );
   }
 
   function handlePrimaryAction(trackId: string) {
@@ -154,7 +145,8 @@ export default function ProjectLibraryPanel(props: {
           listRef={listRef}
           linkedTrackIds={linkedTrackIds}
           linkBusyId={linkBusyId}
-          visibilityOverrides={visibilityOverrides}
+          visibilityBusyId={visibilityBusyId}
+          visibilityOverrides={linkedTrackVisibility}
           setQ={setQ}
           setSelectedIdx={setSelectedIdx}
           onPrimaryAction={handlePrimaryAction}

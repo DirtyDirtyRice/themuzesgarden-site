@@ -1,0 +1,18 @@
+import { describe, expect, it } from "vitest";
+import {
+  isProjectSongPublic,
+  normalizeProjectSongVisibility,
+} from "../../lib/projects/projectSongVisibility";
+
+describe("project song privacy", () => {
+  it("publishes only an explicitly public song inside a public project", () => {
+    expect(isProjectSongPublic({ projectVisibility: "public", songVisibility: "public" })).toBe(true);
+    expect(isProjectSongPublic({ projectVisibility: "public", songVisibility: "private" })).toBe(false);
+    expect(isProjectSongPublic({ projectVisibility: "private", songVisibility: "public" })).toBe(false);
+  });
+
+  it("treats absent or invalid song privacy as private", () => {
+    expect(normalizeProjectSongVisibility(undefined)).toBe("private");
+    expect(normalizeProjectSongVisibility("shared")).toBe("private");
+  });
+});

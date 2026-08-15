@@ -27,6 +27,8 @@ type Props = {
   loadingLibrary: boolean;
   libraryErr: string | null;
   linkBusyId: string | null;
+  visibilityBusyId: string | null;
+  linkedTrackVisibility: Record<string, "private" | "public">;
   nowPlayingId: string | null;
   previewTrackId: string | null;
   metadataTargetType: MetadataTargetType;
@@ -37,6 +39,7 @@ type Props = {
   onSelectTrackMetadataTarget: (tid: string) => void;
   onUnlinkTrack: (tid: string) => void;
   onLinkTrack: (tid: string) => void;
+  onSetTrackVisibility: (tid: string, visibility: "private" | "public") => void;
 };
 
 function normalizeVisibilityLabel(value: unknown): string {
@@ -82,6 +85,8 @@ export default function ProjectLibraryWorkspace(props: Props) {
     loadingLibrary,
     libraryErr,
     linkBusyId,
+    visibilityBusyId,
+    linkedTrackVisibility,
     nowPlayingId,
     previewTrackId,
     metadataTargetType,
@@ -92,6 +97,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
     onSelectTrackMetadataTarget,
     onUnlinkTrack,
     onLinkTrack,
+    onSetTrackVisibility,
   } = props;
 
   const [metadataFilters, setMetadataFilters] = useState<MetadataFilter[]>([]);
@@ -395,9 +401,12 @@ export default function ProjectLibraryWorkspace(props: Props) {
             linkedTrackIds={linkedTrackIds}
             loadingLibrary={loadingLibrary}
             linkBusyId={linkBusyId}
+            visibilityBusyId={visibilityBusyId}
+            linkedTrackVisibility={linkedTrackVisibility}
             linkTrack={onLinkTrack}
             unlinkTrack={onUnlinkTrack}
             onPlayTrackById={onPlayTrackById}
+            onSetTrackVisibility={onSetTrackVisibility}
           />
         </div>
 

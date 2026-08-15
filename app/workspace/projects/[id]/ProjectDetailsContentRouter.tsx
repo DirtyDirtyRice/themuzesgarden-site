@@ -68,9 +68,12 @@ export default function ProjectDetailsContentRouter(props: {
   loadingLibrary: boolean;
   libraryErr: string | null;
   linkBusyId: string | null;
+  visibilityBusyId: string | null;
+  linkedTrackVisibility: Record<string, "private" | "public">;
   onRefreshLibrary: () => void;
   onUnlinkTrack: (tid: string) => void;
   onLinkTrack: (tid: string) => void;
+  onSetTrackVisibility: (tid: string, visibility: "private" | "public") => void;
 }) {
   const {
     tab,
@@ -132,9 +135,12 @@ export default function ProjectDetailsContentRouter(props: {
     loadingLibrary,
     libraryErr,
     linkBusyId,
+    visibilityBusyId,
+    linkedTrackVisibility,
     onRefreshLibrary,
     onUnlinkTrack,
     onLinkTrack,
+    onSetTrackVisibility,
   } = props;
 
   if (!tab) {
@@ -216,6 +222,8 @@ export default function ProjectDetailsContentRouter(props: {
         loadingLibrary={loadingLibrary}
         libraryErr={libraryErr}
         linkBusyId={linkBusyId}
+        visibilityBusyId={visibilityBusyId}
+        linkedTrackVisibility={linkedTrackVisibility}
         nowPlayingId={nowPlayingId}
         previewTrackId={previewTrackId}
         metadataTargetType={metadataTargetType}
@@ -226,6 +234,7 @@ export default function ProjectDetailsContentRouter(props: {
         onSelectTrackMetadataTarget={onSelectTrackMetadataTarget}
         onUnlinkTrack={onUnlinkTrack}
         onLinkTrack={onLinkTrack}
+        onSetTrackVisibility={onSetTrackVisibility}
       />
     );
   }

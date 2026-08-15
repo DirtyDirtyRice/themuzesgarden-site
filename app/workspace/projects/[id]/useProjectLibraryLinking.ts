@@ -44,6 +44,10 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewErr, setOverviewErr] = useState<string | null>(null);
   const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
+  const [visibilityBusyId, setVisibilityBusyId] = useState<string | null>(null);
+  const [linkedTrackVisibility, setLinkedTrackVisibility] = useState<
+    Record<string, "private" | "public">
+  >({});
 
   const linkedTracks = useMemo(() => {
     if (!allTracks?.length) return [];
@@ -108,13 +112,23 @@ if (!isOwner) {
 
     const { data, error } = await supabase
       .from("project_tracks")
-      .select("track_id")
+      .select("track_id, visibility")
       .eq("project_id", projectId);
 
     if (error) throw new Error(error.message);
 
     const ids = new Set<string>((data ?? []).map((r: any) => String(r.track_id)));
     setLinkedTrackIds(ids);
+    setLinkedTrackVisibility(
+      Object.fromEntries(
+        (data ?? []).map((row: any) => [
+          String(row.track_id),
+          String(row.visibility ?? "").toLowerCase() === "public"
+            ? "public"
+            : "private",
+        ]),
+      ),
+    );
 
     setSetlistOrder?.((prev) => prev.filter((tid) => ids.has(String(tid))));
     setNowPlayingId?.((cur) => (!cur ? cur : ids.has(String(cur)) ? cur : null));
@@ -201,9 +215,14 @@ if (!isOwner) {
 
         const { error } = await supabase
           .from("project_tracks")
-          .insert({ project_id: projectId, track_id: trackId });
+          .insert({ project_id: projectId, track_id: trackId, visibility: "private" });
 
         if (error) throw new Error(error.message);
+
+        setLinkedTrackVisibility((current) => ({
+          ...current,
+          [trackId]: "private",
+        }));
 
     const loadedTracks = await ensureTracksLoadedOnce();
 
@@ -307,6 +326,31 @@ const linkedTrack =
     ]
   );
 
+  const setTrackVisibility = useCallback(
+    async (trackId: string, visibility: "private" | "public") => {
+      setLibraryErr(null);
+      setVisibilityBusyId(trackId);
+
+      try {
+        const { error } = await supabase.rpc("set_project_track_visibility", {
+          p_project_id: projectId,
+          p_track_id: trackId,
+          p_visibility: visibility,
+        });
+        if (error) throw new Error(error.message);
+
+        setLinkedTrackVisibility((current) => ({ ...current, [trackId]: visibility }));
+        window.dispatchEvent(new Event("muzes:projectTracksChanged"));
+        logProjectActivity(projectId, "note", `${visibility === "public" ? "Published" : "Made private"} project song`, { trackId });
+      } catch (error: any) {
+        setLibraryErr(error?.message ?? "Song privacy update failed");
+      } finally {
+        setVisibilityBusyId(null);
+      }
+    },
+    [projectId, supabase],
+  );
+
   return {
     allTracks,
     setAllTracks,
@@ -318,6 +362,8 @@ const linkedTrack =
     overviewLoading,
     overviewErr,
     linkBusyId,
+    visibilityBusyId,
+    linkedTrackVisibility,
     ensureProjectExists,
     ensureTracksLoadedOnce,
     refreshLinkedIdsOnly,
@@ -325,5 +371,6 @@ const linkedTrack =
     loadOverviewDock,
     linkTrack,
     unlinkTrack,
+    setTrackVisibility,
   };
 }

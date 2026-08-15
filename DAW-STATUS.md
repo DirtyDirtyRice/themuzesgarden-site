@@ -623,12 +623,23 @@ Every support audit export and revocation can now be proven as part of the appen
 
 Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
-## Next eligible milestone - Project Folder and Song Privacy Editing
+## Completed milestone - Project Folder and Song Privacy Editing
 
-1. Present owner projects as editable song folders with explicit public/private state.
-2. Let the owner decide which Suno project songs are public while keeping other project songs private.
-3. Ensure anonymous Library and Global Player queries derive only from current public project/song decisions.
-4. Preserve audio, project links, and private data while verifying owner edits and anonymous reads end to end.
+- The existing localhost project/folder organization remains the source of truth; no songs or project links were moved, recreated, or deleted.
+- Every linked song now has a durable Public in folder / Private in folder control on its project Library row.
+- Project privacy remains the outer safety boundary: a song is anonymously public only when both its project folder and its own project-song setting are public.
+- Newly linked songs default private so adding music to a public folder cannot publish it accidentally.
+- Existing links were migrated without widening exposure: only songs already linked to currently public projects retained public status; all other existing links became private.
+- Anonymous Library and Global Player catalog reads now exclude private project-song links.
+- Focused project-song and Global Player privacy tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- Supabase migration 20260815073000 applied successfully. Live anonymous verification returned four public projects, 338 public song links, and zero private links.
+- The existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Project Folder Privacy Bulk Review
+
+1. Add clear folder-level counts for public and private songs before changing a folder's visibility.
+2. Provide safe bulk actions for making all songs in one folder private or selecting songs for publication.
+3. Add a review view focused on Suno folders so the owner can make publication decisions efficiently.
 ## Working rules
 
 - Preserve existing architecture and user data.

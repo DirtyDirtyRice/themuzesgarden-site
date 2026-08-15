@@ -6,6 +6,7 @@ import type {
 } from "./projectLibraryPanelTypes";
 import {
   getSourceLabel,
+  getEffectiveVisibilityLabel,
   getTrackTags,
   hasPlayableSource,
 } from "./projectLibraryPanelUtils";
@@ -15,6 +16,7 @@ type Props = {
   isLinked: boolean;
   isSelected: boolean;
   linkBusyId: string | null;
+  visibilityBusyId: string | null;
   visibilityOverrides: Record<string, LocalVisibility>;
   setQ: (value: string) => void;
   onMouseEnter: () => void;
@@ -36,10 +38,13 @@ export default function ProjectLibraryPanelTrackRow({
   isLinked,
   isSelected,
   linkBusyId,
+  visibilityBusyId,
+  visibilityOverrides,
   setQ,
   onMouseEnter,
   onPrimaryAction,
   onPlayTrackById,
+  onToggleTrackVisibility,
   onLinkTrack,
   onUnlinkTrack,
 }: Props) {
@@ -97,6 +102,19 @@ export default function ProjectLibraryPanelTrackRow({
         className="flex shrink-0 flex-wrap items-center gap-2"
         onClick={(e) => e.stopPropagation()}
       >
+        {isLinked ? (
+          <button
+            type="button"
+            className={actionButtonClass}
+            onClick={() => onToggleTrackVisibility(track)}
+            disabled={visibilityBusyId === tid}
+            title="Choose whether this song is public in this project folder"
+          >
+            {visibilityBusyId === tid
+              ? "Saving..."
+              : `${getEffectiveVisibilityLabel(track, visibilityOverrides)} in folder`}
+          </button>
+        ) : null}
         <button
           type="button"
           className={actionButtonClass}

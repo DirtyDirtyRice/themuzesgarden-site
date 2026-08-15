@@ -12,6 +12,7 @@ type Props = {
   listRef: React.RefObject<HTMLDivElement | null>;
   linkedTrackIds: Set<string>;
   linkBusyId: string | null;
+  visibilityBusyId: string | null;
   visibilityOverrides: Record<string, LocalVisibility>;
   setQ: (value: string) => void;
   setSelectedIdx: (value: number) => void;
@@ -28,6 +29,7 @@ export default function ProjectLibraryPanelList({
   listRef,
   linkedTrackIds,
   linkBusyId,
+  visibilityBusyId,
   visibilityOverrides,
   setQ,
   setSelectedIdx,
@@ -49,6 +51,7 @@ export default function ProjectLibraryPanelList({
             isLinked={linkedTrackIds.has(tid)}
             isSelected={idx === selectedIdx}
             linkBusyId={linkBusyId}
+            visibilityBusyId={visibilityBusyId}
             visibilityOverrides={visibilityOverrides}
             setQ={setQ}
             onMouseEnter={() => setSelectedIdx(idx)}
