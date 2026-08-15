@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawOpenSessionFiltersActive, type TimelineDawOpenSessionFilter } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawOpenSessionFiltersActive, type TimelineDawOpenSessionFilter, type TimelineDawOpenSessionSort } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
@@ -41,6 +41,7 @@ export default function ProjectDawWorkspace({
   const [archiveQuery, setArchiveQuery] = useState("");
   const [recentQuery, setRecentQuery] = useState("");
   const [recentStateFilter, setRecentStateFilter] = useState<TimelineDawOpenSessionFilter>("all");
+  const [recentSort, setRecentSort] = useState<TimelineDawOpenSessionSort>("newest");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -93,7 +94,7 @@ export default function ProjectDawWorkspace({
     state: session.state, updatedAt: session.updatedAt, readinessReady: session.readiness.ready,
   }))), [projectId, projectTitle, snapshot.sessions]);
   const filteredArchive = useMemo(() => filterTimelineDawClosedSessionArchive(closedArchive, archiveQuery), [archiveQuery, closedArchive]);
-  const filteredRecent = useMemo(() => filterTimelineDawOpenSessions(songStart.open, recentQuery, recentStateFilter, snapshot.resumeBySessionId), [recentQuery, recentStateFilter, snapshot.resumeBySessionId, songStart.open]);
+  const filteredRecent = useMemo(() => filterTimelineDawOpenSessions(songStart.open, recentQuery, recentStateFilter, snapshot.resumeBySessionId, recentSort), [recentQuery, recentSort, recentStateFilter, snapshot.resumeBySessionId, songStart.open]);
   const recentFiltersActive = timelineDawOpenSessionFiltersActive(recentQuery, recentStateFilter);
 
   function selectSong(nextSongId: string) {
@@ -254,7 +255,7 @@ export default function ProjectDawWorkspace({
         <div className="mb-3">
           <h3 className="font-black text-white">Recent sessions</h3>
           <p className="text-xs text-white/50">Showing {filteredRecent.sessions.length} of {filteredRecent.matchingCount} matches · {filteredRecent.totalOpenCount} total open</p>
-          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto_auto]"><input type="search" maxLength={100} value={recentQuery} onChange={(event) => setRecentQuery(event.target.value)} placeholder="Search open session or song" className="w-full rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"/><select aria-label="Filter open sessions by state" value={recentStateFilter} onChange={(event) => setRecentStateFilter(event.target.value as TimelineDawOpenSessionFilter)} className="rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"><option value="all">All</option><option value="needs-setup">Needs Setup</option><option value="ready">Ready</option><option value="active">Active</option><option value="suspended">Suspended</option></select>{recentFiltersActive ? <button type="button" className={buttonClass} onClick={() => { setRecentQuery(""); setRecentStateFilter("all"); }}>Clear filters</button> : null}</div>
+          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]"><input type="search" maxLength={100} value={recentQuery} onChange={(event) => setRecentQuery(event.target.value)} placeholder="Search open session or song" className="w-full rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"/><select aria-label="Filter open sessions by state" value={recentStateFilter} onChange={(event) => setRecentStateFilter(event.target.value as TimelineDawOpenSessionFilter)} className="rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"><option value="all">All</option><option value="needs-setup">Needs Setup</option><option value="ready">Ready</option><option value="active">Active</option><option value="suspended">Suspended</option></select><select aria-label="Sort open sessions" value={recentSort} onChange={(event) => setRecentSort(event.target.value as TimelineDawOpenSessionSort)} className="rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white"><option value="newest">Newest</option><option value="session-name">Session Name</option><option value="project-name">Project Name</option></select>{recentFiltersActive ? <button type="button" className={buttonClass} onClick={() => { setRecentQuery(""); setRecentStateFilter("all"); }}>Clear filters</button> : null}</div>
         </div>
       <div className="space-y-3">
         {filteredRecent.sessions.map((summary) => {

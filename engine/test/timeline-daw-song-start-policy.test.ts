@@ -138,4 +138,19 @@ describe("DAW song start policy", () => {
     expect(timelineDawOpenSessionFiltersActive("mix", "all")).toBe(true);
     expect(timelineDawOpenSessionFiltersActive("", "suspended")).toBe(true);
   });
+
+  it("sorts filtered results deterministically without changing recommendation or counts", () => {
+    const sessions = [
+      session({ id: "zulu", projectTitle: "Alpha", name: "Zulu", updatedAt: "2026-08-15T08:00:00.000Z" }),
+      session({ id: "alpha", projectTitle: "Zulu", name: "Alpha", updatedAt: "2026-08-15T10:00:00.000Z" }),
+      session({ id: "bravo", projectTitle: "Alpha", name: "Bravo", updatedAt: "2026-08-15T09:00:00.000Z" }),
+    ];
+    const view = createTimelineDawSongStartView(sessions);
+    expect(view.recommended?.id).toBe("alpha");
+    expect(filterTimelineDawOpenSessions(view.open, "", "all", {}, "newest").sessions.map((item) => item.id)).toEqual(["alpha", "bravo", "zulu"]);
+    expect(filterTimelineDawOpenSessions(view.open, "", "all", {}, "session-name")).toMatchObject({ totalOpenCount: 3, matchingCount: 3 });
+    expect(filterTimelineDawOpenSessions(view.open, "", "all", {}, "session-name").sessions.map((item) => item.id)).toEqual(["alpha", "bravo", "zulu"]);
+    expect(filterTimelineDawOpenSessions(view.open, "", "all", {}, "project-name").sessions.map((item) => item.id)).toEqual(["bravo", "zulu", "alpha"]);
+    expect(view.recommended?.id).toBe("alpha");
+  });
 });

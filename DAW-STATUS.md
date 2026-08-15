@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Filter Recovery
+## Latest completed milestone - Recent Session Sort Controls
+
+- Global and project Song Start surfaces now provide deterministic Newest, Session Name, and Project Name ordering for open-session results.
+- Newest remains the default and preserves the existing updated-time, session-name, and stable-ID tie-breakers.
+- Session-name sorting uses project name and stable ID as tie-breakers; project-name sorting uses session name and stable ID.
+- Sorting composes with search and health-aware state filtering without changing displayed, matching, or total-open counts.
+- The independently calculated recommended session and every policy-selected primary action remain unchanged by result ordering.
+- Visible results remain capped at six after filtering and sorting, and all controls remain browser-local against owner-scoped snapshots.
+- Focused Song Start policy tests passed (17 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session Filter Recovery
 
 - Global and project Song Start surfaces now show one Clear Filters action whenever open-session search or state filtering is active.
 - The recovery action resets the search query and state filter together, restoring the complete deterministic recent list in one browser-local interaction.
@@ -486,11 +497,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session Sort Controls
+## Next eligible milestone - Recent Session Result Announcements
 
-1. Add deterministic Newest, Session Name, and Project Name sorting to the filtered open-session results.
-2. Keep sorting local and independent from the recommended session and policy-selected primary actions.
-3. Preserve state/search matching counts and the six-card result limit.
+1. Announce updated open-session result counts when search, filters, or sorting changes.
+2. Keep announcements concise, non-interruptive, and consistent across both owner surfaces.
+3. Preserve current visual counts, recommendation independence, and all local-only controls.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

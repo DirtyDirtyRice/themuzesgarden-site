@@ -10,6 +10,7 @@ export type TimelineDawResumeSession = {
 };
 
 export type TimelineDawOpenSessionFilter = "all" | "needs-setup" | "ready" | "active" | "suspended";
+export type TimelineDawOpenSessionSort = "newest" | "session-name" | "project-name";
 
 export function timelineDawOpenSessionFiltersActive(query: string, stateFilter: TimelineDawOpenSessionFilter) {
   return query.trim().length > 0 || stateFilter !== "all";
@@ -44,6 +45,7 @@ export function filterTimelineDawOpenSessions(
   query: string,
   stateFilter: TimelineDawOpenSessionFilter = "all",
   resumeBySessionId: Record<string, { tick: number; ppq: number } | null | undefined> = {},
+  sort: TimelineDawOpenSessionSort = "newest",
   limit = 6,
 ) {
   const open = sessions.filter((session) => session.state !== "closed");
@@ -51,12 +53,17 @@ export function filterTimelineDawOpenSessions(
   const searchMatches = normalized
     ? open.filter((session) => session.name.toLocaleLowerCase().includes(normalized) || session.songId.toLocaleLowerCase().includes(normalized) || session.projectTitle.toLocaleLowerCase().includes(normalized))
     : open;
-  const matches = stateFilter === "all" ? searchMatches : searchMatches.filter((session) => {
+  const stateMatches = stateFilter === "all" ? searchMatches : searchMatches.filter((session) => {
     const health = createTimelineDawRecentSessionHealth(session, resumeBySessionId[session.id]);
     if (stateFilter === "needs-setup") return health.state !== "ready";
     if (health.state !== "ready") return false;
     if (stateFilter === "ready") return session.state === "draft" || session.state === "ready";
     return session.state === stateFilter;
+  });
+  const matches = [...stateMatches].sort((left, right) => {
+    if (sort === "session-name") return left.name.localeCompare(right.name) || left.projectTitle.localeCompare(right.projectTitle) || left.id.localeCompare(right.id);
+    if (sort === "project-name") return left.projectTitle.localeCompare(right.projectTitle) || left.name.localeCompare(right.name) || left.id.localeCompare(right.id);
+    return Date.parse(right.updatedAt) - Date.parse(left.updatedAt) || left.name.localeCompare(right.name) || left.id.localeCompare(right.id);
   });
   return {
     totalOpenCount: open.length,
