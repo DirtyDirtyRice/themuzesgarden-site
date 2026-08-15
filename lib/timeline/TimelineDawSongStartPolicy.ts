@@ -31,3 +31,15 @@ export function createTimelineDawSongStartView(sessions: TimelineDawResumeSessio
       : "Start a song or import music to create your first protected session.",
   };
 }
+
+export function timelineDawResumePositionLabel(position: { tick: number; ppq: number } | null | undefined) {
+  if (!position || !Number.isSafeInteger(position.tick) || position.tick < 0 || !Number.isSafeInteger(position.ppq) || position.ppq <= 0) {
+    return "Playhead will open at song start.";
+  }
+  const beat = Math.floor(position.tick / position.ppq);
+  const bar = Math.floor(beat / 4) + 1;
+  const beatInBar = (beat % 4) + 1;
+  return position.tick === 0
+    ? "Playhead saved at song start."
+    : `Playhead saved at bar ${bar}, beat ${beatInBar}.`;
+}

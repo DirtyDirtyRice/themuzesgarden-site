@@ -30,6 +30,7 @@ export type DawSession = {
 export type DawSnapshot = {
   workspaceRevision: number;
   sessions: DawSession[];
+  resumeBySessionId?: Record<string, { tick: number; sample: number; ppq: number; updatedAt: string }>;
 };
 
 export type DawSessionAction = "validate" | "activate" | "suspend" | "resume" | "close";

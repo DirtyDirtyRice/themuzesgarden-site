@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawSongStartView, timelineDawResumePositionLabel } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { changeDawSession, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
   dawActionsByState,
@@ -157,6 +157,7 @@ export default function ProjectDawWorkspace({
             <div>
               <h3 className="text-xl font-black text-white">{songStart.recommended.name}</h3>
               <p className="mt-1 text-sm text-white/65">{songStart.message} Last saved {new Date(songStart.recommended.updatedAt).toLocaleString()}.</p>
+              <p className="mt-1 text-sm font-semibold text-emerald-100">{timelineDawResumePositionLabel(snapshot.resumeBySessionId?.[songStart.recommended.id])}</p>
             </div>
             <Link className={buttonClass} href={`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(songStart.recommended.id)}`}>
               {songStart.resumeLabel}

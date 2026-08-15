@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSongStartView } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawSongStartView, timelineDawResumePositionLabel } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -35,5 +35,11 @@ describe("DAW song start policy", () => {
   it("labels a suspended session as an explicit resume", () => {
     const view = createTimelineDawSongStartView([session({ state: "suspended" })]);
     expect(view.resumeLabel).toBe("Resume session");
+  });
+
+  it("turns a durable transport tick into musician-readable resume context", () => {
+    expect(timelineDawResumePositionLabel({ tick: 5 * 960, ppq: 960 })).toBe("Playhead saved at bar 2, beat 2.");
+    expect(timelineDawResumePositionLabel({ tick: 0, ppq: 960 })).toBe("Playhead saved at song start.");
+    expect(timelineDawResumePositionLabel(undefined)).toBe("Playhead will open at song start.");
   });
 });

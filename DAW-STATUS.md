@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Song Start and Resume
+## Latest completed milestone - Durable Studio Resume Context
+
+- Owner-scoped workspace snapshots now expose a minimal resume index derived from each visible session's existing durable transport archive.
+- Resume context contains only tick, sample, PPQ, and transport update time; it does not expose audio, private lanes, storage paths, or another project's sessions.
+- The global DAW control center and each project Studio show the recommended session's saved playhead as a musician-readable bar and beat.
+- Sessions with no valid saved transport receive an explicit song-start fallback instead of a fabricated position.
+- Reopening still uses the existing Studio transport restoration path, so the displayed cue and restored playhead share one authoritative transport record.
+- Focused Song Start and workspace-service tests passed (10 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Song Start and Resume
 
 - The authenticated DAW control center now recommends the active session across every owner project, falling back deterministically to the most recently saved open session.
 - Each project Studio presents the same resume-first path, excludes closed sessions, and limits the working list to the six most recent open sessions.
@@ -313,11 +323,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Studio Resume Context
+## Next eligible milestone - Studio Focus Restore
 
-1. Restore a session at its last durable musical position rather than only reopening its workspace route.
-2. Persist and validate a privacy-safe resume checkpoint covering transport position and the musician's active Studio area.
-3. Provide a clear fallback when a checkpoint is stale or references removed session data.
+1. Save the musician's active Studio area without duplicating or embedding private session data.
+2. Restore focus only to a known, currently available Studio area and reject stale or invented targets.
+3. Keep transport restoration authoritative and independent from visual focus restoration.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

@@ -82,6 +82,12 @@ export type TimelineDawWorkspaceReceipt = {
 export type TimelineDawWorkspaceSnapshot = {
   workspaceRevision: number;
   sessions: TimelineDawSession[];
+  resumeBySessionId: Record<TimelineId, {
+    tick: number;
+    sample: number;
+    ppq: number;
+    updatedAt: string;
+  }>;
 };
 
 export class TimelineDawWorkspaceService {
@@ -110,12 +116,24 @@ export class TimelineDawWorkspaceService {
     const ownerId = this.required(actorId, "Actor identity");
     await this.queue;
     const document = await this.store.load();
-    if (!document) return { workspaceRevision: 0, sessions: [] };
+    if (!document) return { workspaceRevision: 0, sessions: [], resumeBySessionId: {} };
     const coordinator = new TimelineDawSessionCoordinator();
     coordinator.restoreArchive(document.archive);
+    const sessions = coordinator.list({ ownerId, projectId, includeClosed: true });
+    const visibleSessionIds = new Set(sessions.map((session) => session.id));
+    const resumeBySessionId = Object.fromEntries(Object.values(document.archive.transports ?? {})
+      .flatMap((archive) => archive.transports)
+      .filter((transport) => visibleSessionIds.has(transport.sessionId))
+      .map((transport) => [transport.sessionId, {
+        tick: transport.tick,
+        sample: transport.sample,
+        ppq: transport.ppq,
+        updatedAt: transport.updatedAt,
+      }]));
     return {
       workspaceRevision: document.revision,
-      sessions: coordinator.list({ ownerId, projectId, includeClosed: true }),
+      sessions,
+      resumeBySessionId,
     };
   }
 

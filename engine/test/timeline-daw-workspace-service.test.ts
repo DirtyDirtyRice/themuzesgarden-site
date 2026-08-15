@@ -11,6 +11,7 @@ describe("TimelineDawWorkspaceService", () => {
     expect(await service.snapshot("owner-1", "project-1")).toEqual({
       workspaceRevision: 0,
       sessions: [],
+      resumeBySessionId: {},
     });
     await service.execute({
       action: "open",
