@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Production Member Sign-In Consistency
+## Latest completed milestone - Recent Session Preference Storage Consolidation
+
+- Replaced duplicated global and project preference hydration and persistence effects with one shared Song Start hook.
+- The shared hook derives and tracks the exact global or encoded project key, so a scope change immediately returns to the loading gate until that exact key hydrates.
+- Stored values still pass through the strict state-filter and sort allowlists; malformed, missing, or inaccessible storage falls back to All and Newest.
+- Writes remain hydration-guarded and non-blocking, and contain only state-filter and sort identifiers.
+- Search remains ephemeral, while session names, song IDs, project titles, audio, private notes, and storage paths never enter preference storage.
+- Focused preference, shared-control, and Song Start policy tests passed (26 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Production Member Sign-In Consistency
 
 - Removed the member account-creation path that could send the existing owner into an email-confirmation flow on a newly visited domain.
 - Localhost and production now expose the same single existing-account email/password sign-in form; no email code or new-account verification is part of the application flow.
@@ -583,12 +593,12 @@ Every support audit export and revocation can now be proven as part of the appen
 
 Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
-## Next eligible milestone - Recent Session Preference Storage Consolidation
+## Next eligible milestone - Public Library Guest Access Clarity
 
-1. Replace duplicated global and project preference hydration and persistence effects with one shared owner-safe hook.
-2. Preserve exact global and project storage-key isolation and strict allowlist parsing.
-3. Keep search ephemeral and retain the current no-flash hydration behavior.
-4. Verify storage-failure fallbacks, focused policy behavior, and the full production build.
+1. Give signed-out visitors one direct path to the complete public Library without entering owner credentials.
+2. Explain that private Projects require the existing owner account while public playback does not.
+3. Replace raw invalid-credential wording with a clear recoverable message and public-Library action.
+4. Verify guest access, privacy boundaries, and the full production release.
 ## Working rules
 
 - Preserve existing architecture and user data.

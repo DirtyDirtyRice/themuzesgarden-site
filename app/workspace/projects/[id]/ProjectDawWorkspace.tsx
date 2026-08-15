@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, parseTimelineDawOpenSessionPreferences, timelineDawOpenSessionPreferenceKey, type TimelineDawOpenSessionFilter, type TimelineDawOpenSessionSort } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import RecentSessionViewControls from "../../daw/RecentSessionViewControls";
+import { useRecentSessionViewPreferences } from "../../daw/useRecentSessionViewPreferences";
 import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
@@ -41,9 +42,13 @@ export default function ProjectDawWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [archiveQuery, setArchiveQuery] = useState("");
   const [recentQuery, setRecentQuery] = useState("");
-  const [recentStateFilter, setRecentStateFilter] = useState<TimelineDawOpenSessionFilter>("all");
-  const [recentSort, setRecentSort] = useState<TimelineDawOpenSessionSort>("newest");
-  const [recentPreferencesLoaded, setRecentPreferencesLoaded] = useState(false);
+  const {
+    loaded: recentPreferencesLoaded,
+    stateFilter: recentStateFilter,
+    sort: recentSort,
+    setStateFilter: setRecentStateFilter,
+    setSort: setRecentSort,
+  } = useRecentSessionViewPreferences({ projectId });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,8 +66,6 @@ export default function ProjectDawWorkspace({
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
-  useEffect(() => { queueMicrotask(() => { try { const saved = parseTimelineDawOpenSessionPreferences(window.localStorage.getItem(timelineDawOpenSessionPreferenceKey({ projectId }))); setRecentStateFilter(saved.stateFilter); setRecentSort(saved.sort); } catch {} setRecentPreferencesLoaded(true); }); }, [projectId]);
-  useEffect(() => { if (!recentPreferencesLoaded) return; try { window.localStorage.setItem(timelineDawOpenSessionPreferenceKey({ projectId }), JSON.stringify({ stateFilter: recentStateFilter, sort: recentSort })); } catch {} }, [projectId, recentPreferencesLoaded, recentSort, recentStateFilter]);
 
   useEffect(() => {
     if (!songId && tracks[0]) {

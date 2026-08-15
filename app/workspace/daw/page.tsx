@@ -6,8 +6,9 @@ import { useAuth } from "../../components/AuthProvider";
 import { getSupabaseProjects, type ProjectRow } from "../../../lib/getSupabaseProjects";
 import { changeDawSession, changeDawTransport, loadDawSnapshot } from "../projects/[id]/projectDawApi";
 import type { DawSnapshot } from "../projects/[id]/projectDawTypes";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, parseTimelineDawOpenSessionPreferences, timelineDawOpenSessionPreferenceKey, type TimelineDawOpenSessionFilter, type TimelineDawOpenSessionSort } from "../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions } from "../../../lib/timeline/TimelineDawSongStartPolicy";
 import RecentSessionViewControls from "./RecentSessionViewControls";
+import { useRecentSessionViewPreferences } from "./useRecentSessionViewPreferences";
 
 type Studio = { project: ProjectRow; snapshot: DawSnapshot | null; error: string | null };
 const button = "inline-flex rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:opacity-40";
@@ -34,9 +35,13 @@ export default function DawPage() {
   const [error, setError] = useState<string | null>(null);
   const [busySessionId, setBusySessionId] = useState<string | null>(null);
   const [recentQuery, setRecentQuery] = useState("");
-  const [recentStateFilter, setRecentStateFilter] = useState<TimelineDawOpenSessionFilter>("all");
-  const [recentSort, setRecentSort] = useState<TimelineDawOpenSessionSort>("newest");
-  const [recentPreferencesLoaded, setRecentPreferencesLoaded] = useState(false);
+  const {
+    loaded: recentPreferencesLoaded,
+    stateFilter: recentStateFilter,
+    sort: recentSort,
+    setStateFilter: setRecentStateFilter,
+    setSort: setRecentSort,
+  } = useRecentSessionViewPreferences("global");
 
   const load = useCallback(async () => {
     if (!user) { setStudios([]); setLoading(false); return; }
@@ -52,8 +57,6 @@ export default function DawPage() {
   }, [user]);
 
   useEffect(() => { queueMicrotask(() => void load()); }, [load]);
-  useEffect(() => { queueMicrotask(() => { try { const saved = parseTimelineDawOpenSessionPreferences(window.localStorage.getItem(timelineDawOpenSessionPreferenceKey("global"))); setRecentStateFilter(saved.stateFilter); setRecentSort(saved.sort); } catch {} setRecentPreferencesLoaded(true); }); }, []);
-  useEffect(() => { if (!recentPreferencesLoaded) return; try { window.localStorage.setItem(timelineDawOpenSessionPreferenceKey("global"), JSON.stringify({ stateFilter: recentStateFilter, sort: recentSort })); } catch {} }, [recentPreferencesLoaded, recentSort, recentStateFilter]);
   const sessions = useMemo(() => studios.flatMap((studio) => studio.snapshot?.sessions ?? []), [studios]);
   const songStart = useMemo(() => createTimelineDawSongStartView(studios.flatMap((studio) =>
     (studio.snapshot?.sessions ?? []).map((session) => ({
