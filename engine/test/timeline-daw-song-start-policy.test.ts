@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -104,5 +104,13 @@ describe("DAW song start policy", () => {
     ]);
     expect(filterTimelineDawClosedSessionArchive(archive, "song-a")).toMatchObject({ totalCount: 2, matchingCount: 1, sessions: [{ id: "vocal" }] });
     expect(filterTimelineDawClosedSessionArchive(archive, "").sessions.map((item) => item.id)).toEqual(["vocal", "drums"]);
+  });
+
+  it("filters open sessions without changing total count, recommendation, or six-card limit", () => {
+    const sessions = Array.from({ length: 8 }, (_, index) => session({ id: `session-${index}`, name: index < 7 ? `Mix ${index}` : "Vocal Edit", updatedAt: `2026-08-15T0${index}:00:00.000Z` }));
+    const view = createTimelineDawSongStartView(sessions);
+    expect(view.recommended?.id).toBe("session-7");
+    expect(filterTimelineDawOpenSessions(view.open, "mix")).toMatchObject({ totalOpenCount: 8, matchingCount: 7 });
+    expect(filterTimelineDawOpenSessions(view.open, "mix").sessions).toHaveLength(6);
   });
 });

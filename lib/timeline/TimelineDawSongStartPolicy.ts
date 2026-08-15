@@ -19,6 +19,7 @@ export function createTimelineDawSongStartView(sessions: TimelineDawResumeSessio
   const recommended = recent.find((session) => session.state === "active") ?? recent[0] ?? null;
   return {
     recommended,
+    open: recent,
     recent: recent.slice(0, 6),
     openCount: recent.length,
     resumeLabel: recommended
@@ -29,6 +30,23 @@ export function createTimelineDawSongStartView(sessions: TimelineDawResumeSessio
     message: recommended
       ? `Continue ${recommended.name} where you left off.`
       : "Start a song or import music to create your first protected session.",
+  };
+}
+
+export function filterTimelineDawOpenSessions(
+  sessions: TimelineDawResumeSession[],
+  query: string,
+  limit = 6,
+) {
+  const open = sessions.filter((session) => session.state !== "closed");
+  const normalized = query.trim().toLocaleLowerCase().slice(0, 100);
+  const matches = normalized
+    ? open.filter((session) => session.name.toLocaleLowerCase().includes(normalized) || session.songId.toLocaleLowerCase().includes(normalized) || session.projectTitle.toLocaleLowerCase().includes(normalized))
+    : open;
+  return {
+    totalOpenCount: open.length,
+    matchingCount: matches.length,
+    sessions: matches.slice(0, Math.max(1, Math.min(6, Math.floor(limit)))),
   };
 }
 

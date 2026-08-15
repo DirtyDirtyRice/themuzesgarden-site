@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Session Archive Search and Count Integrity
+## Latest completed milestone - Recent Session Search and Open Count Integrity
+
+- Global and project Song Start surfaces now support local search by session name, song ID, and project title where available.
+- Search input is bounded to 100 characters and never changes the independently calculated recommended session.
+- Each surface reports displayed cards, total matching sessions, and total open sessions separately.
+- Visible search results remain capped at six and preserve deterministic active/recent ordering.
+- Every result retains exactly one policy-selected primary action and all existing readiness, transport, state-machine, and revision safeguards.
+- Closed sessions remain excluded from open search and available only through the separate read-only archive.
+- Focused Song Start policy tests passed (14 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Session Archive Search and Count Integrity
 
 - Both owner archive surfaces now support local name and song-ID search across closed sessions.
 - Search input is bounded to 100 characters and filtering remains entirely in the browser against already owner-scoped snapshot data.
@@ -453,11 +464,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session Search and Open Count Integrity
+## Next eligible milestone - Recent Session State Filters
 
-1. Add bounded local search to open recent sessions without changing the deterministic recommendation.
-2. Keep total open count, matching count, and six-session display limit distinct.
-3. Preserve the single primary action and closed-session separation for every result.
+1. Add All, Needs Setup, Ready, Active, and Suspended filters to open-session search.
+2. Keep filters local, mutually exclusive, and independent from the recommended session.
+3. Preserve total/matching/display counts and the six-card result limit.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 
