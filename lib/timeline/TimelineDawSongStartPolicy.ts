@@ -38,6 +38,10 @@ export function timelineDawOpenSessionFiltersActive(query: string, stateFilter: 
   return query.trim().length > 0 || stateFilter !== "all";
 }
 
+export function timelineDawOpenSessionViewIsDefault(query: string, stateFilter: TimelineDawOpenSessionFilter, sort: TimelineDawOpenSessionSort) {
+  return !timelineDawOpenSessionFiltersActive(query, stateFilter) && sort === "newest";
+}
+
 export function timelineDawOpenSessionResultSummary(
   result: { sessions: TimelineDawResumeSession[]; matchingCount: number; totalOpenCount: number },
   stateFilter: TimelineDawOpenSessionFilter,

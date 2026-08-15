@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session View Preferences
+## Latest completed milestone - Recent Session Default View Recovery
+
+- Both owner Song Start surfaces now expose one Reset View action whenever search, state filtering, or sorting differs from the default view.
+- Reset View atomically restores an empty search, All states, and Newest ordering, returning the complete deterministic recent list under the existing six-card limit.
+- The restored filter and sort defaults flow through the safe preference writer, so the next browser visit also starts from the default view.
+- A shared policy recognizes the complete default state, including whitespace-only search, and keeps the action absent when no recovery is needed.
+- The native button is keyboard accessible and triggers no network request, session mutation, transport command, or workspace reload.
+- Recommendation selection, policy-selected primary actions, owner scoping, counts, and live result announcements remain unchanged.
+- Focused Song Start policy tests passed (20 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session View Preferences
 
 - Global and project Song Start surfaces now restore the musician's last state filter and sort order across browser return visits.
 - Global preferences use a dedicated global key; project preferences use an encoded exact-project key and cannot bleed into another project view.
@@ -519,11 +530,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session Default View Recovery
+## Next eligible milestone - Recent Session Preference Hydration Stability
 
-1. Add one Reset View action when search, state, or sorting differs from the default view.
-2. Restore empty search, All states, and Newest ordering together and persist the safe defaults.
-3. Keep the action absent for the default view and preserve recommendation independence.
+1. Prevent the default recent-session view from flashing or announcing before stored preferences finish loading.
+2. Keep preference failure fallback non-blocking and expose controls promptly after hydration.
+3. Preserve search ephemerality, owner scoping, and recommendation independence.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

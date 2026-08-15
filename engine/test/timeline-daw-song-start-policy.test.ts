@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, parseTimelineDawOpenSessionPreferences, timelineDawOpenSessionFiltersActive, timelineDawOpenSessionPreferenceKey, timelineDawOpenSessionResultSummary, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, parseTimelineDawOpenSessionPreferences, timelineDawOpenSessionFiltersActive, timelineDawOpenSessionPreferenceKey, timelineDawOpenSessionResultSummary, timelineDawOpenSessionViewIsDefault, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -165,5 +165,13 @@ describe("DAW song start policy", () => {
     expect(parseTimelineDawOpenSessionPreferences('{"stateFilter":"active","sort":"project-name","query":"private"}')).toEqual({ stateFilter: "active", sort: "project-name" });
     expect(parseTimelineDawOpenSessionPreferences('{"stateFilter":"invented","sort":"oldest"}')).toEqual({ stateFilter: "all", sort: "newest" });
     expect(parseTimelineDawOpenSessionPreferences("broken")).toEqual({ stateFilter: "all", sort: "newest" });
+  });
+
+  it("recognizes the complete default view for one-action recovery", () => {
+    expect(timelineDawOpenSessionViewIsDefault("", "all", "newest")).toBe(true);
+    expect(timelineDawOpenSessionViewIsDefault("   ", "all", "newest")).toBe(true);
+    expect(timelineDawOpenSessionViewIsDefault("mix", "all", "newest")).toBe(false);
+    expect(timelineDawOpenSessionViewIsDefault("", "active", "newest")).toBe(false);
+    expect(timelineDawOpenSessionViewIsDefault("", "all", "session-name")).toBe(false);
   });
 });
