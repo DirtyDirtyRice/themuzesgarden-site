@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawSessionActivationAction, timelineDawTransportInitializationAction } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
   dawActionsByState,
@@ -245,6 +245,7 @@ export default function ProjectDawWorkspace({
           const repair = timelineDawReadinessRepairAction(summary);
           const transportRepair = timelineDawTransportInitializationAction(summary, snapshot.resumeBySessionId?.[session.id]);
           const activation = timelineDawSessionActivationAction(summary, snapshot.resumeBySessionId?.[session.id]);
+          const resume = timelineDawSuspendedSessionResumeAction(summary, snapshot.resumeBySessionId?.[session.id]);
           return (
             <article key={session.id} className="rounded-2xl border border-white/15 bg-black p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -272,6 +273,7 @@ export default function ProjectDawWorkspace({
                 {repair?.action === "validate" ? <button type="button" className={buttonClass} disabled={busy !== null} onClick={() => void runAction(session, "validate")}>{busy === session.id ? "Validating…" : repair.label}</button> : null}
                 {transportRepair ? <button type="button" className={buttonClass} disabled={busy !== null} onClick={() => void initializeTransport(session)}>{busy === session.id ? "Initializing…" : transportRepair.label}</button> : null}
                 {activation ? <button type="button" className={buttonClass} disabled={busy !== null} onClick={() => void runAction(session, "activate")}>{busy === session.id ? "Activating…" : activation.label}</button> : null}
+                {resume ? <button type="button" className={buttonClass} disabled={busy !== null} onClick={() => void runAction(session, "resume")}>{busy === session.id ? "Resuming…" : resume.label}</button> : null}
                 {session.state !== "closed" ? (
                   <Link
                     href={`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(session.id)}`}
@@ -280,7 +282,7 @@ export default function ProjectDawWorkspace({
                     Enter Workspace
                   </Link>
                 ) : null}
-                {dawActionsByState[session.state].filter((action) => action !== "validate" && action !== "activate").map((action) => (
+                {dawActionsByState[session.state].filter((action) => action !== "validate" && action !== "activate" && action !== "resume").map((action) => (
                   <button
                     key={action}
                     type="button"

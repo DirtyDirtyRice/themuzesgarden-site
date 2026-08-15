@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -67,5 +67,13 @@ describe("DAW song start policy", () => {
     expect(timelineDawSessionActivationAction(session({ state: "draft", readinessReady: true }), position)).toBeNull();
     expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: false }), position)).toBeNull();
     expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: true }), undefined)).toBeNull();
+  });
+
+  it("offers resume only to a readiness-valid suspended session with transport", () => {
+    const position = { tick: 960, ppq: 960 };
+    expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended", readinessReady: true }), position)).toEqual({ action: "resume", label: "Resume session" });
+    expect(timelineDawSuspendedSessionResumeAction(session({ state: "active" }), position)).toBeNull();
+    expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended", readinessReady: false }), position)).toBeNull();
+    expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended" }), undefined)).toBeNull();
   });
 });

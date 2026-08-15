@@ -95,3 +95,13 @@ export function timelineDawSessionActivationAction(
     ? { action: "activate" as const, label: "Activate session" }
     : null;
 }
+
+export function timelineDawSuspendedSessionResumeAction(
+  session: Pick<TimelineDawResumeSession, "state" | "readinessReady">,
+  position: { tick: number; ppq: number } | null | undefined,
+) {
+  const health = createTimelineDawRecentSessionHealth(session, position);
+  return session.state === "suspended" && health.state === "ready"
+    ? { action: "resume" as const, label: "Resume session" }
+    : null;
+}
