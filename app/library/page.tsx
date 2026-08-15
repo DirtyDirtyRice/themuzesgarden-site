@@ -13,6 +13,7 @@ import { LibraryPageHeader } from "./LibraryPageHeader";
 import { LibraryTrackList } from "./LibraryTrackList";
 import { useLibraryTracks } from "./useLibraryTracks";
 import { useLibraryFilters } from "./useLibraryFilters";
+import { canViewLibraryTrack } from "./libraryTrackAccess";
 
 type IncomingTagMode = "add" | "replace";
 
@@ -59,10 +60,8 @@ export default function LibraryPage() {
   }, [publicProjectTrackIds, tracks]);
 
   const visibleTracks = useMemo(() => {
-    return groundworkTracks.filter(
-      (track) => track.libraryAccess.visibility !== "private"
-    );
-  }, [groundworkTracks]);
+    return groundworkTracks.filter((track) => canViewLibraryTrack(track, memberUserId));
+  }, [groundworkTracks, memberUserId]);
 
   const {
     activeTags,

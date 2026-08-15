@@ -43,7 +43,9 @@ function inferTrackSource(track: Record<string, unknown>): unknown {
 }
 
 function inferTrackVisibility(track: Record<string, unknown>): unknown {
-  return track.visibility ?? track.libraryVisibility ?? "private";
+  const explicit = track.visibility ?? track.libraryVisibility;
+  if (explicit != null) return explicit;
+  return inferTrackSource(track) === "seed" ? "public" : "private";
 }
 
 function inferSharedWithMemberIds(track: Record<string, unknown>): unknown {

@@ -40,3 +40,21 @@ export function isLibraryTrackPublic(access: LibraryTrackAccess): boolean {
 export function isLibraryTrackPrivate(access: LibraryTrackAccess): boolean {
   return access.visibility === "private";
 }
+
+export function canViewLibraryTrack(
+  track: {
+    libraryAccess?: LibraryTrackAccess;
+    visibility?: unknown;
+    sharedWithMemberIds?: unknown;
+    ownerId?: unknown;
+    owner_id?: unknown;
+  },
+  memberId: string | null,
+) {
+  const access = track.libraryAccess ?? buildLibraryTrackAccess(track);
+  if (isLibraryTrackPublic(access)) return true;
+  const cleanMemberId = String(memberId ?? "").trim();
+  if (!cleanMemberId) return false;
+  const ownerId = String(track.ownerId ?? track.owner_id ?? "").trim();
+  return ownerId === cleanMemberId || access.sharedWithMemberIds.includes(cleanMemberId);
+}

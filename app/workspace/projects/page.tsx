@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "../../components/AuthProvider";
 import { getSupabaseProjects } from "../../../lib/getSupabaseProjects";
 import { createSupabaseProject } from "../../../lib/createSupabaseProject";
@@ -269,8 +270,14 @@ export default function WorkspaceProjectsPage() {
     setLoadingProjects(true);
     setErrorMsg(null);
 
+    if (!user?.id) {
+      setProjects([]);
+      setLoadingProjects(false);
+      return;
+    }
+
     try {
-      const rows = await getSupabaseProjects();
+      const rows = await getSupabaseProjects(user.id);
       setProjects(rows as Project[]);
     } catch (error: unknown) {
       setErrorMsg(
@@ -432,6 +439,29 @@ export default function WorkspaceProjectsPage() {
     return (
       <main className="min-h-screen bg-black p-6 text-white">
         <p className="text-white">Loading...</p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-black px-5 py-6 text-white">
+        <section className="mx-auto w-full max-w-3xl">
+          <div className={panelClass}>
+            <p className={eyebrowClass}>Owner-protected workspace</p>
+            <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
+              Your projects are still private
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
+              Sign in with the account that created the projects to restore
+              them here. This page no longer shows a misleading empty project
+              list while you are signed out.
+            </p>
+            <Link className={`${buttonClass} mt-5 inline-block`} href="/members">
+              Go to Members Sign In
+            </Link>
+          </div>
+        </section>
       </main>
     );
   }

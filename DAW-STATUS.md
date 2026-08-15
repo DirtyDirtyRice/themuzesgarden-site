@@ -6,7 +6,19 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Preference Hydration Stability
+## Latest completed milestone - Library and Project Visibility Recovery
+
+- Restored the complete legacy song seed to the public Library when older song records have no explicit visibility metadata; the live Library currently exposes 226 public songs.
+- Verified in the running application that public Play controls are enabled and selecting a song creates the browser audio player.
+- Private songs remain hidden while signed out, but now return for their exact owner or explicitly shared member instead of being filtered out unconditionally.
+- Unknown uploaded, project, and storage-backed records still default to private, and the global player remains public-only.
+- The Projects page now explains that owner projects are protected when signed out instead of presenting a misleading empty list.
+- Signed-in project loading now queries and defensively filters by the exact authenticated owner ID while retaining database row-level security.
+- Focused Library playback/privacy tests passed (9 tests), TypeScript passed, and the production build passed with 75 generated pages.
+- Targeted lint reported only existing Library hook warnings and legacy Projects-page lint debt outside this recovery; no database migration was required.
+- Private songs and projects could not be visually enumerated without the owner's sign-in session, so their recovery remains privacy-preserving and is verified by access-policy tests and exact-owner query enforcement.
+
+## Previously completed milestone - Recent Session Preference Hydration Stability
 
 - Both owner Song Start surfaces now withhold recent-session controls, cards, and live result announcements until safe browser preference hydration finishes.
 - A concise non-live loading placeholder prevents the default All/Newest view from flashing or being announced before a stored filter and sort are applied.
