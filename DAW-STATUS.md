@@ -1,12 +1,22 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 13, 2026
+Last updated: August 15, 2026
 
 ## Current objective
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Normalization Support Evidence Chain Coverage and Backfill
+## Latest completed milestone - Song Start and Resume
+
+- The authenticated DAW control center now recommends the active session across every owner project, falling back deterministically to the most recently saved open session.
+- Each project Studio presents the same resume-first path, excludes closed sessions, and limits the working list to the six most recent open sessions.
+- Suspended work is labeled explicitly as Resume Session; other open work uses Continue in Studio.
+- Starting a linked song now supplies a musician-readable session name by default, creates the durable protected session through the existing revision-safe API, and navigates directly into its Studio workspace.
+- Empty projects retain a clear first-song instruction without creating placeholder sessions or bypassing linked-song ownership.
+- Focused Song Start policy tests passed (4 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Normalization Support Evidence Chain Coverage and Backfill
 
 Every support audit export and revocation can now be proven as part of the append-only evidence chain.
 
@@ -297,13 +307,18 @@ Every support audit export and revocation can now be proven as part of the appen
 - The private report can be printed or downloaded as structured JSON; downloaded JSON records screenshot presence while deliberately omitting embedded private image data.
 - Focused technical, visual-guide, and report policy tests passed (9 tests), TypeScript passed, and targeted lint passed.
 
-## Next milestone - First Complete Owner-Musician Evidence Run
+## Back Burner - Intentionally skipped
 
-1. Use the protected owner test workspace to create the minimum import, edit, Quick Mix, recovery, and export evidence needed by the automated runner.
-2. Run the technical checks and verify that the saved receipt has no technical holds before asking for listening judgments.
-3. Guide Steve through the seven short human checks with the accessible visual lessons and capture only useful notes, blockers, and screenshots.
-4. Generate the combined private report and verify print and JSON download behavior using real session evidence.
-5. Repair only problems revealed by the evidence run, then build and push the validated musician-test baseline.
+### First Complete Owner-Musician Evidence Run
+
+The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
+
+## Next eligible milestone - Studio Resume Context
+
+1. Restore a session at its last durable musical position rather than only reopening its workspace route.
+2. Persist and validate a privacy-safe resume checkpoint covering transport position and the musician's active Studio area.
+3. Provide a clear fallback when a checkpoint is stale or references removed session data.
+4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 
 - Preserve existing architecture and user data.

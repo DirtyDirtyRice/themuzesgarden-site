@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { changeDawSession, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
   dawActionsByState,
@@ -28,6 +30,7 @@ export default function ProjectDawWorkspace({
   projectTitle: string;
   tracks: Track[];
 }) {
+  const router = useRouter();
   const [snapshot, setSnapshot] = useState<DawSnapshot>({ workspaceRevision: 0, sessions: [] });
   const [songId, setSongId] = useState("");
   const [sessionName, setSessionName] = useState("");
@@ -49,17 +52,41 @@ export default function ProjectDawWorkspace({
   }, [projectId]);
 
   useEffect(() => {
-    void load();
+    queueMicrotask(() => void load());
   }, [load]);
 
   useEffect(() => {
-    if (!songId && tracks[0]) setSongId(String(tracks[0].id));
+    if (!songId && tracks[0]) {
+      queueMicrotask(() => {
+        setSongId(String(tracks[0].id));
+        setSessionName(`${trackName(tracks[0])} Session`);
+      });
+    }
   }, [songId, tracks]);
 
   const trackById = useMemo(
     () => new Map(tracks.map((track) => [String(track.id), track])),
     [tracks],
   );
+  const songStart = useMemo(
+    () => createTimelineDawSongStartView(snapshot.sessions.map((session) => ({
+      id: session.id,
+      projectId,
+      projectTitle,
+      name: session.name,
+      songId: session.songId,
+      state: session.state,
+      updatedAt: session.updatedAt,
+      readinessReady: session.readiness.ready,
+    }))),
+    [projectId, projectTitle, snapshot.sessions],
+  );
+
+  function selectSong(nextSongId: string) {
+    setSongId(nextSongId);
+    const track = trackById.get(nextSongId);
+    setSessionName(track ? `${trackName(track)} Session` : "");
+  }
 
   async function openSession() {
     if (!songId || !sessionName.trim()) return;
@@ -77,6 +104,7 @@ export default function ProjectDawWorkspace({
         sessions: [...current.sessions, result.receipt.session],
       }));
       setSessionName("");
+      router.push(`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(result.receipt.session.id)}`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "DAW session could not be opened.");
       await load();
@@ -122,10 +150,28 @@ export default function ProjectDawWorkspace({
         </p>
       </div>
 
-      <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-[1fr_1fr_auto]">
+      {!loading && songStart.recommended ? (
+        <div className="rounded-2xl border border-emerald-300/35 bg-emerald-400/10 p-5">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">Pick up where you stopped</p>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-black text-white">{songStart.recommended.name}</h3>
+              <p className="mt-1 text-sm text-white/65">{songStart.message} Last saved {new Date(songStart.recommended.updatedAt).toLocaleString()}.</p>
+            </div>
+            <Link className={buttonClass} href={`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(songStart.recommended.id)}`}>
+              {songStart.resumeLabel}
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <h3 className="font-black text-white">Start a song</h3>
+        <p className="mt-1 text-sm text-white/55">Choose linked music, name the working session, and go straight into Studio.</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
         <select
           value={songId}
-          onChange={(event) => setSongId(event.target.value)}
+          onChange={(event) => selectSong(event.target.value)}
           className="rounded-xl border border-white/20 bg-black px-3 py-2 text-white"
           aria-label="Song for new DAW session"
           disabled={tracks.length === 0 || busy !== null}
@@ -150,8 +196,9 @@ export default function ProjectDawWorkspace({
           disabled={!songId || !sessionName.trim() || busy !== null}
           onClick={() => void openSession()}
         >
-          {busy === "open" ? "Opening…" : "Open Session"}
+          {busy === "open" ? "Starting…" : "Start in Studio"}
         </button>
+        </div>
       </div>
 
       {error ? (
@@ -167,8 +214,14 @@ export default function ProjectDawWorkspace({
         </p>
       ) : null}
 
+      {songStart.recent.length ? <div>
+        <div className="mb-3">
+          <h3 className="font-black text-white">Recent sessions</h3>
+          <p className="text-xs text-white/50">{songStart.openCount} open session{songStart.openCount === 1 ? "" : "s"}</p>
+        </div>
       <div className="space-y-3">
-        {snapshot.sessions.map((session) => {
+        {songStart.recent.map((summary) => {
+          const session = snapshot.sessions.find((item) => item.id === summary.id)!;
           const track = trackById.get(session.songId);
           return (
             <article key={session.id} className="rounded-2xl border border-white/15 bg-black p-4">
@@ -217,6 +270,7 @@ export default function ProjectDawWorkspace({
           );
         })}
       </div>
+      </div> : null}
     </section>
   );
 }
