@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, filterTimelineDawClosedSessionArchive, filterTimelineDawOpenSessions, timelineDawOpenSessionFiltersActive, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -130,5 +130,12 @@ describe("DAW song start policy", () => {
     expect(filterTimelineDawOpenSessions(sessions, "", "active", positions).sessions.map((item) => item.id)).toEqual(["active"]);
     expect(filterTimelineDawOpenSessions(sessions, "", "suspended", positions).sessions.map((item) => item.id)).toEqual(["suspended"]);
     expect(filterTimelineDawOpenSessions(sessions, "ready", "active", positions)).toMatchObject({ totalOpenCount: 5, matchingCount: 0 });
+  });
+
+  it("offers filter recovery only when search or state filtering is active", () => {
+    expect(timelineDawOpenSessionFiltersActive("", "all")).toBe(false);
+    expect(timelineDawOpenSessionFiltersActive("   ", "all")).toBe(false);
+    expect(timelineDawOpenSessionFiltersActive("mix", "all")).toBe(true);
+    expect(timelineDawOpenSessionFiltersActive("", "suspended")).toBe(true);
   });
 });

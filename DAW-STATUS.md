@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session State Filters
+## Latest completed milestone - Recent Session Filter Recovery
+
+- Global and project Song Start surfaces now show one Clear Filters action whenever open-session search or state filtering is active.
+- The recovery action resets the search query and state filter together, restoring the complete deterministic recent list in one browser-local interaction.
+- Clear Filters is a native keyboard-accessible button and remains absent when both controls are already clear.
+- Recovery never reloads data, mutates a session, changes transport, or affects the independently calculated recommended session.
+- The shared policy defines filter-active behavior consistently for both owner surfaces, including whitespace-only queries.
+- Displayed, matching, and total-open counts return immediately to their unfiltered values while the six-card limit remains intact.
+- Focused Song Start policy tests passed (16 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session State Filters
 
 - Global and project Song Start surfaces now provide All, Needs Setup, Ready, Active, and Suspended filters alongside open-session search.
 - Filtering is browser-local and operates only on the already owner-scoped workspace snapshots; no new data exposure or server mutation is introduced.
@@ -475,11 +486,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session Filter Recovery
+## Next eligible milestone - Recent Session Sort Controls
 
-1. Add one clear-filter action when search or state filtering is active.
-2. Restore the full recent list atomically without changing the recommended session.
-3. Keep the action local, keyboard accessible, and absent when filters are already clear.
+1. Add deterministic Newest, Session Name, and Project Name sorting to the filtered open-session results.
+2. Keep sorting local and independent from the recommended session and policy-selected primary actions.
+3. Preserve state/search matching counts and the six-card result limit.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

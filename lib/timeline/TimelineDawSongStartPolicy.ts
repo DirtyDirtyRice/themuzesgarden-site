@@ -11,6 +11,10 @@ export type TimelineDawResumeSession = {
 
 export type TimelineDawOpenSessionFilter = "all" | "needs-setup" | "ready" | "active" | "suspended";
 
+export function timelineDawOpenSessionFiltersActive(query: string, stateFilter: TimelineDawOpenSessionFilter) {
+  return query.trim().length > 0 || stateFilter !== "all";
+}
+
 export function createTimelineDawSongStartView(sessions: TimelineDawResumeSession[]) {
   const recent = [...sessions]
     .filter((session) => session.state !== "closed")
