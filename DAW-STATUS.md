@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Default View Recovery
+## Latest completed milestone - Recent Session Preference Hydration Stability
+
+- Both owner Song Start surfaces now withhold recent-session controls, cards, and live result announcements until safe browser preference hydration finishes.
+- A concise non-live loading placeholder prevents the default All/Newest view from flashing or being announced before a stored filter and sort are applied.
+- Global recent-card visibility is gated by the same hydration state, and project recent cards remain absent until their exact-project preference resolves.
+- Missing, malformed, inaccessible, or disabled browser storage still falls back promptly to the allowlisted default view without blocking the DAW.
+- The independently calculated recommended session remains available while recent-view preferences load and is never derived from stored values.
+- Search remains ephemeral, preference writes remain hydration-guarded, and no session or audio data enters browser storage.
+- Focused Song Start policy tests passed (20 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session Default View Recovery
 
 - Both owner Song Start surfaces now expose one Reset View action whenever search, state filtering, or sorting differs from the default view.
 - Reset View atomically restores an empty search, All states, and Newest ordering, returning the complete deterministic recent list under the existing six-card limit.
@@ -530,11 +541,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
-## Next eligible milestone - Recent Session Preference Hydration Stability
+## Next eligible milestone - Recent Session View Controls Consolidation
 
-1. Prevent the default recent-session view from flashing or announcing before stored preferences finish loading.
-2. Keep preference failure fallback non-blocking and expose controls promptly after hydration.
-3. Preserve search ephemerality, owner scoping, and recommendation independence.
+1. Replace duplicated global and project search/filter/sort/reset markup with one shared owner-safe component.
+2. Preserve surface-specific search labels and styling without changing policy behavior.
+3. Keep accessibility, preference hydration, counts, and recommendation independence intact.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 
