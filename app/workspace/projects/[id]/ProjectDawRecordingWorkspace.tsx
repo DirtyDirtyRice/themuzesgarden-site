@@ -21,6 +21,7 @@ import {
 } from "./projectDawApi";
 import type { DawSession } from "./projectDawTypes";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
+import { TIMELINE_DAW_LOCAL_ACTIVITY_EVENT } from "@/lib/timeline/TimelineDawSafeExitPolicy";
 import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWorkspace";
 
 
@@ -77,7 +78,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   }, []);
 
   useEffect(() => {
-    void scanDevices();
+    queueMicrotask(() => void scanDevices());
     const media = navigator.mediaDevices;
     if (!media?.addEventListener) return;
     media.addEventListener("devicechange", scanDevices);
@@ -101,6 +102,17 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     if (contextRef.current) void contextRef.current.close();
     mp3UrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
   }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(TIMELINE_DAW_LOCAL_ACTIVITY_EVENT, {
+      detail: { sessionId: session.id, recording, uploading },
+    }));
+    return () => {
+      window.dispatchEvent(new CustomEvent(TIMELINE_DAW_LOCAL_ACTIVITY_EVENT, {
+        detail: { sessionId: session.id, recording: false, uploading: false },
+      }));
+    };
+  }, [recording, session.id, uploading]);
 
   function appendCaptureBlock(capture: TimelineDawPcmCaptureBuffer, channels: Float32Array[]) {
     capture.append(channels);

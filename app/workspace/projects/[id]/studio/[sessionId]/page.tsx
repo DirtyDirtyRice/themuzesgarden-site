@@ -35,6 +35,7 @@ import TimelineDawBetaReleasePackage from "@/app/components/TimelineDawBetaRelea
 import TimelineDawBetaReadinessCertification from "@/app/components/TimelineDawBetaReadinessCertification";
 import TimelineDawBetaLaunchOperations from "@/app/components/TimelineDawBetaLaunchOperations";
 import TimelineDawStudioFocusRestore from "@/app/components/TimelineDawStudioFocusRestore";
+import TimelineDawSafeExit from "@/app/components/TimelineDawSafeExit";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -149,13 +150,8 @@ export default function ProjectDawSessionPage() {
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-4 text-white sm:p-6">
       <nav className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href={`/workspace/projects/${encodeURIComponent(projectId)}`}
-          className="text-sm font-bold text-white/65 hover:text-white"
-        >
-          ← Back to Project Studio
-        </Link>
-        <span className="text-xs text-white/40">Session revision {session.revision}</span>
+        <span className="text-sm font-bold text-white/65">Project Studio · protected session</span>
+        <TimelineDawSafeExit projectId={projectId} sessionId={session.id} workspaceRevision={snapshot.workspaceRevision} />
       </nav>
 
       <header className="rounded-3xl border border-white/15 bg-[#080808] p-5 sm:p-7">

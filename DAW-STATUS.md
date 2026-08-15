@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Studio Focus Restore
+## Latest completed milestone - Safe Studio Exit and Return
+
+- Studio now has one explicit Save State and Return action that reports the current authoritative durable workspace revision before exit.
+- The recording workspace publishes privacy-safe local activity state for active capture and take upload without exposing audio buffers or file data.
+- In-app exit is blocked while recording or while a recorded take is still being persisted, with one concrete instruction for resolving the hold.
+- Closing or reloading the browser during those same local-only operations triggers the browser's native unsaved-work warning.
+- The redundant unguarded project-back link was removed from the active Studio navigation so it cannot bypass the safety decision.
+- A clean exit returns to the existing project Song Start and Resume surface; transport and Studio focus continue to restore independently from their authoritative state.
+- Focused safe-exit and focus-restore tests passed (4 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Studio Focus Restore
 
 - The Studio now tracks eight stable high-level work areas: guide, beta workflow, transport, mastering, mix, recording, recovery, and export.
 - A sticky focus control shows the musician's last visible area and returns there explicitly without changing playback or transport state.
@@ -333,11 +344,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Safe Studio Exit and Return
+## Next eligible milestone - Session Save Health
 
-1. Give musicians one clear exit action that confirms the session's durable save state before returning to the project.
-2. Prevent an in-progress local recording or unsaved browser-only action from being mistaken for durable work.
-3. Return through the existing Song Start and Resume path with the latest authoritative session context.
+1. Distinguish saved, saving, stale, and conflicted session state in one musician-readable indicator.
+2. Bind the indicator to existing revision-safe API activity rather than cosmetic timers.
+3. Provide a safe refresh path after a revision conflict without discarding browser-local recording work.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 
