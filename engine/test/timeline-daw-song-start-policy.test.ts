@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -53,5 +53,11 @@ describe("DAW song start policy", () => {
     expect(timelineDawReadinessRepairAction(session({ state: "draft", readinessReady: false }))).toEqual({ action: "validate", label: "Run engine validation" });
     expect(timelineDawReadinessRepairAction(session({ state: "suspended", readinessReady: false }))).toEqual({ action: "enter-studio", label: "Review engine blockers" });
     expect(timelineDawReadinessRepairAction(session({ readinessReady: true }))).toBeNull();
+  });
+
+  it("offers transport initialization only to an engine-ready session without transport", () => {
+    expect(timelineDawTransportInitializationAction(session({ readinessReady: true }), undefined)).toEqual({ action: "initialize-transport", label: "Initialize transport" });
+    expect(timelineDawTransportInitializationAction(session({ readinessReady: false }), undefined)).toBeNull();
+    expect(timelineDawTransportInitializationAction(session(), { tick: 0, ppq: 960 })).toBeNull();
   });
 });

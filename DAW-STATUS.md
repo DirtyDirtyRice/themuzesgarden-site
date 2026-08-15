@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - One-Action Session Readiness Repair
+## Latest completed milestone - One-Action Transport Initialization
+
+- Engine-ready sessions without valid durable transport context now expose Initialize Transport on both global and project Song Start cards.
+- Eligibility is derived from the same shared recent-session health policy, so held engines and sessions with an existing valid transport never receive the action.
+- Initialization uses the existing revision-safe transport API with the exact current workspace revision.
+- Authoritative workspace and transport context are reloaded after success and after any conflict or failure.
+- The operation creates only the durable stopped transport baseline; it never auto-plays, auto-records, or fabricates a prior playhead.
+- Focused Song Start and transport tests passed (24 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - One-Action Session Readiness Repair
 
 - Held draft sessions now expose Run Engine Validation directly from both global and project Song Start cards.
 - The action uses the existing revision-safe workspace command with the exact current session revision and workspace revision.
@@ -377,11 +387,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - One-Action Transport Initialization
+## Next eligible milestone - One-Action Session Activation
 
-1. Let an engine-ready session without transport context initialize its durable transport from the recent-session card.
-2. Preserve revision safety and reload authoritative transport context after initialization.
-3. Never auto-play, auto-record, or invent a saved playhead position.
+1. Let a fully validated ready session activate directly from its recent-session card.
+2. Preserve state-machine and revision safety, then reload authoritative session state.
+3. Never activate held, draft, suspended, closed, or transport-incomplete sessions.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

@@ -75,3 +75,13 @@ export function timelineDawReadinessRepairAction(session: Pick<TimelineDawResume
     ? { action: "validate" as const, label: "Run engine validation" }
     : { action: "enter-studio" as const, label: "Review engine blockers" };
 }
+
+export function timelineDawTransportInitializationAction(
+  session: Pick<TimelineDawResumeSession, "state" | "readinessReady">,
+  position: { tick: number; ppq: number } | null | undefined,
+) {
+  const health = createTimelineDawRecentSessionHealth(session, position);
+  return health.state === "setup"
+    ? { action: "initialize-transport" as const, label: "Initialize transport" }
+    : null;
+}

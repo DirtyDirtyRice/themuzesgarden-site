@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
-import { changeDawSession, loadDawSnapshot, openDawSession } from "./projectDawApi";
+import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawTransportInitializationAction } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
   dawActionsByState,
   type DawSession,
@@ -140,6 +140,20 @@ export default function ProjectDawWorkspace({
     }
   }
 
+  async function initializeTransport(session: DawSession) {
+    setBusy(session.id);
+    setError(null);
+    try {
+      await changeDawTransport({ action: "initialize", sessionId: session.id, expectedWorkspaceRevision: snapshot.workspaceRevision });
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Transport could not be initialized.");
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <section className="space-y-5 rounded-2xl border border-white/20 bg-[#080808] p-5">
       <div>
@@ -229,6 +243,7 @@ export default function ProjectDawWorkspace({
           const track = trackById.get(session.songId);
           const health = createTimelineDawRecentSessionHealth(summary, snapshot.resumeBySessionId?.[session.id]);
           const repair = timelineDawReadinessRepairAction(summary);
+          const transportRepair = timelineDawTransportInitializationAction(summary, snapshot.resumeBySessionId?.[session.id]);
           return (
             <article key={session.id} className="rounded-2xl border border-white/15 bg-black p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -254,6 +269,7 @@ export default function ProjectDawWorkspace({
               ) : null}
               <div className="mt-4 flex flex-wrap gap-2">
                 {repair?.action === "validate" ? <button type="button" className={buttonClass} disabled={busy !== null} onClick={() => void runAction(session, "validate")}>{busy === session.id ? "Validating…" : repair.label}</button> : null}
+                {transportRepair ? <button type="button" className={buttonClass} disabled={busy !== null} onClick={() => void initializeTransport(session)}>{busy === session.id ? "Initializing…" : transportRepair.label}</button> : null}
                 {session.state !== "closed" ? (
                   <Link
                     href={`/workspace/projects/${encodeURIComponent(projectId)}/studio/${encodeURIComponent(session.id)}`}
