@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
 import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
@@ -85,6 +85,10 @@ export default function ProjectDawWorkspace({
   const recommendedHealth = songStart.recommended
     ? createTimelineDawRecentSessionHealth(songStart.recommended, snapshot.resumeBySessionId?.[songStart.recommended.id])
     : null;
+  const closedArchive = useMemo(() => createTimelineDawClosedSessionArchive(snapshot.sessions.map((session) => ({
+    id: session.id, projectId, projectTitle, name: session.name, songId: session.songId,
+    state: session.state, updatedAt: session.updatedAt, readinessReady: session.readiness.ready,
+  }))), [projectId, projectTitle, snapshot.sessions]);
 
   function selectSong(nextSongId: string) {
     setSongId(nextSongId);
@@ -300,6 +304,7 @@ export default function ProjectDawWorkspace({
         })}
       </div>
       </div> : null}
+      {closedArchive.count ? <details className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><summary className="cursor-pointer font-black text-white/70">Closed session archive · {closedArchive.count}</summary><p className="mt-2 text-sm text-white/45">Read-only lifecycle history. Closing a session does not delete its saved audio or source artifacts.</p><div className="mt-3 space-y-2">{closedArchive.sessions.map((archived) => { const source = snapshot.sessions.find((item) => item.id === archived.id)!; return <article key={archived.id} className="rounded-xl border border-white/10 bg-black p-3"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-bold">{archived.name}</p><p className="text-xs text-white/45">Song {archived.songId}</p></div><p className="text-xs text-white/45">Revision {source.revision} · closed {new Date(archived.updatedAt).toLocaleString()}</p></div></article>; })}</div></details> : null}
     </section>
   );
 }

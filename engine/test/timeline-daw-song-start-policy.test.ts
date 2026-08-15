@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawClosedSessionArchive, createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -85,5 +85,15 @@ describe("DAW song start policy", () => {
     expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "suspended" }), position)?.action).toBe("resume");
     expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "active" }), position)?.action).toBe("enter-studio");
     expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "closed" }), position)).toBeNull();
+  });
+
+  it("keeps closed sessions in a separate newest-first read-only archive", () => {
+    const archive = createTimelineDawClosedSessionArchive([
+      session({ id: "open", state: "active" }),
+      session({ id: "older", name: "Older", state: "closed", updatedAt: "2026-08-14T08:00:00.000Z" }),
+      session({ id: "newer", name: "Newer", state: "closed", updatedAt: "2026-08-15T08:00:00.000Z" }),
+    ]);
+    expect(archive.count).toBe(2);
+    expect(archive.sessions.map((item) => item.id)).toEqual(["newer", "older"]);
   });
 });

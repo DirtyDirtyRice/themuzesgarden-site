@@ -121,3 +121,10 @@ export function createTimelineDawRecentSessionPrimaryAction(
   if (resume) return resume;
   return { action: "enter-studio" as const, label: readiness?.label ?? "Enter Studio" };
 }
+
+export function createTimelineDawClosedSessionArchive(sessions: TimelineDawResumeSession[]) {
+  const closed = sessions
+    .filter((session) => session.state === "closed")
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt) || left.name.localeCompare(right.name) || left.id.localeCompare(right.id));
+  return { count: closed.length, sessions: closed };
+}

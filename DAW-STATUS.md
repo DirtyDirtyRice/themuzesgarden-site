@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Session Lifecycle Confirmation
+## Latest completed milestone - Closed Session Archive Visibility
+
+- Global and project owner surfaces now show a collapsed read-only archive count when closed sessions exist.
+- Archived entries expose only session name, song identity where appropriate, final session revision, and closure update time.
+- Closed sessions remain excluded from active recommendations, recent-session counts, primary actions, and resume links.
+- Archive ordering is deterministic and newest-closed first with stable name and ID tie-breakers.
+- The archive provides no reopen control because reopening is unsupported by the current lifecycle state machine.
+- Archive copy explicitly distinguishes lifecycle closure from deletion of saved audio or source artifacts.
+- Focused Song Start policy tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Session Lifecycle Confirmation
 
 - Suspend and Close controls on owner project cards now require explicit action-specific confirmation before issuing a lifecycle command.
 - Suspension explains that the session can be explicitly resumed and that saved audio, edits, transport, and source artifacts remain intact.
@@ -431,11 +442,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Closed Session Archive Visibility
+## Next eligible milestone - Session Archive Search and Count Integrity
 
-1. Provide a collapsed owner-only archive count and closed-session identity without returning closed sessions to the musician resume path.
-2. Make permanent closure auditable through existing session revision and update timestamps.
-3. Keep archive viewing read-only and never expose a reopen action unsupported by the lifecycle state machine.
+1. Add a bounded local name/song search for owners with many closed sessions.
+2. Keep the total archive count independent from the filtered visible count.
+3. Preserve read-only behavior and deterministic newest-first ordering.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 
