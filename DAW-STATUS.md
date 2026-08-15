@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Library and Project Visibility Recovery
+## Latest completed milestone - Production Deployment Pipeline Recovery
+
+- Diagnosed the production mismatch: GitHub `main` was current, but the custom domain still targeted an August 13 Vercel deployment because Hobby-plan cron validation rejected every newer deployment.
+- Preserved all five protected normalization workers while changing their schedules from unsupported 5-15 minute intervals to staggered once-daily UTC runs accepted by the connected hosting plan.
+- Added a deployment-only ignore manifest so local diagnostics, build caches, temporary Supabase state, and unrelated document artifacts are never uploaded; the deployment payload fell from 1.4 GB to 2.8 MB.
+- Deployed the current recovered Library and Projects application directly to production and confirmed `www.themuzesgarden.com` now targets ready deployment `dpl_D3kWGTto7u3biZX2bq6RQRipLyNM`.
+- Live custom-domain checks returned HTTP 200 with fresh production responses for both `/library` and `/workspace/projects`.
+- The remote Vercel production build passed TypeScript and generated all 75 pages.
+- No database migration was required; higher-frequency background processing will require a Vercel plan that supports sub-daily cron schedules or a separate scheduler.
+
+## Previously completed milestone - Library and Project Visibility Recovery
 
 - Restored the complete legacy song seed to the public Library when older song records have no explicit visibility metadata; the live Library currently exposes 226 public songs.
 - Verified in the running application that public Play controls are enabled and selecting a song creates the browser audio player.
