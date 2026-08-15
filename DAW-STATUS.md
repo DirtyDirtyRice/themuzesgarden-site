@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Production Deployment Pipeline Recovery
+## Latest completed milestone - Recent Session View Controls Consolidation
+
+- Replaced duplicated global and project Song Start search, state-filter, sort, reset, hydration, and live-result markup with one shared owner-safe component.
+- Global and project surfaces retain their original search wording, control styling, status placement, and preference scope.
+- The shared controls preserve the 100-character search bound, complete state and sort allowlists, conditional Reset View action, and polite atomic result announcement.
+- Preference hydration still withholds every control and result announcement until safe browser restoration completes.
+- Filtering and sorting remain policy-driven, while recommendation selection and owner-scoped session data remain independent of the shared presentation component.
+- Focused shared-control and Song Start policy tests passed (23 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Production Deployment Pipeline Recovery
 
 - Diagnosed the production mismatch: GitHub `main` was current, but the custom domain still targeted an August 13 Vercel deployment because Hobby-plan cron validation rejected every newer deployment.
 - Preserved all five protected normalization workers while changing their schedules from unsupported 5-15 minute intervals to staggered once-daily UTC runs accepted by the connected hosting plan.
@@ -563,12 +573,12 @@ Every support audit export and revocation can now be proven as part of the appen
 
 Exact blocker after three consecutive attempts on August 15, 2026: the local Member Access page remained signed out, so no authenticated owner session was available to open an owner-protected DAW session or write the seven human evidence judgments. The C:\ workspace and local development server are working. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment. Resume only after the owner signs in directly in the preserved browser session.
 
-## Next eligible milestone - Recent Session View Controls Consolidation
+## Next eligible milestone - Production Member Sign-In Consistency
 
-1. Replace duplicated global and project search/filter/sort/reset markup with one shared owner-safe component.
-2. Preserve surface-specific search labels and styling without changing policy behavior.
-3. Keep accessibility, preference hydration, counts, and recommendation independence intact.
-4. Verify focused policy and API behavior, then run the full production build before release.
+1. Remove the unused account-creation path that can strand the existing owner in an email-confirmation flow.
+2. Keep one identical password sign-in experience on localhost and production.
+3. Return protected-project sign-ins directly to the requested owner page.
+4. Verify focused authentication policy behavior and the complete production release.
 ## Working rules
 
 - Preserve existing architecture and user data.
