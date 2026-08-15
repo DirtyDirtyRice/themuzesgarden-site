@@ -646,11 +646,28 @@ Exact blocker after three consecutive attempts on August 15, 2026: the local Mem
 - Focused project-song and Global Player privacy tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - Supabase migration 20260815080000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Public Library Folder Navigation
+## Back Burner - Intentionally Skipped
 
-1. Present public songs under their existing public project-folder names instead of only as one flat catalog.
-2. Keep private folders and private song links completely absent from anonymous navigation and playback.
-3. Preserve the current search, Global Player, and direct-play behavior while adding folder browsing.
+### Public Library Folder Navigation
+
+The owner confirmed on August 15, 2026 that the repaired Library is satisfactory at its current stage and explicitly requested a return to DAW milestones. Existing Library privacy, playback, project folders, and song-level publication controls remain unchanged.
+
+## Completed milestone - Recording Input Preflight and Level Check
+
+- Recording now provides a separate two-second input-level check before a musician starts a real take.
+- The check uses the selected input with browser processing disabled, never connects to storage, and stops its microphone stream and audio context immediately afterward.
+- Peak input is classified as no useful signal, too quiet, ready, too hot, or clipping using bounded dBFS thresholds.
+- Every held state provides one concrete correction for device selection, cables, microphone distance, or interface gain.
+- Changing the selected input clears the prior result so a different device can never inherit a stale ready state.
+- Existing WAV/MP3 capture, punch, loop, take review, and private upload behavior remains unchanged; preflight advises the musician without silently blocking an intentional recording.
+- Focused recording-preflight, input-level, and device-diagnostics tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Recording Setup Recall and Readiness Evidence
+
+1. Remember safe per-session recording choices such as selected input, format, mode, tempo, and count-in without storing microphone audio.
+2. Record the latest input-preflight result as private session readiness evidence with its device identity and timestamp.
+3. Warn when a restored setup references a missing or changed device and require a fresh check before presenting it as ready.
 ## Working rules
 
 - Preserve existing architecture and user data.

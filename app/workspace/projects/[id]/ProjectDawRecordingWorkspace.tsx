@@ -8,6 +8,10 @@ import {
 import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Encoder";
 import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
 import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
+import {
+  assessTimelineDawRecordingPreflight,
+  type TimelineDawRecordingPreflightResult,
+} from "../../../../lib/timeline/TimelineDawRecordingPreflight";
 import { uploadDawRenderSource } from "./projectDawApi";
 import {
   createDawRecordingTakeAudition,
@@ -54,6 +58,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [preflightBusy, setPreflightBusy] = useState(false);
+  const [preflight, setPreflight] = useState<TimelineDawRecordingPreflightResult | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -84,6 +90,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     media.addEventListener("devicechange", scanDevices);
     return () => media.removeEventListener("devicechange", scanDevices);
   }, [scanDevices]);
+
+  useEffect(() => {
+    setPreflight(null);
+  }, [deviceId]);
 
   useEffect(() => {
     let active = true;
@@ -122,6 +132,50 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     if (now - meterUpdatedAtRef.current < 100) return;
     meterUpdatedAtRef.current = now;
     setInputPeakDb(level.peakDbfs);
+  }
+
+  async function testInputLevel() {
+    if (recording || uploading || preflightBusy) return;
+    setError(null);
+    setPreflight(null);
+    setPreflightBusy(true);
+    let stream: MediaStream | null = null;
+    let context: AudioContext | null = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
+      context = new AudioContext({ latencyHint: "interactive" });
+      await context.resume();
+      const source = context.createMediaStreamSource(stream);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      source.connect(analyser);
+      const samples = new Float32Array(analyser.fftSize);
+      let peak = 0;
+      const finishAt = performance.now() + 1800;
+      while (performance.now() < finishAt) {
+        analyser.getFloatTimeDomainData(samples);
+        for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
+        await new Promise((resolve) => window.setTimeout(resolve, 50));
+      }
+      source.disconnect();
+      analyser.disconnect();
+      const peakDbfs = peak > 0 ? 20 * Math.log10(peak) : -96;
+      setPreflight(assessTimelineDawRecordingPreflight(peakDbfs));
+      await scanDevices();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Input level check could not start.");
+    } finally {
+      stream?.getTracks().forEach((track) => track.stop());
+      if (context && context.state !== "closed") await context.close();
+      setPreflightBusy(false);
+    }
   }
 
   async function startRecording() {
@@ -406,6 +460,31 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           <option value="wav">WAV master (default)</option>
           <option value="mp3">WAV master + MP3 copy</option>
         </select>
+      </div>
+      <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-300/[0.05] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-black">Input preflight</p>
+            <p className="mt-1 text-xs text-white/55">Play or sing at performance volume for two seconds. This check does not save audio.</p>
+          </div>
+          <button type="button" className={button} disabled={recording || uploading || preflightBusy || !devices.length} onClick={() => void testInputLevel()}>
+            {preflightBusy ? "Listening..." : preflight ? "Test Input Again" : "Test Input Level"}
+          </button>
+        </div>
+        {preflight ? (
+          <div className="mt-3" role="status" aria-live="polite">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className={preflight.ready ? "font-black text-emerald-200" : preflight.status === "clipping" ? "font-black text-red-200" : "font-black text-amber-200"}>
+                {preflight.status === "ready" ? "Ready to record" : preflight.status === "clipping" ? "Clipping" : preflight.status === "hot" ? "Too hot" : preflight.status === "low" ? "Too quiet" : "No useful signal"}
+              </span>
+              <span className="font-mono text-white/70">Peak {preflight.peakDbfs.toFixed(1)} dBFS</span>
+            </div>
+            <div className="mt-2 h-3 overflow-hidden rounded-full bg-black">
+              <div className={`h-full ${preflight.ready ? "bg-emerald-400" : preflight.status === "clipping" ? "bg-red-400" : "bg-amber-300"}`} style={{ width: `${Math.max(0, Math.min(100, ((preflight.peakDbfs + 60) / 60) * 100))}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-white/70">{preflight.guidance}</p>
+          </div>
+        ) : null}
       </div>
       <div className="mt-4 grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-4">
         <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Mode
