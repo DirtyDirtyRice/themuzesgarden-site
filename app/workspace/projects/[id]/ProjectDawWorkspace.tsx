@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView } from "../../../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawLifecycleConfirmation, type TimelineDawConfirmedLifecycleAction } from "../../../../lib/timeline/TimelineDawLifecycleConfirmationPolicy";
 import { changeDawSession, changeDawTransport, loadDawSnapshot, openDawSession } from "./projectDawApi";
 import {
   dawActionsByState,
@@ -154,6 +155,13 @@ export default function ProjectDawWorkspace({
     }
   }
 
+  function confirmLifecycle(session: DawSession, action: TimelineDawConfirmedLifecycleAction) {
+    const confirmation = createTimelineDawLifecycleConfirmation(action, session.name);
+    if (window.confirm(`${confirmation.title}\n\n${confirmation.message}\n\nChoose OK to ${confirmation.confirmLabel.toLowerCase()}.`)) {
+      void runAction(session, action);
+    }
+  }
+
   return (
     <section className="space-y-5 rounded-2xl border border-white/20 bg-[#080808] p-5">
       <div>
@@ -282,7 +290,7 @@ export default function ProjectDawWorkspace({
                     type="button"
                     className={buttonClass}
                     disabled={busy !== null}
-                    onClick={() => void runAction(session, action)}
+                    onClick={() => confirmLifecycle(session, action as TimelineDawConfirmedLifecycleAction)}
                   >
                     {busy === session.id ? "Working…" : action[0].toUpperCase() + action.slice(1)}
                   </button>

@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Recent Session Action Consolidation
+## Latest completed milestone - Session Lifecycle Confirmation
+
+- Suspend and Close controls on owner project cards now require explicit action-specific confirmation before issuing a lifecycle command.
+- Suspension explains that the session can be explicitly resumed and that saved audio, edits, transport, and source artifacts remain intact.
+- Closure is labeled permanent, explains removal from recent/resume lists, and does not falsely imply that saved audio or source artifacts are deleted.
+- Cancelling confirmation performs no API request and leaves the session and workspace revisions unchanged.
+- Confirmed operations continue through the existing revision-safe state machine and authoritative error/reload handling.
+- Lifecycle controls remain visually separate from the single recommended musician action.
+- Focused lifecycle-confirmation and Song Start tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Recent Session Action Consolidation
 
 - A single shared policy now selects exactly one primary action for every open recent session: Validate, Initialize Transport, Activate Session, Resume Session, or Enter Studio.
 - Selection preserves the full state-machine, engine-readiness, durable-transport, and closed-session safeguards established by the preceding milestones.
@@ -420,11 +431,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Session Lifecycle Confirmation
+## Next eligible milestone - Closed Session Archive Visibility
 
-1. Require explicit musician confirmation before suspending or permanently closing a session from recent-session cards.
-2. Explain the exact effect of each lifecycle transition without implying that audio or source artifacts are deleted.
-3. Preserve revision-safe commands and authoritative reload after every confirmed transition.
+1. Provide a collapsed owner-only archive count and closed-session identity without returning closed sessions to the musician resume path.
+2. Make permanent closure auditable through existing session revision and update timestamps.
+3. Keep archive viewing read-only and never expose a reopen action unsupported by the lifecycle state machine.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 
