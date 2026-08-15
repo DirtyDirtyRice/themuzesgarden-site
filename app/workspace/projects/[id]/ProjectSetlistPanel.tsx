@@ -152,10 +152,12 @@ export default function ProjectSetlistPanel({
               linkBusyId={controller.linkBusyId}
               visibilityBusyId={controller.visibilityBusyId}
               linkedTrackVisibility={controller.linkedTrackVisibility}
+              bulkVisibilityBusy={controller.bulkVisibilityBusy}
               onRefreshLibrary={controller.handleRefreshLibrary}
               onUnlinkTrack={controller.handleUnlinkTrack}
               onLinkTrack={controller.handleLinkTrack}
               onSetTrackVisibility={controller.handleSetTrackVisibility}
+              onMakeAllPrivate={controller.handleMakeAllPrivate}
             />
           ) : null
         }

@@ -21,6 +21,7 @@ import { useProjectWorkspacePanelSystem } from "./command_control/useProjectWork
 
 type Props = {
   allTracks: any[];
+  projectTitle?: string;
   projectVisibility?: "private" | "public" | "shared";
   linkedTracks: any[];
   linkedTrackIds: Set<string>;
@@ -29,6 +30,7 @@ type Props = {
   linkBusyId: string | null;
   visibilityBusyId: string | null;
   linkedTrackVisibility: Record<string, "private" | "public">;
+  bulkVisibilityBusy: boolean;
   nowPlayingId: string | null;
   previewTrackId: string | null;
   metadataTargetType: MetadataTargetType;
@@ -40,6 +42,7 @@ type Props = {
   onUnlinkTrack: (tid: string) => void;
   onLinkTrack: (tid: string) => void;
   onSetTrackVisibility: (tid: string, visibility: "private" | "public") => void;
+  onMakeAllPrivate: () => void;
 };
 
 function normalizeVisibilityLabel(value: unknown): string {
@@ -79,6 +82,7 @@ function isTrackPrivateFromGroundworkTrack(
 export default function ProjectLibraryWorkspace(props: Props) {
   const {
     allTracks,
+    projectTitle,
     projectVisibility = "private",
     linkedTracks,
     linkedTrackIds,
@@ -87,6 +91,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
     linkBusyId,
     visibilityBusyId,
     linkedTrackVisibility,
+    bulkVisibilityBusy,
     nowPlayingId,
     previewTrackId,
     metadataTargetType,
@@ -98,6 +103,7 @@ export default function ProjectLibraryWorkspace(props: Props) {
     onUnlinkTrack,
     onLinkTrack,
     onSetTrackVisibility,
+    onMakeAllPrivate,
   } = props;
 
   const [metadataFilters, setMetadataFilters] = useState<MetadataFilter[]>([]);
@@ -397,16 +403,19 @@ export default function ProjectLibraryWorkspace(props: Props) {
 
           <ProjectLibraryPanel
             allTracks={filteredAllTracks as any[]}
+            projectTitle={projectTitle}
             projectVisibility={projectVisibility}
             linkedTrackIds={linkedTrackIds}
             loadingLibrary={loadingLibrary}
             linkBusyId={linkBusyId}
             visibilityBusyId={visibilityBusyId}
             linkedTrackVisibility={linkedTrackVisibility}
+            bulkVisibilityBusy={bulkVisibilityBusy}
             linkTrack={onLinkTrack}
             unlinkTrack={onUnlinkTrack}
             onPlayTrackById={onPlayTrackById}
             onSetTrackVisibility={onSetTrackVisibility}
+            onMakeAllPrivate={onMakeAllPrivate}
           />
         </div>
 

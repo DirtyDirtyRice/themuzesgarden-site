@@ -70,10 +70,12 @@ export default function ProjectDetailsContentRouter(props: {
   linkBusyId: string | null;
   visibilityBusyId: string | null;
   linkedTrackVisibility: Record<string, "private" | "public">;
+  bulkVisibilityBusy: boolean;
   onRefreshLibrary: () => void;
   onUnlinkTrack: (tid: string) => void;
   onLinkTrack: (tid: string) => void;
   onSetTrackVisibility: (tid: string, visibility: "private" | "public") => void;
+  onMakeAllPrivate: () => void;
 }) {
   const {
     tab,
@@ -137,10 +139,12 @@ export default function ProjectDetailsContentRouter(props: {
     linkBusyId,
     visibilityBusyId,
     linkedTrackVisibility,
+    bulkVisibilityBusy,
     onRefreshLibrary,
     onUnlinkTrack,
     onLinkTrack,
     onSetTrackVisibility,
+    onMakeAllPrivate,
   } = props;
 
   if (!tab) {
@@ -216,6 +220,7 @@ export default function ProjectDetailsContentRouter(props: {
     return (
       <ProjectLibraryWorkspace
         allTracks={allTracks}
+        projectTitle={String(project?.title ?? "")}
         projectVisibility={project?.visibility ?? "private"}
         linkedTracks={linkedTracks}
         linkedTrackIds={linkedTrackIds}
@@ -224,6 +229,7 @@ export default function ProjectDetailsContentRouter(props: {
         linkBusyId={linkBusyId}
         visibilityBusyId={visibilityBusyId}
         linkedTrackVisibility={linkedTrackVisibility}
+        bulkVisibilityBusy={bulkVisibilityBusy}
         nowPlayingId={nowPlayingId}
         previewTrackId={previewTrackId}
         metadataTargetType={metadataTargetType}
@@ -235,6 +241,7 @@ export default function ProjectDetailsContentRouter(props: {
         onUnlinkTrack={onUnlinkTrack}
         onLinkTrack={onLinkTrack}
         onSetTrackVisibility={onSetTrackVisibility}
+        onMakeAllPrivate={onMakeAllPrivate}
       />
     );
   }

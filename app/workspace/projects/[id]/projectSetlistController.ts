@@ -248,6 +248,9 @@ export function useProjectSetlistController({
     ) => {
       void projectLibrary.setTrackVisibility(trackId, visibility);
     },
+    handleMakeAllPrivate: () => {
+      void projectLibrary.makeAllTracksPrivate();
+    },
     handleTrySwitchNote: (note: unknown) => {
       void projectNotes.trySwitchNote(note as any);
     },

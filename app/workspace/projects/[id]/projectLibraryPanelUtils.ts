@@ -119,7 +119,7 @@ export function filterTracks(
 
   let list = Array.isArray(allTracks) ? allTracks : [];
 
-  if (mode === "linked") {
+  if (mode === "linked" || mode === "privacy") {
     list = list.filter((track) => linkedTrackIds.has(String(track?.id)));
   } else if (mode === "unlinked") {
     list = list.filter((track) => !linkedTrackIds.has(String(track?.id)));

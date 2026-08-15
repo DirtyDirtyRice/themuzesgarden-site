@@ -45,6 +45,7 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
   const [overviewErr, setOverviewErr] = useState<string | null>(null);
   const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
   const [visibilityBusyId, setVisibilityBusyId] = useState<string | null>(null);
+  const [bulkVisibilityBusy, setBulkVisibilityBusy] = useState(false);
   const [linkedTrackVisibility, setLinkedTrackVisibility] = useState<
     Record<string, "private" | "public">
   >({});
@@ -351,6 +352,26 @@ const linkedTrack =
     [projectId, supabase],
   );
 
+  const makeAllTracksPrivate = useCallback(async () => {
+    setLibraryErr(null);
+    setBulkVisibilityBusy(true);
+    try {
+      const { error } = await supabase.rpc("make_project_tracks_private", {
+        p_project_id: projectId,
+      });
+      if (error) throw new Error(error.message);
+      setLinkedTrackVisibility((current) =>
+        Object.fromEntries(Object.keys(current).map((trackId) => [trackId, "private"])),
+      );
+      window.dispatchEvent(new Event("muzes:projectTracksChanged"));
+      logProjectActivity(projectId, "note", "Made every song in this project private");
+    } catch (error: any) {
+      setLibraryErr(error?.message ?? "Folder privacy update failed");
+    } finally {
+      setBulkVisibilityBusy(false);
+    }
+  }, [projectId, supabase]);
+
   return {
     allTracks,
     setAllTracks,
@@ -363,6 +384,7 @@ const linkedTrack =
     overviewErr,
     linkBusyId,
     visibilityBusyId,
+    bulkVisibilityBusy,
     linkedTrackVisibility,
     ensureProjectExists,
     ensureTracksLoadedOnce,
@@ -372,5 +394,6 @@ const linkedTrack =
     linkTrack,
     unlinkTrack,
     setTrackVisibility,
+    makeAllTracksPrivate,
   };
 }

@@ -635,11 +635,22 @@ Exact blocker after three consecutive attempts on August 15, 2026: the local Mem
 - Supabase migration 20260815073000 applied successfully. Live anonymous verification returned four public projects, 338 public song links, and zero private links.
 - The existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Project Folder Privacy Bulk Review
+## Completed milestone - Project Folder Privacy Bulk Review
 
-1. Add clear folder-level counts for public and private songs before changing a folder's visibility.
-2. Provide safe bulk actions for making all songs in one folder private or selecting songs for publication.
-3. Add a review view focused on Suno folders so the owner can make publication decisions efficiently.
+- Each project Library now reports exact linked, public-song, and private-song counts before the owner changes anything.
+- Privacy Review limits the working list to songs already linked to that folder, keeping unrelated library tracks out of the decision surface.
+- Suno-named project folders are clearly labeled as a Suno publication review.
+- The owner can publish or privatize one linked song at a time using the durable controls from the preceding milestone.
+- Make all songs private performs one atomic owner-authorized database operation; there is intentionally no equivalent publish-all action.
+- Public-folder guidance now accurately explains that only songs individually marked Public in folder are exposed.
+- Focused project-song and Global Player privacy tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- Supabase migration 20260815080000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Public Library Folder Navigation
+
+1. Present public songs under their existing public project-folder names instead of only as one flat catalog.
+2. Keep private folders and private song links completely absent from anonymous navigation and playback.
+3. Preserve the current search, Global Player, and direct-play behavior while adding folder browsing.
 ## Working rules
 
 - Preserve existing architecture and user data.

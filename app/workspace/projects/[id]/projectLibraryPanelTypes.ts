@@ -11,6 +11,6 @@ export type AnyTrack = {
   visibility?: "private" | "shared" | "public";
 };
 
-export type FilterMode = "all" | "linked" | "unlinked";
+export type FilterMode = "all" | "linked" | "unlinked" | "privacy";
 
 export type LocalVisibility = "private" | "public";

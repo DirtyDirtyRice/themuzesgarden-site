@@ -12,32 +12,39 @@ import {
   filterTracks,
   hasPlayableSource,
 } from "./projectLibraryPanelUtils";
+import { summarizeProjectSongVisibility } from "../../../../lib/projects/projectSongVisibility";
 
 export default function ProjectLibraryPanel(props: {
   allTracks: AnyTrack[];
+  projectTitle?: string;
   projectVisibility?: "private" | "public" | "shared";
   linkedTrackIds: Set<string>;
   loadingLibrary: boolean;
   linkBusyId: string | null;
   visibilityBusyId: string | null;
   linkedTrackVisibility: Record<string, "private" | "public">;
+  bulkVisibilityBusy: boolean;
   linkTrack: (trackId: string) => void;
   unlinkTrack: (trackId: string) => void;
   onPlayTrackById: (trackId: string) => void;
   onSetTrackVisibility: (trackId: string, visibility: "private" | "public") => void;
+  onMakeAllPrivate: () => void;
 }) {
   const {
     allTracks,
+    projectTitle = "",
     projectVisibility = "private",
     linkedTrackIds,
     loadingLibrary,
     linkBusyId,
     visibilityBusyId,
     linkedTrackVisibility,
+    bulkVisibilityBusy,
     linkTrack,
     unlinkTrack,
     onPlayTrackById,
     onSetTrackVisibility,
+    onMakeAllPrivate,
   } = props;
 
   const [q, setQ] = useState("");
@@ -77,6 +84,10 @@ export default function ProjectLibraryPanel(props: {
 
   const linkedCount = linkedTrackIds.size;
   const showingCount = filtered.length;
+  const visibilitySummary = useMemo(
+    () => summarizeProjectSongVisibility(linkedTrackIds, linkedTrackVisibility),
+    [linkedTrackIds, linkedTrackVisibility],
+  );
 
   function toggleTrackVisibility(track: AnyTrack) {
     const tid = String(track?.id ?? "");
@@ -116,6 +127,10 @@ export default function ProjectLibraryPanel(props: {
       <ProjectLibraryPanelHeader
         linkedCount={linkedCount}
         showingCount={showingCount}
+        privateCount={visibilitySummary.privateCount}
+        publicCount={visibilitySummary.publicCount}
+        isSunoProject={projectTitle.toLowerCase().includes("suno")}
+        bulkVisibilityBusy={bulkVisibilityBusy}
         projectVisibility={projectVisibility}
         mode={mode}
         setMode={setMode}
@@ -129,6 +144,7 @@ export default function ProjectLibraryPanel(props: {
           handlePrimaryAction(tid);
         }}
         onPlaySelected={handlePlaySelected}
+        onMakeAllPrivate={onMakeAllPrivate}
       />
 
       {filtered.length === 0 || visibleTracks.length === 0 ? (

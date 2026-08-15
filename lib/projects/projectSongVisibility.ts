@@ -17,3 +17,16 @@ export function isProjectSongPublic(args: {
     normalizeProjectSongVisibility(args.songVisibility) === "public"
   );
 }
+
+export function summarizeProjectSongVisibility(
+  linkedTrackIds: Iterable<string>,
+  visibilityByTrackId: Record<string, ProjectSongVisibility>,
+): { privateCount: number; publicCount: number; totalCount: number } {
+  let privateCount = 0;
+  let publicCount = 0;
+  for (const trackId of linkedTrackIds) {
+    if (normalizeProjectSongVisibility(visibilityByTrackId[trackId]) === "public") publicCount += 1;
+    else privateCount += 1;
+  }
+  return { privateCount, publicCount, totalCount: privateCount + publicCount };
+}
