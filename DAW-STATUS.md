@@ -6,7 +6,18 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - One-Action Suspended Session Resume
+## Latest completed milestone - Recent Session Action Consolidation
+
+- A single shared policy now selects exactly one primary action for every open recent session: Validate, Initialize Transport, Activate Session, Resume Session, or Enter Studio.
+- Selection preserves the full state-machine, engine-readiness, durable-transport, and closed-session safeguards established by the preceding milestones.
+- Global DAW cards no longer show a separate Enter Workspace link beside a more urgent setup or lifecycle action.
+- Project cards place only the selected musician action in the primary action row.
+- Suspend and Close remain available only in a clearly separated Session Lifecycle area on owner project cards.
+- Closed sessions remain absent from both recent-session surfaces and never receive a primary action.
+- Focused Song Start and session-coordinator tests passed (15 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - One-Action Suspended Session Resume
 
 - Readiness-valid suspended sessions with durable transport now expose Resume Session on both global and project Song Start cards.
 - Resume eligibility is centralized in the shared Song Start policy and requires state `suspended`, passing engine readiness, and valid transport context.
@@ -409,11 +420,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Recent Session Action Consolidation
+## Next eligible milestone - Session Lifecycle Confirmation
 
-1. Present exactly one primary next action per recent session from Validate, Initialize, Activate, Resume, or Enter Studio.
-2. Keep destructive Close and lifecycle Suspend controls visually separate from the recommended musician path.
-3. Preserve all current state-machine, readiness, transport, and revision safeguards.
+1. Require explicit musician confirmation before suspending or permanently closing a session from recent-session cards.
+2. Explain the exact effect of each lifecycle transition without implying that audio or source artifacts are deleted.
+3. Preserve revision-safe commands and authoritative reload after every confirmed transition.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

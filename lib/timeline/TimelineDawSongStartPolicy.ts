@@ -105,3 +105,19 @@ export function timelineDawSuspendedSessionResumeAction(
     ? { action: "resume" as const, label: "Resume session" }
     : null;
 }
+
+export function createTimelineDawRecentSessionPrimaryAction(
+  session: Pick<TimelineDawResumeSession, "state" | "readinessReady">,
+  position: { tick: number; ppq: number } | null | undefined,
+) {
+  if (session.state === "closed") return null;
+  const readiness = timelineDawReadinessRepairAction(session);
+  if (readiness?.action === "validate") return readiness;
+  const transport = timelineDawTransportInitializationAction(session, position);
+  if (transport) return transport;
+  const activation = timelineDawSessionActivationAction(session, position);
+  if (activation) return activation;
+  const resume = timelineDawSuspendedSessionResumeAction(session, position);
+  if (resume) return resume;
+  return { action: "enter-studio" as const, label: readiness?.label ?? "Enter Studio" };
+}

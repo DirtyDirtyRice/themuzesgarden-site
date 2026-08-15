@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawRecentSessionHealth, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
+import { createTimelineDawRecentSessionHealth, createTimelineDawRecentSessionPrimaryAction, createTimelineDawSongStartView, timelineDawReadinessRepairAction, timelineDawResumePositionLabel, timelineDawSessionActivationAction, timelineDawSuspendedSessionResumeAction, timelineDawTransportInitializationAction } from "../../lib/timeline/TimelineDawSongStartPolicy";
 
 const session = (overrides: Partial<Parameters<typeof createTimelineDawSongStartView>[0][number]> = {}) => ({
   id: "session-1", projectId: "project-1", projectTitle: "Album", name: "Morning Mix", songId: "song-1",
@@ -75,5 +75,15 @@ describe("DAW song start policy", () => {
     expect(timelineDawSuspendedSessionResumeAction(session({ state: "active" }), position)).toBeNull();
     expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended", readinessReady: false }), position)).toBeNull();
     expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended" }), undefined)).toBeNull();
+  });
+
+  it("selects exactly one primary action for every open session state", () => {
+    const position = { tick: 0, ppq: 960 };
+    expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "draft", readinessReady: false }), undefined)?.action).toBe("validate");
+    expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "ready" }), undefined)?.action).toBe("initialize-transport");
+    expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "ready" }), position)?.action).toBe("activate");
+    expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "suspended" }), position)?.action).toBe("resume");
+    expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "active" }), position)?.action).toBe("enter-studio");
+    expect(createTimelineDawRecentSessionPrimaryAction(session({ state: "closed" }), position)).toBeNull();
   });
 });
