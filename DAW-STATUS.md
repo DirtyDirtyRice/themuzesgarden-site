@@ -6,7 +6,17 @@ Last updated: August 15, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
-## Latest completed milestone - Durable Studio Resume Context
+## Latest completed milestone - Studio Focus Restore
+
+- The Studio now tracks eight stable high-level work areas: guide, beta workflow, transport, mastering, mix, recording, recovery, and export.
+- A sticky focus control shows the musician's last visible area and returns there explicitly without changing playback or transport state.
+- Focus state is browser-local, scoped to the exact session, and stores only an allowlisted area ID—never audio, track names, notes, storage paths, or private session content.
+- Stale, malformed, and invented area values are rejected and fall back safely to normal Studio entry.
+- Stable scroll anchors keep restoration independent from the internal layout of each existing DAW tool.
+- Focused focus-restore and Song Start tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 75 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Previously completed milestone - Durable Studio Resume Context
 
 - Owner-scoped workspace snapshots now expose a minimal resume index derived from each visible session's existing durable transport archive.
 - Resume context contains only tick, sample, PPQ, and transport update time; it does not expose audio, private lanes, storage paths, or another project's sessions.
@@ -323,11 +333,11 @@ Every support audit export and revocation can now be proven as part of the appen
 
 The manual evidence run is intentionally deferred. Its implementation prerequisites, automated runner, visual guide, and private report remain available; no automated result will be presented as Steve's listening or usability judgment.
 
-## Next eligible milestone - Studio Focus Restore
+## Next eligible milestone - Safe Studio Exit and Return
 
-1. Save the musician's active Studio area without duplicating or embedding private session data.
-2. Restore focus only to a known, currently available Studio area and reject stale or invented targets.
-3. Keep transport restoration authoritative and independent from visual focus restoration.
+1. Give musicians one clear exit action that confirms the session's durable save state before returning to the project.
+2. Prevent an in-progress local recording or unsaved browser-only action from being mistaken for durable work.
+3. Return through the existing Song Start and Resume path with the latest authoritative session context.
 4. Verify focused policy and API behavior, then run the full production build before release.
 ## Working rules
 

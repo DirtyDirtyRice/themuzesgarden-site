@@ -34,6 +34,7 @@ import TimelineDawBetaAuditionOwner from "@/app/components/TimelineDawBetaAuditi
 import TimelineDawBetaReleasePackage from "@/app/components/TimelineDawBetaReleasePackage";
 import TimelineDawBetaReadinessCertification from "@/app/components/TimelineDawBetaReadinessCertification";
 import TimelineDawBetaLaunchOperations from "@/app/components/TimelineDawBetaLaunchOperations";
+import TimelineDawStudioFocusRestore from "@/app/components/TimelineDawStudioFocusRestore";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -211,6 +212,9 @@ export default function ProjectDawSessionPage() {
         </div>
       ) : null}
 
+      <TimelineDawStudioFocusRestore sessionId={session.id} />
+
+      <div data-daw-focus-area="guide" className="space-y-6 scroll-mt-24">
       <TimelineDawVisualGuide sessionId={session.id} />
 
       <TimelineDawTechnicalTestRunner sessionId={session.id} />
@@ -218,7 +222,9 @@ export default function ProjectDawSessionPage() {
       <TimelineDawOwnerTestReport sessionId={session.id} />
 
       <TimelineDawOwnerMusicianTest sessionId={session.id} />
+      </div>
 
+      <div data-daw-focus-area="beta" className="space-y-6 scroll-mt-24">
       <TimelineDawBetaWorkflow sessionId={session.id} />
 
       <TimelineDawBetaFeedback sessionId={session.id} />
@@ -232,13 +238,17 @@ export default function ProjectDawSessionPage() {
       <TimelineDawBetaReleasePackage sessionId={session.id} />
       <TimelineDawBetaReadinessCertification sessionId={session.id} />
       <TimelineDawBetaLaunchOperations sessionId={session.id} />
+      </div>
 
+      <div data-daw-focus-area="transport" className="scroll-mt-24">
       <ProjectDawTransport
         session={session}
         workspaceRevision={snapshot.workspaceRevision}
         onWorkspaceRevision={handleWorkspaceRevision}
       />
+      </div>
 
+      <div data-daw-focus-area="mastering" className="space-y-6 scroll-mt-24">
       <TimelineDawNormalizationRevisions sessionId={session.id} onLanesChanged={() => setNormalizationLaneRevision((value) => value + 1)} />
 
       <TimelineDawNormalizationOperations sessionId={session.id} />
@@ -259,25 +269,33 @@ export default function ProjectDawSessionPage() {
 
       <TimelineDawNormalizationSupportCoverage sessionId={session.id} />
       <TimelineDawNormalizationEvidenceMonitoring sessionId={session.id} />
+      </div>
 
+      <div data-daw-focus-area="mix" className="space-y-6 scroll-mt-24">
       <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} />
 
       <ProjectDawDeviceDiagnostics />
+      </div>
+      <div data-daw-focus-area="record" className="space-y-6 scroll-mt-24">
       <ProjectDawRecordingWorkspace session={session} />
 
       <ProjectDawTimeline session={session} />
+      </div>
+      <div data-daw-focus-area="recover" className="scroll-mt-24">
       <ProjectDawRecoveryWorkspace
         session={session}
         workspaceRevision={snapshot.workspaceRevision}
         onWorkspaceRevision={handleWorkspaceRevision}
       />
+      </div>
 
-
+      <div data-daw-focus-area="export" className="scroll-mt-24">
       <ProjectDawExportWorkspace
         session={session}
         workspaceRevision={snapshot.workspaceRevision}
         onWorkspaceRevision={handleWorkspaceRevision}
       />
+      </div>
 
       <section>
         <div className="mb-3">
