@@ -20,6 +20,10 @@ import {
   type TimelineDawRecordingEvidence,
 } from "../../../../lib/timeline/TimelineDawRecordingSetup";
 import {
+  assessTimelineDawRecordingMonitoring,
+  type TimelineDawMonitoringMode,
+} from "../../../../lib/timeline/TimelineDawRecordingMonitoring";
+import {
   createDawRecordingTakeAudition,
   deleteDawRecordingTake,
   loadDawRecordingTakes,
@@ -70,6 +74,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [latestEvidence, setLatestEvidence] = useState<TimelineDawRecordingEvidence | null>(null);
   const [setupLoaded, setSetupLoaded] = useState(false);
   const [restoredDeviceId, setRestoredDeviceId] = useState("");
+  const [monitoringMode, setMonitoringMode] = useState<TimelineDawMonitoringMode>("off");
+  const [headphonesConfirmed, setHeadphonesConfirmed] = useState(false);
+  const [monitoringLatencyMs, setMonitoringLatencyMs] = useState<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -113,6 +120,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         setDeviceId(saved.deviceId); setRestoredDeviceId(saved.deviceId);
         setOutputFormat(saved.outputFormat); setRecordingMode(saved.recordingMode);
         setCountInBars(saved.countInBars); setBpm(saved.bpm); setBeatsPerBar(saved.beatsPerBar);
+        setMonitoringMode(saved.monitoringMode);
       }
     } catch {
       localStorage.removeItem(timelineDawRecordingSetupKey(session.id));
@@ -125,9 +133,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   useEffect(() => {
     if (!setupLoaded) return;
     localStorage.setItem(timelineDawRecordingSetupKey(session.id), JSON.stringify({
-      deviceId, outputFormat, recordingMode, countInBars, bpm, beatsPerBar,
+      deviceId, outputFormat, recordingMode, countInBars, bpm, beatsPerBar, monitoringMode,
     }));
-  }, [beatsPerBar, bpm, countInBars, deviceId, outputFormat, recordingMode, session.id, setupLoaded]);
+  }, [beatsPerBar, bpm, countInBars, deviceId, monitoringMode, outputFormat, recordingMode, session.id, setupLoaded]);
 
   useEffect(() => {
     let active = true;
@@ -201,6 +209,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       source.disconnect();
       analyser.disconnect();
       const peakDbfs = peak > 0 ? 20 * Math.log10(peak) : -96;
+      const outputLatency = "outputLatency" in context ? context.outputLatency : 0;
+      setMonitoringLatencyMs(Math.round((context.baseLatency + outputLatency) * 100_000) / 100);
       const result = assessTimelineDawRecordingPreflight(peakDbfs);
       setPreflight(result);
       const selectedDevice = devices.find((device) => device.deviceId === deviceId);
@@ -225,6 +235,11 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const restoredDeviceWarning = setupLoaded && devicesScanned
     ? getTimelineDawRestoredDeviceWarning(restoredDeviceId, devices.map((device) => device.deviceId))
     : null;
+  const monitoringAssessment = assessTimelineDawRecordingMonitoring({
+    mode: monitoringMode,
+    latencyMs: monitoringLatencyMs,
+    headphonesConfirmed,
+  });
 
   async function startRecording() {
     if (recording || uploading) return;
@@ -258,7 +273,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       );
       const legacyProcessor = context.createScriptProcessor(4096, channelCount, channelCount);
       const silence = context.createGain();
-      silence.gain.value = 0;
+      silence.gain.value = monitoringAssessment.browserGain;
       legacyProcessor.onaudioprocess = (event) => {
         try {
           const channels = Array.from({ length: channelCount }, (_, channel) =>
@@ -540,6 +555,28 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           </div>
         ) : null}
       </div>
+      <div className="mt-4 rounded-xl border border-violet-300/25 bg-violet-300/[0.05] p-4">
+        <div className="grid gap-3 md:grid-cols-[minmax(0,14rem)_1fr]">
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">
+            Monitoring path
+            <select className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={monitoringMode} onChange={(event) => { setMonitoringMode(event.target.value as TimelineDawMonitoringMode); setHeadphonesConfirmed(false); }} disabled={recording || uploading}>
+              <option value="off">Off (silent capture)</option>
+              <option value="direct">Hardware/direct monitoring</option>
+              <option value="browser">Browser monitoring</option>
+            </select>
+          </label>
+          <div className="self-end">
+            <p className={`text-sm font-bold ${monitoringAssessment.ready ? "text-emerald-200" : "text-amber-200"}`}>{monitoringAssessment.recommendation}</p>
+            {monitoringLatencyMs !== null ? <p className="mt-1 text-xs text-white/50">Measured browser latency: {monitoringLatencyMs.toFixed(1)} ms</p> : null}
+          </div>
+        </div>
+        {monitoringMode === "browser" ? (
+          <label className="mt-3 flex items-start gap-2 text-sm text-white/75">
+            <input type="checkbox" checked={headphonesConfirmed} onChange={(event) => setHeadphonesConfirmed(event.target.checked)} disabled={recording || uploading} />
+            I am wearing headphones and speakers are muted.
+          </label>
+        ) : null}
+      </div>
       <div className="mt-4 grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-4">
         <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Mode
           <select className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={recordingMode} onChange={(event) => setRecordingMode(event.target.value as DawRecordingPlan["mode"])} disabled={recording || uploading}>
@@ -567,7 +604,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <p className="self-end text-xs text-white/45">Count-in is excluded from every saved take. Punch and loop passes are placed at the exact range start.</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={recording || uploading || !devices.length || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
+        <button type="button" className={button} disabled={recording || uploading || !devices.length || !monitoringAssessment.ready || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
         <button type="button" className={button} disabled={!recording} onClick={() => void stopRecording()}>Stop &amp; Save</button>
         <button type="button" className={button} disabled={recording || uploading} onClick={() => void scanDevices()}>Rescan Inputs</button>
       </div>

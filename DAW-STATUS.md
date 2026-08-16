@@ -674,11 +674,22 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused setup-recall, recording-preflight, and device-diagnostics tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - Supabase migration 20260815083000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Latency-Aware Recording Monitoring
+## Completed milestone - Latency-Aware Recording Monitoring
 
-1. Let the musician explicitly choose browser monitoring, hardware/direct monitoring, or monitoring off before recording.
-2. Prevent accidental doubled monitoring and feedback while preserving silent capture routing.
-3. Combine the chosen monitoring path with measured latency to provide one recording-specific readiness recommendation.
+- Recording now offers three mutually exclusive monitoring paths: off, hardware/direct, or browser monitoring.
+- Off remains the default and keeps the capture graph silent; hardware/direct explicitly leaves browser output muted to prevent doubled monitoring.
+- Browser monitoring requires an Input Level Test, measured latency of 20 ms or less, and an explicit headphones/speakers-muted confirmation before Start Recording becomes available.
+- High or missing latency produces one recording-specific recommendation to test again or use hardware/direct monitoring.
+- Browser audio gain is enabled only when the shared monitoring policy is ready; every other path remains zero-gain while PCM capture continues unchanged.
+- Monitoring choice is included in bounded per-session setup recall, while the headphones acknowledgement is deliberately not persisted.
+- Focused monitoring, setup-recall, and preflight tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Audible Count-In and Recording Capture Boundary
+
+1. Turn the existing count-in setting into a real tempo- and meter-aware audible cue before capture begins.
+2. Keep count-in sound out of the recorded PCM and begin the saved take exactly after the final count-in beat.
+3. Provide a visible beat/bar countdown with cancel support so a musician can stop safely before recording starts.
 ## Working rules
 
 - Preserve existing architecture and user data.

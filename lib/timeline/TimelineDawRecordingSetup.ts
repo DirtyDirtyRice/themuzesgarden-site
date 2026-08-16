@@ -1,4 +1,5 @@
 import type { TimelineDawRecordingPreflightStatus } from "./TimelineDawRecordingPreflight";
+import type { TimelineDawMonitoringMode } from "./TimelineDawRecordingMonitoring";
 
 export type TimelineDawRecordingSetup = {
   deviceId: string;
@@ -7,6 +8,7 @@ export type TimelineDawRecordingSetup = {
   countInBars: number;
   bpm: number;
   beatsPerBar: number;
+  monitoringMode: TimelineDawMonitoringMode;
 };
 
 export type TimelineDawRecordingEvidence = {
@@ -28,6 +30,8 @@ export function parseTimelineDawRecordingSetup(value: unknown): TimelineDawRecor
   const outputFormat = row.outputFormat === "mp3" ? "mp3" : "wav";
   const recordingMode = ["normal", "punch", "loop"].includes(String(row.recordingMode))
     ? row.recordingMode as TimelineDawRecordingSetup["recordingMode"] : "normal";
+  const monitoringMode = ["off", "direct", "browser"].includes(String(row.monitoringMode))
+    ? row.monitoringMode as TimelineDawMonitoringMode : "off";
   const bounded = (raw: unknown, min: number, max: number, fallback: number) => {
     const numeric = Number(raw);
     return Number.isFinite(numeric) ? Math.max(min, Math.min(max, numeric)) : fallback;
@@ -36,7 +40,7 @@ export function parseTimelineDawRecordingSetup(value: unknown): TimelineDawRecor
     deviceId: String(row.deviceId ?? ""), outputFormat, recordingMode,
     countInBars: bounded(row.countInBars, 0, 8, 0),
     bpm: bounded(row.bpm, 20, 400, 120),
-    beatsPerBar: bounded(row.beatsPerBar, 1, 32, 4),
+    beatsPerBar: bounded(row.beatsPerBar, 1, 32, 4), monitoringMode,
   };
 }
 
