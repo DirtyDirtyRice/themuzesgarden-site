@@ -844,6 +844,10 @@ Three safe attempts on August 15, 2026 reached the same external blocker: the av
 3. The owner runs the release gate; the musician opens My Beta Sessions and performs playback, record, trim, save/reopen, export, and feedback.
 4. Only genuine blockers or serious confusion from that session should select the next implementation milestone.
 
+## Back Burner - Blocked - Non-Expiring Musician Guest Pass
+
+Three verification attempts on August 16, 2026 reached the same external Supabase blocker. The owner enabled **Allow anonymous sign-ins** on the correct live project (`ohjvqopxmmfrvgliolcr`), and the dashboard switch appeared green, but the live Auth settings endpoint returned `external.anonymous_users: false` after every attempt. The dashboard also displayed a failed `500` request at the time of the setting change. Do not deploy or describe the credential-free guest-pass milestone as complete while anonymous guest sessions remain disabled, because the proposed musician entry page would fail at `signInAnonymously()`. The reviewed application changes and migration remain local and unapplied. Resume only after the live Auth endpoint reports anonymous users enabled or Supabase resolves the dashboard/configuration failure.
+
 ## Back Burner - Recording Device Loss and Stream Interruption Recovery
 
 Further recording hardening is deferred until real musician sessions show that it is a current blocker. The planned scope remains microphone/device removal detection, safe partial-take finalization, and exact interruption recovery guidance.
