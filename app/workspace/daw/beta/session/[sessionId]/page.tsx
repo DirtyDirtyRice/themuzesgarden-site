@@ -5,6 +5,7 @@ import Link from "next/link";
 import { requireProjectSupabase } from "@/app/workspace/projects/[id]/projectSupabase";
 import TimelineDawBetaCollaboratorPanel from "@/app/components/TimelineDawBetaCollaboratorPanel";
 import TimelineDawBetaAuditionPlayer from "@/app/components/TimelineDawBetaAuditionPlayer";
+import TimelineDawMusicianTrialWorkspace from "@/app/components/TimelineDawMusicianTrialWorkspace";
 
 type AccessData = {
   access: { role: string; reason: string; receiptId: string };
@@ -42,6 +43,7 @@ export default function TimelineDawBetaSessionPage({ params }: { params: Promise
       </section>
       <section className="rounded-2xl border border-white/15 p-4"><h2 className="font-black">Current permissions</h2>{data.capabilities.map((item) => <p key={item}>✓ {item}</p>)}<p className="mt-3 text-sm text-white/55">Administration, invitations, release decisions, destructive restore, delivery, and project privacy remain owner-only.</p></section>
       <TimelineDawBetaAuditionPlayer sessionId={sessionId}/>
+      <TimelineDawMusicianTrialWorkspace sessionId={sessionId}/>
       <TimelineDawBetaCollaboratorPanel sessionId={sessionId}/>
     </> : null}
   </main>;

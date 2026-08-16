@@ -769,11 +769,22 @@ The next work must stay on the musician's essential path: access, onboarding, op
 - Focused trial-readiness, access, onboarding, and certification tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Secure Hands-On Musician Workspace Access
+## Completed milestone - Secure Hands-On Musician Trial Workspace
 
-1. Extend released beta-collaborator permission from listening/feedback to the essential working actions: record, edit, save/reopen, and test export.
-2. Open a musician-focused workspace that excludes owner administration, privacy changes, destructive restore, and final delivery controls.
-3. Verify each allowed action against the live enrollment and release gate, record access receipts, and keep all project audio owner-protected.
+- Every released beta invitation still passes the existing enrollment, acknowledgement, environment, owner-release, and revocation checks before the musician session opens.
+- The verified musician page now includes a real hands-on workspace for recording a new take, playing it, trimming its start/end, saving and reopening it after refresh, exporting an edited WAV, and deleting it.
+- Test takes are isolated in browser-private IndexedDB under the exact invited session and never modify or upload into the owner's original project.
+- A strict 100 MB saved-take limit and five-minute PCM capture bound prevent an experimental trial from growing without limit.
+- Approved owner audio remains available through the existing short-lived read-only audition URL, while invitations, privacy, destructive restore, final delivery, and owner administration remain unavailable.
+- The seven-step readiness gate now passes for the actual musician trial surface: verified access, approved playback, local recording, reversible trim, save/reopen, WAV export, and checkpoint-linked feedback.
+- Focused musician edit, readiness, access, and PCM capture tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - First Musician Trial Invitation Handoff
+
+1. Give the owner one plain path to select a released session, create/copy an invitation, and see whether the musician can enter the hands-on trial.
+2. Put the short musician test instructions directly beside the invitation so the message and actual seven-step task stay aligned.
+3. Verify the production enrollment-to-trial route and identify only blockers that must be repaired before sending the first 3-5 invitations.
 
 ## Back Burner - Recording Device Loss and Stream Interruption Recovery
 

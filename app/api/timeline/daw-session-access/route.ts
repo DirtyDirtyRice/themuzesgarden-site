@@ -13,9 +13,7 @@ export async function GET(request: NextRequest) {
       .select("id,role,capability,action,allowed,reason,receipt_checksum,observed_at")
       .eq("actor_id", access.actorId).eq("session_id", sessionId).order("observed_at", { ascending: false }).limit(20);
     if (error) throw new Error(error.message);
-    const capabilities = access.decision.role === "owner"
-      ? ["session:read", "workflow:read", "feedback:create", "feedback:respond", "transport:read"]
-      : ["session:read", "workflow:read", "feedback:create", "feedback:respond", "transport:read"];
+    const capabilities = ["session:read", "workflow:read", "feedback:create", "feedback:respond", "transport:read", "recording:create", "arrangement:edit", "session:write", "export:create"];
     return NextResponse.json({ access: access.decision, capabilities, trialReadiness: evaluateTimelineDawMusicianTrialReadiness(capabilities), receipts: data ?? [] }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return fail(error); }
 }
