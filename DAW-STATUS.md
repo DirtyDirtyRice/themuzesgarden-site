@@ -791,11 +791,26 @@ The next work must stay on the musician's essential path: access, onboarding, op
 - Focused invitation-handoff, onboarding, and trial-readiness tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - First Musician Enrollment Dry Run
+## Back Burner - Blocked - First Musician Enrollment Dry Run
 
-1. Verify the production journey using a separate musician account: receive the message, sign in, redeem the code, acknowledge the trial, and complete the browser/audio setup check.
-2. Run the owner release gate and confirm My Beta Sessions opens the hands-on workspace with all seven essential steps available.
-3. Record only genuine blockers or confusing steps; repair those before sending invitations to the remaining 3-5 musician cohort.
+Three safe attempts on August 15, 2026 reached the same external blocker: the available production browser is signed out, the connected Chrome profile is unavailable to Codex, and no separate musician test-account credential is configured in the workspace or environment. The dry run cannot honestly verify sign-in, code redemption, acknowledgement, microphone permission, owner release, or the seven hands-on steps without a real second musician account. Do not claim this milestone complete. Resume it when a musician or separate test account can sign in and receive an invitation.
+
+## Completed milestone - Redeemed Musician Enrollment Resume
+
+- A genuine dry-run blocker found during inspection is repaired: redeeming a one-time invitation no longer leaves the musician stranded if the enrollment page refreshes or the browser restarts.
+- The signed-in enrollment page now finds the musician's newest active enrollment and restores its session without requiring the already-used invitation code again.
+- Saved acknowledgement and browser/audio setup results return with the enrollment, so completed work is clearly preserved.
+- Revoked and inactive enrollments are excluded; the resume endpoint is scoped to the authenticated tester and returns no owner or other tester information.
+- The sign-in link now returns directly to the musician enrollment page, and the page plainly says it is safe to leave and return while waiting for owner release.
+- Focused enrollment-resume, onboarding, and trial-readiness tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next required musician step - Real Separate-Account Enrollment
+
+1. A musician signs in with their own account and redeems a newly created seven-day invitation.
+2. They save the acknowledgement, run the browser/audio setup check, refresh once to prove enrollment resume, and tell the owner setup is complete.
+3. The owner runs the release gate; the musician opens My Beta Sessions and performs playback, record, trim, save/reopen, export, and feedback.
+4. Only genuine blockers or serious confusion from that session should select the next implementation milestone.
 
 ## Back Burner - Recording Device Loss and Stream Interruption Recovery
 
