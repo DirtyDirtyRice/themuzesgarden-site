@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessTimelineDawRecordingInterruption } from "../../lib/timeline/TimelineDawRecordingInterruption";
+import { assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled } from "../../lib/timeline/TimelineDawRecordingInterruption";
 
 describe("TimelineDawRecordingInterruption", () => {
   it("finalizes captured audio when the selected input ends", () => {
@@ -25,6 +25,21 @@ describe("TimelineDawRecordingInterruption", () => {
     });
     expect(decision).toMatchObject({ shouldStop: true, canRecoverAudio: true });
     expect(decision.notice).toMatch(/muted for five seconds/i);
+  });
+
+  it("detects a five-second capture pipeline stall only after audio began", () => {
+    expect(isTimelineDawCaptureStalled({
+      recordingActive: true, stopAlreadyStarted: false, capturedFrames: 4_800,
+      lastCaptureAtMs: 1_000, nowMs: 6_000,
+    })).toBe(true);
+    expect(isTimelineDawCaptureStalled({
+      recordingActive: true, stopAlreadyStarted: false, capturedFrames: 0,
+      lastCaptureAtMs: 1_000, nowMs: 20_000,
+    })).toBe(false);
+    expect(isTimelineDawCaptureStalled({
+      recordingActive: true, stopAlreadyStarted: true, capturedFrames: 4_800,
+      lastCaptureAtMs: 1_000, nowMs: 20_000,
+    })).toBe(false);
   });
 
   it("ignores duplicate, inactive, and manual-stop events", () => {

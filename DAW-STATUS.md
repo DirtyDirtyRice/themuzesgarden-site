@@ -867,6 +867,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - The grace timer and all mute listeners are removed on manual stop, automatic stop, navigation, and component teardown, preventing a late timer from touching a later take.
 - Focused interruption, PCM capture, and recording-recovery tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Recording Capture Pipeline Stall Protection
+
+- Every successfully received PCM block now refreshes a monotonic capture heartbeat while recording is active.
+- A watchdog compares that heartbeat with actual buffered frames and detects when the browser has delivered no microphone audio for five seconds even though the device still appears connected.
+- The watchdog does not fire before the first PCM block, during a manual/automatic stop, or after recording cleanup, avoiding false recovery attempts around startup and normal Stop & Save.
+- A confirmed capture stall performs one automatic Stop & Save and sends all captured audio through the existing private-save and persistent Local Recovery path.
+- The musician receives an exact warning that the browser stopped delivering audio, so an advancing wall-clock timer cannot be mistaken for a healthy take.
+- The watchdog interval is removed with the interruption listeners on stop and teardown, preventing it from affecting a later take.
+- Focused interruption, PCM capture, and recording-recovery tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.

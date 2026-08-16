@@ -12,7 +12,7 @@ import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
 import { assessTimelineDawRecordingStorage, type TimelineDawRecordingStorageHealth } from "../../../../lib/timeline/TimelineDawRecordingStorageHealth";
-import { assessTimelineDawRecordingInterruption, TIMELINE_DAW_INPUT_MUTE_GRACE_MS, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
+import { assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled, TIMELINE_DAW_CAPTURE_STALL_MS, TIMELINE_DAW_INPUT_MUTE_GRACE_MS, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
 import {
   deleteTimelineDawRecordingRecovery,
   loadTimelineDawRecordingRecovery,
@@ -136,6 +136,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const interruptionHandledRef = useRef(false);
   const interruptionCleanupRef = useRef<(() => void) | null>(null);
   const inputMuteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const captureWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastCaptureAtRef = useRef(0);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -262,6 +264,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
 
   function appendCaptureBlock(capture: TimelineDawPcmCaptureBuffer, channels: Float32Array[]) {
     if (captureLimitReachedRef.current) return;
+    lastCaptureAtRef.current = performance.now();
     const appended = capture.appendBounded(channels);
     if (appended.limitReached) {
       captureLimitReachedRef.current = true;
@@ -495,6 +498,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       processorRef.current = processor;
       silenceRef.current = silence;
       captureRef.current = capture;
+      lastCaptureAtRef.current = performance.now();
       startedAtRef.current = performance.now();
       setElapsedSeconds(0);
       timerRef.current = setInterval(() => {
@@ -537,9 +541,20 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       track?.addEventListener("mute", onTrackMuted);
       track?.addEventListener("unmute", onTrackUnmuted);
       stream.addEventListener("inactive", onStreamInactive);
+      captureWatchdogRef.current = setInterval(() => {
+        if (isTimelineDawCaptureStalled({
+          recordingActive: recordingActiveRef.current,
+          stopAlreadyStarted: stoppingRef.current,
+          capturedFrames: captureRef.current?.frameCount ?? 0,
+          lastCaptureAtMs: lastCaptureAtRef.current,
+          nowMs: performance.now(),
+        })) handleInterruption("capture-stalled");
+      }, Math.min(1_000, TIMELINE_DAW_CAPTURE_STALL_MS));
       interruptionCleanupRef.current = () => {
         if (inputMuteTimerRef.current) clearTimeout(inputMuteTimerRef.current);
         inputMuteTimerRef.current = null;
+        if (captureWatchdogRef.current) clearInterval(captureWatchdogRef.current);
+        captureWatchdogRef.current = null;
         track?.removeEventListener("ended", onTrackEnded);
         track?.removeEventListener("mute", onTrackMuted);
         track?.removeEventListener("unmute", onTrackUnmuted);

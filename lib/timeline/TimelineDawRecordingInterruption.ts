@@ -1,9 +1,26 @@
 export type TimelineDawRecordingInterruptionReason =
   | "input-ended"
   | "input-muted"
+  | "capture-stalled"
   | "stream-inactive";
 
 export const TIMELINE_DAW_INPUT_MUTE_GRACE_MS = 5_000;
+export const TIMELINE_DAW_CAPTURE_STALL_MS = 5_000;
+
+export function isTimelineDawCaptureStalled(input: {
+  recordingActive: boolean;
+  stopAlreadyStarted: boolean;
+  capturedFrames: number;
+  lastCaptureAtMs: number;
+  nowMs: number;
+}): boolean {
+  return input.recordingActive
+    && !input.stopAlreadyStarted
+    && input.capturedFrames > 0
+    && Number.isFinite(input.lastCaptureAtMs)
+    && Number.isFinite(input.nowMs)
+    && input.nowMs - input.lastCaptureAtMs >= TIMELINE_DAW_CAPTURE_STALL_MS;
+}
 
 export type TimelineDawRecordingInterruptionDecision = {
   shouldStop: boolean;
@@ -26,6 +43,8 @@ export function assessTimelineDawRecordingInterruption(input: {
     ? "The selected microphone disconnected or stopped sending audio."
     : input.reason === "input-muted"
       ? "The selected microphone stayed muted for five seconds."
+      : input.reason === "capture-stalled"
+        ? "The browser stopped delivering microphone audio for five seconds."
       : "The browser reported that the microphone stream ended.";
   return {
     shouldStop: true,
