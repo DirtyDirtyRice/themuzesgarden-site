@@ -18,6 +18,15 @@ describe("TimelineDawRecordingInterruption", () => {
     expect(decision.notice).toMatch(/before any audio/i);
   });
 
+  it("stops safely when a muted input does not recover during its grace period", () => {
+    const decision = assessTimelineDawRecordingInterruption({
+      reason: "input-muted", recordingActive: true, stopAlreadyStarted: false,
+      interruptionAlreadyHandled: false, capturedFrames: 2_400,
+    });
+    expect(decision).toMatchObject({ shouldStop: true, canRecoverAudio: true });
+    expect(decision.notice).toMatch(/muted for five seconds/i);
+  });
+
   it("ignores duplicate, inactive, and manual-stop events", () => {
     for (const overrides of [
       { recordingActive: false },

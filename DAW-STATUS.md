@@ -857,6 +857,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Event listeners are removed before intentionally stopping tracks and during component teardown, preventing stale device events or repeated finalization.
 - Focused interruption, PCM capture, storage-health, and recording-recovery tests passed (12 tests); the final focused interruption/PCM rerun passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Microphone Mute Grace and Recovery
+
+- An active take now listens for the browser microphone track's `mute` and `unmute` signals in addition to permanent track/stream endings.
+- A temporary input dropout displays an immediate warning and gives the microphone five seconds to recover without stopping the musician's take.
+- If the signal returns during that grace period, the pending stop is cancelled and the musician is told that recording continued.
+- If the input remains muted, the DAW performs one automatic Stop & Save and routes captured audio through the same private-save and persistent Local Recovery protection.
+- The grace timer and all mute listeners are removed on manual stop, automatic stop, navigation, and component teardown, preventing a late timer from touching a later take.
+- Focused interruption, PCM capture, and recording-recovery tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.

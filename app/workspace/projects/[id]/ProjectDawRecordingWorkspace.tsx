@@ -12,7 +12,7 @@ import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
 import { assessTimelineDawRecordingStorage, type TimelineDawRecordingStorageHealth } from "../../../../lib/timeline/TimelineDawRecordingStorageHealth";
-import { assessTimelineDawRecordingInterruption, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
+import { assessTimelineDawRecordingInterruption, TIMELINE_DAW_INPUT_MUTE_GRACE_MS, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
 import {
   deleteTimelineDawRecordingRecovery,
   loadTimelineDawRecordingRecovery,
@@ -135,6 +135,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const stoppingRef = useRef(false);
   const interruptionHandledRef = useRef(false);
   const interruptionCleanupRef = useRef<(() => void) | null>(null);
+  const inputMuteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -517,10 +518,31 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       const track = stream.getAudioTracks()[0];
       const onTrackEnded = () => handleInterruption("input-ended");
       const onStreamInactive = () => handleInterruption("stream-inactive");
+      const onTrackMuted = () => {
+        if (!recordingActiveRef.current || stoppingRef.current || interruptionHandledRef.current) return;
+        if (inputMuteTimerRef.current) clearTimeout(inputMuteTimerRef.current);
+        setInterruptionNotice("Microphone signal interrupted. Recording will continue if it returns within five seconds.");
+        inputMuteTimerRef.current = setTimeout(() => {
+          inputMuteTimerRef.current = null;
+          handleInterruption("input-muted");
+        }, TIMELINE_DAW_INPUT_MUTE_GRACE_MS);
+      };
+      const onTrackUnmuted = () => {
+        if (!inputMuteTimerRef.current) return;
+        clearTimeout(inputMuteTimerRef.current);
+        inputMuteTimerRef.current = null;
+        setInterruptionNotice("Microphone signal returned. Recording continued without stopping.");
+      };
       track?.addEventListener("ended", onTrackEnded);
+      track?.addEventListener("mute", onTrackMuted);
+      track?.addEventListener("unmute", onTrackUnmuted);
       stream.addEventListener("inactive", onStreamInactive);
       interruptionCleanupRef.current = () => {
+        if (inputMuteTimerRef.current) clearTimeout(inputMuteTimerRef.current);
+        inputMuteTimerRef.current = null;
         track?.removeEventListener("ended", onTrackEnded);
+        track?.removeEventListener("mute", onTrackMuted);
+        track?.removeEventListener("unmute", onTrackUnmuted);
         stream.removeEventListener("inactive", onStreamInactive);
       };
       startRecordingCue(context);
