@@ -696,11 +696,22 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused count-in, punch/loop boundary, and monitoring tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - Supabase migration 20260815090000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Recording Metronome and Cue Controls
+## Completed milestone - Recording Metronome and Cue Controls
 
-1. Add an optional tempo/meter metronome during recording without routing clicks into captured PCM.
-2. Provide bounded cue volume and accent controls with headphones-first guidance.
-3. Preserve the chosen cue settings per session and stop every scheduled click immediately on stop, cancel, error, or navigation.
+- Recording now includes an optional in-take metronome driven by the selected tempo and meter.
+- Click oscillators connect only to the browser output destination and never to the PCM capture processor or saved source buffer.
+- Beat-one accent is optional, and cue gain is strictly bounded from 5% to 50%.
+- Start Recording is held until the musician confirms headphones are on and speakers are muted whenever the metronome is enabled.
+- Metronome enablement, bounded cue volume, and accent choice are recalled per session; the safety acknowledgement is deliberately never persisted.
+- The scheduler is stopped by Stop & Save, count-in cancellation, capture error cleanup, and Studio component teardown/navigation.
+- Focused cue, count-in, and setup-recall tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Interrupted Recording Local Recovery
+
+1. Preserve a completed WAV locally when its private upload or take registration fails after recording stops.
+2. Let the musician download the recovery WAV immediately or retry the original private save without recording again.
+3. Clear recoverable audio only after verified registration or explicit musician deletion, with bounded storage and privacy guidance.
 ## Working rules
 
 - Preserve existing architecture and user data.

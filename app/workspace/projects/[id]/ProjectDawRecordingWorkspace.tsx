@@ -9,6 +9,7 @@ import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Enc
 import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
 import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
 import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../../lib/timeline/TimelineDawCountIn";
+import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import {
   assessTimelineDawRecordingPreflight,
   type TimelineDawRecordingPreflightResult,
@@ -80,6 +81,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [monitoringMode, setMonitoringMode] = useState<TimelineDawMonitoringMode>("off");
   const [headphonesConfirmed, setHeadphonesConfirmed] = useState(false);
   const [monitoringLatencyMs, setMonitoringLatencyMs] = useState<number | null>(null);
+  const [cueEnabled, setCueEnabled] = useState(false);
+  const [cueVolume, setCueVolume] = useState(0.2);
+  const [cueAccentEnabled, setCueAccentEnabled] = useState(true);
+  const [cueHeadphonesConfirmed, setCueHeadphonesConfirmed] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -92,6 +97,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const mp3UrlsRef = useRef<string[]>([]);
   const meterUpdatedAtRef = useRef(0);
   const countInGenerationRef = useRef(0);
+  const cueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -125,6 +131,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         setOutputFormat(saved.outputFormat); setRecordingMode(saved.recordingMode);
         setCountInBars(saved.countInBars); setBpm(saved.bpm); setBeatsPerBar(saved.beatsPerBar);
         setMonitoringMode(saved.monitoringMode);
+        setCueEnabled(saved.cue.enabled); setCueVolume(saved.cue.volume); setCueAccentEnabled(saved.cue.accentEnabled);
       }
     } catch {
       localStorage.removeItem(timelineDawRecordingSetupKey(session.id));
@@ -138,8 +145,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     if (!setupLoaded) return;
     localStorage.setItem(timelineDawRecordingSetupKey(session.id), JSON.stringify({
       deviceId, outputFormat, recordingMode, countInBars, bpm, beatsPerBar, monitoringMode,
+      cue: { enabled: cueEnabled, volume: cueVolume, accentEnabled: cueAccentEnabled },
     }));
-  }, [beatsPerBar, bpm, countInBars, deviceId, monitoringMode, outputFormat, recordingMode, session.id, setupLoaded]);
+  }, [beatsPerBar, bpm, countInBars, cueAccentEnabled, cueEnabled, cueVolume, deviceId, monitoringMode, outputFormat, recordingMode, session.id, setupLoaded]);
 
   useEffect(() => {
     let active = true;
@@ -151,6 +159,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
 
   useEffect(() => () => {
     countInGenerationRef.current += 1;
+    if (cueTimerRef.current) clearTimeout(cueTimerRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
     processorRef.current?.disconnect();
     sourceRef.current?.disconnect();
@@ -270,6 +279,35 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     return true;
   }
 
+  function stopRecordingCue() {
+    if (cueTimerRef.current) clearTimeout(cueTimerRef.current);
+    cueTimerRef.current = null;
+  }
+
+  function startRecordingCue(context: AudioContext) {
+    stopRecordingCue();
+    if (!cueEnabled) return;
+    let beatIndex = 0;
+    const play = () => {
+      if (context.state === "closed") return;
+      const cue = getTimelineDawRecordingCueBeat({
+        beatIndex, beatsPerBar, bpm,
+        settings: { enabled: cueEnabled, volume: cueVolume, accentEnabled: cueAccentEnabled },
+      });
+      const oscillator = context.createOscillator(), gain = context.createGain();
+      oscillator.frequency.value = cue.frequencyHz;
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(cue.gain, context.currentTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.05);
+      oscillator.connect(gain); gain.connect(context.destination);
+      oscillator.start(); oscillator.stop(context.currentTime + 0.06);
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      beatIndex += 1;
+      cueTimerRef.current = setTimeout(play, cue.intervalMs);
+    };
+    play();
+  }
+
   async function cancelCountIn() {
     countInGenerationRef.current += 1;
     setCountingIn(false); setCountInBeat(null);
@@ -365,6 +403,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         setElapsedSeconds(Math.floor((performance.now() - startedAtRef.current) / 1000));
       }, 250);
       setRecording(true);
+      startRecordingCue(context);
       await scanDevices();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Microphone recording could not start.");
@@ -373,6 +412,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   }
 
   async function releaseCapture(): Promise<void> {
+    stopRecordingCue();
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     processorRef.current?.disconnect();
@@ -618,6 +658,29 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           </label>
         ) : null}
       </div>
+      <div className="mt-4 rounded-xl border border-fuchsia-300/25 bg-fuchsia-300/[0.05] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="flex items-center gap-2 text-sm font-black">
+            <input type="checkbox" checked={cueEnabled} onChange={(event) => { setCueEnabled(event.target.checked); setCueHeadphonesConfirmed(false); }} disabled={recording || countingIn || uploading} />
+            Metronome during recording
+          </label>
+          {cueEnabled ? <span className="text-xs text-fuchsia-200">Clicks play to output only and never enter captured PCM.</span> : null}
+        </div>
+        {cueEnabled ? (
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Cue volume
+              <input type="range" min={0.05} max={0.5} step={0.05} value={cueVolume} onChange={(event) => setCueVolume(Number(event.target.value))} disabled={recording || countingIn || uploading} />
+              <span>{Math.round(cueVolume * 200)}%</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-white/75">
+              <input type="checkbox" checked={cueAccentEnabled} onChange={(event) => setCueAccentEnabled(event.target.checked)} disabled={recording || countingIn || uploading} /> Accent beat one
+            </label>
+            <label className="flex items-center gap-2 text-sm text-white/75">
+              <input type="checkbox" checked={cueHeadphonesConfirmed} onChange={(event) => setCueHeadphonesConfirmed(event.target.checked)} disabled={recording || countingIn || uploading} /> Headphones on; speakers muted
+            </label>
+          </div>
+        ) : null}
+      </div>
       <div className="mt-4 grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-4">
         <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">Mode
           <select className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={recordingMode} onChange={(event) => setRecordingMode(event.target.value as DawRecordingPlan["mode"])} disabled={recording || uploading}>
@@ -645,7 +708,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <p className="self-end text-xs text-white/45">Count-in is excluded from every saved take. Punch and loop passes are placed at the exact range start.</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={recording || countingIn || uploading || !devices.length || !monitoringAssessment.ready || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
+        <button type="button" className={button} disabled={recording || countingIn || uploading || !devices.length || !monitoringAssessment.ready || (cueEnabled && !cueHeadphonesConfirmed) || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
         {countingIn ? <button type="button" className={button} onClick={() => void cancelCountIn()}>Cancel Count-In</button> : null}
         <button type="button" className={button} disabled={!recording} onClick={() => void stopRecording()}>Stop &amp; Save</button>
         <button type="button" className={button} disabled={recording || uploading} onClick={() => void scanDevices()}>Rescan Inputs</button>

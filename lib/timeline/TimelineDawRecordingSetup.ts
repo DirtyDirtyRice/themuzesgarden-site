@@ -1,5 +1,6 @@
 import type { TimelineDawRecordingPreflightStatus } from "./TimelineDawRecordingPreflight";
 import type { TimelineDawMonitoringMode } from "./TimelineDawRecordingMonitoring";
+import { parseTimelineDawRecordingCueSettings, type TimelineDawRecordingCueSettings } from "./TimelineDawRecordingCue";
 
 export type TimelineDawRecordingSetup = {
   deviceId: string;
@@ -9,6 +10,7 @@ export type TimelineDawRecordingSetup = {
   bpm: number;
   beatsPerBar: number;
   monitoringMode: TimelineDawMonitoringMode;
+  cue: TimelineDawRecordingCueSettings;
 };
 
 export type TimelineDawRecordingEvidence = {
@@ -41,6 +43,7 @@ export function parseTimelineDawRecordingSetup(value: unknown): TimelineDawRecor
     countInBars: bounded(row.countInBars, 0, 8, 0),
     bpm: bounded(row.bpm, 20, 400, 120),
     beatsPerBar: bounded(row.beatsPerBar, 1, 32, 4), monitoringMode,
+    cue: parseTimelineDawRecordingCueSettings(row.cue),
   };
 }
 
