@@ -752,11 +752,21 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused PCM capture, storage-health, and recovery tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Recording Device Loss and Stream Interruption Recovery
+## Current release priority - Real Musician Use
 
-1. Detect microphone track endings, device removal, and AudioContext interruption while a take is active.
-2. Stop and finalize already buffered audio safely instead of leaving recording controls active or losing the partial take.
-3. Present the exact interruption cause, protect the partial WAV in Local Recovery, and require a fresh device check before the next take.
+The owner clarified on August 15, 2026 that the immediate goal is to let musicians use the app and discover how well the complete workflow works. Do not continue general polish, optional features, or broad Creator Preview hardening before this evidence exists.
+
+The next work must stay on the musician's essential path: access, onboarding, opening a project, playing songs, recording, editing, saving, and exporting. Fix only confirmed blockers or serious confusion found on that path. Use actual musician results to choose subsequent work.
+
+## Next eligible milestone - Musician First-Session Readiness Pass
+
+1. Verify the production musician path from access through opening a project, playback, recording, editing, saving, and export.
+2. Repair only issues that block or seriously confuse completion of those essential steps.
+3. Produce a short, plain-language supported setup and first-session path for a 3-5 musician trial.
+
+## Back Burner - Recording Device Loss and Stream Interruption Recovery
+
+Further recording hardening is deferred until real musician sessions show that it is a current blocker. The planned scope remains microphone/device removal detection, safe partial-take finalization, and exact interruption recovery guidance.
 ## Working rules
 
 - Preserve existing architecture and user data.
