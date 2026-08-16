@@ -12,7 +12,7 @@ import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
 import { assessTimelineDawRecordingStorage, type TimelineDawRecordingStorageHealth } from "../../../../lib/timeline/TimelineDawRecordingStorageHealth";
-import { assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled, TIMELINE_DAW_CAPTURE_STALL_MS, TIMELINE_DAW_INPUT_MUTE_GRACE_MS, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
+import { assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled, TIMELINE_DAW_AUDIO_RESUME_GRACE_MS, TIMELINE_DAW_CAPTURE_STALL_MS, TIMELINE_DAW_INPUT_MUTE_GRACE_MS, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
 import {
   deleteTimelineDawRecordingRecovery,
   loadTimelineDawRecordingRecovery,
@@ -138,6 +138,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const inputMuteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const captureWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastCaptureAtRef = useRef(0);
+  const audioResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -537,10 +538,33 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         inputMuteTimerRef.current = null;
         setInterruptionNotice("Microphone signal returned. Recording continued without stopping.");
       };
+      const onAudioContextStateChange = () => {
+        if (!recordingActiveRef.current || stoppingRef.current || interruptionHandledRef.current) return;
+        if (context.state === "running") {
+          if (audioResumeTimerRef.current) clearTimeout(audioResumeTimerRef.current);
+          audioResumeTimerRef.current = null;
+          setInterruptionNotice("Browser audio engine resumed. Recording continued.");
+          lastCaptureAtRef.current = performance.now();
+          return;
+        }
+        if (context.state === "closed") {
+          handleInterruption("audio-engine-stopped");
+          return;
+        }
+        setInterruptionNotice("Browser audio engine paused. Trying to resume recording for three seconds.");
+        if (!audioResumeTimerRef.current) {
+          audioResumeTimerRef.current = setTimeout(() => {
+            audioResumeTimerRef.current = null;
+            if (context.state !== "running") handleInterruption("audio-engine-stopped");
+          }, TIMELINE_DAW_AUDIO_RESUME_GRACE_MS);
+        }
+        void context.resume().catch(() => undefined);
+      };
       track?.addEventListener("ended", onTrackEnded);
       track?.addEventListener("mute", onTrackMuted);
       track?.addEventListener("unmute", onTrackUnmuted);
       stream.addEventListener("inactive", onStreamInactive);
+      context.addEventListener("statechange", onAudioContextStateChange);
       captureWatchdogRef.current = setInterval(() => {
         if (isTimelineDawCaptureStalled({
           recordingActive: recordingActiveRef.current,
@@ -555,10 +579,13 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         inputMuteTimerRef.current = null;
         if (captureWatchdogRef.current) clearInterval(captureWatchdogRef.current);
         captureWatchdogRef.current = null;
+        if (audioResumeTimerRef.current) clearTimeout(audioResumeTimerRef.current);
+        audioResumeTimerRef.current = null;
         track?.removeEventListener("ended", onTrackEnded);
         track?.removeEventListener("mute", onTrackMuted);
         track?.removeEventListener("unmute", onTrackUnmuted);
         stream.removeEventListener("inactive", onStreamInactive);
+        context.removeEventListener("statechange", onAudioContextStateChange);
       };
       startRecordingCue(context);
       await scanDevices();

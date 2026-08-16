@@ -42,6 +42,15 @@ describe("TimelineDawRecordingInterruption", () => {
     })).toBe(false);
   });
 
+  it("protects captured audio when the browser audio engine cannot resume", () => {
+    const decision = assessTimelineDawRecordingInterruption({
+      reason: "audio-engine-stopped", recordingActive: true, stopAlreadyStarted: false,
+      interruptionAlreadyHandled: false, capturedFrames: 9_600,
+    });
+    expect(decision).toMatchObject({ shouldStop: true, canRecoverAudio: true });
+    expect(decision.notice).toMatch(/could not resume within three seconds/i);
+  });
+
   it("ignores duplicate, inactive, and manual-stop events", () => {
     for (const overrides of [
       { recordingActive: false },

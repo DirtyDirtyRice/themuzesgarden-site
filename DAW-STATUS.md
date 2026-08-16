@@ -878,6 +878,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - The watchdog interval is removed with the interruption listeners on stop and teardown, preventing it from affecting a later take.
 - Focused interruption, PCM capture, and recording-recovery tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Browser Audio Engine Pause Recovery
+
+- Active recording now watches the underlying browser `AudioContext` instead of relying only on microphone and PCM events.
+- When the audio engine becomes suspended or interrupted, the DAW immediately tells the musician and attempts to resume it automatically.
+- A recovered engine cancels the pending stop, refreshes the capture heartbeat, and confirms that recording continued.
+- If the engine closes or cannot return to `running` within three seconds, the take stops once and captured audio follows the existing private-save and persistent Local Recovery path.
+- Manual stop and teardown remove the state listener and resume timer before closing the audio engine, so an intentional close cannot be mistaken for a failure.
+- Focused interruption, PCM capture, and recording-recovery tests passed (12 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.
