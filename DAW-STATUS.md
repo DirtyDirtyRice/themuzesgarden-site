@@ -718,11 +718,23 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused recovery, cue, and count-in tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Recording Recovery Across Refresh and Browser Crash
+## Completed milestone - Recording Recovery Across Refresh and Browser Crash
 
-1. Persist the single bounded recovery WAV in private browser storage so refresh or an accidental tab crash does not erase it.
-2. Restore recovery metadata only for the exact DAW session and require the owner to resume, download, or delete it.
-3. Verify quota, corruption, and cleanup behavior without ever synchronizing recovery audio to public storage.
+- Interrupted WAV recovery is now written to browser-private IndexedDB and survives refresh, accidental tab closure, and browser restart when storage remains available.
+- Recovery lookup is scoped to the exact DAW session ID; a record from another session is rejected rather than displayed or retried.
+- Restored records validate WAV size, `.wav` filename, recording plan, timestamp, and a strict 500 MB maximum before a File or download URL is reconstructed.
+- Empty, corrupt, mismatched, or invalid recovery records are removed and reported instead of being treated as usable audio.
+- Retry stage survives refresh: if private source upload succeeded before registration failed, the uploaded source reference is retained so the next retry does not duplicate it.
+- Verified registration and explicit deletion both remove IndexedDB recovery; cleanup failures are visible without undoing a successfully saved take.
+- Recovery audio never enters localStorage, public storage, telemetry, or reports; only the existing owner-authorized private-save retry can transmit it.
+- Focused persistent-store and recovery policy tests passed (4 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Recording Storage Capacity and Persistence Health
+
+1. Check browser storage support, estimated free capacity, and persistent-storage status before a long recording begins.
+2. Warn when the selected maximum take length could exceed safe recovery capacity and provide a smaller safe duration.
+3. Let the musician request persistent browser storage explicitly while keeping recording possible when recovery persistence is unavailable.
 ## Working rules
 
 - Preserve existing architecture and user data.

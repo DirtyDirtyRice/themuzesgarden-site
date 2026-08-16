@@ -12,6 +12,11 @@ import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
 import {
+  deleteTimelineDawRecordingRecovery,
+  loadTimelineDawRecordingRecovery,
+  saveTimelineDawRecordingRecovery,
+} from "../../../../lib/timeline/TimelineDawRecordingRecoveryStore";
+import {
   assessTimelineDawRecordingPreflight,
   type TimelineDawRecordingPreflightResult,
 } from "../../../../lib/timeline/TimelineDawRecordingPreflight";
@@ -95,6 +100,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [cueAccentEnabled, setCueAccentEnabled] = useState(true);
   const [cueHeadphonesConfirmed, setCueHeadphonesConfirmed] = useState(false);
   const [recovery, setRecovery] = useState<RecoverableRecording | null>(null);
+  const [recoveryStorageWarning, setRecoveryStorageWarning] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -150,6 +156,25 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       setSetupLoaded(true);
     }
     void loadDawRecordingReadiness(session.id).then(setLatestEvidence).catch(() => setLatestEvidence(null));
+  }, [session.id]);
+
+  useEffect(() => {
+    let active = true;
+    void loadTimelineDawRecordingRecovery(session.id)
+      .then(({ recovery: stored, warning }) => {
+        if (!active) return;
+        setRecoveryStorageWarning(warning);
+        if (!stored) return;
+        const downloadUrl = URL.createObjectURL(stored.file);
+        recoveryUrlRef.current = downloadUrl;
+        setRecovery({
+          file: stored.file, downloadUrl, plan: stored.plan as DawRecordingPlan,
+          uploaded: stored.uploaded as DawRecordedSourceEventDetail | null,
+          failure: stored.failure, mp3Url: undefined,
+        });
+      })
+      .catch((cause) => { if (active) setRecoveryStorageWarning(cause instanceof Error ? cause.message : "Private recovery storage could not be checked."); });
+    return () => { active = false; };
   }, [session.id]);
 
   useEffect(() => {
@@ -499,7 +524,19 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       recoveryUrlRef.current = null;
     } catch (cause) {
       const failure = cause instanceof Error ? cause.message : "Recorded WAV could not be uploaded.";
-      if (recoverable) setRecovery({ ...recoverable, failure });
+      if (recoverable) {
+        const protectedRecovery = { ...recoverable, failure };
+        setRecovery(protectedRecovery);
+        try {
+          await saveTimelineDawRecordingRecovery({
+            sessionId: session.id, file: protectedRecovery.file, plan: protectedRecovery.plan,
+            uploaded: protectedRecovery.uploaded, failure, savedAt: new Date().toISOString(),
+          });
+          setRecoveryStorageWarning(null);
+        } catch (storageCause) {
+          setRecoveryStorageWarning(storageCause instanceof Error ? storageCause.message : "Recovery remains in this tab but could not persist across refresh.");
+        }
+      }
       setError(recoverable ? "Private save was interrupted. Your WAV is available in Local Recovery below." : failure);
     } finally {
       setUploading(false);
@@ -509,22 +546,40 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   async function retryRecoverableRecording() {
     if (!recovery || uploading) return;
     setUploading(true); setError(null);
+    let uploadedForRetry = recovery.uploaded;
     try {
       const uploaded = recovery.uploaded ?? await uploadDawRenderSource(session.id, recovery.file);
-      if (!recovery.uploaded) setRecovery((current) => current ? { ...current, uploaded } : current);
+      uploadedForRetry = uploaded;
+      if (!recovery.uploaded) {
+        setRecovery((current) => current ? { ...current, uploaded } : current);
+        await saveTimelineDawRecordingRecovery({
+          sessionId: session.id, file: recovery.file, plan: recovery.plan,
+          uploaded, failure: recovery.failure, savedAt: new Date().toISOString(),
+        });
+      }
       const { takes: registeredTakes } = await registerDawRecordingTake(session.id, uploaded, recovery.plan);
       setTakes((current) => [...registeredTakes.map((take) => ({ ...take, mp3Url: recovery.mp3Url })), ...current]);
       window.dispatchEvent(new CustomEvent<DawRecordedSourceEventDetail>(DAW_RECORDED_SOURCE_EVENT, { detail: uploaded }));
       URL.revokeObjectURL(recovery.downloadUrl); recoveryUrlRef.current = null;
       setRecovery(null); setTakeName(`${session.name} Take ${takes.length + 2}`); setElapsedSeconds(0);
+      try { await deleteTimelineDawRecordingRecovery(session.id); setRecoveryStorageWarning(null); }
+      catch { setRecoveryStorageWarning("The take saved privately, but stale browser recovery cleanup needs another page refresh."); }
     } catch (cause) {
       const failure = cause instanceof Error ? cause.message : "Recovery save failed.";
       setRecovery((current) => current ? { ...current, failure } : current);
+      try {
+        await saveTimelineDawRecordingRecovery({
+          sessionId: session.id, file: recovery.file, plan: recovery.plan,
+          uploaded: uploadedForRetry, failure, savedAt: new Date().toISOString(),
+        });
+      } catch (storageCause) {
+        setRecoveryStorageWarning(storageCause instanceof Error ? storageCause.message : "Recovery retry state could not persist.");
+      }
       setError("Recovery remains available. The private save did not complete.");
     } finally { setUploading(false); }
   }
 
-  function deleteRecoverableRecording() {
+  async function deleteRecoverableRecording() {
     if (!recovery || !window.confirm("Delete this local recovery WAV? Download it first if you may need it.")) return;
     URL.revokeObjectURL(recovery.downloadUrl); recoveryUrlRef.current = null;
     if (recovery.mp3Url) {
@@ -532,6 +587,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       mp3UrlsRef.current = mp3UrlsRef.current.filter((url) => url !== recovery.mp3Url);
     }
     setRecovery(null); setError(null);
+    try { await deleteTimelineDawRecordingRecovery(session.id); setRecoveryStorageWarning(null); }
+    catch (cause) { setRecoveryStorageWarning(cause instanceof Error ? cause.message : "Private recovery storage cleanup failed."); }
   }
 
   async function auditionTake(take: UploadedTake) {
@@ -789,6 +846,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         </div>
       ) : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
+      {recoveryStorageWarning ? <p role="alert" className="mt-4 text-sm text-amber-200">Recovery storage: {recoveryStorageWarning}</p> : null}
       {recovery ? (
         <section className="mt-4 rounded-xl border border-amber-300/40 bg-amber-300/10 p-4" aria-label="Local recording recovery">
           <p className="text-sm font-black text-amber-100">Unsaved recording protected locally</p>
