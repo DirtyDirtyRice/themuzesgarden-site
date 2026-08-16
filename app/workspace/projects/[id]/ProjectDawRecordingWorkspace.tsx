@@ -12,7 +12,7 @@ import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
 import { assessTimelineDawRecordingStorage, type TimelineDawRecordingStorageHealth } from "../../../../lib/timeline/TimelineDawRecordingStorageHealth";
-import { assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled, TIMELINE_DAW_AUDIO_RESUME_GRACE_MS, TIMELINE_DAW_CAPTURE_STALL_MS, TIMELINE_DAW_INPUT_MUTE_GRACE_MS, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
+import { assessTimelineDawPostInterruptionReadiness, assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled, TIMELINE_DAW_AUDIO_RESUME_GRACE_MS, TIMELINE_DAW_CAPTURE_STALL_MS, TIMELINE_DAW_INPUT_MUTE_GRACE_MS, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
 import {
   deleteTimelineDawRecordingRecovery,
   loadTimelineDawRecordingRecovery,
@@ -93,6 +93,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [captureLimitReached, setCaptureLimitReached] = useState(false);
   const [captureLimitNotice, setCaptureLimitNotice] = useState<string | null>(null);
   const [interruptionNotice, setInterruptionNotice] = useState<string | null>(null);
+  const [interruptionRecheckRequired, setInterruptionRecheckRequired] = useState(false);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
   const [reviewingTakeId, setReviewingTakeId] = useState<string | null>(null);
   const [reviewName, setReviewName] = useState("");
@@ -318,6 +319,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       setMonitoringLatencyMs(Math.round((context.baseLatency + outputLatency) * 100_000) / 100);
       const result = assessTimelineDawRecordingPreflight(peakDbfs);
       setPreflight(result);
+      if (result.ready) setInterruptionRecheckRequired(false);
       const selectedDevice = devices.find((device) => device.deviceId === deviceId);
       const evidence: TimelineDawRecordingEvidence = {
         deviceId, deviceLabel: selectedDevice?.label || "Selected audio input",
@@ -350,6 +352,11 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   });
   const maximumTakeSeconds = maxTakeMinutes * 60;
   const remainingTakeSeconds = Math.max(0, maximumTakeSeconds - bufferedSeconds);
+  const postInterruptionReadiness = assessTimelineDawPostInterruptionReadiness({
+    recheckRequired: interruptionRecheckRequired,
+    devicePresent: devices.some((device) => device.deviceId === deviceId),
+    preflightReady: Boolean(preflight?.ready),
+  });
 
   async function runCountIn(context: AudioContext): Promise<boolean> {
     const beats = createTimelineDawCountIn({ bars: countInBars, beatsPerBar, bpm });
@@ -517,7 +524,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         });
         if (!decision.shouldStop) return;
         interruptionHandledRef.current = true;
+        setInterruptionRecheckRequired(true);
+        setPreflight(null);
         setInterruptionNotice(decision.notice);
+        void scanDevices().catch(() => undefined);
         void stopRecording();
       };
       const track = stream.getAudioTracks()[0];
@@ -1008,7 +1018,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <p className="self-end text-xs text-white/45">Count-in is excluded from every saved take. Punch and loop passes are placed at the exact range start.</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={recoveryView.startHeld || recording || countingIn || uploading || !devices.length || !monitoringAssessment.ready || (cueEnabled && !cueHeadphonesConfirmed) || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
+        <button type="button" className={button} disabled={recoveryView.startHeld || recording || countingIn || uploading || !devices.length || !postInterruptionReadiness.ready || !monitoringAssessment.ready || (cueEnabled && !cueHeadphonesConfirmed) || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
         {countingIn ? <button type="button" className={button} onClick={() => void cancelCountIn()}>Cancel Count-In</button> : null}
         <button type="button" className={button} disabled={!recording} onClick={() => void stopRecording()}>Stop &amp; Save</button>
         <button type="button" className={button} disabled={recording || uploading} onClick={() => void scanDevices()}>Rescan Inputs</button>
@@ -1045,6 +1055,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       ) : null}
       {captureLimitNotice ? <p role="alert" className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm font-bold text-amber-100">{captureLimitNotice}</p> : null}
       {interruptionNotice ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-300/10 p-3 text-sm font-bold text-red-100">{interruptionNotice}</p> : null}
+      {!postInterruptionReadiness.ready ? <p role="alert" className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm font-bold text-amber-100">Before another take: {postInterruptionReadiness.guidance}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {recoveryStorageWarning ? <p role="alert" className="mt-4 text-sm text-amber-200">Recovery storage: {recoveryStorageWarning}</p> : null}
       {recovery ? (

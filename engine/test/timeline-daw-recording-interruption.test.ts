@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled } from "../../lib/timeline/TimelineDawRecordingInterruption";
+import { assessTimelineDawPostInterruptionReadiness, assessTimelineDawRecordingInterruption, isTimelineDawCaptureStalled } from "../../lib/timeline/TimelineDawRecordingInterruption";
 
 describe("TimelineDawRecordingInterruption", () => {
   it("finalizes captured audio when the selected input ends", () => {
@@ -49,6 +49,21 @@ describe("TimelineDawRecordingInterruption", () => {
     });
     expect(decision).toMatchObject({ shouldStop: true, canRecoverAudio: true });
     expect(decision.notice).toMatch(/could not resume within three seconds/i);
+  });
+
+  it("requires a present and verified input after an interrupted take", () => {
+    expect(assessTimelineDawPostInterruptionReadiness({
+      recheckRequired: true, devicePresent: false, preflightReady: false,
+    })).toMatchObject({ ready: false, guidance: expect.stringMatching(/reconnect/i) });
+    expect(assessTimelineDawPostInterruptionReadiness({
+      recheckRequired: true, devicePresent: true, preflightReady: false,
+    })).toMatchObject({ ready: false, guidance: expect.stringMatching(/test input level/i) });
+    expect(assessTimelineDawPostInterruptionReadiness({
+      recheckRequired: true, devicePresent: true, preflightReady: true,
+    }).ready).toBe(true);
+    expect(assessTimelineDawPostInterruptionReadiness({
+      recheckRequired: false, devicePresent: false, preflightReady: false,
+    }).ready).toBe(true);
   });
 
   it("ignores duplicate, inactive, and manual-stop events", () => {

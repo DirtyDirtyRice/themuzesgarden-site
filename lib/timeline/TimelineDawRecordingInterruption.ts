@@ -9,6 +9,21 @@ export const TIMELINE_DAW_INPUT_MUTE_GRACE_MS = 5_000;
 export const TIMELINE_DAW_CAPTURE_STALL_MS = 5_000;
 export const TIMELINE_DAW_AUDIO_RESUME_GRACE_MS = 3_000;
 
+export function assessTimelineDawPostInterruptionReadiness(input: {
+  recheckRequired: boolean;
+  devicePresent: boolean;
+  preflightReady: boolean;
+}): { ready: boolean; guidance: string } {
+  if (!input.recheckRequired) return { ready: true, guidance: "" };
+  if (!input.devicePresent) {
+    return { ready: false, guidance: "Reconnect a microphone, then rescan inputs and run Test Input Level before recording again." };
+  }
+  if (!input.preflightReady) {
+    return { ready: false, guidance: "Run Test Input Level and reach Ready to record before starting another take." };
+  }
+  return { ready: true, guidance: "Input recheck passed. Recording can start again." };
+}
+
 export function isTimelineDawCaptureStalled(input: {
   recordingActive: boolean;
   stopAlreadyStarted: boolean;

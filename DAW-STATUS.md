@@ -888,6 +888,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Manual stop and teardown remove the state listener and resume timer before closing the audio engine, so an intentional close cannot be mistaken for a failure.
 - Focused interruption, PCM capture, and recording-recovery tests passed (12 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Post-Interruption Input Recheck Gate
+
+- Every confirmed microphone, stream, capture-pipeline, or browser-audio-engine interruption now invalidates the old input preflight result.
+- The DAW rescans available inputs after the interruption and holds Start Recording until the musician verifies the recovered or replacement input.
+- A missing device gives an exact reconnect/rescan instruction; a present but unverified device directs the musician to Test Input Level and reach Ready to record.
+- Only a genuinely ready new preflight clears the hold; a quiet, hot, clipping, or absent signal cannot silently unlock another take.
+- Normal recordings that have not suffered an interruption retain the existing advisory preflight behavior, so the new gate is limited to the proven-risk recovery path.
+- Focused interruption, preflight, setup, and PCM tests passed (17 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.
