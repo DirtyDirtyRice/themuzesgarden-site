@@ -11,6 +11,7 @@ export type TimelineDawRecordingSetup = {
   beatsPerBar: number;
   monitoringMode: TimelineDawMonitoringMode;
   cue: TimelineDawRecordingCueSettings;
+  maxTakeMinutes: number;
 };
 
 export type TimelineDawRecordingEvidence = {
@@ -44,6 +45,7 @@ export function parseTimelineDawRecordingSetup(value: unknown): TimelineDawRecor
     bpm: bounded(row.bpm, 20, 400, 120),
     beatsPerBar: bounded(row.beatsPerBar, 1, 32, 4), monitoringMode,
     cue: parseTimelineDawRecordingCueSettings(row.cue),
+    maxTakeMinutes: bounded(row.maxTakeMinutes, 1, 30, 30),
   };
 }
 

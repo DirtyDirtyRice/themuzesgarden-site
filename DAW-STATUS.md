@@ -730,11 +730,22 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused persistent-store and recovery policy tests passed (4 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Recording Storage Capacity and Persistence Health
+## Completed milestone - Recording Storage Capacity and Persistence Health
 
-1. Check browser storage support, estimated free capacity, and persistent-storage status before a long recording begins.
-2. Warn when the selected maximum take length could exceed safe recovery capacity and provide a smaller safe duration.
-3. Let the musician request persistent browser storage explicitly while keeping recording possible when recovery persistence is unavailable.
+- Recording now checks browser storage support, estimated free capacity, and persistent-storage status before a long take begins.
+- Musicians can select a bounded 1-30 minute maximum take length, recalled per DAW session, and the PCM capture buffer now uses that actual limit.
+- Recovery estimates conservatively budget stereo 48 kHz Float32 PCM and reserve 20% of reported free storage as safety headroom.
+- When the selected duration exceeds the safe estimate, the DAW recommends a smaller duration or asks the musician to clear/download local files.
+- Persistent browser storage can be requested explicitly from the recording panel, and the result is refreshed immediately.
+- Storage health is advisory rather than a recording lock: unsupported or denied persistence keeps recording available while clearly recommending recovery WAV downloads.
+- Focused storage-health, persistent-recovery, and setup-recall tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Long Recording Memory Pressure and Early Stop Protection
+
+1. Show live buffered duration and remaining time while recording against the musician's selected maximum take length.
+2. Stop capture safely at the configured maximum instead of allowing a buffer-limit exception to interrupt finalization.
+3. Preserve and expose the final bounded recovery WAV with an explicit limit-reached warning before private save or retry.
 ## Working rules
 
 - Preserve existing architecture and user data.

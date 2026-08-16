@@ -11,6 +11,7 @@ import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineD
 import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../../lib/timeline/TimelineDawCountIn";
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
+import { assessTimelineDawRecordingStorage, type TimelineDawRecordingStorageHealth } from "../../../../lib/timeline/TimelineDawRecordingStorageHealth";
 import {
   deleteTimelineDawRecordingRecovery,
   loadTimelineDawRecordingRecovery,
@@ -48,6 +49,12 @@ import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWo
 
 
 const button = "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
+
+function formatStorageBytes(bytes: number | null): string {
+  if (bytes === null) return "Unavailable";
+  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
+  return `${Math.round(bytes / 1_000_000)} MB`;
+}
 
 type UploadedTake = DawRecordingTake & { mp3Url?: string };
 type RecoverableRecording = {
@@ -101,6 +108,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [cueHeadphonesConfirmed, setCueHeadphonesConfirmed] = useState(false);
   const [recovery, setRecovery] = useState<RecoverableRecording | null>(null);
   const [recoveryStorageWarning, setRecoveryStorageWarning] = useState<string | null>(null);
+  const [maxTakeMinutes, setMaxTakeMinutes] = useState(30);
+  const [storageHealth, setStorageHealth] = useState<TimelineDawRecordingStorageHealth>(() => assessTimelineDawRecordingStorage({ supported: false, persisted: false, quotaBytes: null, usageBytes: null, maxTakeMinutes: 30 }));
+  const [storageBusy, setStorageBusy] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -149,6 +159,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         setCountInBars(saved.countInBars); setBpm(saved.bpm); setBeatsPerBar(saved.beatsPerBar);
         setMonitoringMode(saved.monitoringMode);
         setCueEnabled(saved.cue.enabled); setCueVolume(saved.cue.volume); setCueAccentEnabled(saved.cue.accentEnabled);
+        setMaxTakeMinutes(saved.maxTakeMinutes);
       }
     } catch {
       localStorage.removeItem(timelineDawRecordingSetupKey(session.id));
@@ -182,8 +193,28 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     localStorage.setItem(timelineDawRecordingSetupKey(session.id), JSON.stringify({
       deviceId, outputFormat, recordingMode, countInBars, bpm, beatsPerBar, monitoringMode,
       cue: { enabled: cueEnabled, volume: cueVolume, accentEnabled: cueAccentEnabled },
+      maxTakeMinutes,
     }));
-  }, [beatsPerBar, bpm, countInBars, cueAccentEnabled, cueEnabled, cueVolume, deviceId, monitoringMode, outputFormat, recordingMode, session.id, setupLoaded]);
+  }, [beatsPerBar, bpm, countInBars, cueAccentEnabled, cueEnabled, cueVolume, deviceId, maxTakeMinutes, monitoringMode, outputFormat, recordingMode, session.id, setupLoaded]);
+
+  const refreshStorageHealth = useCallback(async (minutes = maxTakeMinutes) => {
+    const supported = Boolean(navigator.storage?.estimate);
+    try {
+      const estimate = supported ? await navigator.storage.estimate() : {};
+      const persisted = Boolean(navigator.storage?.persisted && await navigator.storage.persisted());
+      setStorageHealth(assessTimelineDawRecordingStorage({ supported, persisted, quotaBytes: estimate.quota ?? null, usageBytes: estimate.usage ?? null, maxTakeMinutes: minutes }));
+    } catch {
+      setStorageHealth(assessTimelineDawRecordingStorage({ supported: false, persisted: false, quotaBytes: null, usageBytes: null, maxTakeMinutes: minutes }));
+    }
+  }, [maxTakeMinutes]);
+
+  useEffect(() => { void refreshStorageHealth(); }, [refreshStorageHealth]);
+
+  async function requestPersistentRecoveryStorage() {
+    setStorageBusy(true);
+    try { if (navigator.storage?.persist) await navigator.storage.persist(); }
+    finally { await refreshStorageHealth(); setStorageBusy(false); }
+  }
 
   useEffect(() => {
     let active = true;
@@ -387,7 +418,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       const capture = new TimelineDawPcmCaptureBuffer(
         context.sampleRate,
         channelCount,
-        context.sampleRate * 60 * 30,
+        context.sampleRate * 60 * maxTakeMinutes,
       );
       const legacyProcessor = context.createScriptProcessor(4096, channelCount, channelCount);
       const silence = context.createGain();
@@ -744,6 +775,39 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
             <p className="mt-2 text-xs text-white/70">{preflight.guidance}</p>
           </div>
         ) : null}
+      </div>
+      <div className={`mt-4 rounded-xl border p-4 ${storageHealth.status === "ready" ? "border-emerald-300/25 bg-emerald-300/[0.05]" : "border-amber-300/30 bg-amber-300/[0.06]"}`}>
+        <div className="grid gap-3 md:grid-cols-[minmax(0,13rem)_1fr_auto] md:items-end">
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">
+            Maximum take length
+            <select
+              className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white"
+              value={maxTakeMinutes}
+              onChange={(event) => setMaxTakeMinutes(Number(event.target.value))}
+              disabled={recording || countingIn || uploading}
+            >
+              {[1, 2, 5, 10, 15, 20, 30].map((minutes) => <option key={minutes} value={minutes}>{minutes} minute{minutes === 1 ? "" : "s"}</option>)}
+            </select>
+          </label>
+          <div role="status" aria-live="polite">
+            <p className={`text-sm font-black ${storageHealth.status === "ready" ? "text-emerald-200" : "text-amber-200"}`}>
+              Recovery storage: {storageHealth.persisted ? "persistent" : storageHealth.status === "unknown" ? "not confirmed" : "temporary"}
+            </p>
+            <p className="mt-1 text-xs text-white/60">
+              Estimated take {formatStorageBytes(storageHealth.estimatedTakeBytes)} · Available {formatStorageBytes(storageHealth.availableBytes)}
+              {storageHealth.safeMinutes === null ? "" : ` · Safe estimate ${storageHealth.safeMinutes} min`}
+            </p>
+            <p className="mt-1 text-xs text-white/75">{storageHealth.recommendation}</p>
+          </div>
+          {!storageHealth.persisted && storageHealth.supported ? (
+            <button type="button" className={button} disabled={storageBusy || recording || countingIn || uploading} onClick={() => void requestPersistentRecoveryStorage()}>
+              {storageBusy ? "Requesting..." : "Request Persistent Storage"}
+            </button>
+          ) : null}
+        </div>
+        <p className="mt-3 text-xs text-white/50">
+          This is an advisory, not a recording lock. Recording remains available when persistent storage is unavailable; download recovery WAVs before leaving Studio.
+        </p>
       </div>
       <div className="mt-4 rounded-xl border border-violet-300/25 bg-violet-300/[0.05] p-4">
         <div className="grid gap-3 md:grid-cols-[minmax(0,14rem)_1fr]">
