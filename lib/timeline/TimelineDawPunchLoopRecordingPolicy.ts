@@ -10,6 +10,7 @@ export type TimelineDawRecordingPlan = {
   rangeEndFrame: number | null;
   loopPasses: number;
   groupId: string | null;
+  countInCaptured: boolean;
 };
 
 export type TimelineDawRecordingPass = {
@@ -46,11 +47,14 @@ export function parseTimelineDawRecordingPlan(value: unknown): TimelineDawRecord
     rangeEndFrame: mode === "normal" ? null : rangeEndFrame,
     loopPasses: mode === "loop" ? loopPasses : 1,
     groupId: typeof input.groupId === "string" && input.groupId.trim() ? input.groupId.trim() : null,
+    countInCaptured: input.countInCaptured !== false,
   };
 }
 
 export function timelineDawCountInFrames(plan: TimelineDawRecordingPlan): number {
-  return Math.round(plan.countInBars * plan.beatsPerBar * 60 / plan.bpm * plan.sampleRate);
+  return plan.countInCaptured
+    ? Math.round(plan.countInBars * plan.beatsPerBar * 60 / plan.bpm * plan.sampleRate)
+    : 0;
 }
 
 export function createTimelineDawRecordingPasses(plan: TimelineDawRecordingPlan, capturedFrames: number): TimelineDawRecordingPass[] {

@@ -84,6 +84,7 @@ function take(row: Record<string, unknown>) {
       sourceInFrame: Number(row.source_in_frame ?? 0),
       sourceOutFrame: row.source_out_frame == null ? Number(row.frame_count) : Number(row.source_out_frame),
       countInBars: Number(row.count_in_bars ?? 0),
+      countInCaptured: Boolean(row.count_in_captured ?? true),
     },
     createdAt: String(row.created_at),
   };
@@ -156,6 +157,7 @@ export async function POST(request: NextRequest) {
         source_in_frame: pass.sourceInFrame,
         source_out_frame: pass.sourceOutFrame,
         count_in_bars: plan.countInBars,
+        count_in_captured: plan.countInCaptured,
       }));
       const { data, error } = await user.client.from(TABLE).insert(rows).select("*");
       if (error || !data?.length) throw new ApiError(`Recording take could not be registered: ${error?.message ?? "missing rows"}`, 500);

@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { createTimelineDawRecordingPasses, parseTimelineDawRecordingPlan, timelineDawCountInFrames } from "../../lib/timeline/TimelineDawPunchLoopRecordingPolicy";
 
 describe("punch and loop recording policy", () => {
+  it("does not trim count-in frames when capture begins after the audible cue", () => {
+    const plan = parseTimelineDawRecordingPlan({ mode: "normal", sampleRate: 48_000, countInBars: 2, beatsPerBar: 4, bpm: 120, rangeStartFrame: 0, countInCaptured: false });
+    expect(timelineDawCountInFrames(plan)).toBe(0);
+    expect(createTimelineDawRecordingPasses(plan, 48_000)[0].sourceInFrame).toBe(0);
+  });
   it("builds a tempo-aware count-in without recording over the target", () => {
     const plan = parseTimelineDawRecordingPlan({ mode: "punch", sampleRate: 48_000, countInBars: 2, beatsPerBar: 4, bpm: 120, rangeStartFrame: 96_000, rangeEndFrame: 144_000 });
     expect(timelineDawCountInFrames(plan)).toBe(192_000);

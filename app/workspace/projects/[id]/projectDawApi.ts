@@ -211,7 +211,7 @@ export function loadDawRecordingTakes(sessionId: string): Promise<{ takes: DawRe
   return request(`/api/timeline/daw-recording-takes?sessionId=${encodeURIComponent(sessionId)}`);
 }
 
-export type DawRecordingPlan = { mode: "normal" | "punch" | "loop"; countInBars: number; beatsPerBar: number; bpm: number; rangeStartFrame: number; rangeEndFrame: number | null; loopPasses: number; groupId?: string | null };
+export type DawRecordingPlan = { mode: "normal" | "punch" | "loop"; countInBars: number; beatsPerBar: number; bpm: number; rangeStartFrame: number; rangeEndFrame: number | null; loopPasses: number; groupId?: string | null; countInCaptured?: boolean };
 
 export function registerDawRecordingTake(
   sessionId: string,

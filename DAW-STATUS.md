@@ -685,11 +685,22 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused monitoring, setup-recall, and preflight tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Audible Count-In and Recording Capture Boundary
+## Completed milestone - Audible Count-In and Recording Capture Boundary
 
-1. Turn the existing count-in setting into a real tempo- and meter-aware audible cue before capture begins.
-2. Keep count-in sound out of the recorded PCM and begin the saved take exactly after the final count-in beat.
-3. Provide a visible beat/bar countdown with cancel support so a musician can stop safely before recording starts.
+- The existing 0-8 bar count-in now produces real tempo- and meter-aware Web Audio clicks, with a higher accent on each bar's first beat.
+- A large live bar/beat display explicitly says audio is not recording yet during the count-in.
+- Cancel Count-In invalidates the pending cue, disconnects the input, stops microphone tracks, and closes the AudioContext before PCM capture starts.
+- The microphone source remains disconnected from the capture processor throughout the cue; the saved capture buffer begins only after the final beat interval finishes.
+- New take records explicitly mark count-in as external to captured PCM, while legacy takes retain their previous count-in-frame trimming semantics.
+- Safe-exit activity treats count-in as active recording work so navigation cannot silently abandon an open microphone.
+- Focused count-in, punch/loop boundary, and monitoring tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- Supabase migration 20260815090000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Recording Metronome and Cue Controls
+
+1. Add an optional tempo/meter metronome during recording without routing clicks into captured PCM.
+2. Provide bounded cue volume and accent controls with headphones-first guidance.
+3. Preserve the chosen cue settings per session and stop every scheduled click immediately on stop, cancel, error, or navigation.
 ## Working rules
 
 - Preserve existing architecture and user data.

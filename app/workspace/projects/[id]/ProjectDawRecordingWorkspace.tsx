@@ -8,6 +8,7 @@ import {
 import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Encoder";
 import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
 import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
+import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../../lib/timeline/TimelineDawCountIn";
 import {
   assessTimelineDawRecordingPreflight,
   type TimelineDawRecordingPreflightResult,
@@ -57,6 +58,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [rangeEndSeconds, setRangeEndSeconds] = useState(4);
   const [loopPasses, setLoopPasses] = useState(3);
   const [recording, setRecording] = useState(false);
+  const [countingIn, setCountingIn] = useState(false);
+  const [countInBeat, setCountInBeat] = useState<TimelineDawCountInBeat | null>(null);
   const [uploading, setUploading] = useState(false);
   const [auditionUrls, setAuditionUrls] = useState<Record<string, string>>({});
   const [inputPeakDb, setInputPeakDb] = useState(-96);
@@ -88,6 +91,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const captureErrorRef = useRef<Error | null>(null);
   const mp3UrlsRef = useRef<string[]>([]);
   const meterUpdatedAtRef = useRef(0);
+  const countInGenerationRef = useRef(0);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -146,6 +150,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   }, [session.id]);
 
   useEffect(() => () => {
+    countInGenerationRef.current += 1;
     if (timerRef.current) clearInterval(timerRef.current);
     processorRef.current?.disconnect();
     sourceRef.current?.disconnect();
@@ -157,14 +162,14 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(TIMELINE_DAW_LOCAL_ACTIVITY_EVENT, {
-      detail: { sessionId: session.id, recording, uploading },
+      detail: { sessionId: session.id, recording: recording || countingIn, uploading },
     }));
     return () => {
       window.dispatchEvent(new CustomEvent(TIMELINE_DAW_LOCAL_ACTIVITY_EVENT, {
         detail: { sessionId: session.id, recording: false, uploading: false },
       }));
     };
-  }, [recording, session.id, uploading]);
+  }, [countingIn, recording, session.id, uploading]);
 
   function appendCaptureBlock(capture: TimelineDawPcmCaptureBuffer, channels: Float32Array[]) {
     capture.append(channels);
@@ -241,13 +246,43 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     headphonesConfirmed,
   });
 
+  async function runCountIn(context: AudioContext): Promise<boolean> {
+    const beats = createTimelineDawCountIn({ bars: countInBars, beatsPerBar, bpm });
+    if (!beats.length) return true;
+    const generation = ++countInGenerationRef.current;
+    setCountingIn(true);
+    for (const beat of beats) {
+      if (countInGenerationRef.current !== generation) return false;
+      setCountInBeat(beat);
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.frequency.value = beat.accent ? 1320 : 880;
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.22, context.currentTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.07);
+      oscillator.connect(gain); gain.connect(context.destination);
+      oscillator.start(); oscillator.stop(context.currentTime + 0.08);
+      await new Promise((resolve) => window.setTimeout(resolve, beat.delayMs));
+      oscillator.disconnect(); gain.disconnect();
+    }
+    if (countInGenerationRef.current !== generation) return false;
+    setCountingIn(false); setCountInBeat(null);
+    return true;
+  }
+
+  async function cancelCountIn() {
+    countInGenerationRef.current += 1;
+    setCountingIn(false); setCountInBeat(null);
+    await releaseCapture();
+  }
+
   async function startRecording() {
-    if (recording || uploading) return;
+    if (recording || uploading || countingIn) return;
     setError(null);
     captureErrorRef.current = null;
     setInputPeakDb(-96);
     setInputClipped(false);
-    setCaptureMode("compatibility");
+    setCaptureMode(null);
     meterUpdatedAtRef.current = 0;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -266,6 +301,11 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         1,
         Math.min(2, stream.getAudioTracks()[0]?.getSettings().channelCount ?? source.channelCount ?? 1),
       );
+      streamRef.current = stream;
+      contextRef.current = context;
+      sourceRef.current = source;
+      if (!await runCountIn(context)) return;
+      setCaptureMode("compatibility");
       const capture = new TimelineDawPcmCaptureBuffer(
         context.sampleRate,
         channelCount,
@@ -380,6 +420,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         rangeStartFrame,
         rangeEndFrame,
         loopPasses: recordingMode === "loop" ? loopPasses : 1,
+        countInCaptured: false,
       };
       const { takes: registeredTakes } = await registerDawRecordingTake(session.id, uploaded, recordingPlan);
       let mp3Url: string | undefined;
@@ -488,7 +529,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           </p>
         </div>
         <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${recording ? "border-red-300/40 bg-red-400/15 text-red-200" : "border-white/15 bg-white/5 text-white/55"}`}>
-          {recording ? `Recording ${elapsedSeconds}s` : uploading ? "Uploading" : "Ready"}
+          {countingIn && countInBeat ? `Count-in ${countInBeat.bar}:${countInBeat.beat}` : recording ? `Recording ${elapsedSeconds}s` : uploading ? "Uploading" : "Ready"}
         </span>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -604,10 +645,17 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <p className="self-end text-xs text-white/45">Count-in is excluded from every saved take. Punch and loop passes are placed at the exact range start.</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={recording || uploading || !devices.length || !monitoringAssessment.ready || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
+        <button type="button" className={button} disabled={recording || countingIn || uploading || !devices.length || !monitoringAssessment.ready || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
+        {countingIn ? <button type="button" className={button} onClick={() => void cancelCountIn()}>Cancel Count-In</button> : null}
         <button type="button" className={button} disabled={!recording} onClick={() => void stopRecording()}>Stop &amp; Save</button>
         <button type="button" className={button} disabled={recording || uploading} onClick={() => void scanDevices()}>Rescan Inputs</button>
       </div>
+      {countingIn && countInBeat ? (
+        <div className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-4 text-center" role="status" aria-live="assertive">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-200">Count-in — audio is not recording yet</p>
+          <p className="mt-2 text-4xl font-black">Bar {countInBeat.bar} · Beat {countInBeat.beat}</p>
+        </div>
+      ) : null}
       {captureMode ? (
         <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.04] p-3">
           <div className="flex items-center justify-between gap-3 text-xs font-black uppercase tracking-wide">
