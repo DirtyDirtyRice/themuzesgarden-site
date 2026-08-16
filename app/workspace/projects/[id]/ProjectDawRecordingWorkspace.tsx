@@ -140,11 +140,17 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const captureWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastCaptureAtRef = useRef(0);
   const audioResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeDeviceIdRef = useRef("");
+  const activeDeviceMissingHandlerRef = useRef<(() => void) | null>(null);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
     const next = (await navigator.mediaDevices.enumerateDevices())
       .filter((device) => device.kind === "audioinput");
+    const activeDeviceId = activeDeviceIdRef.current;
+    if (recordingActiveRef.current && activeDeviceId && !next.some((device) => device.deviceId === activeDeviceId)) {
+      activeDeviceMissingHandlerRef.current?.();
+    }
     setDevices(next);
     setDevicesScanned(true);
     setDeviceId((current) =>
@@ -531,6 +537,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         void stopRecording();
       };
       const track = stream.getAudioTracks()[0];
+      activeDeviceIdRef.current = track?.getSettings().deviceId || deviceId;
+      activeDeviceMissingHandlerRef.current = () => handleInterruption("selected-device-missing");
       const onTrackEnded = () => handleInterruption("input-ended");
       const onStreamInactive = () => handleInterruption("stream-inactive");
       const onTrackMuted = () => {
@@ -596,6 +604,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         track?.removeEventListener("unmute", onTrackUnmuted);
         stream.removeEventListener("inactive", onStreamInactive);
         context.removeEventListener("statechange", onAudioContextStateChange);
+        activeDeviceIdRef.current = "";
+        activeDeviceMissingHandlerRef.current = null;
       };
       startRecordingCue(context);
       await scanDevices();

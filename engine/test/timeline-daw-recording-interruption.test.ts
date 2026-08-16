@@ -66,6 +66,15 @@ describe("TimelineDawRecordingInterruption", () => {
     }).ready).toBe(true);
   });
 
+  it("stops instead of silently switching when the active microphone disappears", () => {
+    const decision = assessTimelineDawRecordingInterruption({
+      reason: "selected-device-missing", recordingActive: true, stopAlreadyStarted: false,
+      interruptionAlreadyHandled: false, capturedFrames: 14_400,
+    });
+    expect(decision).toMatchObject({ shouldStop: true, canRecoverAudio: true });
+    expect(decision.notice).toMatch(/started this take is no longer available/i);
+  });
+
   it("ignores duplicate, inactive, and manual-stop events", () => {
     for (const overrides of [
       { recordingActive: false },

@@ -898,6 +898,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Normal recordings that have not suffered an interruption retain the existing advisory preflight behavior, so the new gate is limited to the proven-risk recovery path.
 - Focused interruption, preflight, setup, and PCM tests passed (17 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Active Recording Input Device Lock
+
+- Each take now records the exact browser device ID of the microphone that actually opened the capture stream.
+- Device-change rescans compare the current hardware list with that locked ID while recording is active.
+- If the starting microphone disappears, the DAW stops the take once and protects captured audio instead of silently shifting the selected controls to another available input.
+- The interruption message states that the microphone which started the take is unavailable, and the existing post-interruption gate requires the replacement/reconnected input to pass Test Input Level.
+- Manual stop and teardown clear both the locked device ID and its handler, so later device changes cannot affect a completed or future take.
+- Focused interruption, preflight, setup, and PCM tests passed (18 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.

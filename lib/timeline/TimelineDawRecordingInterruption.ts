@@ -3,6 +3,7 @@ export type TimelineDawRecordingInterruptionReason =
   | "input-muted"
   | "capture-stalled"
   | "audio-engine-stopped"
+  | "selected-device-missing"
   | "stream-inactive";
 
 export const TIMELINE_DAW_INPUT_MUTE_GRACE_MS = 5_000;
@@ -64,6 +65,8 @@ export function assessTimelineDawRecordingInterruption(input: {
         ? "The browser stopped delivering microphone audio for five seconds."
         : input.reason === "audio-engine-stopped"
           ? "The browser audio engine stopped and could not resume within three seconds."
+          : input.reason === "selected-device-missing"
+            ? "The microphone that started this take is no longer available."
       : "The browser reported that the microphone stream ended.";
   return {
     shouldStop: true,
