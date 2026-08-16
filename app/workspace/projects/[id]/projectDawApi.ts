@@ -12,6 +12,31 @@ import type {
   TimelineTransportEvent,
   TimelineTransportSynchronization,
 } from "../../../../lib/timeline/TimelineTransportAndSynchronizationEngine";
+import type { TimelineDawRecordingEvidence } from "../../../../lib/timeline/TimelineDawRecordingSetup";
+
+export async function loadDawRecordingReadiness(sessionId: string): Promise<TimelineDawRecordingEvidence | null> {
+  const client = requireProjectSupabase();
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user) throw new Error("Sign in to load recording readiness.");
+  const { data, error } = await client.from("timeline_daw_recording_readiness_evidence")
+    .select("device_id,device_label,peak_dbfs,status,ready,observed_at")
+    .eq("owner_id", auth.user.id).eq("session_id", sessionId)
+    .order("observed_at", { ascending: false }).limit(1).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? { deviceId: data.device_id, deviceLabel: data.device_label, peakDbfs: data.peak_dbfs, status: data.status, ready: data.ready, observedAt: data.observed_at } as TimelineDawRecordingEvidence : null;
+}
+
+export async function recordDawRecordingReadiness(sessionId: string, evidence: TimelineDawRecordingEvidence): Promise<void> {
+  const client = requireProjectSupabase();
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user) throw new Error("Sign in to save recording readiness.");
+  const { error } = await client.from("timeline_daw_recording_readiness_evidence").insert({
+    id: `timeline-daw-recording-readiness-${crypto.randomUUID()}`, owner_id: auth.user.id,
+    session_id: sessionId, device_id: evidence.deviceId, device_label: evidence.deviceLabel,
+    peak_dbfs: evidence.peakDbfs, status: evidence.status, ready: evidence.ready, observed_at: evidence.observedAt,
+  });
+  if (error) throw new Error(error.message);
+}
 
 async function accessToken(): Promise<string> {
   const { data, error } = await requireProjectSupabase().auth.getSession();

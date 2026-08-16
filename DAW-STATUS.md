@@ -663,11 +663,22 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused recording-preflight, input-level, and device-diagnostics tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Recording Setup Recall and Readiness Evidence
+## Completed milestone - Recording Setup Recall and Readiness Evidence
 
-1. Remember safe per-session recording choices such as selected input, format, mode, tempo, and count-in without storing microphone audio.
-2. Record the latest input-preflight result as private session readiness evidence with its device identity and timestamp.
-3. Warn when a restored setup references a missing or changed device and require a fresh check before presenting it as ready.
+- Each DAW session now recalls its selected input, WAV/MP3 choice, normal/punch/loop mode, count-in, tempo, and meter in session-scoped browser storage.
+- Restored numeric values pass strict DAW bounds and unrecognized format or mode values fall back safely.
+- Microphone audio, sample buffers, waveforms, take names, and private notes are never placed in setup storage.
+- Every completed input preflight writes owner-only readiness evidence containing device identity, peak dBFS, classification, ready state, and observation time.
+- Returning musicians can see the latest private measurement but it is never presented as current readiness; a fresh check remains required.
+- A missing or changed restored device raises a clear warning and cannot inherit the previous device's ready result.
+- Focused setup-recall, recording-preflight, and device-diagnostics tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- Supabase migration 20260815083000 applied successfully; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Latency-Aware Recording Monitoring
+
+1. Let the musician explicitly choose browser monitoring, hardware/direct monitoring, or monitoring off before recording.
+2. Prevent accidental doubled monitoring and feedback while preserving silent capture routing.
+3. Combine the chosen monitoring path with measured latency to provide one recording-specific readiness recommendation.
 ## Working rules
 
 - Preserve existing architecture and user data.

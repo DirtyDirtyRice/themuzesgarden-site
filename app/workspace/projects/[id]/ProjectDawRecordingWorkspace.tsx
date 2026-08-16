@@ -12,7 +12,13 @@ import {
   assessTimelineDawRecordingPreflight,
   type TimelineDawRecordingPreflightResult,
 } from "../../../../lib/timeline/TimelineDawRecordingPreflight";
-import { uploadDawRenderSource } from "./projectDawApi";
+import { loadDawRecordingReadiness, recordDawRecordingReadiness, uploadDawRenderSource } from "./projectDawApi";
+import {
+  getTimelineDawRestoredDeviceWarning,
+  parseTimelineDawRecordingSetup,
+  timelineDawRecordingSetupKey,
+  type TimelineDawRecordingEvidence,
+} from "../../../../lib/timeline/TimelineDawRecordingSetup";
 import {
   createDawRecordingTakeAudition,
   deleteDawRecordingTake,
@@ -35,6 +41,7 @@ type UploadedTake = DawRecordingTake & { mp3Url?: string };
 
 export default function ProjectDawRecordingWorkspace({ session }: { session: DawSession }) {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [devicesScanned, setDevicesScanned] = useState(false);
   const [deviceId, setDeviceId] = useState("");
   const [takeName, setTakeName] = useState(`${session.name} Take 1`);
   const [outputFormat, setOutputFormat] = useState<"wav" | "mp3">("wav");
@@ -60,6 +67,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [error, setError] = useState<string | null>(null);
   const [preflightBusy, setPreflightBusy] = useState(false);
   const [preflight, setPreflight] = useState<TimelineDawRecordingPreflightResult | null>(null);
+  const [latestEvidence, setLatestEvidence] = useState<TimelineDawRecordingEvidence | null>(null);
+  const [setupLoaded, setSetupLoaded] = useState(false);
+  const [restoredDeviceId, setRestoredDeviceId] = useState("");
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -77,6 +87,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     const next = (await navigator.mediaDevices.enumerateDevices())
       .filter((device) => device.kind === "audioinput");
     setDevices(next);
+    setDevicesScanned(true);
     setDeviceId((current) =>
       next.some((device) => device.deviceId === current)
         ? current
@@ -94,6 +105,29 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   useEffect(() => {
     setPreflight(null);
   }, [deviceId]);
+
+  useEffect(() => {
+    try {
+      const saved = parseTimelineDawRecordingSetup(JSON.parse(localStorage.getItem(timelineDawRecordingSetupKey(session.id)) ?? "null"));
+      if (saved) {
+        setDeviceId(saved.deviceId); setRestoredDeviceId(saved.deviceId);
+        setOutputFormat(saved.outputFormat); setRecordingMode(saved.recordingMode);
+        setCountInBars(saved.countInBars); setBpm(saved.bpm); setBeatsPerBar(saved.beatsPerBar);
+      }
+    } catch {
+      localStorage.removeItem(timelineDawRecordingSetupKey(session.id));
+    } finally {
+      setSetupLoaded(true);
+    }
+    void loadDawRecordingReadiness(session.id).then(setLatestEvidence).catch(() => setLatestEvidence(null));
+  }, [session.id]);
+
+  useEffect(() => {
+    if (!setupLoaded) return;
+    localStorage.setItem(timelineDawRecordingSetupKey(session.id), JSON.stringify({
+      deviceId, outputFormat, recordingMode, countInBars, bpm, beatsPerBar,
+    }));
+  }, [beatsPerBar, bpm, countInBars, deviceId, outputFormat, recordingMode, session.id, setupLoaded]);
 
   useEffect(() => {
     let active = true;
@@ -167,7 +201,17 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       source.disconnect();
       analyser.disconnect();
       const peakDbfs = peak > 0 ? 20 * Math.log10(peak) : -96;
-      setPreflight(assessTimelineDawRecordingPreflight(peakDbfs));
+      const result = assessTimelineDawRecordingPreflight(peakDbfs);
+      setPreflight(result);
+      const selectedDevice = devices.find((device) => device.deviceId === deviceId);
+      const evidence: TimelineDawRecordingEvidence = {
+        deviceId, deviceLabel: selectedDevice?.label || "Selected audio input",
+        peakDbfs: result.peakDbfs, status: result.status, ready: result.ready,
+        observedAt: new Date().toISOString(),
+      };
+      await recordDawRecordingReadiness(session.id, evidence);
+      setLatestEvidence(evidence);
+      setRestoredDeviceId(deviceId);
       await scanDevices();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Input level check could not start.");
@@ -177,6 +221,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       setPreflightBusy(false);
     }
   }
+
+  const restoredDeviceWarning = setupLoaded && devicesScanned
+    ? getTimelineDawRestoredDeviceWarning(restoredDeviceId, devices.map((device) => device.deviceId))
+    : null;
 
   async function startRecording() {
     if (recording || uploading) return;
@@ -471,6 +519,12 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
             {preflightBusy ? "Listening..." : preflight ? "Test Input Again" : "Test Input Level"}
           </button>
         </div>
+        {restoredDeviceWarning ? <p role="alert" className="mt-3 text-sm font-bold text-amber-200">{restoredDeviceWarning}</p> : null}
+        {!preflight && latestEvidence ? (
+          <p className="mt-3 text-xs text-white/55">
+            Last private check: {latestEvidence.status} at {latestEvidence.peakDbfs.toFixed(1)} dBFS on {latestEvidence.deviceLabel}, {new Date(latestEvidence.observedAt).toLocaleString()}. Run a fresh check before treating this setup as ready.
+          </p>
+        ) : null}
         {preflight ? (
           <div className="mt-3" role="status" aria-live="polite">
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
