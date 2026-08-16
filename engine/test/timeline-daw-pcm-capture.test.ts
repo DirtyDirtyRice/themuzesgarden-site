@@ -55,4 +55,15 @@ describe("TimelineDawPcmCapture", () => {
       255, 255, 127,
     ]);
   });
+
+  it("keeps the final partial block and reports a safe bounded stop", () => {
+    const capture = new TimelineDawPcmCaptureBuffer(48_000, 1, 5);
+    expect(capture.appendBounded([new Float32Array([1, 2, 3])])).toEqual({
+      frameCount: 3, appendedFrames: 3, limitReached: false,
+    });
+    expect(capture.appendBounded([new Float32Array([4, 5, 6, 7])])).toEqual({
+      frameCount: 5, appendedFrames: 2, limitReached: true,
+    });
+    expect(Array.from(capture.finalizePcm().channels[0])).toEqual([1, 2, 3, 4, 5]);
+  });
 });

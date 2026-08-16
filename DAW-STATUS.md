@@ -741,11 +741,22 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused storage-health, persistent-recovery, and setup-recall tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Long Recording Memory Pressure and Early Stop Protection
+## Completed milestone - Long Recording Memory Pressure and Early Stop Protection
 
-1. Show live buffered duration and remaining time while recording against the musician's selected maximum take length.
-2. Stop capture safely at the configured maximum instead of allowing a buffer-limit exception to interrupt finalization.
-3. Preserve and expose the final bounded recovery WAV with an explicit limit-reached warning before private save or retry.
+- Active recording now shows actual buffered duration, the configured maximum duration, remaining seconds, and a live capacity progress bar.
+- The bounded PCM capture path retains the final partial audio block exactly up to the selected frame limit instead of throwing a frame-limit exception.
+- Reaching the selected limit stops capture and metronome output automatically, then follows the normal WAV finalization and private-save path.
+- A limit-reached notice distinguishes a verified private save from a WAV protected in Local Recovery after an interrupted upload or registration.
+- Repeated AudioWorklet or compatibility-processor messages are ignored after the limit is reached, preventing further memory growth while React initiates finalization.
+- Manual Stop & Save and legacy strict buffer callers retain their existing behavior; the new bounded append policy is explicit and independently tested.
+- Focused PCM capture, storage-health, and recovery tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Recording Device Loss and Stream Interruption Recovery
+
+1. Detect microphone track endings, device removal, and AudioContext interruption while a take is active.
+2. Stop and finalize already buffered audio safely instead of leaving recording controls active or losing the partial take.
+3. Present the exact interruption cause, protect the partial WAV in Local Recovery, and require a fresh device check before the next take.
 ## Working rules
 
 - Preserve existing architecture and user data.

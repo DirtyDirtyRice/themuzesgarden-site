@@ -11,6 +11,12 @@ export type TimelineDawCapturedPcm = Omit<TimelineDawCapturedWav, "bytes" | "bit
   channels: Float32Array[];
 };
 
+export type TimelineDawBoundedAppendResult = {
+  frameCount: number;
+  appendedFrames: number;
+  limitReached: boolean;
+};
+
 const MAX_CAPTURE_FRAMES = 48_000 * 60 * 30;
 
 export class TimelineDawPcmCaptureBuffer {
@@ -34,6 +40,15 @@ export class TimelineDawPcmCaptureBuffer {
   }
 
   append(channels: Float32Array[]): number {
+    const blockFrames = channels[0]?.length ?? 0;
+    if (this.frames + blockFrames > this.maximumFrames) {
+      throw new Error("Capture exceeded its frame limit.");
+    }
+    const result = this.appendBounded(channels);
+    return result.frameCount;
+  }
+
+  appendBounded(channels: Float32Array[]): TimelineDawBoundedAppendResult {
     if (channels.length !== this.channelCount) {
       throw new Error("Capture block channel count changed.");
     }
@@ -41,12 +56,12 @@ export class TimelineDawPcmCaptureBuffer {
     if (!blockFrames || channels.some((channel) => channel.length !== blockFrames)) {
       throw new Error("Capture block frames are invalid.");
     }
-    if (this.frames + blockFrames > this.maximumFrames) {
-      throw new Error("Capture exceeded its frame limit.");
+    const appendedFrames = Math.min(blockFrames, Math.max(0, this.maximumFrames - this.frames));
+    if (appendedFrames) {
+      this.chunks.push(channels.map((channel) => channel.slice(0, appendedFrames)));
+      this.frames += appendedFrames;
     }
-    this.chunks.push(channels.map((channel) => channel.slice()));
-    this.frames += blockFrames;
-    return this.frames;
+    return { frameCount: this.frames, appendedFrames, limitReached: this.frames >= this.maximumFrames };
   }
 
   get frameCount(): number {

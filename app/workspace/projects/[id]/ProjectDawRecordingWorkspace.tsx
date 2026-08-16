@@ -88,6 +88,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [inputClipped, setInputClipped] = useState(false);
   const [captureMode, setCaptureMode] = useState<"worklet" | "compatibility" | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [bufferedSeconds, setBufferedSeconds] = useState(0);
+  const [captureLimitReached, setCaptureLimitReached] = useState(false);
+  const [captureLimitNotice, setCaptureLimitNotice] = useState<string | null>(null);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
   const [reviewingTakeId, setReviewingTakeId] = useState<string | null>(null);
   const [reviewName, setReviewName] = useState("");
@@ -125,6 +128,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const countInGenerationRef = useRef(0);
   const cueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recoveryUrlRef = useRef<string | null>(null);
+  const captureLimitReachedRef = useRef(false);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -249,12 +253,19 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   }, [countingIn, recording, session.id, uploading]);
 
   function appendCaptureBlock(capture: TimelineDawPcmCaptureBuffer, channels: Float32Array[]) {
-    capture.append(channels);
+    if (captureLimitReachedRef.current) return;
+    const appended = capture.appendBounded(channels);
+    if (appended.limitReached) {
+      captureLimitReachedRef.current = true;
+      setCaptureLimitReached(true);
+      setCaptureLimitNotice(`The ${maxTakeMinutes}-minute recording limit was reached. Capture stopped safely and the complete bounded WAV is being saved.`);
+    }
     const level = analyzeTimelineDawInputLevel(channels);
     if (level.clipped) setInputClipped(true);
     const now = performance.now();
-    if (now - meterUpdatedAtRef.current < 100) return;
+    if (now - meterUpdatedAtRef.current < 100 && !appended.limitReached) return;
     meterUpdatedAtRef.current = now;
+    setBufferedSeconds(appended.frameCount / capture.sampleRate);
     setInputPeakDb(level.peakDbfs);
   }
 
@@ -325,6 +336,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const recoveryView = createTimelineDawRecordingRecoveryView({
     hasRecovery: Boolean(recovery), uploading, uploadedSourceAvailable: Boolean(recovery?.uploaded),
   });
+  const maximumTakeSeconds = maxTakeMinutes * 60;
+  const remainingTakeSeconds = Math.max(0, maximumTakeSeconds - bufferedSeconds);
 
   async function runCountIn(context: AudioContext): Promise<boolean> {
     const beats = createTimelineDawCountIn({ bars: countInBars, beatsPerBar, bpm });
@@ -389,6 +402,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     if (recording || uploading || countingIn) return;
     setError(null);
     captureErrorRef.current = null;
+    captureLimitReachedRef.current = false;
+    setCaptureLimitReached(false);
+    setCaptureLimitNotice(null);
+    setBufferedSeconds(0);
     setInputPeakDb(-96);
     setInputClipped(false);
     setCaptureMode(null);
@@ -551,6 +568,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       ));
       setTakeName(`${session.name} Take ${takes.length + 2}`);
       setElapsedSeconds(0);
+      if (captureLimitReachedRef.current) setCaptureLimitNotice("The recording limit was reached safely. The complete bounded WAV was saved privately.");
       URL.revokeObjectURL(downloadUrl);
       recoveryUrlRef.current = null;
     } catch (cause) {
@@ -567,12 +585,17 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         } catch (storageCause) {
           setRecoveryStorageWarning(storageCause instanceof Error ? storageCause.message : "Recovery remains in this tab but could not persist across refresh.");
         }
+        if (captureLimitReachedRef.current) setCaptureLimitNotice("The recording limit was reached safely. The complete bounded WAV is protected in Local Recovery below.");
       }
       setError(recoverable ? "Private save was interrupted. Your WAV is available in Local Recovery below." : failure);
     } finally {
       setUploading(false);
     }
   }
+
+  useEffect(() => {
+    if (recording && captureLimitReached) void stopRecording();
+  }, [captureLimitReached, recording]);
 
   async function retryRecoverableRecording() {
     if (!recovery || uploading) return;
@@ -906,9 +929,17 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
               style={{ width: `${Math.max(0, Math.min(100, ((inputPeakDb + 60) / 60) * 100))}%` }}
             />
           </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-black uppercase tracking-wide text-white/65">
+            <span>Buffered {bufferedSeconds.toFixed(1)}s / {maximumTakeSeconds}s</span>
+            <span>{recording ? `${remainingTakeSeconds.toFixed(1)}s remaining` : captureLimitReached ? "Limit reached safely" : "Capture stopped"}</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-black">
+            <div className={`h-full transition-[width] duration-100 ${remainingTakeSeconds <= 30 ? "bg-amber-300" : "bg-sky-400"}`} style={{ width: `${Math.min(100, (bufferedSeconds / maximumTakeSeconds) * 100)}%` }} />
+          </div>
           <p className="mt-2 text-xs text-white/45">Aim for peaks between -18 and -6 dBFS. Lower the interface gain if clipping is detected.</p>
         </div>
       ) : null}
+      {captureLimitNotice ? <p role="alert" className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm font-bold text-amber-100">{captureLimitNotice}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {recoveryStorageWarning ? <p role="alert" className="mt-4 text-sm text-amber-200">Recovery storage: {recoveryStorageWarning}</p> : null}
       {recovery ? (
