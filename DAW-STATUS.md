@@ -848,9 +848,15 @@ Three safe attempts on August 15, 2026 reached the same external blocker: the av
 
 Three verification attempts on August 16, 2026 reached the same external Supabase blocker. The owner enabled **Allow anonymous sign-ins** on the correct live project (`ohjvqopxmmfrvgliolcr`), and the dashboard switch appeared green, but the live Auth settings endpoint returned `external.anonymous_users: false` after every attempt. The dashboard also displayed a failed `500` request at the time of the setting change. Do not deploy or describe the credential-free guest-pass milestone as complete while anonymous guest sessions remain disabled, because the proposed musician entry page would fail at `signInAnonymously()`. The reviewed application changes and migration remain local and unapplied. Resume only after the live Auth endpoint reports anonymous users enabled or Supabase resolves the dashboard/configuration failure.
 
-## Back Burner - Recording Device Loss and Stream Interruption Recovery
+## Completed milestone - Recording Device Loss and Stream Interruption Recovery
 
-Further recording hardening is deferred until real musician sessions show that it is a current blocker. The planned scope remains microphone/device removal detection, safe partial-take finalization, and exact interruption recovery guidance.
+- An active take now listens for both the selected microphone track ending and the complete browser microphone stream becoming inactive.
+- A genuine interruption triggers one automatic Stop & Save; duplicate `ended`/`inactive` events and the events caused by a normal manual stop are ignored.
+- Audio already captured before the interruption follows the existing WAV finalization, private-save, and persistent Local Recovery path instead of being silently abandoned.
+- If the input disappears before any PCM arrives, the musician is told that no audio could be recovered and is guided to reconnect the input, rescan, and begin a new take.
+- Event listeners are removed before intentionally stopping tracks and during component teardown, preventing stale device events or repeated finalization.
+- Focused interruption, PCM capture, storage-health, and recording-recovery tests passed (12 tests); the final focused interruption/PCM rerun passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.

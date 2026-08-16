@@ -12,6 +12,7 @@ import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
 import { assessTimelineDawRecordingStorage, type TimelineDawRecordingStorageHealth } from "../../../../lib/timeline/TimelineDawRecordingStorageHealth";
+import { assessTimelineDawRecordingInterruption, type TimelineDawRecordingInterruptionReason } from "../../../../lib/timeline/TimelineDawRecordingInterruption";
 import {
   deleteTimelineDawRecordingRecovery,
   loadTimelineDawRecordingRecovery,
@@ -91,6 +92,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [bufferedSeconds, setBufferedSeconds] = useState(0);
   const [captureLimitReached, setCaptureLimitReached] = useState(false);
   const [captureLimitNotice, setCaptureLimitNotice] = useState<string | null>(null);
+  const [interruptionNotice, setInterruptionNotice] = useState<string | null>(null);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
   const [reviewingTakeId, setReviewingTakeId] = useState<string | null>(null);
   const [reviewName, setReviewName] = useState("");
@@ -129,6 +131,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const cueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recoveryUrlRef = useRef<string | null>(null);
   const captureLimitReachedRef = useRef(false);
+  const recordingActiveRef = useRef(false);
+  const stoppingRef = useRef(false);
+  const interruptionHandledRef = useRef(false);
+  const interruptionCleanupRef = useRef<(() => void) | null>(null);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -239,6 +245,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     if (contextRef.current) void contextRef.current.close();
     mp3UrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     if (recoveryUrlRef.current) URL.revokeObjectURL(recoveryUrlRef.current);
+    interruptionCleanupRef.current?.();
   }, []);
 
   useEffect(() => {
@@ -405,6 +412,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     captureLimitReachedRef.current = false;
     setCaptureLimitReached(false);
     setCaptureLimitNotice(null);
+    setInterruptionNotice(null);
+    interruptionHandledRef.current = false;
     setBufferedSeconds(0);
     setInputPeakDb(-96);
     setInputClipped(false);
@@ -490,10 +499,36 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       timerRef.current = setInterval(() => {
         setElapsedSeconds(Math.floor((performance.now() - startedAtRef.current) / 1000));
       }, 250);
+      recordingActiveRef.current = true;
       setRecording(true);
+      const handleInterruption = (reason: TimelineDawRecordingInterruptionReason) => {
+        const decision = assessTimelineDawRecordingInterruption({
+          reason,
+          recordingActive: recordingActiveRef.current,
+          stopAlreadyStarted: stoppingRef.current,
+          interruptionAlreadyHandled: interruptionHandledRef.current,
+          capturedFrames: captureRef.current?.frameCount ?? 0,
+        });
+        if (!decision.shouldStop) return;
+        interruptionHandledRef.current = true;
+        setInterruptionNotice(decision.notice);
+        void stopRecording();
+      };
+      const track = stream.getAudioTracks()[0];
+      const onTrackEnded = () => handleInterruption("input-ended");
+      const onStreamInactive = () => handleInterruption("stream-inactive");
+      track?.addEventListener("ended", onTrackEnded);
+      stream.addEventListener("inactive", onStreamInactive);
+      interruptionCleanupRef.current = () => {
+        track?.removeEventListener("ended", onTrackEnded);
+        stream.removeEventListener("inactive", onStreamInactive);
+      };
       startRecordingCue(context);
       await scanDevices();
     } catch (cause) {
+      recordingActiveRef.current = false;
+      stoppingRef.current = false;
+      setRecording(false);
       setError(cause instanceof Error ? cause.message : "Microphone recording could not start.");
       await releaseCapture();
     }
@@ -501,6 +536,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
 
   async function releaseCapture(): Promise<void> {
     stopRecordingCue();
+    interruptionCleanupRef.current?.();
+    interruptionCleanupRef.current = null;
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     processorRef.current?.disconnect();
@@ -517,7 +554,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   }
 
   async function stopRecording() {
-    if (!recording) return;
+    if (!recordingActiveRef.current || stoppingRef.current) return;
+    stoppingRef.current = true;
+    recordingActiveRef.current = false;
     setRecording(false);
     setUploading(true);
     setError(null);
@@ -590,6 +629,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       setError(recoverable ? "Private save was interrupted. Your WAV is available in Local Recovery below." : failure);
     } finally {
       setUploading(false);
+      stoppingRef.current = false;
     }
   }
 
@@ -940,6 +980,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         </div>
       ) : null}
       {captureLimitNotice ? <p role="alert" className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm font-bold text-amber-100">{captureLimitNotice}</p> : null}
+      {interruptionNotice ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-300/10 p-3 text-sm font-bold text-red-100">{interruptionNotice}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {recoveryStorageWarning ? <p role="alert" className="mt-4 text-sm text-amber-200">Recovery storage: {recoveryStorageWarning}</p> : null}
       {recovery ? (
