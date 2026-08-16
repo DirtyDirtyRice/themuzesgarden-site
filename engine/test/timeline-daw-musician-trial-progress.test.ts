@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completeTimelineDawMusicianTrialStep, parseTimelineDawMusicianTrialProgress, summarizeTimelineDawMusicianTrialProgress } from "../../lib/timeline/TimelineDawMusicianTrialProgress";
+import { completeTimelineDawMusicianTrialStep, createTimelineDawMusicianTrialResultSummary, parseTimelineDawMusicianTrialProgress, summarizeTimelineDawMusicianTrialProgress } from "../../lib/timeline/TimelineDawMusicianTrialProgress";
 
 describe("musician trial progress", () => {
   it("keeps only known steps with valid observation times", () => {
@@ -11,5 +11,13 @@ describe("musician trial progress", () => {
     const repeated = completeTimelineDawMusicianTrialStep(first, "record", "2026-08-16T12:00:00.000Z");
     expect(repeated.record).toBe("2026-08-15T12:00:00.000Z");
     expect(summarizeTimelineDawMusicianTrialProgress(repeated)).toMatchObject({ completed: 1, required: 7, complete: false });
+  });
+
+  it("creates a plain results handoff without session or private data", () => {
+    const summary = createTimelineDawMusicianTrialResultSummary({ access: "2026-08-15T12:00:00.000Z", play: "2026-08-15T12:01:00.000Z" });
+    expect(summary).toContain("Completed: 2/7");
+    expect(summary).toContain("WORKED — Play the approved session audio");
+    expect(summary).toContain("NOT COMPLETED — Record a new take");
+    expect(summary).not.toContain("session-");
   });
 });

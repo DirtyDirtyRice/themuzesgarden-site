@@ -816,6 +816,16 @@ Three safe attempts on August 15, 2026 reached the same external blocker: the av
 - Focused trial-progress, readiness, and edit tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
+## Completed milestone - Musician Trial Results Handoff
+
+- The hands-on checklist now provides one Copy Results for Owner action at any point in the trial, including when a blocker prevents all seven actions from being completed.
+- The generated plain-language report marks every essential action as WORKED or NOT COMPLETED and includes the total completed count.
+- An incomplete result explicitly asks the owner to discuss what stopped or confused the musician instead of treating missing actions as success.
+- The report deliberately excludes the musician's name, account, session ID, timestamps, audio, feedback text, and private project data.
+- Clipboard failure is visible and recoverable; no result is silently described as copied when browser clipboard access is blocked.
+- Focused trial-progress and readiness tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
 ## Next required musician step - Real Separate-Account Enrollment
 
 1. A musician signs in with their own account and redeems a newly created seven-day invitation.

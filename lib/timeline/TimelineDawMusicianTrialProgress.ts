@@ -18,3 +18,16 @@ export function summarizeTimelineDawMusicianTrialProgress(progress: TimelineDawM
   const steps = TIMELINE_DAW_MUSICIAN_TRIAL_STEPS.map((step) => ({ ...step, complete: Boolean(progress[step.key]) }));
   return { steps, completed: steps.filter((step) => step.complete).length, required: steps.length, complete: steps.every((step) => step.complete) };
 }
+
+export function createTimelineDawMusicianTrialResultSummary(progress: TimelineDawMusicianTrialProgress) {
+  const summary = summarizeTimelineDawMusicianTrialProgress(progress);
+  return [
+    "THE MUZES GARDEN — MUSICIAN TRIAL RESULTS",
+    `Completed: ${summary.completed}/${summary.required}`,
+    "",
+    ...summary.steps.map((step) => `${step.complete ? "WORKED" : "NOT COMPLETED"} — ${step.label}`),
+    "",
+    summary.complete ? "All seven trial actions were completed." : "Please ask me what stopped or confused me on the actions marked NOT COMPLETED.",
+    "This summary contains no audio, account details, or private project data.",
+  ].join("\n");
+}
