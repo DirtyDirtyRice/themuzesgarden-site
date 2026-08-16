@@ -780,11 +780,22 @@ The next work must stay on the musician's essential path: access, onboarding, op
 - Focused musician edit, readiness, access, and PCM capture tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - First Musician Trial Invitation Handoff
+## Completed milestone - First Musician Trial Invitation Handoff
 
-1. Give the owner one plain path to select a released session, create/copy an invitation, and see whether the musician can enter the hands-on trial.
-2. Put the short musician test instructions directly beside the invitation so the message and actual seven-step task stay aligned.
-3. Verify the production enrollment-to-trial route and identify only blockers that must be repaired before sending the first 3-5 invitations.
+- The owner invitation panel is now a four-step path: create invitation, send the complete message, wait for musician setup, and run the release gate.
+- Creating a seven-day invitation immediately generates the musician-facing message with their label, production enrollment link, one-time code, 45-60 minute expectation, privacy boundary, supported browser, and actual trial steps.
+- Copy Full Invitation places the complete subject and message on the clipboard; Copy Code Only remains available, and the enrollment page can be previewed directly.
+- The one-time code is explicitly presented as a copy-now secret and is never added to a URL, browser history, invitation list, or database response after creation.
+- Enrollment rows now use plain owner language for acknowledgement, setup-check, release-held, and musician-may-enter states.
+- The invitation instructions match the live hands-on surface: approved playback, short recording, trim, refresh/reopen, edited WAV export, and honest feedback.
+- Focused invitation-handoff, onboarding, and trial-readiness tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - First Musician Enrollment Dry Run
+
+1. Verify the production journey using a separate musician account: receive the message, sign in, redeem the code, acknowledge the trial, and complete the browser/audio setup check.
+2. Run the owner release gate and confirm My Beta Sessions opens the hands-on workspace with all seven essential steps available.
+3. Record only genuine blockers or confusing steps; repair those before sending invitations to the remaining 3-5 musician cohort.
 
 ## Back Burner - Recording Device Loss and Stream Interruption Recovery
 
