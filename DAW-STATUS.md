@@ -826,6 +826,17 @@ Three safe attempts on August 15, 2026 reached the same external blocker: the av
 - Focused trial-progress and readiness tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
+## Completed milestone - Hands-On Musician Release Gate Alignment
+
+- The owner release gate now evaluates the controls that actually protect the isolated musician trial: active enrollment, current acknowledgement, every browser/audio setup result, unresolved blocking feedback, and integrity blockers.
+- The older owner guided-workflow percentage and owner export record are bypassed only when the server explicitly verifies that all seven isolated trial capabilities are present; every other release keeps the original requirements.
+- An incomplete older workflow remains visible as a warning in the release receipt, so it is not hidden or falsely described as complete.
+- Failed microphone/setup checks, missing acknowledgement, inactive enrollment, blocking feedback, and integrity incidents still hold release exactly as before.
+- Owner-only release authority, per-opening authorization, revocation, private project boundaries, and browser-private trial audio remain unchanged.
+- The release receipt now includes the isolated trial-readiness evidence used for that decision.
+- Focused onboarding, musician-readiness, and session-access tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
 ## Next required musician step - Real Separate-Account Enrollment
 
 1. A musician signs in with their own account and redeems a newly created seven-day invitation.
