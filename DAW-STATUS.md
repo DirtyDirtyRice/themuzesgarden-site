@@ -707,11 +707,22 @@ The owner confirmed on August 15, 2026 that the repaired Library is satisfactory
 - Focused cue, count-in, and setup-recall tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
-## Next eligible milestone - Interrupted Recording Local Recovery
+## Completed milestone - Interrupted Recording Local Recovery
 
-1. Preserve a completed WAV locally when its private upload or take registration fails after recording stops.
-2. Let the musician download the recovery WAV immediately or retry the original private save without recording again.
-3. Clear recoverable audio only after verified registration or explicit musician deletion, with bounded storage and privacy guidance.
+- A fully encoded WAV is retained in the current browser tab whenever private source upload or take registration fails after Stop & Save.
+- The musician can immediately download the recovery WAV, retry private saving, or explicitly delete it with confirmation.
+- If source upload succeeded but registration failed, retry resumes at take registration instead of uploading a duplicate source.
+- Starting another recording is held while the single bounded recovery slot is occupied, preventing a newer failure from overwriting the protected take.
+- Recovery audio is cleared only after verified take registration, explicit confirmed deletion, or browser-tab closure; the UI states that tab boundary plainly.
+- Optional MP3 data remains associated with a successful retried take and is revoked if the recovery is explicitly deleted.
+- Focused recovery, cue, and count-in tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Recording Recovery Across Refresh and Browser Crash
+
+1. Persist the single bounded recovery WAV in private browser storage so refresh or an accidental tab crash does not erase it.
+2. Restore recovery metadata only for the exact DAW session and require the owner to resume, download, or delete it.
+3. Verify quota, corruption, and cleanup behavior without ever synchronizing recovery audio to public storage.
 ## Working rules
 
 - Preserve existing architecture and user data.

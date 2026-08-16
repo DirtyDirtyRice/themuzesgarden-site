@@ -10,6 +10,7 @@ import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/
 import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
 import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../../lib/timeline/TimelineDawCountIn";
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
+import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
 import {
   assessTimelineDawRecordingPreflight,
   type TimelineDawRecordingPreflightResult,
@@ -44,6 +45,14 @@ import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWo
 const button = "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
 
 type UploadedTake = DawRecordingTake & { mp3Url?: string };
+type RecoverableRecording = {
+  file: File;
+  downloadUrl: string;
+  plan: DawRecordingPlan;
+  uploaded: DawRecordedSourceEventDetail | null;
+  mp3Url?: string;
+  failure: string;
+};
 
 export default function ProjectDawRecordingWorkspace({ session }: { session: DawSession }) {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -85,6 +94,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [cueVolume, setCueVolume] = useState(0.2);
   const [cueAccentEnabled, setCueAccentEnabled] = useState(true);
   const [cueHeadphonesConfirmed, setCueHeadphonesConfirmed] = useState(false);
+  const [recovery, setRecovery] = useState<RecoverableRecording | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -98,6 +108,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const meterUpdatedAtRef = useRef(0);
   const countInGenerationRef = useRef(0);
   const cueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recoveryUrlRef = useRef<string | null>(null);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -167,6 +178,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     streamRef.current?.getTracks().forEach((track) => track.stop());
     if (contextRef.current) void contextRef.current.close();
     mp3UrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    if (recoveryUrlRef.current) URL.revokeObjectURL(recoveryUrlRef.current);
   }, []);
 
   useEffect(() => {
@@ -253,6 +265,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     mode: monitoringMode,
     latencyMs: monitoringLatencyMs,
     headphonesConfirmed,
+  });
+  const recoveryView = createTimelineDawRecordingRecoveryView({
+    hasRecovery: Boolean(recovery), uploading, uploadedSourceAvailable: Boolean(recovery?.uploaded),
   });
 
   async function runCountIn(context: AudioContext): Promise<boolean> {
@@ -436,6 +451,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     const capture = captureRef.current;
     captureRef.current = null;
     await releaseCapture();
+    let recoverable: RecoverableRecording | null = null;
     try {
       if (captureErrorRef.current) throw captureErrorRef.current;
       if (!capture) throw new Error("PCM capture was not available.");
@@ -448,8 +464,6 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         safeName.toLowerCase().endsWith(".wav") ? safeName : `${safeName}.wav`,
         { type: "audio/wav" },
       );
-      const uploaded = await uploadDawRenderSource(session.id, file);
-      const detail: DawRecordedSourceEventDetail = uploaded;
       const rangeStartFrame = Math.round(rangeStartSeconds * pcm.sampleRate);
       const rangeEndFrame = recordingMode === "normal" ? null : Math.round(rangeEndSeconds * pcm.sampleRate);
       const recordingPlan: DawRecordingPlan = {
@@ -462,12 +476,18 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         loopPasses: recordingMode === "loop" ? loopPasses : 1,
         countInCaptured: false,
       };
-      const { takes: registeredTakes } = await registerDawRecordingTake(session.id, uploaded, recordingPlan);
       let mp3Url: string | undefined;
       if (mp3Bytes) {
         mp3Url = URL.createObjectURL(new Blob([mp3Bytes.slice().buffer], { type: "audio/mpeg" }));
         mp3UrlsRef.current.push(mp3Url);
       }
+      const downloadUrl = URL.createObjectURL(file);
+      recoveryUrlRef.current = downloadUrl;
+      recoverable = { file, downloadUrl, plan: recordingPlan, uploaded: null, mp3Url, failure: "" };
+      const uploaded = await uploadDawRenderSource(session.id, file);
+      recoverable.uploaded = uploaded;
+      const detail: DawRecordedSourceEventDetail = uploaded;
+      const { takes: registeredTakes } = await registerDawRecordingTake(session.id, uploaded, recordingPlan);
       setTakes((current) => [...registeredTakes.map((take) => ({ ...take, mp3Url })), ...current]);
       window.dispatchEvent(new CustomEvent<DawRecordedSourceEventDetail>(
         DAW_RECORDED_SOURCE_EVENT,
@@ -475,11 +495,43 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       ));
       setTakeName(`${session.name} Take ${takes.length + 2}`);
       setElapsedSeconds(0);
+      URL.revokeObjectURL(downloadUrl);
+      recoveryUrlRef.current = null;
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Recorded WAV could not be uploaded.");
+      const failure = cause instanceof Error ? cause.message : "Recorded WAV could not be uploaded.";
+      if (recoverable) setRecovery({ ...recoverable, failure });
+      setError(recoverable ? "Private save was interrupted. Your WAV is available in Local Recovery below." : failure);
     } finally {
       setUploading(false);
     }
+  }
+
+  async function retryRecoverableRecording() {
+    if (!recovery || uploading) return;
+    setUploading(true); setError(null);
+    try {
+      const uploaded = recovery.uploaded ?? await uploadDawRenderSource(session.id, recovery.file);
+      if (!recovery.uploaded) setRecovery((current) => current ? { ...current, uploaded } : current);
+      const { takes: registeredTakes } = await registerDawRecordingTake(session.id, uploaded, recovery.plan);
+      setTakes((current) => [...registeredTakes.map((take) => ({ ...take, mp3Url: recovery.mp3Url })), ...current]);
+      window.dispatchEvent(new CustomEvent<DawRecordedSourceEventDetail>(DAW_RECORDED_SOURCE_EVENT, { detail: uploaded }));
+      URL.revokeObjectURL(recovery.downloadUrl); recoveryUrlRef.current = null;
+      setRecovery(null); setTakeName(`${session.name} Take ${takes.length + 2}`); setElapsedSeconds(0);
+    } catch (cause) {
+      const failure = cause instanceof Error ? cause.message : "Recovery save failed.";
+      setRecovery((current) => current ? { ...current, failure } : current);
+      setError("Recovery remains available. The private save did not complete.");
+    } finally { setUploading(false); }
+  }
+
+  function deleteRecoverableRecording() {
+    if (!recovery || !window.confirm("Delete this local recovery WAV? Download it first if you may need it.")) return;
+    URL.revokeObjectURL(recovery.downloadUrl); recoveryUrlRef.current = null;
+    if (recovery.mp3Url) {
+      URL.revokeObjectURL(recovery.mp3Url);
+      mp3UrlsRef.current = mp3UrlsRef.current.filter((url) => url !== recovery.mp3Url);
+    }
+    setRecovery(null); setError(null);
   }
 
   async function auditionTake(take: UploadedTake) {
@@ -708,7 +760,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <p className="self-end text-xs text-white/45">Count-in is excluded from every saved take. Punch and loop passes are placed at the exact range start.</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={recording || countingIn || uploading || !devices.length || !monitoringAssessment.ready || (cueEnabled && !cueHeadphonesConfirmed) || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
+        <button type="button" className={button} disabled={recoveryView.startHeld || recording || countingIn || uploading || !devices.length || !monitoringAssessment.ready || (cueEnabled && !cueHeadphonesConfirmed) || (recordingMode !== "normal" && rangeEndSeconds <= rangeStartSeconds)} onClick={() => void startRecording()}>Start Recording</button>
         {countingIn ? <button type="button" className={button} onClick={() => void cancelCountIn()}>Cancel Count-In</button> : null}
         <button type="button" className={button} disabled={!recording} onClick={() => void stopRecording()}>Stop &amp; Save</button>
         <button type="button" className={button} disabled={recording || uploading} onClick={() => void scanDevices()}>Rescan Inputs</button>
@@ -737,6 +789,19 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         </div>
       ) : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
+      {recovery ? (
+        <section className="mt-4 rounded-xl border border-amber-300/40 bg-amber-300/10 p-4" aria-label="Local recording recovery">
+          <p className="text-sm font-black text-amber-100">Unsaved recording protected locally</p>
+          <p className="mt-1 text-xs text-white/70">{recoveryView.privacy}</p>
+          <p className="mt-2 break-words text-xs text-red-200">Last save error: {recovery.failure}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a className={button} href={recovery.downloadUrl} download={recovery.file.name}>Download Recovery WAV</a>
+            <button type="button" className={button} disabled={uploading} onClick={() => void retryRecoverableRecording()}>{uploading ? "Retrying..." : recoveryView.retryLabel}</button>
+            <button type="button" className={button} disabled={uploading} onClick={deleteRecoverableRecording}>Delete Local Recovery</button>
+          </div>
+          <p className="mt-3 text-xs font-bold text-amber-200">Resolve this recovery before starting another take; only one recovery WAV is held at a time.</p>
+        </section>
+      ) : null}
       {takes.length ? (
         <ol className="mt-5 grid gap-2">
           {takes.map((take) => (
