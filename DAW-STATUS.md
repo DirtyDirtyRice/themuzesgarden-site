@@ -758,11 +758,22 @@ The owner clarified on August 15, 2026 that the immediate goal is to let musicia
 
 The next work must stay on the musician's essential path: access, onboarding, opening a project, playing songs, recording, editing, saving, and exporting. Fix only confirmed blockers or serious confusion found on that path. Use actual musician results to choose subsequent work.
 
-## Next eligible milestone - Musician First-Session Readiness Pass
+## Completed milestone - Musician First-Session Readiness Pass
 
-1. Verify the production musician path from access through opening a project, playback, recording, editing, saving, and export.
-2. Repair only issues that block or seriously confuse completion of those essential steps.
-3. Produce a short, plain-language supported setup and first-session path for a 3-5 musician trial.
+- The live production path was checked as a signed-out musician: private projects correctly require membership and the public Library exposes 226 playable public songs without sign-in.
+- The controlled invitation path was traced end to end and a serious release blocker was confirmed: invited musicians currently receive secure audition and feedback access, not the working recording/editing DAW.
+- A durable seven-step trial gate now measures access, playback, recording, reversible editing, save/reopen, export, and feedback independently.
+- The musician session page states plainly how many essential steps are available and cannot describe a listening-only session as a complete hands-on trial.
+- Current owner-only administration, project privacy, destructive restore, and delivery boundaries remain unchanged.
+- The musician invitation message and short test guide are prepared in plain language, but should not be sent as a hands-on invitation until this gate passes.
+- Focused trial-readiness, access, onboarding, and certification tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Next eligible milestone - Secure Hands-On Musician Workspace Access
+
+1. Extend released beta-collaborator permission from listening/feedback to the essential working actions: record, edit, save/reopen, and test export.
+2. Open a musician-focused workspace that excludes owner administration, privacy changes, destructive restore, and final delivery controls.
+3. Verify each allowed action against the live enrollment and release gate, record access receipts, and keep all project audio owner-protected.
 
 ## Back Burner - Recording Device Loss and Stream Interruption Recovery
 
