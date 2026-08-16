@@ -805,6 +805,17 @@ Three safe attempts on August 15, 2026 reached the same external blocker: the av
 - Focused enrollment-resume, onboarding, and trial-readiness tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 
+## Completed milestone - Musician Trial Action Checklist
+
+- The released musician session now shows one plain seven-action checklist for access, approved playback, recording, reversible trim editing, save/reopen, edited WAV export, and feedback.
+- Checklist completion is connected to the real action: opening verified access, starting playback, successfully saving recorded PCM, changing a trim boundary, reopening the saved take after refresh, triggering the WAV export, and successfully submitting feedback.
+- Musicians cannot manually check off work they did not perform; each completed action marks itself at the point where the app confirms it occurred.
+- Save/reopen deliberately completes only when a previously saved browser-private take is loaded, giving the first musician a clear reason to test refresh recovery.
+- Progress survives refresh in session-scoped browser storage and contains only step timestamps; it contains no audio, feedback text, account secrets, or private project information.
+- The page reports a simple completed count and tells the musician when all seven essential actions are finished.
+- Focused trial-progress, readiness, and edit tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
 ## Next required musician step - Real Separate-Account Enrollment
 
 1. A musician signs in with their own account and redeems a newly created seven-day invitation.

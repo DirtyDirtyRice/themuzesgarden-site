@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { requireProjectSupabase } from "@/app/workspace/projects/[id]/projectSupabase";
 import TimelineDawBetaCollaboratorPanel from "@/app/components/TimelineDawBetaCollaboratorPanel";
 import TimelineDawBetaAuditionPlayer from "@/app/components/TimelineDawBetaAuditionPlayer";
 import TimelineDawMusicianTrialWorkspace from "@/app/components/TimelineDawMusicianTrialWorkspace";
+import { completeTimelineDawMusicianTrialStep, parseTimelineDawMusicianTrialProgress, summarizeTimelineDawMusicianTrialProgress, type TimelineDawMusicianTrialProgress, type TimelineDawMusicianTrialStepKey } from "@/lib/timeline/TimelineDawMusicianTrialProgress";
 
 type AccessData = {
   access: { role: string; reason: string; receiptId: string };
@@ -18,6 +19,9 @@ export default function TimelineDawBetaSessionPage({ params }: { params: Promise
   const [sessionId, setSessionId] = useState("");
   const [data, setData] = useState<AccessData | null>(null);
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState<TimelineDawMusicianTrialProgress>({});
+  const completeStep = useCallback((key: TimelineDawMusicianTrialStepKey) => { if (!sessionId) return; setProgress((current) => { const next = completeTimelineDawMusicianTrialStep(current, key, new Date().toISOString()); try { localStorage.setItem(`muzes-daw-musician-trial-progress:${sessionId}`, JSON.stringify(next)); } catch { /* Progress display remains available for this visit. */ } return next; }); }, [sessionId]);
+  const progressSummary = useMemo(() => summarizeTimelineDawMusicianTrialProgress(progress), [progress]);
   useEffect(() => { void params.then(async (value) => {
     setSessionId(value.sessionId);
     try {
@@ -28,6 +32,8 @@ export default function TimelineDawBetaSessionPage({ params }: { params: Promise
       setData(result);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Session access could not be verified."); }
   }); }, [params]);
+  useEffect(() => { if (!sessionId) return; try { setProgress(parseTimelineDawMusicianTrialProgress(JSON.parse(localStorage.getItem(`muzes-daw-musician-trial-progress:${sessionId}`) ?? "{}"))); } catch { setProgress({}); } }, [sessionId]);
+  useEffect(() => { if (data) completeStep("access"); }, [completeStep, data]);
   return <main className="mx-auto max-w-4xl space-y-5 p-6 text-white">
     <p className="text-xs font-black uppercase tracking-[.22em] text-sky-200">Controlled musician beta</p>
     <h1 className="text-4xl font-black">Musician Test Session</h1>
@@ -41,10 +47,11 @@ export default function TimelineDawBetaSessionPage({ params }: { params: Promise
         <div className="mt-3 grid gap-2 sm:grid-cols-2">{data.trialReadiness.steps.map((step) => <p className={step.ready ? "text-emerald-200" : "text-amber-200"} key={step.key}>{step.ready ? "Ready" : "Blocked"} · {step.label}</p>)}</div>
         {!data.trialReadiness.ready ? <p className="mt-3 font-bold text-amber-100">This page currently supports listening and feedback only. It is not yet a complete hands-on DAW trial.</p> : null}
       </section>
+      <section className={`rounded-2xl border p-4 ${progressSummary.complete ? "border-emerald-300/40 bg-emerald-300/[.06]" : "border-sky-300/30"}`}><h2 className="text-2xl font-black">Your trial checklist: {progressSummary.completed}/{progressSummary.required}</h2><p className="mt-1 text-white/65">Complete these in order if that feels natural. The checkmarks stay in this browser and contain no audio or private project data.</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{progressSummary.steps.map((step) => <p className={step.complete ? "text-emerald-200" : "text-white/65"} key={step.key}>{step.complete ? "✓ Done" : "○ Try next"} · {step.label}</p>)}</div>{progressSummary.complete ? <p className="mt-3 font-black text-emerald-200">All seven musician actions completed. Tell the owner what felt difficult or unclear.</p> : null}</section>
       <section className="rounded-2xl border border-white/15 p-4"><h2 className="font-black">Current permissions</h2>{data.capabilities.map((item) => <p key={item}>✓ {item}</p>)}<p className="mt-3 text-sm text-white/55">Administration, invitations, release decisions, destructive restore, delivery, and project privacy remain owner-only.</p></section>
-      <TimelineDawBetaAuditionPlayer sessionId={sessionId}/>
-      <TimelineDawMusicianTrialWorkspace sessionId={sessionId}/>
-      <TimelineDawBetaCollaboratorPanel sessionId={sessionId}/>
+      <TimelineDawBetaAuditionPlayer sessionId={sessionId} onPlayed={() => completeStep("play")}/>
+      <TimelineDawMusicianTrialWorkspace sessionId={sessionId} onStepComplete={completeStep}/>
+      <TimelineDawBetaCollaboratorPanel sessionId={sessionId} onFeedbackSubmitted={() => completeStep("feedback")}/>
     </> : null}
   </main>;
 }
