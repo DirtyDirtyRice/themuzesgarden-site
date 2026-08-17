@@ -1085,6 +1085,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Successful trims save immediately, create existing arrangement history, and confirm the edited track in plain language.
 - Focused movement-and-trim tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing durable private-lane arrangement and edit-history systems are reused.
+
+## Completed milestone - Durable Musician Track Naming
+
+- Every audio track now has an editable Track name field and a clear Save Track Name action.
+- Musicians can replace technical upload and recording filenames with practical labels such as Lead Vocal, Guitar, or Harmony 2.
+- Names are normalized for accidental extra spaces, limited to 120 characters, and cannot be saved empty.
+- A saved name is written to the existing private track record and returns after reopening the Studio without renaming or altering the underlying private audio master.
+- Successful changes update the track immediately and produce a plain-language confirmation; failed saves leave a visible error instead of pretending the change persisted.
+- Focused naming, movement, and trimming tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing private audio-lane name column, owner authorization, and session confinement are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

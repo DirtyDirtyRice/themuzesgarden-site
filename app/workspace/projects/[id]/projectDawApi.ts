@@ -376,6 +376,17 @@ export function arrangeDawPrivateAudioLane(
   });
 }
 
+export function renameDawPrivateAudioLane(
+  sessionId: string,
+  laneId: string,
+  name: string,
+): Promise<{ lane: DawPrivateAudioLane }> {
+  return request("/api/timeline/daw-private-audio-lanes", {
+    method: "POST",
+    body: JSON.stringify({ action: "rename", sessionId, laneId, name }),
+  });
+}
+
 export function splitDawPrivateAudioLane(
   sessionId: string,
   laneId: string,

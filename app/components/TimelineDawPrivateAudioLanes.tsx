@@ -18,6 +18,7 @@ import {
   loadDawPrivateLaneWaveform,
   loadDawPrivateFreezes,
   removeDawPrivateAudioLane,
+  renameDawPrivateAudioLane,
   saveDawPrivateBus,
   splitDawPrivateAudioLane,
   updateDawPrivateAudioLaneMix,
@@ -60,6 +61,7 @@ import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivate
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 import { resolveTimelineDawMusicianTrackMove } from "@/lib/timeline/TimelineDawMusicianTrackMove";
 import { resolveTimelineDawMusicianTrackTrim } from "@/lib/timeline/TimelineDawMusicianTrackTrim";
+import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -68,6 +70,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [movementNotice, setMovementNotice] = useState<string>();
+  const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -382,6 +385,21 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function saveTrackName(lane: DawPrivateAudioLane) {
+    setBusy(true);
+    setError(undefined);
+    setMovementNotice(undefined);
+    try {
+      const name = parseTimelineDawMusicianTrackName(nameDrafts[lane.id] ?? lane.name);
+      const { lane: saved } = await renameDawPrivateAudioLane(sessionId, lane.id, name);
+      setLanes((current) => current.map((candidate) => candidate.id === saved.id ? saved : candidate));
+      setNameDrafts((current) => { const next = { ...current }; delete next[lane.id]; return next; });
+      setMovementNotice(`Track renamed ${saved.name}.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Track name could not be saved.");
+    } finally { setBusy(false); }
+  }
+
   async function saveBus(input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }) {
     setBusy(true); setError(undefined);
     try { const { bus } = await saveDawPrivateBus(sessionId, input); setBuses((current) => [...current.filter((item) => item.id !== bus.id), bus]); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "gain", value: bus.mix.gain }); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "pan", value: bus.mix.pan }); }
@@ -493,6 +511,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s â†’ {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s Â· {lane.audio.channelCount}ch Â· {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` Â· comp ${lane.provenance.compId}` : " Â· recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
                 </div>
+                <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><label className="min-w-52 flex-1 text-xs font-black text-white/70">Track name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={nameDrafts[lane.id] ?? lane.name} maxLength={120} onChange={(event) => setNameDrafts((current) => ({ ...current, [lane.id]: event.target.value }))} /></label><button type="button" className={button} disabled={busy || (nameDrafts[lane.id] ?? lane.name).trim() === lane.name} onClick={() => void saveTrackName(lane)}>Save Track Name</button></div>
                 <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} />
                 <TimelineDawPrivateClipRepairEditor sessionId={sessionId} lane={lane} onChange={(repair) => setClipRepairs((current) => current[repair.laneId]?.checksum === repair.checksum ? current : { ...current, [repair.laneId]: repair })} />
                 <TimelineDawTransientEditor sessionId={sessionId} laneId={lane.id} sampleRate={lane.audio.sampleRate} onNavigate={(seconds) => { const audio=audioRefs.current.get(lane.id); if(audio) audio.currentTime=seconds; }} onAudition={(seconds)=>{const audio=audioRefs.current.get(lane.id);if(audio){audio.currentTime=seconds;void audio.play()}}} />

@@ -8,6 +8,7 @@ import { parseTimelineDawPrivateLaneFade } from "@/lib/timeline/TimelineDawPriva
 import { parseTimelineDawPrivateLaneTransform } from "@/lib/timeline/TimelineDawPrivateLaneTransformPolicy";
 import { parseTimelineDawPrivateLaneSplit } from "@/lib/timeline/TimelineDawPrivateLaneSplitPolicy";
 import { createTimelineDawPrivateLaneEditReceipt, type TimelineDawPrivateLaneEditOperation } from "@/lib/timeline/TimelineDawPrivateLaneEditHistoryPolicy";
+import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -112,6 +113,17 @@ export async function POST(request: NextRequest) {
       }).select("*").single();
       if (error || !data) throw new ApiError(`Private audio lane could not be saved: ${error?.message ?? "missing row"}`, 500);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, input.sourceUri)) }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    }
+    if (body.action === "rename") {
+      const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
+      if (!laneId) throw new ApiError("laneId is required.", 400);
+      let name: string;
+      try { name = parseTimelineDawMusicianTrackName(body.name); }
+      catch (cause) { throw new ApiError(cause instanceof Error ? cause.message : "Track name is invalid.", 400); }
+      const { data, error } = await user.client.from(TABLE).update({ name, updated_at: new Date().toISOString() })
+        .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).select("*").single();
+      if (error || !data) throw new ApiError("Private audio track was not found.", 404);
+      return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { headers: { "Cache-Control": "no-store" } });
     }
     if (body.action === "arrange") {
       const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
