@@ -54,6 +54,7 @@ import {
 import type { DawSession } from "./projectDawTypes";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
 import { TIMELINE_DAW_LOCAL_ACTIVITY_EVENT } from "@/lib/timeline/TimelineDawSafeExitPolicy";
+import { createTimelineDawTakeArrangementPlacement } from "@/lib/timeline/TimelineDawTakeArrangementPlacement";
 import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWorkspace";
 
 
@@ -110,6 +111,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [reviewName, setReviewName] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
+  const [arrangementNotice, setArrangementNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preflightBusy, setPreflightBusy] = useState(false);
   const [preflight, setPreflight] = useState<TimelineDawRecordingPreflightResult | null>(null);
@@ -856,6 +858,16 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     }
   }
 
+  function addTakeToTracks(take: UploadedTake) {
+    const placement = createTimelineDawTakeArrangementPlacement(take);
+    window.dispatchEvent(new CustomEvent<DawRecordedSourceEventDetail>(
+      DAW_RECORDED_SOURCE_EVENT,
+      { detail: placement.detail },
+    ));
+    setArrangementNotice(placement.confirmation);
+    setError(null);
+  }
+
   function beginTakeReview(take: UploadedTake) {
     setReviewingTakeId(take.id);
     setReviewName(take.name);
@@ -1170,6 +1182,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         </div>
         {takeListStatus.guidance ? <p className={`mt-2 text-xs font-bold ${takeListLoadState === "failed" ? "text-amber-200" : "text-white/55"}`}>{takeListStatus.guidance}</p> : null}
         {takeListLoadError ? <p className="mt-2 text-xs text-red-200">Load details: {takeListLoadError}</p> : null}
+        {arrangementNotice ? <p role="status" className="mt-2 text-sm font-bold text-emerald-200">{arrangementNotice} Open Tracks / Editing / MIDI above to see and move it.</p> : null}
       </section>
       {takes.length ? (
         <ol className="mt-5 grid gap-2">
@@ -1238,6 +1251,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
                 <audio className="mt-3 w-full" controls preload="metadata" src={auditionUrls[take.id]} onError={() => void recoverAuditionPlayback(take)} />
               ) : null}
               <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" className={button} disabled={uploading} onClick={() => addTakeToTracks(take)}>Add to Tracks at Play Position</button>
                 <button type="button" className={button} disabled={uploading} onClick={() => void auditionTake(take)}>{auditionUrls[take.id] ? "Refresh Audition" : "Audition Take"}</button>
                 <button type="button" className={button} disabled={uploading || take.preferred} onClick={() => void preferTake(take)}>Use as Preferred</button>
                 <button type="button" className={button} disabled={uploading} onClick={() => beginTakeReview(take)}>{reviewingTakeId === take.id ? "Reset Review" : "Review Take"}</button>

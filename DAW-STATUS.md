@@ -1054,6 +1054,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Changing the project clears the old search and selection, while choosing a song continues to create the existing editable default session name.
 - Focused quick-start tests passed (4 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; existing linked-song identities and protected session creation are unchanged.
+
+## Completed milestone - Saved Recording to Track Placement
+
+- Every saved recording take now has an explicit Add to Tracks at Play Position action, including takes loaded again after reopening the Studio.
+- The action preserves the take's private source identity, checksum, channel count, sample rate, duration, and frame count when creating the editable audio lane.
+- Placement uses the musician's current play position, so a take can be added where it belongs in the song instead of always starting at the beginning.
+- A plain-language confirmation tells the musician that the take is being added and directs them to Tracks / Editing / MIDI to see and move it.
+- Newly recorded takes continue entering the arrangement automatically; this milestone closes the missing recovery path for older saved takes and repeated placements.
+- Focused take-placement and private-delivery tests passed (3 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing private audio-lane storage and recorded-source event are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
