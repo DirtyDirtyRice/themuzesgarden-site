@@ -49,6 +49,8 @@ import {
   type DawSnapshot,
 } from "../../projectDawTypes";
 import type { TimelineDawSaveHealth } from "@/lib/timeline/TimelineDawSaveHealthPolicy";
+import { createTimelineDawLifecycleConfirmation } from "@/lib/timeline/TimelineDawLifecycleConfirmationPolicy";
+import { TIMELINE_DAW_MUSICIAN_ACTION, TIMELINE_DAW_MUSICIAN_SESSION_STATE } from "@/lib/timeline/TimelineDawMusicianSessionControls";
 
 const buttonClass =
   "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
@@ -102,6 +104,10 @@ export default function ProjectDawSessionPage() {
   }, [load]);
 
   async function runAction(current: DawSession, action: DawSessionAction) {
+    if (action === "suspend" || action === "close") {
+      const confirmation = createTimelineDawLifecycleConfirmation(action, current.name);
+      if (!window.confirm(`${confirmation.title}\n\n${confirmation.message}\n\nChoose OK to ${confirmation.confirmLabel.toLowerCase()}.`)) return;
+    }
     setBusy(true);
     setSaveHealth("saving");
     setError(null);
@@ -172,7 +178,7 @@ export default function ProjectDawSessionPage() {
             <p className="mt-2 text-sm text-white/55">Song {session.songId}</p>
           </div>
           <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-emerald-200">
-            {session.state}
+            {TIMELINE_DAW_MUSICIAN_SESSION_STATE[session.state].label}
           </span>
         </div>
 
@@ -200,14 +206,16 @@ export default function ProjectDawSessionPage() {
             <button
               key={action}
               type="button"
-              className={buttonClass}
+              className={TIMELINE_DAW_MUSICIAN_ACTION[action].danger ? "rounded-xl border border-red-300/40 bg-red-950 px-4 py-2 text-sm font-black text-red-100 disabled:opacity-40" : buttonClass}
               disabled={busy}
               onClick={() => void runAction(session, action)}
             >
-              {busy ? "Working…" : action[0].toUpperCase() + action.slice(1)}
+              {busy ? "Working…" : TIMELINE_DAW_MUSICIAN_ACTION[action].label}
             </button>
           ))}
         </div>
+        <p className="mt-3 text-sm text-white/65">{TIMELINE_DAW_MUSICIAN_SESSION_STATE[session.state].explanation}</p>
+        {dawActionsByState[session.state].length ? <ul className="mt-2 space-y-1 text-xs text-white/50">{dawActionsByState[session.state].map((action) => <li key={action}><b>{TIMELINE_DAW_MUSICIAN_ACTION[action].label}:</b> {TIMELINE_DAW_MUSICIAN_ACTION[action].explanation}</li>)}</ul> : null}
       </header>
 
       {error ? (

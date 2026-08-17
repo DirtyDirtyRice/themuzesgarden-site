@@ -1021,6 +1021,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Session creation reuses the current workspace revision and existing protected DAW API, and a successful creation routes directly into the exact new Studio session.
 - Focused quick-start and navigation-guide tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; existing project links, song records, authorization, and durable session creation are reused.
+
+## Completed milestone - Plain-Language Studio Setup and Lifecycle Safety
+
+- The Studio no longer presents raw engine commands such as Validate, Activate, Suspend, and Resume as the musician's primary controls.
+- Those actions now read Check Studio Setup, Open Music Tools, Pause Session Safely, and Continue This Session, with one short explanation of what each choice does.
+- Technical session states now read Setup needed, Ready to open, Ready for music, Paused safely, or Closed permanently, and the current state explains the musician's next practical step.
+- Permanent closure is visually separated as a red danger action and explicitly states that the session cannot currently be reopened.
+- Both Pause Session Safely and Close Session Permanently now require a detailed confirmation before changing lifecycle state; saved audio and artifacts are accurately described as protected rather than deleted.
+- Existing owner authorization, workspace revisions, session state transitions, and safe-exit health remain unchanged.
+- Focused musician-control and lifecycle-confirmation tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing durable lifecycle is reused with safer musician-facing controls.
 ## Working rules
 
 - Preserve existing architecture and user data.
