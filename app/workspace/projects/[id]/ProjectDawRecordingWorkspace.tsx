@@ -38,6 +38,10 @@ import {
 import { cleanTimelineDawDeletedTakeState } from "../../../../lib/timeline/TimelineDawTakeDeletion";
 import { applyTimelineDawPreferredTakeDeletion } from "../../../../lib/timeline/TimelineDawPreferredTakeDeletion";
 import {
+  timelineDawSavedTakeListStatus,
+  type TimelineDawSavedTakeListLoadState,
+} from "../../../../lib/timeline/TimelineDawSavedTakeListLoad";
+import {
   createDawRecordingTakeAudition,
   deleteDawRecordingTake,
   loadDawRecordingTakes,
@@ -100,6 +104,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [interruptionRecheckRequired, setInterruptionRecheckRequired] = useState(false);
   const [recordedSignalHealth, setRecordedSignalHealth] = useState<TimelineDawRecordedSignalHealth | null>(null);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
+  const [takeListLoadState, setTakeListLoadState] = useState<TimelineDawSavedTakeListLoadState>("loading");
+  const [takeListLoadError, setTakeListLoadError] = useState<string | null>(null);
   const [reviewingTakeId, setReviewingTakeId] = useState<string | null>(null);
   const [reviewName, setReviewName] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
@@ -151,6 +157,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const takeClippedRef = useRef(false);
   const auditionRefreshAttemptsRef = useRef<Record<string, number>>({});
   const auditionRefreshingRef = useRef<Record<string, boolean>>({});
+  const takeListLoadGenerationRef = useRef(0);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -246,13 +253,26 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     finally { await refreshStorageHealth(); setStorageBusy(false); }
   }
 
-  useEffect(() => {
-    let active = true;
-    void loadDawRecordingTakes(session.id)
-      .then(({ takes: stored }) => { if (active) setTakes(stored); })
-      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Recording takes could not be loaded."); });
-    return () => { active = false; };
+  const loadSavedTakes = useCallback(async () => {
+    const generation = ++takeListLoadGenerationRef.current;
+    setTakeListLoadState("loading");
+    setTakeListLoadError(null);
+    try {
+      const { takes: stored } = await loadDawRecordingTakes(session.id);
+      if (generation !== takeListLoadGenerationRef.current) return;
+      setTakes(stored);
+      setTakeListLoadState("ready");
+    } catch (cause) {
+      if (generation !== takeListLoadGenerationRef.current) return;
+      setTakeListLoadState("failed");
+      setTakeListLoadError(cause instanceof Error ? cause.message : "Recording takes could not be loaded.");
+    }
   }, [session.id]);
+
+  useEffect(() => {
+    void loadSavedTakes();
+    return () => { takeListLoadGenerationRef.current += 1; };
+  }, [loadSavedTakes]);
 
   useEffect(() => () => {
     countInGenerationRef.current += 1;
@@ -369,6 +389,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const recoveryView = createTimelineDawRecordingRecoveryView({
     hasRecovery: Boolean(recovery), uploading, uploadedSourceAvailable: Boolean(recovery?.uploaded),
   });
+  const takeListStatus = timelineDawSavedTakeListStatus({ state: takeListLoadState, takeCount: takes.length });
   const maximumTakeSeconds = maxTakeMinutes * 60;
   const remainingTakeSeconds = Math.max(0, maximumTakeSeconds - bufferedSeconds);
   const postInterruptionReadiness = assessTimelineDawPostInterruptionReadiness({
@@ -1137,6 +1158,19 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           <p className="mt-3 text-xs font-bold text-amber-200">Resolve this recovery before starting another take; only one recovery WAV is held at a time.</p>
         </section>
       ) : null}
+      <section className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] p-3" aria-label="Saved recording takes" aria-live="polite">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-white/45">Saved takes</p>
+            <p className="mt-1 text-sm font-black text-white/85">{takeListStatus.summary}</p>
+          </div>
+          <button type="button" className={button} disabled={takeListLoadState === "loading" || uploading || recording || countingIn} onClick={() => void loadSavedTakes()}>
+            {takeListLoadState === "loading" ? "Loading Saved Takes…" : "Reload Saved Takes"}
+          </button>
+        </div>
+        {takeListStatus.guidance ? <p className={`mt-2 text-xs font-bold ${takeListLoadState === "failed" ? "text-amber-200" : "text-white/55"}`}>{takeListStatus.guidance}</p> : null}
+        {takeListLoadError ? <p className="mt-2 text-xs text-red-200">Load details: {takeListLoadError}</p> : null}
+      </section>
       {takes.length ? (
         <ol className="mt-5 grid gap-2">
           {takes.map((take) => (

@@ -968,6 +968,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - If automatic promotion cannot be saved after deletion, the take list remains truthful and the musician receives a direct instruction to choose Use as Preferred manually.
 - Focused preferred-deletion, deletion-state, and stored-audio cleanup tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing preferred-take field and private session authorization are reused.
+
+## Completed milestone - Saved Take List Loading and Recovery
+
+- The recording workspace now distinguishes Loading Saved Takes, a verified No Saved Takes state, and a failed load, so a temporary connection problem cannot look like recordings disappeared.
+- A dedicated Reload Saved Takes control lets the musician recover without refreshing the whole Studio page or leaving the recording workflow.
+- Refreshing does not clear already visible recordings; if the request fails, previously loaded takes remain available for audition, review, preference, and deletion.
+- Failed first loads explicitly tell the musician not to assume recordings are missing and provide the exact recovery action.
+- Stale or overlapping load responses are ignored, preventing a slower old request from replacing a newer successful take list.
+- Focused saved-list, preferred-deletion, and deletion-state tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing authorized saved-take API is reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
