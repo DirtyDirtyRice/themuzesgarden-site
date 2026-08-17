@@ -155,11 +155,6 @@ const METADATA_CHILD_LINKS: TitleBarLink[] = [
 
 const TOOLS_CHILD_LINKS: TitleBarLink[] = [
   {
-    label: "DAW Studio",
-    href: "/workspace/daw",
-    detail: "Discover project Studios and open authenticated DAW sessions",
-  },
-  {
     label: "AI Developer Workspace",
     href: "/developer-workspace",
     detail: "Open the standalone coding workspace for project indexing, prevention, investigation, and safe patches",
@@ -174,6 +169,15 @@ const TOOLS_CHILD_LINKS: TitleBarLink[] = [
     href: "/tools/code-map",
     detail: "Open the coding app code map",
   },
+];
+
+const DAW_CHILD_LINKS: TitleBarLink[] = [
+  { label: "DAW Control Center", href: "/workspace/daw", detail: "See projects and continue existing Studio sessions" },
+  { label: "Start a Song", href: "/workspace/daw#daw-start-song-help", detail: "See the exact steps for creating a new Studio song" },
+  { label: "Continue a Song", href: "/workspace/daw#daw-open-sessions", detail: "Search and reopen an existing Studio session" },
+  { label: "DAW Navigation Help", href: "/workspace/daw#daw-navigation-help", detail: "Choose what you want to do and follow simple directions" },
+  { label: "Projects", href: "/workspace/projects", detail: "Choose the project that holds your music" },
+  { label: "Upload Audio", href: "/upload", detail: "Add an MP3, WAV, or other music file" },
 ];
 
 const TRACK_MATCHER_CHILD_LINKS: TitleBarLink[] = [
@@ -458,12 +462,14 @@ export default function TitleBar() {
   const libraryActive = isActivePath(pathname, "/library");
   const metadataActive = isActivePath(pathname, "/metadata");
   const toolsActive = isActivePath(pathname, "/tools") || isActivePath(pathname, "/developer-workspace") || pathname === "/live";
+  const dawActive = isActivePath(pathname, "/workspace/daw") || /\/workspace\/projects\/[^/]+\/studio\//.test(pathname);
   const trackMatcherActive = isActivePath(pathname, "/tools/track-matcher");
 
   const [aiMenuOpen, setAiMenuOpen] = useState(false);
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [metadataMenuOpen, setMetadataMenuOpen] = useState(false);
   const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
+  const [dawMenuOpen, setDawMenuOpen] = useState(false);
   const [trackMatcherMenuOpen, setTrackMatcherMenuOpen] = useState(false);
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
 
@@ -547,6 +553,15 @@ export default function TitleBar() {
   onClose={() => setLibraryMenuOpen(false)}
   onOpen={() => setLibraryMenuOpen(true)}
 />
+
+          <TitleBarDropdown
+            active={dawActive}
+            label="DAW"
+            links={DAW_CHILD_LINKS}
+            menuOpen={dawMenuOpen}
+            onClose={() => setDawMenuOpen(false)}
+            onOpen={() => setDawMenuOpen(true)}
+          />
 
           <TitleBarDropdown
             active={toolsActive}

@@ -978,6 +978,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Stale or overlapping load responses are ignored, preventing a slower old request from replacing a newer successful take list.
 - Focused saved-list, preferred-deletion, and deletion-state tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing authorized saved-take API is reused.
+
+## Completed milestone - Musician DAW Navigation Help
+
+- The title bar now has a dedicated DAW dropdown instead of hiding the Studio entrance inside Tools.
+- The menu provides direct choices for the DAW Control Center, Start a Song help, continuing a song, full navigation help, Projects, and audio uploads from every app page.
+- The DAW Control Center now opens with a plain-language Where do you want to go guide covering new songs, existing sessions, MP3/WAV intake, audio recording, MIDI, track editing, mixing, exporting, and recovery.
+- Every destination expands into at least four one-step-at-a-time directions and ends with a clearly labeled action link.
+- Open-session search has a stable menu target, so Continue a Song moves directly to the correct part of the control center.
+- Project buttons now explicitly say Open Project and Start a Song with enforced visible button text, resolving the blank-looking control reported in musician review.
+- Focused navigation-guide tests passed (3 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; existing authenticated DAW, project, upload, and Studio routes are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
