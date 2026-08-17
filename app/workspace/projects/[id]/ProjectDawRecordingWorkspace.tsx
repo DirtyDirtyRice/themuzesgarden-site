@@ -9,6 +9,7 @@ import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Enc
 import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
 import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
 import { assessTimelineDawRecordedSignalHealth, type TimelineDawRecordedSignalHealth } from "../../../../lib/timeline/TimelineDawRecordedSignalHealth";
+import { decideTimelineDawAuditionRecovery } from "../../../../lib/timeline/TimelineDawAuditionRecovery";
 import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../../lib/timeline/TimelineDawCountIn";
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
@@ -146,6 +147,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const activeDeviceMissingHandlerRef = useRef<(() => void) | null>(null);
   const maximumTakePeakDbRef = useRef(-96);
   const takeClippedRef = useRef(false);
+  const auditionRefreshAttemptsRef = useRef<Record<string, number>>({});
+  const auditionRefreshingRef = useRef<Record<string, boolean>>({});
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -781,7 +784,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     catch (cause) { setRecoveryStorageWarning(cause instanceof Error ? cause.message : "Private recovery storage cleanup failed."); }
   }
 
-  async function auditionTake(take: UploadedTake) {
+  async function auditionTake(take: UploadedTake, automatic = false) {
+    if (!automatic) auditionRefreshAttemptsRef.current[take.id] = 0;
     setUploading(true);
     setError(null);
     try {
@@ -792,6 +796,24 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     } finally {
       setUploading(false);
     }
+  }
+
+  async function recoverAuditionPlayback(take: UploadedTake) {
+    if (auditionRefreshingRef.current[take.id]) return;
+    const attempts = auditionRefreshAttemptsRef.current[take.id] ?? 0;
+    const decision = decideTimelineDawAuditionRecovery({
+      automaticRefreshAttempts: attempts,
+      online: navigator.onLine !== false,
+    });
+    if (!decision.refresh) {
+      setError(decision.guidance);
+      return;
+    }
+    auditionRefreshAttemptsRef.current[take.id] = attempts + 1;
+    setError(decision.guidance);
+    auditionRefreshingRef.current[take.id] = true;
+    try { await auditionTake(take, true); }
+    finally { auditionRefreshingRef.current[take.id] = false; }
   }
 
   async function preferTake(take: UploadedTake) {
@@ -1158,7 +1180,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
                 <a className="mt-2 inline-block text-sm font-black text-rose-300 hover:text-rose-200" href={take.mp3Url} download={take.name.replace(/\.wav$/i, ".mp3")}>Download MP3 copy</a>
               ) : null}
               {auditionUrls[take.id] ? (
-                <audio className="mt-3 w-full" controls preload="metadata" src={auditionUrls[take.id]} />
+                <audio className="mt-3 w-full" controls preload="metadata" src={auditionUrls[take.id]} onError={() => void recoverAuditionPlayback(take)} />
               ) : null}
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" className={button} disabled={uploading} onClick={() => void auditionTake(take)}>{auditionUrls[take.id] ? "Refresh Audition" : "Audition Take"}</button>

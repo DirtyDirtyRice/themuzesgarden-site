@@ -928,6 +928,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Starting a new take clears both the stored clipping flag and the prior warning so results cannot leak between takes.
 - Focused recorded-signal, input-level, interruption, PCM, and recovery tests passed (20 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Saved Take Audition Link Recovery
+
+- A saved take's audio player now treats a playback error as a potentially expired or failed short-lived private audition link.
+- When online, the DAW requests one fresh authorized audition link automatically and retries the player without requiring the musician to diagnose signed URLs.
+- Automatic recovery is strictly bounded to one refresh per take; repeated media error events during the same request are ignored and cannot create a retry loop.
+- If the refreshed link still fails, the musician receives a clear manual Refresh Audition instruction; if offline, the DAW waits for connectivity instead of issuing a doomed request.
+- Choosing Refresh Audition manually resets the bounded recovery allowance for that new musician-requested attempt.
+- Focused audition-recovery, recorded-signal, interruption, and recording-recovery tests passed (17 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; private audio authorization and short-lived URL boundaries remain unchanged.
 ## Working rules
 
 - Preserve existing architecture and user data.
