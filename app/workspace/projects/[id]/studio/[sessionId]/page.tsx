@@ -280,9 +280,10 @@ export default function ProjectDawSessionPage() {
 
       <ProjectDawDeviceDiagnostics />
       </div>
-      <div data-daw-focus-area="record" className="space-y-6 scroll-mt-24">
+      <div data-daw-focus-area="record" className="scroll-mt-24">
       <ProjectDawRecordingWorkspace session={session} />
-
+      </div>
+      <div data-daw-focus-area="arrange" className="scroll-mt-24">
       <ProjectDawTimeline session={session} />
       </div>
       <div data-daw-focus-area="recover" className="scroll-mt-24">

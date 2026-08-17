@@ -989,6 +989,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Project buttons now explicitly say Open Project and Start a Song with enforced visible button text, resolving the blank-looking control reported in musician review.
 - Focused navigation-guide tests passed (3 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; existing authenticated DAW, project, upload, and Studio routes are reused.
+
+## Completed milestone - In-Studio Musician Section Navigator
+
+- A sticky Where do you want to work navigator now remains available near the top of every protected Studio session.
+- Musicians can jump directly to Play and Stop, Tracks/Editing/MIDI, Recording, Mixing/Effects, Recovery, or Export without scrolling through the entire engineering workspace.
+- Every choice includes one plain-language sentence explaining what happens there before the musician moves.
+- Essential music-making destinations appear first under Make music; beta, owner, guide, mastering, and support controls are separated under Advanced and owner tools.
+- Recording and arrangement now have separate navigation targets, so choosing Recording no longer lands at the start of the much larger track editor and choosing Tracks/Editing/MIDI goes directly to the arrangement workspace.
+- The existing session-scoped focus memory is reused, and the navigator continues tracking the musician's current area for a quick return without creating another competing navigation system.
+- Focused Studio navigation and DAW guide tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing protected Studio route and browser-private focus memory are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
