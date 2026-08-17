@@ -867,7 +867,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     setUploading(true);
     setError(null);
     try {
-      await deleteDawRecordingTake(session.id, take.id);
+      const deletion = await deleteDawRecordingTake(session.id, take.id);
       setTakes((current) => current.filter((item) => item.id !== take.id));
       setAuditionUrls((current) => cleanTimelineDawDeletedTakeState({
         deletedTakeId: take.id,
@@ -885,6 +885,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         URL.revokeObjectURL(take.mp3Url);
         mp3UrlsRef.current = mp3UrlsRef.current.filter((url) => url !== take.mp3Url);
       }
+      if (deletion.cleanupWarning) setError(deletion.cleanupWarning);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Recording take could not be deleted.");
     } finally {

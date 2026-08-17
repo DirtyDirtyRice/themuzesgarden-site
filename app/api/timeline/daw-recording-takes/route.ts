@@ -8,6 +8,10 @@ import {
 } from "@/lib/timeline/TimelineDawRecordingTakeDeliveryPolicy";
 import { parseTimelineDawTakeReview } from "@/lib/timeline/TimelineDawTakeReviewPolicy";
 import { createTimelineDawRecordingPasses, parseTimelineDawRecordingPlan } from "@/lib/timeline/TimelineDawPunchLoopRecordingPolicy";
+import {
+  decideTimelineDawTakeAudioCleanup,
+  timelineDawStoredAudioCleanupWarning,
+} from "@/lib/timeline/TimelineDawTakeAudioCleanup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -244,12 +248,16 @@ export async function POST(request: NextRequest) {
       const { error: deleteError } = await user.client.from(TABLE).delete().eq("id", body.takeId).eq("owner_id", user.id);
       if (deleteError) throw new ApiError(`Recording take could not be deleted: ${deleteError.message}`, 500);
       const { count, error: countError } = await user.client.from(TABLE).select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("session_id", sessionId).eq("uri", uri);
-      if (countError) throw new ApiError(`Recording source references could not be checked: ${countError.message}`, 500);
-      if (!count) {
+      const cleanup = decideTimelineDawTakeAudioCleanup({
+        remainingReferenceCount: count,
+        referenceCheckFailed: Boolean(countError),
+      });
+      let cleanupWarning = cleanup.warning;
+      if (cleanup.removeStoredAudio) {
         const { error: storageError } = await user.client.storage.from(BUCKET).remove([uri.slice(PREFIX.length)]);
-        if (storageError) throw new ApiError(`Recording audio could not be deleted: ${storageError.message}`, 500);
+        if (storageError) cleanupWarning = timelineDawStoredAudioCleanupWarning();
       }
-      return NextResponse.json({ deletedTakeId: body.takeId }, { headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json({ deletedTakeId: body.takeId, cleanupWarning }, { headers: { "Cache-Control": "no-store" } });
     }
 
     throw new ApiError("Recording take action is invalid.", 400);

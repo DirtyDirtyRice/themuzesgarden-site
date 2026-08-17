@@ -948,6 +948,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Any temporary MP3 copy for the deleted take is still revoked and removed from the component cleanup list.
 - Focused deletion and audition-recovery tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; existing private-audio deletion authorization remains unchanged.
+
+## Completed milestone - Truthful Take Deletion and Orphaned Audio Cleanup
+
+- The recording-take API now treats project-record deletion and unused-file cleanup as two separate results instead of reporting the entire deletion as failed after the take is already gone.
+- If reference checking or private storage cleanup fails after a successful deletion, the DAW removes the deleted take from the accurate recording list and gives the musician a specific cleanup warning.
+- A musician will no longer retry deletion against a take that the server already removed or see it unexpectedly disappear only after refreshing the page.
+- Punch and loop passes continue sharing their source safely: stored audio is removed only when no remaining take references that private source.
+- Storage uncertainty defaults to preserving audio for later cleanup rather than risking removal of a file another take may still use.
+- Focused deletion-state and stored-audio cleanup tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; take ownership, private-audio authorization, and existing storage paths remain unchanged.
 ## Working rules
 
 - Preserve existing architecture and user data.
