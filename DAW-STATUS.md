@@ -1074,6 +1074,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - A plain-language status message confirms the track name and its newly saved position, and the visible track list reorders into timeline order.
 - Focused track-movement tests passed (2 tests), TypeScript passed, and the production build passed with 76 generated pages after one stalled local build process was safely stopped and retried.
 - No database migration was required; the existing durable private-lane arrangement API and history are reused.
+
+## Completed milestone - Play-Position Track Trimming
+
+- Every audio track now has Trim Beginning to Play Position and Trim End to Play Position actions beside its movement controls.
+- A musician can listen, stop at the desired edit point, and trim there without translating song time into the recording's internal source-time numbers.
+- Beginning trims keep the remaining performance in musical sync by moving both the visible track start and its private source-in point together.
+- End trims preserve the track start, and both trim directions correctly account for stretched audio.
+- Unsafe edits are refused when the play position is outside the audible track or would remove the entire recording; Reset Full Source remains visible as the recovery action.
+- Successful trims save immediately, create existing arrangement history, and confirm the edited track in plain language.
+- Focused movement-and-trim tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing durable private-lane arrangement and edit-history systems are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
