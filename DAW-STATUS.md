@@ -1064,6 +1064,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Newly recorded takes continue entering the arrangement automatically; this milestone closes the missing recovery path for older saved takes and repeated placements.
 - Focused take-placement and private-delivery tests passed (3 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing private audio-lane storage and recorded-source event are reused.
+
+## Completed milestone - One-Click Musician Track Movement
+
+- Every audio track now has direct 1 Second Earlier, 1 Second Later, and Move to Play Position controls beside its arrangement settings.
+- Each movement saves immediately, so a musician does not need to calculate decimal timestamps and then remember a separate save step.
+- Moving earlier safely stops at the beginning of the song, and all movement is rounded consistently to millisecond precision.
+- The track's source trims, private audio identity, mix, routing, and processing remain unchanged while its song position moves.
+- A plain-language status message confirms the track name and its newly saved position, and the visible track list reorders into timeline order.
+- Focused track-movement tests passed (2 tests), TypeScript passed, and the production build passed with 76 generated pages after one stalled local build process was safely stopped and retried.
+- No database migration was required; the existing durable private-lane arrangement API and history are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

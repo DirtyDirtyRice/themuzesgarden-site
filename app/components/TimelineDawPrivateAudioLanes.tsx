@@ -58,6 +58,7 @@ import TimelineDawMusicianImport from "@/app/components/TimelineDawMusicianImpor
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
+import { resolveTimelineDawMusicianTrackMove } from "@/lib/timeline/TimelineDawMusicianTrackMove";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -65,6 +66,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [lanes, setLanes] = useState<DawPrivateAudioLane[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const [movementNotice, setMovementNotice] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -329,6 +331,30 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function moveTrack(lane: DawPrivateAudioLane, destinationSeconds: number) {
+    setBusy(true);
+    setError(undefined);
+    setMovementNotice(undefined);
+    try {
+      const timelineStartSeconds = resolveTimelineDawMusicianTrackMove({
+        currentStartSeconds: lane.timelineStartSeconds,
+        destinationSeconds,
+      });
+      const { lane: saved } = await arrangeDawPrivateAudioLane(sessionId, lane.id, {
+        timelineStartSeconds,
+        sourceInSeconds: lane.sourceInSeconds,
+        sourceOutSeconds: lane.sourceOutSeconds,
+      });
+      setLanes((current) => current.map((candidate) => candidate.id === saved.id ? saved : candidate)
+        .sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+      setHistoryRevision((current) => current + 1);
+      setMovementNotice(`${saved.name} moved to ${saved.timelineStartSeconds.toFixed(2)} seconds.`);
+      synchronize(playheadRef.current, transportStateRef.current === "playing");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Track could not be moved.");
+    } finally { setBusy(false); }
+  }
+
   async function saveBus(input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }) {
     setBusy(true); setError(undefined);
     try { const { bus } = await saveDawPrivateBus(sessionId, input); setBuses((current) => [...current.filter((item) => item.id !== bus.id), bus]); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "gain", value: bus.mix.gain }); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "pan", value: bus.mix.pan }); }
@@ -406,6 +432,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <p className="text-xs font-black uppercase tracking-[0.22em] text-violet-200">Private source lanes</p>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
+      {movementNotice ? <p role="status" className="mt-3 text-sm font-bold text-emerald-200">{movementNotice}</p> : null}
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
@@ -445,6 +472,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                 <TimelineDawWarpEditor sessionId={sessionId} laneId={lane.id} frameCount={lane.audio.frameCount} sampleRate={lane.audio.sampleRate} onChange={(markers)=>setWarpMaps(x=>({...x,[lane.id]:markers}))} />
                 <label className="mt-3 block text-xs font-black text-white/55">Output routing<select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={lane.busId ?? ""} onChange={(event) => void assignBus(lane, event.target.value || null)}><option value="">Master</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label><label className="ml-3 text-xs font-black text-white/55">Parallel send<select aria-label={`${lane.name} parallel send`} className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" defaultValue="" onChange={(event) => { if (event.target.value) void persistSend({ sourceKind: "lane", sourceId: lane.id, destinationBusId: event.target.value, level: 0.5, preFader: false, muted: false }); event.currentTarget.value = ""; }}><option value="">Add sendâ€¦</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:col-span-3"><span className="text-xs font-black text-white/70">Move this track:</span><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: -1 }))}>1 Second Earlier</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: 1 }))}>1 Second Later</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, playheadRef.current)}>Move to Play Position</button></div>
                   <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceOutSeconds} onChange={(event) => editArrangement(lane.id, { sourceOutSeconds: Number(event.target.value) })} /></label>
