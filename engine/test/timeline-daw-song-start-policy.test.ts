@@ -50,20 +50,20 @@ describe("DAW song start policy", () => {
   });
 
   it("offers direct validation only to an eligible held draft", () => {
-    expect(timelineDawReadinessRepairAction(session({ state: "draft", readinessReady: false }))).toEqual({ action: "validate", label: "Run engine validation" });
-    expect(timelineDawReadinessRepairAction(session({ state: "suspended", readinessReady: false }))).toEqual({ action: "enter-studio", label: "Review engine blockers" });
+    expect(timelineDawReadinessRepairAction(session({ state: "draft", readinessReady: false }))).toEqual({ action: "validate", label: "Check Studio Setup" });
+    expect(timelineDawReadinessRepairAction(session({ state: "suspended", readinessReady: false }))).toEqual({ action: "enter-studio", label: "See What Needs Attention" });
     expect(timelineDawReadinessRepairAction(session({ readinessReady: true }))).toBeNull();
   });
 
   it("offers transport initialization only to an engine-ready session without transport", () => {
-    expect(timelineDawTransportInitializationAction(session({ readinessReady: true }), undefined)).toEqual({ action: "initialize-transport", label: "Initialize transport" });
+    expect(timelineDawTransportInitializationAction(session({ readinessReady: true }), undefined)).toEqual({ action: "initialize-transport", label: "Prepare Play Controls" });
     expect(timelineDawTransportInitializationAction(session({ readinessReady: false }), undefined)).toBeNull();
     expect(timelineDawTransportInitializationAction(session(), { tick: 0, ppq: 960 })).toBeNull();
   });
 
   it("offers activation only to a fully ready session with durable transport", () => {
     const position = { tick: 0, ppq: 960 };
-    expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: true }), position)).toEqual({ action: "activate", label: "Activate session" });
+    expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: true }), position)).toEqual({ action: "activate", label: "Open Music Tools" });
     expect(timelineDawSessionActivationAction(session({ state: "draft", readinessReady: true }), position)).toBeNull();
     expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: false }), position)).toBeNull();
     expect(timelineDawSessionActivationAction(session({ state: "ready", readinessReady: true }), undefined)).toBeNull();
@@ -71,7 +71,7 @@ describe("DAW song start policy", () => {
 
   it("offers resume only to a readiness-valid suspended session with transport", () => {
     const position = { tick: 960, ppq: 960 };
-    expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended", readinessReady: true }), position)).toEqual({ action: "resume", label: "Resume session" });
+    expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended", readinessReady: true }), position)).toEqual({ action: "resume", label: "Continue This Session" });
     expect(timelineDawSuspendedSessionResumeAction(session({ state: "active" }), position)).toBeNull();
     expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended", readinessReady: false }), position)).toBeNull();
     expect(timelineDawSuspendedSessionResumeAction(session({ state: "suspended" }), undefined)).toBeNull();

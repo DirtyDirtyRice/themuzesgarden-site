@@ -148,8 +148,8 @@ export function createTimelineDawRecentSessionHealth(
 export function timelineDawReadinessRepairAction(session: Pick<TimelineDawResumeSession, "state" | "readinessReady">) {
   if (session.readinessReady) return null;
   return session.state === "draft"
-    ? { action: "validate" as const, label: "Run engine validation" }
-    : { action: "enter-studio" as const, label: "Review engine blockers" };
+    ? { action: "validate" as const, label: "Check Studio Setup" }
+    : { action: "enter-studio" as const, label: "See What Needs Attention" };
 }
 
 export function timelineDawTransportInitializationAction(
@@ -158,7 +158,7 @@ export function timelineDawTransportInitializationAction(
 ) {
   const health = createTimelineDawRecentSessionHealth(session, position);
   return health.state === "setup"
-    ? { action: "initialize-transport" as const, label: "Initialize transport" }
+    ? { action: "initialize-transport" as const, label: "Prepare Play Controls" }
     : null;
 }
 
@@ -168,7 +168,7 @@ export function timelineDawSessionActivationAction(
 ) {
   const health = createTimelineDawRecentSessionHealth(session, position);
   return session.state === "ready" && health.state === "ready"
-    ? { action: "activate" as const, label: "Activate session" }
+    ? { action: "activate" as const, label: "Open Music Tools" }
     : null;
 }
 
@@ -178,7 +178,7 @@ export function timelineDawSuspendedSessionResumeAction(
 ) {
   const health = createTimelineDawRecentSessionHealth(session, position);
   return session.state === "suspended" && health.state === "ready"
-    ? { action: "resume" as const, label: "Resume session" }
+    ? { action: "resume" as const, label: "Continue This Session" }
     : null;
 }
 

@@ -1032,6 +1032,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Existing owner authorization, workspace revisions, session state transitions, and safe-exit health remain unchanged.
 - Focused musician-control and lifecycle-confirmation tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing durable lifecycle is reused with safer musician-facing controls.
+
+## Completed milestone - Plain-Language Session Setup Everywhere
+
+- The DAW Control Center and individual Project session list now use the same musician language as the protected Studio instead of reverting to technical engine terms.
+- Run engine validation is now Check Studio Setup, Initialize transport is Prepare Play Controls, Activate session is Open Music Tools, and Resume session is Continue This Session.
+- A setup problem now says See What Needs Attention rather than asking the musician to review engine blockers.
+- Session cards display Setup needed, Ready to open, Ready for music, Paused safely, or Closed permanently instead of raw internal lifecycle state names.
+- The DAW Control Center now reports Setup X/Y ready instead of exposing engine revision details, and an empty project points back to the new Start a Song Here panel.
+- Project session lifecycle buttons reuse the same safe plain-language labels, while existing confirmations and durable state transitions remain unchanged.
+- Focused song-start and musician-control tests passed (23 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; this milestone changes only labels and guidance around existing verified actions.
 ## Working rules
 
 - Preserve existing architecture and user data.

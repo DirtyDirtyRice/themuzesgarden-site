@@ -15,6 +15,7 @@ import {
   type DawSessionAction,
   type DawSnapshot,
 } from "./projectDawTypes";
+import { TIMELINE_DAW_MUSICIAN_ACTION, TIMELINE_DAW_MUSICIAN_SESSION_STATE } from "../../../../lib/timeline/TimelineDawMusicianSessionControls";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
 
@@ -277,7 +278,7 @@ export default function ProjectDawWorkspace({
                   </p>
                 </div>
                 <span className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-200">
-                  {session.state}
+                  {TIMELINE_DAW_MUSICIAN_SESSION_STATE[session.state].label}
                 </span>
               </div>
               <p className="mt-3 text-xs text-white/50">
@@ -308,7 +309,7 @@ export default function ProjectDawWorkspace({
                     disabled={busy !== null}
                     onClick={() => confirmLifecycle(session, action as TimelineDawConfirmedLifecycleAction)}
                   >
-                    {busy === session.id ? "Working…" : action[0].toUpperCase() + action.slice(1)}
+                    {busy === session.id ? "Working…" : TIMELINE_DAW_MUSICIAN_ACTION[action].label}
                   </button>
                 ))}</div></div> : null}
             </article>
