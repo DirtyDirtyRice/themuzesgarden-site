@@ -938,6 +938,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Choosing Refresh Audition manually resets the bounded recovery allowance for that new musician-requested attempt.
 - Focused audition-recovery, recorded-signal, interruption, and recording-recovery tests passed (17 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; private audio authorization and short-lived URL boundaries remain unchanged.
+
+## Completed milestone - Safe Take Deletion and Playback Cleanup
+
+- Delete Take now names the selected recording, states that its private WAV will be permanently removed, and clearly warns that the action cannot be undone before any request is sent.
+- The take remains in the musician's list if the server deletion fails, preserving its review controls and playable private audition link for another attempt.
+- After a successful server deletion, the DAW removes the take, its private audition link, any open review controls, and its bounded playback-recovery bookkeeping from browser memory.
+- Other saved takes retain their audition links and review state, so deleting one recording cannot interrupt the musician's work on another.
+- Any temporary MP3 copy for the deleted take is still revoked and removed from the component cleanup list.
+- Focused deletion and audition-recovery tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; existing private-audio deletion authorization remains unchanged.
 ## Working rules
 
 - Preserve existing architecture and user data.

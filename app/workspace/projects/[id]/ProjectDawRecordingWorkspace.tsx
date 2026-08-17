@@ -35,6 +35,7 @@ import {
   assessTimelineDawRecordingMonitoring,
   type TimelineDawMonitoringMode,
 } from "../../../../lib/timeline/TimelineDawRecordingMonitoring";
+import { cleanTimelineDawDeletedTakeState } from "../../../../lib/timeline/TimelineDawTakeDeletion";
 import {
   createDawRecordingTakeAudition,
   deleteDawRecordingTake,
@@ -862,12 +863,24 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   }
 
   async function deleteTake(take: UploadedTake) {
-    if (!window.confirm(`Delete ${take.name} and its private WAV permanently?`)) return;
+    if (!window.confirm(`Permanently delete \"${take.name}\" and its private WAV? This cannot be undone.`)) return;
     setUploading(true);
     setError(null);
     try {
       await deleteDawRecordingTake(session.id, take.id);
       setTakes((current) => current.filter((item) => item.id !== take.id));
+      setAuditionUrls((current) => cleanTimelineDawDeletedTakeState({
+        deletedTakeId: take.id,
+        auditionUrls: current,
+        reviewingTakeId: null,
+      }).auditionUrls);
+      setReviewingTakeId((current) => cleanTimelineDawDeletedTakeState({
+        deletedTakeId: take.id,
+        auditionUrls: {},
+        reviewingTakeId: current,
+      }).reviewingTakeId);
+      delete auditionRefreshAttemptsRef.current[take.id];
+      delete auditionRefreshingRef.current[take.id];
       if (take.mp3Url) {
         URL.revokeObjectURL(take.mp3Url);
         mp3UrlsRef.current = mp3UrlsRef.current.filter((url) => url !== take.mp3Url);
