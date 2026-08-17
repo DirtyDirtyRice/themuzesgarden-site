@@ -958,6 +958,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Storage uncertainty defaults to preserving audio for later cleanup rather than risking removal of a file another take may still use.
 - Focused deletion-state and stored-audio cleanup tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; take ownership, private-audio authorization, and existing storage paths remain unchanged.
+
+## Completed milestone - Preferred Take Continuity After Deletion
+
+- Deleting the take marked Preferred now promotes the newest remaining saved take, so the session keeps a clear chosen performance instead of silently losing its selection.
+- The server performs the replacement after confirming that the old preferred take was deleted and returns the exact promoted take to the recording workspace.
+- Deleting a non-preferred take leaves the musician's existing Preferred choice unchanged.
+- Deleting the only take cleanly leaves the session with no preferred take and does not invent a nonexistent replacement.
+- If automatic promotion cannot be saved after deletion, the take list remains truthful and the musician receives a direct instruction to choose Use as Preferred manually.
+- Focused preferred-deletion, deletion-state, and stored-audio cleanup tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing preferred-take field and private session authorization are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

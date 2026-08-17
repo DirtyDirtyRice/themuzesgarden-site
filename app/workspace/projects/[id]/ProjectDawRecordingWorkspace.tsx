@@ -36,6 +36,7 @@ import {
   type TimelineDawMonitoringMode,
 } from "../../../../lib/timeline/TimelineDawRecordingMonitoring";
 import { cleanTimelineDawDeletedTakeState } from "../../../../lib/timeline/TimelineDawTakeDeletion";
+import { applyTimelineDawPreferredTakeDeletion } from "../../../../lib/timeline/TimelineDawPreferredTakeDeletion";
 import {
   createDawRecordingTakeAudition,
   deleteDawRecordingTake,
@@ -868,7 +869,12 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     setError(null);
     try {
       const deletion = await deleteDawRecordingTake(session.id, take.id);
-      setTakes((current) => current.filter((item) => item.id !== take.id));
+      setTakes((current) => applyTimelineDawPreferredTakeDeletion({
+        takes: current,
+        deletedTakeId: take.id,
+        deletedTakeWasPreferred: deletion.deletedTakeWasPreferred,
+        replacementPreferredTakeId: deletion.replacementPreferredTake?.id ?? null,
+      }));
       setAuditionUrls((current) => cleanTimelineDawDeletedTakeState({
         deletedTakeId: take.id,
         auditionUrls: current,
@@ -885,7 +891,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         URL.revokeObjectURL(take.mp3Url);
         mp3UrlsRef.current = mp3UrlsRef.current.filter((url) => url !== take.mp3Url);
       }
-      if (deletion.cleanupWarning) setError(deletion.cleanupWarning);
+      const deletionWarning = [deletion.preferenceWarning, deletion.cleanupWarning].filter(Boolean).join(" ");
+      if (deletionWarning) setError(deletionWarning);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Recording take could not be deleted.");
     } finally {

@@ -12,6 +12,7 @@ import {
   decideTimelineDawTakeAudioCleanup,
   timelineDawStoredAudioCleanupWarning,
 } from "@/lib/timeline/TimelineDawTakeAudioCleanup";
+import { timelineDawPreferredTakeReplacementWarning } from "@/lib/timeline/TimelineDawPreferredTakeDeletion";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -247,6 +248,30 @@ export async function POST(request: NextRequest) {
       if (!uri.startsWith(ownerPrefix)) throw new ApiError("Recording source path is invalid.", 400);
       const { error: deleteError } = await user.client.from(TABLE).delete().eq("id", body.takeId).eq("owner_id", user.id);
       if (deleteError) throw new ApiError(`Recording take could not be deleted: ${deleteError.message}`, 500);
+      let replacementPreferredTake = null;
+      let preferenceWarning: string | null = null;
+      if (Boolean(data.is_preferred)) {
+        const { data: candidate, error: candidateError } = await user.client.from(TABLE)
+          .select("*")
+          .eq("owner_id", user.id)
+          .eq("session_id", sessionId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (candidateError) {
+          preferenceWarning = timelineDawPreferredTakeReplacementWarning();
+        } else if (candidate) {
+          const { data: promoted, error: promoteError } = await user.client.from(TABLE)
+            .update({ is_preferred: true, updated_at: new Date().toISOString() })
+            .eq("owner_id", user.id)
+            .eq("session_id", sessionId)
+            .eq("id", candidate.id)
+            .select("*")
+            .single();
+          if (promoteError || !promoted) preferenceWarning = timelineDawPreferredTakeReplacementWarning();
+          else replacementPreferredTake = take(promoted);
+        }
+      }
       const { count, error: countError } = await user.client.from(TABLE).select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("session_id", sessionId).eq("uri", uri);
       const cleanup = decideTimelineDawTakeAudioCleanup({
         remainingReferenceCount: count,
@@ -257,7 +282,13 @@ export async function POST(request: NextRequest) {
         const { error: storageError } = await user.client.storage.from(BUCKET).remove([uri.slice(PREFIX.length)]);
         if (storageError) cleanupWarning = timelineDawStoredAudioCleanupWarning();
       }
-      return NextResponse.json({ deletedTakeId: body.takeId, cleanupWarning }, { headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json({
+        deletedTakeId: body.takeId,
+        deletedTakeWasPreferred: Boolean(data.is_preferred),
+        replacementPreferredTake,
+        cleanupWarning,
+        preferenceWarning,
+      }, { headers: { "Cache-Control": "no-store" } });
     }
 
     throw new ApiError("Recording take action is invalid.", 400);

@@ -252,7 +252,13 @@ export function createDawRecordingTakeAudition(
   });
 }
 
-export function deleteDawRecordingTake(sessionId: string, takeId: string): Promise<{ deletedTakeId: string; cleanupWarning: string | null }> {
+export function deleteDawRecordingTake(sessionId: string, takeId: string): Promise<{
+  deletedTakeId: string;
+  deletedTakeWasPreferred: boolean;
+  replacementPreferredTake: DawRecordingTake | null;
+  cleanupWarning: string | null;
+  preferenceWarning: string | null;
+}> {
   return request("/api/timeline/daw-recording-takes", {
     method: "POST",
     body: JSON.stringify({ action: "delete", sessionId, takeId }),
