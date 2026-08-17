@@ -918,6 +918,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Healthy recordings do not receive an unnecessary warning, and invalid level readings are safely treated as silence.
 - Focused recorded-signal, input-level, interruption, PCM, and recovery tests passed (19 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Clipped Take Detection and Gain Guidance
+
+- Recording now retains an exact take-level clipping flag alongside the maximum measured peak instead of depending on a possibly stale React meter state.
+- A take that reaches digital clipping is classified separately from healthy, quiet, and silent recordings.
+- The post-take warning uses a high-visibility red treatment, includes the measured peak, and tells the musician to lower interface gain and keep peaks below -6 dBFS.
+- The clipped WAV is always preserved through normal private saving or Local Recovery; the DAW never discards a performance because of signal quality.
+- Starting a new take clears both the stored clipping flag and the prior warning so results cannot leak between takes.
+- Focused recorded-signal, input-level, interruption, PCM, and recovery tests passed (20 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.

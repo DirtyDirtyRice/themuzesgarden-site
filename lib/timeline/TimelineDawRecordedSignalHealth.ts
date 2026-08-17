@@ -1,11 +1,18 @@
 export type TimelineDawRecordedSignalHealth = {
-  state: "healthy" | "very-low" | "silent";
+  state: "healthy" | "very-low" | "silent" | "clipped";
   peakDbfs: number;
   warning: string | null;
 };
 
-export function assessTimelineDawRecordedSignalHealth(peakDbfs: number): TimelineDawRecordedSignalHealth {
+export function assessTimelineDawRecordedSignalHealth(peakDbfs: number, clipped = false): TimelineDawRecordedSignalHealth {
   const peak = Number.isFinite(peakDbfs) ? Math.max(-96, Math.min(0, peakDbfs)) : -96;
+  if (clipped) {
+    return {
+      state: "clipped",
+      peakDbfs: peak,
+      warning: "This take clipped the microphone input. The WAV was preserved, but lower the audio-interface gain and keep peaks below -6 dBFS before recording again.",
+    };
+  }
   if (peak <= -80) {
     return {
       state: "silent",

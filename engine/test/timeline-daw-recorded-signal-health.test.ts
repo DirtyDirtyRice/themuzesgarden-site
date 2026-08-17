@@ -21,4 +21,11 @@ describe("TimelineDawRecordedSignalHealth", () => {
     expect(assessTimelineDawRecordedSignalHealth(Number.NaN).state).toBe("silent");
     expect(assessTimelineDawRecordedSignalHealth(4).peakDbfs).toBe(0);
   });
+
+  it("reports clipping separately and preserves the take", () => {
+    const result = assessTimelineDawRecordedSignalHealth(-0.01, true);
+    expect(result).toMatchObject({ state: "clipped", peakDbfs: -0.01 });
+    expect(result.warning).toMatch(/wav was preserved/i);
+    expect(result.warning).toMatch(/below -6 dbfs/i);
+  });
 });
