@@ -218,32 +218,6 @@ export default function ProjectDawSessionPage() {
 
       <TimelineDawStudioFocusRestore sessionId={session.id} />
 
-      <div data-daw-focus-area="guide" className="space-y-6 scroll-mt-24">
-      <TimelineDawVisualGuide sessionId={session.id} />
-
-      <TimelineDawTechnicalTestRunner sessionId={session.id} />
-
-      <TimelineDawOwnerTestReport sessionId={session.id} />
-
-      <TimelineDawOwnerMusicianTest sessionId={session.id} />
-      </div>
-
-      <div data-daw-focus-area="beta" className="space-y-6 scroll-mt-24">
-      <TimelineDawBetaWorkflow sessionId={session.id} />
-
-      <TimelineDawBetaFeedback sessionId={session.id} />
-
-      <TimelineDawBetaOnboardingOwner sessionId={session.id} />
-
-      <TimelineDawBetaCohort sessionId={session.id} />
-
-      <TimelineDawBetaAuditionOwner sessionId={session.id} />
-
-      <TimelineDawBetaReleasePackage sessionId={session.id} />
-      <TimelineDawBetaReadinessCertification sessionId={session.id} />
-      <TimelineDawBetaLaunchOperations sessionId={session.id} />
-      </div>
-
       <div data-daw-focus-area="transport" className="scroll-mt-24">
       <ProjectDawTransport
         session={session}
@@ -252,39 +226,16 @@ export default function ProjectDawSessionPage() {
       />
       </div>
 
-      <div data-daw-focus-area="mastering" className="space-y-6 scroll-mt-24">
-      <TimelineDawNormalizationRevisions sessionId={session.id} onLanesChanged={() => setNormalizationLaneRevision((value) => value + 1)} />
-
-      <TimelineDawNormalizationOperations sessionId={session.id} />
-
-      <TimelineDawNormalizationSupportCases sessionId={session.id} alertIds={[]} recoveryReceiptIds={[]} />
-
-      <TimelineDawNormalizationSupportTriage sessionId={session.id} />
-
-      <TimelineDawNormalizationSupportAutomation sessionId={session.id} />
-
-      <TimelineDawNormalizationSupportNotifications sessionId={session.id} />
-
-      <TimelineDawNormalizationSupportAudit sessionId={session.id} />
-
-      <TimelineDawNormalizationSupportAuditRepair sessionId={session.id} />
-
-      <TimelineDawNormalizationSupportEvidenceSeals sessionId={session.id} />
-
-      <TimelineDawNormalizationSupportCoverage sessionId={session.id} />
-      <TimelineDawNormalizationEvidenceMonitoring sessionId={session.id} />
-      </div>
-
-      <div data-daw-focus-area="mix" className="space-y-6 scroll-mt-24">
-      <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} />
-
-      <ProjectDawDeviceDiagnostics />
-      </div>
       <div data-daw-focus-area="record" className="scroll-mt-24">
       <ProjectDawRecordingWorkspace session={session} />
       </div>
       <div data-daw-focus-area="arrange" className="scroll-mt-24">
       <ProjectDawTimeline session={session} />
+      </div>
+      <div data-daw-focus-area="mix" className="space-y-6 scroll-mt-24">
+      <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} />
+
+      <ProjectDawDeviceDiagnostics />
       </div>
       <div data-daw-focus-area="recover" className="scroll-mt-24">
       <ProjectDawRecoveryWorkspace
@@ -302,7 +253,50 @@ export default function ProjectDawSessionPage() {
       />
       </div>
 
-      <section>
+      <details className="rounded-3xl border border-white/15 bg-[#080808] p-4">
+        <summary className="cursor-pointer text-xl font-black">Lessons and owner checks <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
+        <div data-daw-focus-area="guide" className="mt-5 space-y-6 scroll-mt-24">
+        <TimelineDawVisualGuide sessionId={session.id} />
+        <TimelineDawTechnicalTestRunner sessionId={session.id} />
+        <TimelineDawOwnerTestReport sessionId={session.id} />
+        <TimelineDawOwnerMusicianTest sessionId={session.id} />
+        </div>
+      </details>
+
+      <details className="rounded-3xl border border-white/15 bg-[#080808] p-4">
+        <summary className="cursor-pointer text-xl font-black">Beta testing tools <span className="ml-2 text-sm font-normal text-white/50">Owner tools</span></summary>
+        <div data-daw-focus-area="beta" className="mt-5 space-y-6 scroll-mt-24">
+        <TimelineDawBetaWorkflow sessionId={session.id} />
+        <TimelineDawBetaFeedback sessionId={session.id} />
+        <TimelineDawBetaOnboardingOwner sessionId={session.id} />
+        <TimelineDawBetaCohort sessionId={session.id} />
+        <TimelineDawBetaAuditionOwner sessionId={session.id} />
+        <TimelineDawBetaReleasePackage sessionId={session.id} />
+        <TimelineDawBetaReadinessCertification sessionId={session.id} />
+        <TimelineDawBetaLaunchOperations sessionId={session.id} />
+        </div>
+      </details>
+
+      <details className="rounded-3xl border border-white/15 bg-[#080808] p-4">
+        <summary className="cursor-pointer text-xl font-black">Mastering and support tools <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
+        <div data-daw-focus-area="mastering" className="mt-5 space-y-6 scroll-mt-24">
+        <TimelineDawNormalizationRevisions sessionId={session.id} onLanesChanged={() => setNormalizationLaneRevision((value) => value + 1)} />
+        <TimelineDawNormalizationOperations sessionId={session.id} />
+        <TimelineDawNormalizationSupportCases sessionId={session.id} alertIds={[]} recoveryReceiptIds={[]} />
+        <TimelineDawNormalizationSupportTriage sessionId={session.id} />
+        <TimelineDawNormalizationSupportAutomation sessionId={session.id} />
+        <TimelineDawNormalizationSupportNotifications sessionId={session.id} />
+        <TimelineDawNormalizationSupportAudit sessionId={session.id} />
+        <TimelineDawNormalizationSupportAuditRepair sessionId={session.id} />
+        <TimelineDawNormalizationSupportEvidenceSeals sessionId={session.id} />
+        <TimelineDawNormalizationSupportCoverage sessionId={session.id} />
+        <TimelineDawNormalizationEvidenceMonitoring sessionId={session.id} />
+        </div>
+      </details>
+
+      <details className="rounded-3xl border border-white/15 bg-black p-5">
+      <summary className="cursor-pointer text-xl font-black">Technical engine readiness <span className="ml-2 text-sm font-normal text-white/50">Advanced details</span></summary>
+      <section className="mt-5">
         <div className="mb-3">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-white/45">
             Work Areas
@@ -355,6 +349,7 @@ export default function ProjectDawSessionPage() {
           ))}
         </ol>
       </section>
+      </details>
     </main>
   );
 }

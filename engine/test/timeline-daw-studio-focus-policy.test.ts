@@ -17,6 +17,13 @@ describe("DAW Studio focus policy", () => {
     expect(findTimelineDawStudioFocusArea("unknown")).toBeNull();
   });
 
+  it("keeps the musician workflow in a natural song-making order", () => {
+    const order = TIMELINE_DAW_STUDIO_FOCUS_AREAS.filter((area) => area.musician).map((area) => area.id);
+    expect(order.indexOf("transport")).toBeLessThan(order.indexOf("record"));
+    expect(order.indexOf("record")).toBeLessThan(order.indexOf("mix"));
+    expect(order.indexOf("mix")).toBeLessThan(order.indexOf("export"));
+  });
+
   it("scopes browser focus state to one session", () => {
     expect(timelineDawStudioFocusStorageKey("session-1")).toBe("muzes:daw-studio-focus:session-1");
     expect(() => timelineDawStudioFocusStorageKey(" ")).toThrow("valid DAW session");

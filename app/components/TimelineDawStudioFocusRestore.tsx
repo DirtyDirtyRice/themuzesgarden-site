@@ -30,7 +30,10 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
   const selected = findTimelineDawStudioFocusArea(saved);
   const chosen = findTimelineDawStudioFocusArea(destination);
   function goTo(area: TimelineDawStudioFocusArea) {
-    document.querySelector<HTMLElement>(`[data-daw-focus-area="${area}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const target = document.querySelector<HTMLElement>(`[data-daw-focus-area="${area}"]`);
+    const disclosure = target?.closest("details");
+    if (disclosure) disclosure.open = true;
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   const musicianAreas = TIMELINE_DAW_STUDIO_FOCUS_AREAS.filter((area) => area.musician);

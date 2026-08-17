@@ -1000,6 +1000,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - The existing session-scoped focus memory is reused, and the navigator continues tracking the musician's current area for a quick return without creating another competing navigation system.
 - Focused Studio navigation and DAW guide tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing protected Studio route and browser-private focus memory are reused.
+
+## Completed milestone - Musician-First Studio Layout
+
+- A protected Studio session now presents the essential song workflow first: play/stop, record, arrange and edit/MIDI, mix, recover, and export.
+- Lessons and owner checks, beta administration, mastering/support operations, and technical engine details are moved below the music workflow into four clearly labeled collapsed sections.
+- Advanced controls remain fully available and unchanged; they no longer force a musician to scroll through testing and engineering administration before reaching recording or tracks.
+- Choosing an advanced destination in the sticky Studio navigator automatically opens its collapsed section before scrolling, so simplifying the default view does not create dead or confusing navigation.
+- Recording remains separate from the arrangement workspace, and the visible music-tool order now follows a practical start-to-finish song path.
+- Focused Studio navigation and DAW guide tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; this milestone changes only protected Studio presentation and navigation behavior.
 ## Working rules
 
 - Preserve existing architecture and user data.
