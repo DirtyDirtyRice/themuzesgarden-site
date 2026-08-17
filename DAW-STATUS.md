@@ -1010,6 +1010,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Recording remains separate from the arrangement workspace, and the visible music-tool order now follows a practical start-to-finish song path.
 - Focused Studio navigation and DAW guide tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; this milestone changes only protected Studio presentation and navigation behavior.
+
+## Completed milestone - Direct DAW Song Quick Start
+
+- The DAW Control Center now contains a real Start a Song Here panel immediately below its heading instead of requiring a trip through a separate Project page.
+- A musician chooses the project, chooses one of that project's linked songs, accepts or edits the suggested session name, and enters the new protected Studio session with one Start in Studio action.
+- Changing projects reloads only that project's linked-song choices, and changing songs creates a clear default session name without overwriting later musician edits.
+- The chooser combines existing Supabase storage songs and uploaded/database song records, preserving the project links and song identities already used throughout the app.
+- Empty projects state plainly that a song must be linked and point the musician toward the existing Project or Upload workflow rather than presenting a dead button.
+- Session creation reuses the current workspace revision and existing protected DAW API, and a successful creation routes directly into the exact new Studio session.
+- Focused quick-start and navigation-guide tests passed (6 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; existing project links, song records, authorization, and durable session creation are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

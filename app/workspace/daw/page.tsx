@@ -11,6 +11,7 @@ import RecentSessionViewControls from "./RecentSessionViewControls";
 import { useRecentSessionViewPreferences } from "./useRecentSessionViewPreferences";
 import RecentSessionEmptyState from "./RecentSessionEmptyState";
 import { TIMELINE_DAW_NAVIGATION_DESTINATIONS } from "../../../lib/timeline/TimelineDawNavigationGuide";
+import TimelineDawQuickSongStart from "./TimelineDawQuickSongStart";
 
 type Studio = { project: ProjectRow; snapshot: DawSnapshot | null; error: string | null };
 const button = "inline-flex rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:opacity-40";
@@ -148,6 +149,7 @@ export default function DawPage() {
           <div className="flex flex-wrap justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-300">Musician Control Center</p><h1 className="mt-2 text-5xl font-black">DAW Studio</h1><p className="mt-3 text-white/65">Open authenticated project Studios and durable sessions from one place.</p></div><button type="button" className={button} disabled={loading} onClick={() => void load()}>{loading ? "Refreshing…" : "Refresh Studios"}</button></div>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">{[["Projects", studios.length], ["Sessions", sessions.length], ["Engine-ready", sessions.filter((session) => session.readiness.ready).length]].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"><p className="text-xs uppercase text-white/45">{label}</p><p className="text-3xl font-black">{value}</p></div>)}</div>
         </header>
+        {!loading ? <TimelineDawQuickSongStart projects={studios.map((studio) => ({ id: studio.project.id, title: studio.project.title || "Untitled Project", workspaceRevision: studio.snapshot?.workspaceRevision ?? null }))} /> : null}
         <section id="daw-navigation-help" className="scroll-mt-24 rounded-3xl border border-sky-300/30 bg-sky-300/[0.05] p-6">
           <p className="text-xs font-black uppercase tracking-[0.24em] text-sky-200">DAW Navigation Help</p>
           <h2 className="mt-2 text-3xl font-black">Where do you want to go?</h2>
