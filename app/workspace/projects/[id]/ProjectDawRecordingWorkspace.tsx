@@ -8,6 +8,7 @@ import {
 import { encodeTimelineDawMp3 } from "../../../../lib/timeline/TimelineDawMp3Encoder";
 import { parseTimelineDawCaptureWorkletMessage } from "../../../../lib/timeline/TimelineDawCaptureWorkletProtocol";
 import { analyzeTimelineDawInputLevel } from "../../../../lib/timeline/TimelineDawInputLevel";
+import { assessTimelineDawRecordedSignalHealth, type TimelineDawRecordedSignalHealth } from "../../../../lib/timeline/TimelineDawRecordedSignalHealth";
 import { createTimelineDawCountIn, type TimelineDawCountInBeat } from "../../../../lib/timeline/TimelineDawCountIn";
 import { getTimelineDawRecordingCueBeat } from "../../../../lib/timeline/TimelineDawRecordingCue";
 import { createTimelineDawRecordingRecoveryView } from "../../../../lib/timeline/TimelineDawRecordingRecovery";
@@ -94,6 +95,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [captureLimitNotice, setCaptureLimitNotice] = useState<string | null>(null);
   const [interruptionNotice, setInterruptionNotice] = useState<string | null>(null);
   const [interruptionRecheckRequired, setInterruptionRecheckRequired] = useState(false);
+  const [recordedSignalHealth, setRecordedSignalHealth] = useState<TimelineDawRecordedSignalHealth | null>(null);
   const [takes, setTakes] = useState<UploadedTake[]>([]);
   const [reviewingTakeId, setReviewingTakeId] = useState<string | null>(null);
   const [reviewName, setReviewName] = useState("");
@@ -142,6 +144,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const audioResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeDeviceIdRef = useRef("");
   const activeDeviceMissingHandlerRef = useRef<(() => void) | null>(null);
+  const maximumTakePeakDbRef = useRef(-96);
 
   const scanDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -280,6 +283,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       setCaptureLimitNotice(`The ${maxTakeMinutes}-minute recording limit was reached. Capture stopped safely and the complete bounded WAV is being saved.`);
     }
     const level = analyzeTimelineDawInputLevel(channels);
+    maximumTakePeakDbRef.current = Math.max(maximumTakePeakDbRef.current, level.peakDbfs);
     if (level.clipped) setInputClipped(true);
     const now = performance.now();
     if (now - meterUpdatedAtRef.current < 100 && !appended.limitReached) return;
@@ -431,7 +435,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     setCaptureLimitReached(false);
     setCaptureLimitNotice(null);
     setInterruptionNotice(null);
+    setRecordedSignalHealth(null);
     interruptionHandledRef.current = false;
+    maximumTakePeakDbRef.current = -96;
     setBufferedSeconds(0);
     setInputPeakDb(-96);
     setInputClipped(false);
@@ -652,6 +658,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       if (captureErrorRef.current) throw captureErrorRef.current;
       if (!capture) throw new Error("PCM capture was not available.");
       const pcm = capture.finalizePcm();
+      setRecordedSignalHealth(assessTimelineDawRecordedSignalHealth(maximumTakePeakDbRef.current));
       const wav = encodeTimelineDawPcmWav(pcm.channels, pcm.sampleRate);
       const mp3Bytes = outputFormat === "mp3" ? encodeTimelineDawMp3(pcm.channels, pcm.sampleRate) : null;
       const safeName = takeName.trim().replace(/[^a-zA-Z0-9._-]+/g, "-") || "recorded-take";
@@ -1065,6 +1072,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       ) : null}
       {captureLimitNotice ? <p role="alert" className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm font-bold text-amber-100">{captureLimitNotice}</p> : null}
       {interruptionNotice ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-300/10 p-3 text-sm font-bold text-red-100">{interruptionNotice}</p> : null}
+      {recordedSignalHealth?.warning ? <p role="alert" className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm font-bold text-amber-100">Recorded peak {recordedSignalHealth.peakDbfs.toFixed(1)} dBFS. {recordedSignalHealth.warning}</p> : null}
       {!postInterruptionReadiness.ready ? <p role="alert" className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm font-bold text-amber-100">Before another take: {postInterruptionReadiness.guidance}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {recoveryStorageWarning ? <p role="alert" className="mt-4 text-sm text-amber-200">Recovery storage: {recoveryStorageWarning}</p> : null}

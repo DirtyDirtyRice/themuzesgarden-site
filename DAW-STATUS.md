@@ -908,6 +908,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Manual stop and teardown clear both the locked device ID and its handler, so later device changes cannot affect a completed or future take.
 - Focused interruption, preflight, setup, and PCM tests passed (18 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
+
+## Completed milestone - Silent and Extremely Quiet Take Detection
+
+- Recording now retains the maximum measured microphone peak across the entire captured take instead of relying only on the live meter's latest reading.
+- A take peaking at or below -80 dBFS is identified as containing no useful microphone signal; a take below -50 dBFS is identified as extremely quiet.
+- The warning includes the measured peak and practical interface-input, hardware-mute, cable, and gain guidance.
+- The WAV is always preserved and follows the normal private-save or Local Recovery path; signal health never silently deletes a musician's recording.
+- Healthy recordings do not receive an unnecessary warning, and invalid level readings are safely treated as silence.
+- Focused recorded-signal, input-level, interruption, PCM, and recovery tests passed (19 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing Code Map broad-pattern warning remains unrelated and non-blocking.
 ## Working rules
 
 - Preserve existing architecture and user data.
