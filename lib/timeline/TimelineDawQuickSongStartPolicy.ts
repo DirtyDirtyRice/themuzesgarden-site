@@ -20,3 +20,12 @@ export function validateTimelineDawQuickSongStart(input: {
   if (!Number.isInteger(revision) || revision < 0) return { ready: false as const, message: "Refresh Studios before starting this song." };
   return { ready: true as const, input: { projectId, songId, name, expectedWorkspaceRevision: revision } };
 }
+
+export function filterTimelineDawQuickSongChoices<T extends { id: string; title?: string | null; artist?: string | null }>(tracks: T[], query: unknown): T[] {
+  const words = typeof query === "string" ? query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean) : [];
+  if (!words.length) return tracks;
+  return tracks.filter((track) => {
+    const searchable = `${track.title ?? ""} ${track.artist ?? ""}`.toLocaleLowerCase();
+    return words.every((word) => searchable.includes(word));
+  });
+}

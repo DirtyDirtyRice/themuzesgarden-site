@@ -1043,6 +1043,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Project session lifecycle buttons reuse the same safe plain-language labels, while existing confirmations and durable state transitions remain unchanged.
 - Focused song-start and musician-control tests passed (23 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; this milestone changes only labels and guidance around existing verified actions.
+
+## Completed milestone - Searchable and Truthful Song Quick Start
+
+- Start a Song Here now uses four numbered choices—Project, Find a linked song, Choose the song, and Name the session—so the required order is visible without instructions elsewhere.
+- Musicians can search a project's linked songs by title or artist, using multiple words to narrow large folders before opening the song list.
+- The chooser shows the number of matching songs and the total number linked to the selected project, making filters and empty results understandable.
+- A no-match result explicitly asks the musician to clear or change the search; a genuinely empty project still points to Project or Upload Audio.
+- A failed song load is now kept separate from a verified empty project and states that the project was not changed, preventing a connection problem from looking like songs disappeared.
+- Changing the project clears the old search and selection, while choosing a song continues to create the existing editable default session name.
+- Focused quick-start tests passed (4 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; existing linked-song identities and protected session creation are unchanged.
 ## Working rules
 
 - Preserve existing architecture and user data.

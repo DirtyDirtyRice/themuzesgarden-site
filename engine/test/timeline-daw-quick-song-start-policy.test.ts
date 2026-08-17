@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawQuickSongStartName, validateTimelineDawQuickSongStart } from "../../lib/timeline/TimelineDawQuickSongStartPolicy";
+import { createTimelineDawQuickSongStartName, filterTimelineDawQuickSongChoices, validateTimelineDawQuickSongStart } from "../../lib/timeline/TimelineDawQuickSongStartPolicy";
 
 describe("DAW quick song start policy", () => {
   it("creates a plain default session name from the linked song", () => {
@@ -15,5 +15,16 @@ describe("DAW quick song start policy", () => {
 
   it("returns the exact durable session-open input when ready", () => {
     expect(validateTimelineDawQuickSongStart({ projectId: " p ", songId: " s ", sessionName: " First   Take ", workspaceRevision: 4 })).toEqual({ ready: true, input: { projectId: "p", songId: "s", name: "First Take", expectedWorkspaceRevision: 4 } });
+  });
+
+  it("searches linked choices by title or artist using every word", () => {
+    const tracks = [
+      { id: "1", title: "Midnight Train", artist: "Steve" },
+      { id: "2", title: "Morning Light", artist: "The Garden" },
+      { id: "3", title: "Train Home", artist: "The Garden" },
+    ];
+    expect(filterTimelineDawQuickSongChoices(tracks, "train garden").map((track) => track.id)).toEqual(["3"]);
+    expect(filterTimelineDawQuickSongChoices(tracks, "  STEVE ").map((track) => track.id)).toEqual(["1"]);
+    expect(filterTimelineDawQuickSongChoices(tracks, "")).toBe(tracks);
   });
 });
