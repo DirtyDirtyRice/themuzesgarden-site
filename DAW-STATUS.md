@@ -1326,6 +1326,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused group-alignment, audible-timing, and Undo-policy tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
 
+## Completed milestone - Place Selected Tracks One After Another
+
+- Musicians can now select two or more audio tracks and press **Place Selected One After Another** to build a continuous sequence without calculating start times.
+- Tracks keep their current left-to-right order, and the sequence begins at the earliest selected track's existing song position.
+- Every following track begins at the previous track's truthful audible ending, including trimmed, slowed, sped-up, and speed-bypassed audio.
+- The whole sequence is saved atomically as one durable Undo step; unsafe arrangements beyond the song boundary are refused without leaving partial movement.
+- Private audio, trims, fades, effects, automation, routing, mix, timing repairs, and audio repairs remain unchanged.
+- Focused sequencing, group-alignment, audible-timing, and Undo-policy tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

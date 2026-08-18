@@ -12,6 +12,7 @@ export type TimelineDawPrivateLaneGroupEdit =
   | { action: "move"; deltaSeconds: number }
   | { action: "align-start"; timelineStartSeconds: number }
   | { action: "align-end"; timelineStartSecondsById: Record<string, number> }
+  | { action: "sequence"; timelineStartSecondsById: Record<string, number> }
   | { action: "mix"; muted: boolean; gain: number; pan: number }
   | { action: "fade"; fadeInSeconds: number; fadeOutSeconds: number }
   | { action: "audibility"; clearSolo: boolean; unmute: boolean };
@@ -63,6 +64,26 @@ export function parseTimelineDawPrivateLaneGroupEdit(value: unknown, lanes: Time
       throw new Error("The selected tracks already end together.");
     }
     return { action: "align-end", timelineStartSecondsById };
+  }
+  if (input.groupAction === "sequence") {
+    const ordered = [...lanes].sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds || a.id.localeCompare(b.id));
+    let nextStart = ordered[0].timelineStartSeconds;
+    const timelineStartSecondsById: Record<string, number> = {};
+    for (const lane of ordered) {
+      const speedFactor = lane.transformBypassed ? 1 : (lane.stretchRatio ?? 1);
+      const duration = (lane.sourceOutSeconds - lane.sourceInSeconds) * speedFactor;
+      const roundedStart = Math.round(nextStart * 1_000) / 1_000;
+      const nextEnd = roundedStart + duration;
+      if (![speedFactor, duration, nextEnd].every(Number.isFinite) || speedFactor <= 0 || duration <= 0 || roundedStart < 0 || nextEnd > 86_400) {
+        throw new Error("Selected tracks cannot fit one after another inside the session timeline.");
+      }
+      timelineStartSecondsById[lane.id] = roundedStart;
+      nextStart = nextEnd;
+    }
+    if (lanes.every((lane) => lane.timelineStartSeconds === timelineStartSecondsById[lane.id])) {
+      throw new Error("The selected tracks are already placed one after another.");
+    }
+    return { action: "sequence", timelineStartSecondsById };
   }
   if (input.groupAction === "mix") {
     const gain = Number(input.gain); const pan = Number(input.pan);
