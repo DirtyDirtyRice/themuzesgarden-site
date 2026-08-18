@@ -62,6 +62,7 @@ import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPri
 import { resolveTimelineDawMusicianTrackMove } from "@/lib/timeline/TimelineDawMusicianTrackMove";
 import { resolveTimelineDawMusicianTrackTrim } from "@/lib/timeline/TimelineDawMusicianTrackTrim";
 import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
+import { createTimelineDawMusicianTrackPreview } from "@/lib/timeline/TimelineDawMusicianTrackPreview";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -71,6 +72,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const [error, setError] = useState<string>();
   const [movementNotice, setMovementNotice] = useState<string>();
   const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
+  const [previewLaneId, setPreviewLaneId] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -90,6 +92,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   const contextRef = useRef<AudioContext | null>(null);
   const busGraphRefs = useRef(new Map<string, TimelineDawPrivateBusGraph>());
   const saveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioCallbacksRef = useRef(new Map<string, (element: HTMLAudioElement | null) => void>());
   const playheadRef = useRef(0);
   const transportStateRef = useRef<"playing" | "paused" | "stopped">("stopped");
@@ -202,7 +205,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Private freezes could not be loaded."); });
     void loadDawPrivateAutomation(sessionId).then(({envelopes})=>{if(active)setAutomation(envelopes);})
       .catch((cause)=>{if(active)setError(cause instanceof Error?cause.message:"Private automation could not be loaded.");});
-    return () => { active = false; audioRefs.current.forEach((audio) => audio.pause()); freezeAudioRefs.current.forEach((audio) => audio.pause()); graphRefs.current.forEach((graph) => graph.dispose()); busGraphRefs.current.forEach((graph) => graph.dispose()); if (contextRef.current) void contextRef.current.close(); saveTimersRef.current.forEach((timer) => clearTimeout(timer)); };
+    return () => { active = false; audioRefs.current.forEach((audio) => audio.pause()); freezeAudioRefs.current.forEach((audio) => audio.pause()); graphRefs.current.forEach((graph) => graph.dispose()); busGraphRefs.current.forEach((graph) => graph.dispose()); if (contextRef.current) void contextRef.current.close(); saveTimersRef.current.forEach((timer) => clearTimeout(timer)); if (previewTimerRef.current) clearTimeout(previewTimerRef.current); };
   }, [sessionId]);
 
   useEffect(() => {
@@ -400,6 +403,47 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  function stopTrackPreview(lane?: DawPrivateAudioLane) {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    previewTimerRef.current = null;
+    audioRefs.current.forEach((audio) => audio.pause());
+    if (lane) {
+      const audio = audioRefs.current.get(lane.id);
+      if (audio) audio.currentTime = lane.sourceInSeconds;
+    }
+    setPreviewLaneId(undefined);
+    synchronize(playheadRef.current, false);
+  }
+
+  async function previewTrack(lane: DawPrivateAudioLane) {
+    setError(undefined);
+    stopTrackPreview();
+    const audio = audioRefs.current.get(lane.id);
+    const graph = graphRefs.current.get(lane.id);
+    if (!audio || !graph) { setError(`${lane.name} is not ready to preview yet.`); return; }
+    try {
+      const plan = createTimelineDawMusicianTrackPreview({
+        sourceInSeconds: lane.sourceInSeconds,
+        sourceOutSeconds: lane.sourceOutSeconds,
+        stretchRatio: lane.transform.stretchRatio,
+        transformBypassed: lane.transform.bypassed,
+        playbackRate: timelineDawPrivateLanePlaybackRate(lane.transform),
+      });
+      const fade = effectiveFades.get(lane.id) ?? lane.fade;
+      audio.preservesPitch = lane.transform.algorithm === "preserve-pitch";
+      audio.playbackRate = plan.playbackRate;
+      audio.currentTime = plan.sourceStartSeconds;
+      graph.applyEnvelope({ ...lane.mix, muted: false, soloed: false, gain: lane.mix.gain * (master.muted ? 0 : master.gain) }, true, 0, plan.durationSeconds, fade.inSeconds, fade.outSeconds);
+      await graph.resume();
+      await audio.play();
+      setPreviewLaneId(lane.id);
+      previewTimerRef.current = setTimeout(() => stopTrackPreview(lane), plan.stopAfterMilliseconds);
+    } catch (cause) {
+      stopTrackPreview(lane);
+      setError(cause instanceof Error ? cause.message : `${lane.name} could not be previewed.`);
+    }
+  }
+
   async function saveBus(input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }) {
     setBusy(true); setError(undefined);
     try { const { bus } = await saveDawPrivateBus(sessionId, input); setBuses((current) => [...current.filter((item) => item.id !== bus.id), bus]); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "gain", value: bus.mix.gain }); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "pan", value: bus.mix.pan }); }
@@ -511,6 +555,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s â†’ {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s Â· {lane.audio.channelCount}ch Â· {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` Â· comp ${lane.provenance.compId}` : " Â· recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
                 </div>
+                <div className="mt-3 flex flex-wrap gap-2"><button type="button" className={button} onClick={() => previewLaneId === lane.id ? stopTrackPreview(lane) : void previewTrack(lane)}>{previewLaneId === lane.id ? "Stop Track Preview" : "Hear This Track Alone"}</button><span className="self-center text-xs text-white/45">Temporary preview only—your Solo, Mute, and mix settings are not changed.</span></div>
                 <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><label className="min-w-52 flex-1 text-xs font-black text-white/70">Track name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={nameDrafts[lane.id] ?? lane.name} maxLength={120} onChange={(event) => setNameDrafts((current) => ({ ...current, [lane.id]: event.target.value }))} /></label><button type="button" className={button} disabled={busy || (nameDrafts[lane.id] ?? lane.name).trim() === lane.name} onClick={() => void saveTrackName(lane)}>Save Track Name</button></div>
                 <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} />
                 <TimelineDawPrivateClipRepairEditor sessionId={sessionId} lane={lane} onChange={(repair) => setClipRepairs((current) => current[repair.laneId]?.checksum === repair.checksum ? current : { ...current, [repair.laneId]: repair })} />

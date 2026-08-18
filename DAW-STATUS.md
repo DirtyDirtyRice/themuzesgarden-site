@@ -1105,6 +1105,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Recent technical history is collapsed under Show recent track edits so recovery remains easy without adding visual clutter to normal music work.
 - Focused Undo, naming, and trimming tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages after the active compiler completed its extended local run.
 - No database migration was required; the existing owner-confined lane history and conflict-safe restore procedure are reused.
+
+## Completed milestone - Hear One Track Alone
+
+- Every audio track now has a Hear This Track Alone action directly on its track card, changing to Stop Track Preview while it plays.
+- Preview begins at the track's edited source-in point and stops automatically at its edited ending instead of playing discarded audio outside the trim.
+- Stretched tracks use their arranged playback rate and duration, so the preview matches what the musician hears in the song.
+- Starting a preview pauses other track audio temporarily without saving changes to Solo, Mute, routing, effects, gain, pan, or the arrangement.
+- Stopping or completing the preview restores the normal transport-ready graph, and leaving the Studio clears the preview timer and audio safely.
+- Focused preview, Undo, and trimming tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing private playback URLs and in-browser monitoring graph are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
