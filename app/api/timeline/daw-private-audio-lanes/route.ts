@@ -199,7 +199,8 @@ export async function POST(request: NextRequest) {
       let split;
       try {
         split = parseTimelineDawPrivateLaneSplit(body, Number(stored.sample_rate), Number(stored.timeline_start_seconds),
-          Number(stored.source_in_seconds), Number(stored.source_out_seconds), Number(stored.fade_in_seconds), Number(stored.fade_out_seconds));
+          Number(stored.source_in_seconds), Number(stored.source_out_seconds), Number(stored.fade_in_seconds), Number(stored.fade_out_seconds),
+          Number(stored.stretch_ratio ?? 1), Boolean(stored.transform_bypassed));
       } catch (cause) { throw new ApiError(cause instanceof Error ? cause.message : "Private lane split is invalid.", 400); }
       const rightLaneId = `timeline-daw-private-lane-${crypto.randomUUID()}`;
       const { data, error } = await user.client.rpc("split_timeline_daw_private_audio_lane", {

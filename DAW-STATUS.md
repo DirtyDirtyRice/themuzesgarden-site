@@ -1125,6 +1125,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Successful copying immediately reorders the visible track list, creates the existing durable Undo history entry, and confirms the new track name and position in plain language.
 - Focused copying, movement, trimming, and Undo tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined private-lane duplicate API and edit-history system are reused.
+
+## Completed milestone - Cut Track into Two at Play Position
+
+- Every audio track now has a plain Cut into Two at Play Position action instead of the technical Split at Playhead label.
+- A musician can listen, stop at the desired edit point, and turn one track into two separately editable pieces without calculating source-time numbers.
+- Cutting now accounts for active time-stretch settings, so the cut lands where the musician actually hears it on a slower or faster track; bypassed stretch correctly uses normal timing.
+- Both pieces preserve the protected source audio, arrangement continuity, routing, effects, mix settings, fades, and existing Undo history.
+- Unsafe cuts at a track edge or through an existing outer fade are refused, while a successful cut immediately confirms the track name and exact position in plain language.
+- Focused cutting, copying, trimming, and Undo tests passed (13 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing atomic private-lane split procedure and edit-history system are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

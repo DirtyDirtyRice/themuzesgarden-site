@@ -22,4 +22,24 @@ describe("private lane split policy", () => {
     expect(split.timelineSplitSeconds - 8).toBeCloseTo(split.sourceSplitSeconds - 1, 12);
     expect(split.leftFrameCount + split.rightFrameCount).toBe(88_200);
   });
+
+  it("cuts a stretched track at the place the musician hears", () => {
+    const split = parseTimelineDawPrivateLaneSplit(
+      { timelineSplitSeconds: 14 }, 48_000, 10, 2, 8, 0, 0, 2, false,
+    );
+    expect(split).toEqual({
+      timelineSplitSeconds: 14,
+      sourceSplitSeconds: 4,
+      leftFrameCount: 96_000,
+      rightFrameCount: 192_000,
+    });
+  });
+
+  it("uses normal timing when a saved stretch is bypassed", () => {
+    const split = parseTimelineDawPrivateLaneSplit(
+      { timelineSplitSeconds: 12 }, 48_000, 10, 2, 8, 0, 0, 2, true,
+    );
+    expect(split.sourceSplitSeconds).toBe(4);
+    expect(split.timelineSplitSeconds).toBe(12);
+  });
 });
