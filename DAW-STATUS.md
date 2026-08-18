@@ -1165,6 +1165,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - The live monitoring graph receives the saved reset values immediately, and a plain-language confirmation names the track and result.
 - Focused mixer, reset, and safety tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing durable track-mix API and live monitoring events are reused.
+
+## Completed milestone - Hear All Tracks Again
+
+- The main track workspace now has Turn Off All Solo, Unmute All Tracks, and Hear All Tracks Again recovery actions above the individual tracks.
+- A musician who hears missing tracks can restore the whole song without finding every active Solo or Mute button one track at a time.
+- Each action preserves volume, pan, routing, effects, fades, edits, and private recordings; it changes only the requested Solo and Mute states.
+- The server updates every track atomically, so the song cannot be left half-restored if one row fails, and the change creates one durable Undo-able group edit.
+- Recovery works even for a song with only one track, unavailable actions are disabled, and success is confirmed in plain language.
+- Focused group, history, mixer, and reset tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined atomic group-edit procedure and track history are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

@@ -7,6 +7,12 @@ const lanes = [
 ];
 
 describe("private lane group edit policy", () => {
+  it("restores track sound without requiring multiple tracks", () => {
+    expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "audibility", clearSolo: true, unmute: false }, [lanes[0]]))
+      .toEqual({ action: "audibility", clearSolo: true, unmute: false });
+    expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "audibility", clearSolo: false, unmute: false }, [lanes[0]]))
+      .toThrow(/Choose Solo, Mute, or both/);
+  });
   it("normalizes moves while preserving relative offsets", () => {
     const edit = parseTimelineDawPrivateLaneGroupEdit({ groupAction: "move", deltaSeconds: 0.2504 }, lanes);
     expect(edit).toEqual({ action: "move", deltaSeconds: 0.25 });

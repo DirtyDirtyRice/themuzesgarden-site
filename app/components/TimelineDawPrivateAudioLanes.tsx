@@ -521,6 +521,27 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     finally { setBusy(false); }
   }
 
+  async function restoreAllTrackSound(mode: "solo" | "mute" | "both") {
+    if (!lanes.length) return;
+    setBusy(true);
+    setError(undefined);
+    setMovementNotice(undefined);
+    try {
+      const { lanes: saved } = await editDawPrivateLaneGroup({
+        sessionId,
+        laneIds: lanes.map((lane) => lane.id),
+        groupAction: "audibility",
+        clearSolo: mode !== "mute",
+        unmute: mode !== "solo",
+      });
+      setLanes(saved.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+      setHistoryRevision((current) => current + 1);
+      setMovementNotice(mode === "solo" ? "All Solo buttons are off. Every unmuted track can play again." : mode === "mute" ? "All tracks are unmuted." : "All Solo and Mute buttons are cleared. Every track can play again.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Track sound could not be restored.");
+    } finally { setBusy(false); }
+  }
+
   async function splitAtPlayhead(lane: DawPrivateAudioLane) {
     setBusy(true);
     setError(undefined);
@@ -578,6 +599,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-2xl font-black">Recorded and promoted audio</h2><p className="mt-1 text-sm text-white/55">New sources enter at the current playhead and follow the session transport. Removing a lane never deletes its private master.</p></div><span className="text-sm font-black text-violet-200">{lanes.length} lane{lanes.length === 1 ? "" : "s"}</span></div>
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       {movementNotice ? <p role="status" className="mt-3 text-sm font-bold text-emerald-200">{movementNotice}</p> : null}
+      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><span className="text-xs font-black text-white/70">If tracks seem missing:</span><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed)} onClick={() => void restoreAllTrackSound("solo")}>Turn Off All Solo</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.muted)} onClick={() => void restoreAllTrackSound("mute")}>Unmute All Tracks</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed || lane.mix.muted)} onClick={() => void restoreAllTrackSound("both")}>Hear All Tracks Again</button></div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />

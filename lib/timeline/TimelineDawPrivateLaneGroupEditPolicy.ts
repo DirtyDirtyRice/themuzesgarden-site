@@ -9,12 +9,20 @@ export type TimelineDawPrivateLaneGroupTarget = {
 export type TimelineDawPrivateLaneGroupEdit =
   | { action: "move"; deltaSeconds: number }
   | { action: "mix"; muted: boolean; gain: number; pan: number }
-  | { action: "fade"; fadeInSeconds: number; fadeOutSeconds: number };
+  | { action: "fade"; fadeInSeconds: number; fadeOutSeconds: number }
+  | { action: "audibility"; clearSolo: boolean; unmute: boolean };
 
 export function parseTimelineDawPrivateLaneGroupEdit(value: unknown, lanes: TimelineDawPrivateLaneGroupTarget[]): TimelineDawPrivateLaneGroupEdit {
   if (!value || typeof value !== "object") throw new Error("Group edit is required.");
-  if (lanes.length < 2 || new Set(lanes.map((lane) => lane.id)).size !== lanes.length) throw new Error("Select at least two distinct private regions.");
+  if (!lanes.length || new Set(lanes.map((lane) => lane.id)).size !== lanes.length) throw new Error("Select at least one distinct private track.");
   const input = value as Record<string, unknown>;
+  if (input.groupAction === "audibility") {
+    if (typeof input.clearSolo !== "boolean" || typeof input.unmute !== "boolean" || (!input.clearSolo && !input.unmute)) {
+      throw new Error("Choose Solo, Mute, or both to restore track sound.");
+    }
+    return { action: "audibility", clearSolo: input.clearSolo, unmute: input.unmute };
+  }
+  if (lanes.length < 2) throw new Error("Select at least two distinct private tracks.");
   if (input.groupAction === "move") {
     const deltaSeconds = Math.round(Number(input.deltaSeconds) * 1_000) / 1_000;
     if (!Number.isFinite(deltaSeconds) || lanes.some((lane) => lane.timelineStartSeconds + deltaSeconds < 0 || lane.timelineStartSeconds + deltaSeconds > 86_400)) {

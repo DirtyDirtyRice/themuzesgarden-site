@@ -330,13 +330,15 @@ export function loadDawPrivateLaneWaveform(sessionId: string, laneId: string): P
 export function editDawPrivateLaneGroup(input: {
   sessionId: string;
   laneIds: string[];
-  groupAction: "move" | "mix" | "fade";
+  groupAction: "move" | "mix" | "fade" | "audibility";
   deltaSeconds?: number;
   muted?: boolean;
   gain?: number;
   pan?: number;
   fadeInSeconds?: number;
   fadeOutSeconds?: number;
+  clearSolo?: boolean;
+  unmute?: boolean;
 }): Promise<{ lanes: DawPrivateAudioLane[] }> {
   return request("/api/timeline/daw-private-lane-groups", { method: "POST", body: JSON.stringify(input) });
 }
