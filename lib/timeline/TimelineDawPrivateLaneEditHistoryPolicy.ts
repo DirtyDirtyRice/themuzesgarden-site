@@ -1,11 +1,11 @@
 export const timelineDawPrivateLaneEditLabels = {
-  arrange: "Move or trim region",
-  split: "Split region",
-  duplicate: "Duplicate region",
-  fade: "Change region fades",
-  remove: "Remove region",
-  group: "Edit selected regions",
-  transform: "Change time stretch or pitch",
+  arrange: "Move or trim track",
+  split: "Cut track into two",
+  duplicate: "Make track copy",
+  fade: "Change track fades",
+  remove: "Remove track from song",
+  group: "Edit selected tracks",
+  transform: "Change track speed or pitch",
 } as const;
 
 export type TimelineDawPrivateLaneEditOperation = keyof typeof timelineDawPrivateLaneEditLabels;

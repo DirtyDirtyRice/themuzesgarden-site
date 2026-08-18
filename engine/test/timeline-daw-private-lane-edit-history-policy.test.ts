@@ -4,7 +4,7 @@ import { createTimelineDawPrivateLaneEditReceipt } from "../../lib/timeline/Time
 describe("private lane edit history policy", () => {
   it("labels operations and deterministically orders snapshots", () => {
     expect(createTimelineDawPrivateLaneEditReceipt({ operation: "split", beforeRows: [{ id: "b" }], afterRows: [{ id: "c" }, { id: "b" }] }))
-      .toEqual({ operation: "split", label: "Split region", beforeRows: [{ id: "b" }], afterRows: [{ id: "b" }, { id: "c" }] });
+      .toEqual({ operation: "split", label: "Cut track into two", beforeRows: [{ id: "b" }], afterRows: [{ id: "b" }, { id: "c" }] });
   });
 
   it("rejects unsupported, empty, and unchanged receipts", () => {

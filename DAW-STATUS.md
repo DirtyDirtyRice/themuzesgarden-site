@@ -1145,6 +1145,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - A fade outside the track or overlapping the opposite fade is refused; successful saves create existing Undo history and produce a plain-language confirmation.
 - Focused fade, cut, and Undo tests passed (14 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing durable private-lane fade columns, API, monitoring envelope, and edit history are reused.
+
+## Completed milestone - Safe Remove Track from Song
+
+- The technical Remove Lane action is now the plain Remove Track from Song action on every audio track.
+- Before removal, the confirmation names the track and states that its private recording will be preserved and Undo Last Track Edit can bring the track back.
+- After removal, a visible confirmation repeats that the private recording remains safe and points directly to Undo for immediate recovery.
+- A failed request leaves the track visible and reports that it could not be removed, so the screen never pretends a change succeeded.
+- Track history now uses musician language for moves, cuts, copies, fades, removals, group edits, and speed or pitch changes instead of technical region terminology.
+- Focused removal, history, Undo, and fade tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined removal API, preserved private master, and durable Undo history are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

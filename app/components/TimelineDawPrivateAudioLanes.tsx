@@ -36,6 +36,7 @@ import { resolveTimelineDawPrivateRoutingAudibility } from "@/lib/timeline/Timel
 import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } from "@/lib/timeline/TimelineDawPrivateLaneMonitorGraph";
 import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
 import { resolveTimelineDawMusicianTrackFade } from "@/lib/timeline/TimelineDawMusicianTrackFade";
+import { createTimelineDawMusicianTrackRemovalMessage } from "@/lib/timeline/TimelineDawMusicianTrackRemoval";
 import TimelineDawTransientEditor from "@/app/components/TimelineDawTransientEditor";
 import TimelineDawWarpEditor from "@/app/components/TimelineDawWarpEditor";
 import TimelineDawPrivateMasterBus from "@/app/components/TimelineDawPrivateMasterBus";
@@ -532,9 +533,11 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
   }
 
   async function remove(lane: DawPrivateAudioLane) {
-    if (!window.confirm(`Remove ${lane.name} from this timeline? The private WAV master will be preserved.`)) return;
+    const message = createTimelineDawMusicianTrackRemovalMessage(lane.name);
+    if (!window.confirm(message.confirmation)) return;
     setBusy(true);
     setError(undefined);
+    setMovementNotice(undefined);
     try {
       await removeDawPrivateAudioLane(sessionId, lane.id);
       audioRefs.current.get(lane.id)?.pause();
@@ -543,8 +546,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       graphRefs.current.delete(lane.id);
       setLanes((current) => current.filter((candidate) => candidate.id !== lane.id));
       setHistoryRevision((current) => current + 1);
+      setMovementNotice(message.success);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Private audio lane could not be removed.");
+      setError(cause instanceof Error ? cause.message : "Track could not be removed from this song.");
     } finally { setBusy(false); }
   }
 
@@ -585,7 +589,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
               <li key={lane.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s â†’ {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s Â· {lane.audio.channelCount}ch Â· {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` Â· comp ${lane.provenance.compId}` : " Â· recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
-                  <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Lane</button>
+                  <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Track from Song</button>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2"><button type="button" className={button} onClick={() => previewLaneId === lane.id ? stopTrackPreview(lane) : void previewTrack(lane)}>{previewLaneId === lane.id ? "Stop Track Preview" : "Hear This Track Alone"}</button><span className="self-center text-xs text-white/45">Temporary preview only—your Solo, Mute, and mix settings are not changed.</span></div>
                 <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><label className="min-w-52 flex-1 text-xs font-black text-white/70">Track name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={nameDrafts[lane.id] ?? lane.name} maxLength={120} onChange={(event) => setNameDrafts((current) => ({ ...current, [lane.id]: event.target.value }))} /></label><button type="button" className={button} disabled={busy || (nameDrafts[lane.id] ?? lane.name).trim() === lane.name} onClick={() => void saveTrackName(lane)}>Save Track Name</button></div>
