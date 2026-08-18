@@ -71,6 +71,7 @@ import { resolveTimelineDawMusicianTrackPlacement, type TimelineDawMusicianTrack
 import { resolveTimelineDawMusicianTrackTrim } from "@/lib/timeline/TimelineDawMusicianTrackTrim";
 import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
 import { createTimelineDawMusicianTrackPreview } from "@/lib/timeline/TimelineDawMusicianTrackPreview";
+import { resolveTimelineDawMusicianTrackTiming } from "@/lib/timeline/TimelineDawMusicianTrackTiming";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -112,7 +113,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     return result;
   }, [buses, freezes, lanes]);
   const crossfades = useMemo(() => detectTimelineDawPrivateLaneCrossfades(lanes), [lanes]);
-  const timelineExtentSeconds = useMemo(() => Math.max(60, ...lanes.map((lane) => lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds)), [lanes]);
+  const timelineExtentSeconds = useMemo(() => Math.max(60, ...lanes.map((lane) => resolveTimelineDawMusicianTrackTiming({
+    timelineStartSeconds: lane.timelineStartSeconds, sourceInSeconds: lane.sourceInSeconds, sourceOutSeconds: lane.sourceOutSeconds,
+    stretchRatio: lane.transform.stretchRatio, transformBypassed: lane.transform.bypassed,
+  }).audibleEndSeconds)), [lanes]);
   const waveformSourceKey = useMemo(() => [...new Set(lanes.map((lane) => lane.source.checksum))].sort().join("|"), [lanes]);
   const effectiveFades = useMemo(() => {
     const result = new Map(lanes.map((lane) => [lane.id, { ...lane.fade }]));
@@ -156,7 +160,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
 
   useEffect(() => {
     for (const lane of lanes) {
-      const duration = lane.sourceOutSeconds - lane.sourceInSeconds;
+      const duration = resolveTimelineDawMusicianTrackTiming({ timelineStartSeconds: lane.timelineStartSeconds, sourceInSeconds: lane.sourceInSeconds, sourceOutSeconds: lane.sourceOutSeconds, stretchRatio: lane.transform.stretchRatio, transformBypassed: lane.transform.bypassed }).audibleDurationSeconds;
       const fade = effectiveFades.get(lane.id) ?? lane.fade;
       graphRefs.current.get(lane.id)?.applyEnvelope(lane.mix, audibility.get(lane.id) ?? false, playheadRef.current - lane.timelineStartSeconds, duration, fade.inSeconds, fade.outSeconds);
     }
@@ -750,7 +754,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
             return (
               <li key={lane.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">{lane.timelineStartSeconds.toFixed(2)}s â†’ {(lane.timelineStartSeconds + lane.sourceOutSeconds - lane.sourceInSeconds).toFixed(2)}s Â· {lane.audio.channelCount}ch Â· {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` Â· comp ${lane.provenance.compId}` : " Â· recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
+                  <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">Start {lane.timelineStartSeconds.toFixed(2)}s · End {resolveTimelineDawMusicianTrackTiming({ timelineStartSeconds: lane.timelineStartSeconds, sourceInSeconds: lane.sourceInSeconds, sourceOutSeconds: lane.sourceOutSeconds, stretchRatio: lane.transform.stretchRatio, transformBypassed: lane.transform.bypassed }).audibleEndSeconds.toFixed(2)}s · Length {resolveTimelineDawMusicianTrackTiming({ timelineStartSeconds: lane.timelineStartSeconds, sourceInSeconds: lane.sourceInSeconds, sourceOutSeconds: lane.sourceOutSeconds, stretchRatio: lane.transform.stretchRatio, transformBypassed: lane.transform.bypassed }).audibleDurationSeconds.toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
                   <button type="button" className={button} disabled={busy} onClick={() => void remove(lane)}>Remove Track from Song</button>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2"><button type="button" className={button} onClick={() => previewLaneId === lane.id ? stopTrackPreview(lane) : void previewTrack(lane)}>{previewLaneId === lane.id ? "Stop Track Preview" : "Hear This Track Alone"}</button><span className="self-center text-xs text-white/45">Temporary preview only—your Solo, Mute, and mix settings are not changed.</span></div>

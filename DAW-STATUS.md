@@ -1247,6 +1247,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused ending-placement, movement, transform, and Undo-history tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined track arrangement API and Undo history are reused.
 
+## Completed milestone - Truthful Track Timing
+
+- Every audio track now displays clearly labeled Start, End, and Length values that match what the musician actually hears.
+- Slowed-down, sped-up, trimmed, and speed-bypassed tracks report their correct audible ending instead of the unprocessed source ending.
+- Timeline waveform bars now expand or contract to the audible track length, and the overall song timeline includes the true ending of every track.
+- Fade graphics and live envelope timing use the same audible duration, keeping the visual track and playback behavior aligned.
+- Corrupted timing separators in the track summary were replaced with plain readable labels and punctuation.
+- Focused timing, waveform, movement, repeat, and transform tests passed (15 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; this milestone corrects musician-facing timing projections while preserving every private recording and edit.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

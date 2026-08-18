@@ -2,6 +2,7 @@
 
 import type { DawPrivateAudioLane, DawPrivateLaneWaveform } from "@/app/workspace/projects/[id]/projectDawApi";
 import { projectTimelineDawPrivateLaneWaveform } from "@/lib/timeline/TimelineDawPrivateLaneWaveformPolicy";
+import { resolveTimelineDawMusicianTrackTiming } from "@/lib/timeline/TimelineDawMusicianTrackTiming";
 
 export default function TimelineDawPrivateLaneWaveform({
   lane,
@@ -14,7 +15,11 @@ export default function TimelineDawPrivateLaneWaveform({
   timelineExtentSeconds: number;
   onEdit: (patch: Partial<Pick<DawPrivateAudioLane, "timelineStartSeconds" | "sourceInSeconds" | "sourceOutSeconds">>) => void;
 }) {
-  const duration = lane.sourceOutSeconds - lane.sourceInSeconds;
+  const timing = resolveTimelineDawMusicianTrackTiming({
+    timelineStartSeconds: lane.timelineStartSeconds, sourceInSeconds: lane.sourceInSeconds, sourceOutSeconds: lane.sourceOutSeconds,
+    stretchRatio: lane.transform.stretchRatio, transformBypassed: lane.transform.bypassed,
+  });
+  const duration = timing.audibleDurationSeconds;
   const sampleStep = 1 / lane.audio.sampleRate;
   const peaks = waveform ? projectTimelineDawPrivateLaneWaveform(
     waveform,
@@ -22,7 +27,7 @@ export default function TimelineDawPrivateLaneWaveform({
     Math.round(lane.sourceOutSeconds * lane.audio.sampleRate),
   ) : [];
   const left = 100 * lane.timelineStartSeconds / timelineExtentSeconds;
-  const width = 100 * duration / timelineExtentSeconds;
+  const width = 100 * timing.audibleDurationSeconds / timelineExtentSeconds;
 
   return (
     <div className="mt-3 rounded-xl border border-violet-300/20 bg-black/60 p-3">
