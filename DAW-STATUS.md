@@ -1186,6 +1186,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused one-step upload tests passed (3 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing audio bucket, Library storage, and project-track link system are reused.
 
+## Completed milestone - Move Several Tracks Together
+
+- The main track area now provides Select All Tracks, Clear Selection, Move Selected 1 Second Earlier, Move Selected 1 Second Later, and Move Selected to Play Position controls.
+- Musicians can check two or more tracks and move the entire performance group without opening the advanced engineering section or calculating timeline offsets.
+- Moving to the play position places the earliest selected track there while preserving the exact spacing between every selected performance.
+- Unsafe moves before the start or beyond the end of the song are refused, duplicate selections are ignored, and no-change moves explain that the group is already at that position.
+- Successful movement is saved atomically, creates the existing durable Undo history entry, refreshes playback alignment, and confirms how many tracks moved.
+- Focused group-movement and atomic group-edit tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined group-edit API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

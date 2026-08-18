@@ -63,6 +63,7 @@ import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer"
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 import { resolveTimelineDawMusicianTrackMove } from "@/lib/timeline/TimelineDawMusicianTrackMove";
+import { resolveTimelineDawMusicianGroupMove, type TimelineDawMusicianGroupMoveMode } from "@/lib/timeline/TimelineDawMusicianGroupMove";
 import { resolveTimelineDawMusicianTrackTrim } from "@/lib/timeline/TimelineDawMusicianTrackTrim";
 import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
 import { createTimelineDawMusicianTrackPreview } from "@/lib/timeline/TimelineDawMusicianTrackPreview";
@@ -511,14 +512,38 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
 
   async function persistSend(input: Omit<DawPrivateSend, "id"> & { id?: string }) { setError(undefined); try { const { send } = await saveDawPrivateSend(sessionId, input); setSends((current) => [...current.filter((item) => item.id !== send.id && !(item.sourceKind === send.sourceKind && item.sourceId === send.sourceId && item.destinationBusId === send.destinationBusId)), send]); } catch (cause) { setError(cause instanceof Error ? cause.message : "Private send could not be saved."); } }
   async function persistInsert(input: Omit<DawPrivateInsert, "id"> & { id?: string }) { setError(undefined); try { const { insert } = await saveDawPrivateInsert(sessionId, input); setInserts((current) => [...current.filter((item) => item.id !== insert.id && !(item.sourceKind === insert.sourceKind && item.sourceId === insert.sourceId && item.slot === insert.slot)), insert]); } catch (cause) { setError(cause instanceof Error ? cause.message : "Private insert could not be saved."); } }
-  async function applyGroupEdit(edit: PrivateLaneGroupEditInput) {
-    setBusy(true); setError(undefined);
+  async function applyGroupEdit(edit: PrivateLaneGroupEditInput, successMessage?: string) {
+    setBusy(true); setError(undefined); setMovementNotice(undefined);
     try {
       const { lanes: saved } = await editDawPrivateLaneGroup({ sessionId, laneIds: [...selectedIds], ...edit });
       setLanes(saved.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
       setHistoryRevision((current) => current + 1);
+      if (successMessage) setMovementNotice(successMessage);
+      synchronize(playheadRef.current, transportStateRef.current === "playing");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Selected regions could not be edited."); }
     finally { setBusy(false); }
+  }
+
+  async function moveSelectedTracks(mode: TimelineDawMusicianGroupMoveMode) {
+    const selectedTracks = lanes.filter((lane) => selectedIds.has(lane.id));
+    try {
+      const deltaSeconds = resolveTimelineDawMusicianGroupMove({
+        tracks: selectedTracks,
+        mode,
+        playPositionSeconds: playheadRef.current,
+      });
+      const direction = mode === "one-second-earlier"
+        ? "one second earlier"
+        : mode === "one-second-later"
+          ? "one second later"
+          : "to the play position";
+      await applyGroupEdit(
+        { groupAction: "move", deltaSeconds },
+        `${selectedTracks.length} selected tracks moved ${direction}. Their spacing stayed the same.`,
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Selected tracks could not be moved.");
+    }
   }
 
   async function restoreAllTrackSound(mode: "solo" | "mute" | "both") {
@@ -600,6 +625,17 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       {movementNotice ? <p role="status" className="mt-3 text-sm font-bold text-emerald-200">{movementNotice}</p> : null}
       <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><span className="text-xs font-black text-white/70">If tracks seem missing:</span><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed)} onClick={() => void restoreAllTrackSound("solo")}>Turn Off All Solo</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.muted)} onClick={() => void restoreAllTrackSound("mute")}>Unmute All Tracks</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed || lane.mix.muted)} onClick={() => void restoreAllTrackSound("both")}>Hear All Tracks Again</button></div>
+      <div className="mt-3 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-black text-cyan-100">Move tracks together: {selectedIds.size} selected</span>
+          <button type="button" className={button} disabled={busy || !lanes.length || selectedIds.size === lanes.length} onClick={() => setSelectedIds(new Set(lanes.map((lane) => lane.id)))}>Select All Tracks</button>
+          <button type="button" className={button} disabled={busy || !selectedIds.size} onClick={() => setSelectedIds(new Set())}>Clear Selection</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("one-second-earlier")}>Move Selected 1 Second Earlier</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("one-second-later")}>Move Selected 1 Second Later</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("play-position")}>Move Selected to Play Position</button>
+        </div>
+        <p className="mt-2 text-xs text-white/55">Check two or more tracks below. They move as one group and keep the same spacing between performances.</p>
+      </div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
