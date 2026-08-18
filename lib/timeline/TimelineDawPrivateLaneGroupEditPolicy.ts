@@ -4,11 +4,14 @@ export type TimelineDawPrivateLaneGroupTarget = {
   sourceInSeconds: number;
   sourceOutSeconds: number;
   sampleRate: number;
+  stretchRatio?: number;
+  transformBypassed?: boolean;
 };
 
 export type TimelineDawPrivateLaneGroupEdit =
   | { action: "move"; deltaSeconds: number }
   | { action: "align-start"; timelineStartSeconds: number }
+  | { action: "align-end"; timelineStartSecondsById: Record<string, number> }
   | { action: "mix"; muted: boolean; gain: number; pan: number }
   | { action: "fade"; fadeInSeconds: number; fadeOutSeconds: number }
   | { action: "audibility"; clearSolo: boolean; unmute: boolean };
@@ -40,6 +43,26 @@ export function parseTimelineDawPrivateLaneGroupEdit(value: unknown, lanes: Time
       throw new Error("The selected tracks already start together.");
     }
     return { action: "align-start", timelineStartSeconds };
+  }
+  if (input.groupAction === "align-end") {
+    const timing = lanes.map((lane) => {
+      const speedFactor = lane.transformBypassed ? 1 : (lane.stretchRatio ?? 1);
+      const duration = (lane.sourceOutSeconds - lane.sourceInSeconds) * speedFactor;
+      const end = lane.timelineStartSeconds + duration;
+      if (![speedFactor, duration, end].every(Number.isFinite) || speedFactor <= 0 || duration <= 0 || end > 86_400) {
+        throw new Error("Selected track endings cannot be aligned inside the session timeline.");
+      }
+      return { id: lane.id, duration, end };
+    });
+    const latestEnd = Math.max(...timing.map((item) => item.end));
+    const timelineStartSecondsById = Object.fromEntries(timing.map((item) => [item.id, Math.round((latestEnd - item.duration) * 1_000) / 1_000]));
+    if (Object.values(timelineStartSecondsById).some((start) => start < 0 || start > 86_400)) {
+      throw new Error("Selected track endings cannot be aligned inside the session timeline.");
+    }
+    if (lanes.every((lane) => lane.timelineStartSeconds === timelineStartSecondsById[lane.id])) {
+      throw new Error("The selected tracks already end together.");
+    }
+    return { action: "align-end", timelineStartSecondsById };
   }
   if (input.groupAction === "mix") {
     const gain = Number(input.gain); const pan = Number(input.pan);

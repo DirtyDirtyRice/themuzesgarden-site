@@ -330,7 +330,7 @@ export function loadDawPrivateLaneWaveform(sessionId: string, laneId: string): P
 export function editDawPrivateLaneGroup(input: {
   sessionId: string;
   laneIds: string[];
-  groupAction: "move" | "align-start" | "mix" | "fade" | "audibility";
+  groupAction: "move" | "align-start" | "align-end" | "mix" | "fade" | "audibility";
   deltaSeconds?: number;
   muted?: boolean;
   gain?: number;

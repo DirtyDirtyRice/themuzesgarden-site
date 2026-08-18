@@ -30,6 +30,17 @@ describe("private lane group edit policy", () => {
     ])).toThrow(/already start together/);
   });
 
+  it("aligns audible endings to the latest selected ending", () => {
+    expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "align-end" }, [
+      { ...lanes[0], timelineStartSeconds: 1, sourceOutSeconds: 3, stretchRatio: 2, transformBypassed: false },
+      { ...lanes[1], timelineStartSeconds: 5, sourceInSeconds: 0, sourceOutSeconds: 2, stretchRatio: 0.5, transformBypassed: false },
+    ])).toEqual({ action: "align-end", timelineStartSecondsById: { a: 1, b: 6 } });
+    expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "align-end" }, [
+      { ...lanes[0], timelineStartSeconds: 1, sourceOutSeconds: 3, stretchRatio: 2, transformBypassed: true },
+      { ...lanes[1], timelineStartSeconds: 4, sourceInSeconds: 0, sourceOutSeconds: 2, stretchRatio: 0.5, transformBypassed: false },
+    ])).toEqual({ action: "align-end", timelineStartSecondsById: { a: 2, b: 4 } });
+  });
+
   it("validates common mixer and fade values across the selection", () => {
     expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "mix", muted: true, gain: 1.2, pan: -0.25 }, lanes)).toEqual({ action: "mix", muted: true, gain: 1.2, pan: -0.25 });
     expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "fade", fadeInSeconds: 0.25, fadeOutSeconds: 0.5 }, lanes)).toMatchObject({ action: "fade" });

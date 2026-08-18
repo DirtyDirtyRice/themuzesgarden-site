@@ -1316,6 +1316,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused group-alignment and Undo-policy tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
 
+## Completed milestone - Align Selected Track Endings
+
+- Musicians can now select two or more audio tracks and press **Align Selected Endings** to make layered performances finish at exactly the same audible song position.
+- The latest selected ending becomes the alignment point, and each track receives the correct individual start position for its own trimmed and speed-adjusted audible length.
+- Normal-speed, slowed, sped-up, and speed-bypassed tracks align by what the musician actually hears instead of by the unprocessed source-file length.
+- The entire selection is saved atomically as one durable Undo step while private audio, trims, fades, effects, automation, routing, mix, and repairs remain unchanged.
+- Group-edit responses now retain complete speed-and-pitch transform information, keeping the musician-facing timing display truthful immediately after an alignment.
+- Focused group-alignment, audible-timing, and Undo-policy tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
