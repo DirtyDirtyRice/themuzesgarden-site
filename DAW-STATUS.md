@@ -1196,6 +1196,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused group-movement and atomic group-edit tests passed (8 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined group-edit API and Undo history are reused.
 
+## Completed milestone - Simple Speed and Pitch Controls
+
+- Every audio track now has one-click Slow Down 10%, Speed Up 10%, Lower 1 Semitone, Raise 1 Semitone, and Original Speed and Pitch actions.
+- Each action saves immediately and confirms the result in plain language, so musicians do not need to understand stretch ratios or remember a separate save step.
+- Speed changes preserve pitch, pitch changes preserve speed, and the selected processing quality remains intact.
+- Safe speed and pitch limits are enforced; unavailable boundary actions are disabled and original private recordings are never changed.
+- The current musical result is shown in plain language, while detailed ratio, algorithm, and quality controls remain available inside a closed Advanced speed and pitch settings section.
+- Every successful change refreshes playback alignment and creates the existing durable Undo history entry.
+- Focused musician controls, transform-engine, and history tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined transform API, elastic audio engine, and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
