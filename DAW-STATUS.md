@@ -1267,6 +1267,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused crossfade, fade, timing, and transform tests passed (13 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing real-time equal-power envelope system is reused with corrected audible timing.
 
+## Completed milestone - Copies Keep Their Sound
+
+- Repeat Once, Repeat 2 Times, Repeat 4 Times, and Copy to Play Position now preserve the original track's inserted effects and parallel sends.
+- Every copied insert keeps its slot, effect, settings, bypass state, latency, and sidechain choice.
+- Every copied send keeps its destination, level, pre- or post-fader choice, and mute state.
+- If the server cannot preserve the processing, it removes the unfinished copied track or repeat group and reports the failure instead of leaving a misleading partial copy.
+- The track area reloads the saved processing graph after a successful copy, so the copied sound controls are immediately available on screen.
+- Focused copy, repeat, mixer-processing, and Undo-history tests passed (15 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined insert, send, audio-lane, and Undo-history tables are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

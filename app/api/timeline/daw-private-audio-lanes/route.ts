@@ -11,6 +11,7 @@ import { createTimelineDawPrivateLaneEditReceipt, type TimelineDawPrivateLaneEdi
 import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
 import { resolveTimelineDawMusicianTrackCopyPosition } from "@/lib/timeline/TimelineDawMusicianTrackCopy";
 import { resolveTimelineDawMusicianTrackRepeatPositions } from "@/lib/timeline/TimelineDawMusicianTrackRepeat";
+import { buildTimelineDawMusicianTrackProcessingCopies } from "@/lib/timeline/TimelineDawMusicianTrackProcessingCopy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,23 @@ async function authorize(request: NextRequest) {
 async function requireSession(ownerId: string, token: string, sessionId: string) {
   if (!sessionId) throw new ApiError("sessionId is required.", 400);
   if (!await createTimelineDawWorkspaceServer(ownerId, token).get(ownerId, sessionId)) throw new ApiError("DAW session was not found.", 404);
+}
+async function copyLaneProcessing(client: SupabaseClient, ownerId: string, sessionId: string, sourceLaneId: string, targetLaneIds: string[]) {
+  const [sends, inserts] = await Promise.all([
+    client.from("timeline_daw_private_sends").select("destination_bus_id,level,pre_fader,muted").eq("owner_id", ownerId).eq("session_id", sessionId).eq("source_kind", "lane").eq("source_id", sourceLaneId),
+    client.from("timeline_daw_private_inserts").select("slot,effect,bypassed,parameters,latency_samples,sidechain").eq("owner_id", ownerId).eq("session_id", sessionId).eq("source_kind", "lane").eq("source_id", sourceLaneId),
+  ]);
+  if (sends.error || inserts.error) throw new Error(sends.error?.message ?? inserts.error?.message ?? "Track effects could not be read.");
+  const copies = buildTimelineDawMusicianTrackProcessingCopies({ ownerId, sessionId, targetLaneIds, sends: sends.data ?? [], inserts: inserts.data ?? [], id: () => crypto.randomUUID() });
+  if (copies.sends.length) { const saved = await client.from("timeline_daw_private_sends").insert(copies.sends); if (saved.error) throw new Error(saved.error.message); }
+  if (copies.inserts.length) { const saved = await client.from("timeline_daw_private_inserts").insert(copies.inserts); if (saved.error) throw new Error(saved.error.message); }
+}
+async function removeFailedCopies(client: SupabaseClient, ownerId: string, sessionId: string, laneIds: string[]) {
+  await Promise.all([
+    client.from("timeline_daw_private_sends").delete().eq("owner_id", ownerId).eq("session_id", sessionId).in("source_id", laneIds),
+    client.from("timeline_daw_private_inserts").delete().eq("owner_id", ownerId).eq("session_id", sessionId).in("source_id", laneIds),
+  ]);
+  await client.from(TABLE).delete().eq("owner_id", ownerId).eq("session_id", sessionId).in("id", laneIds);
 }
 function failure(error: unknown) {
   return NextResponse.json({ error: error instanceof Error ? error.message : "Private audio lane request failed." }, {
@@ -192,6 +210,8 @@ export async function POST(request: NextRequest) {
         bus_id: stored.bus_id,
       }).select("*").single();
       if (error || !data) throw new ApiError(`Private audio lane could not be duplicated: ${error?.message ?? "missing row"}`, 500);
+      try { await copyLaneProcessing(user.client, user.id, sessionId, laneId, [copyId]); }
+      catch (cause) { await removeFailedCopies(user.client, user.id, sessionId, [copyId]); throw new ApiError(`Track copy could not preserve its sound: ${cause instanceof Error ? cause.message : "processing copy failed"}`, 500); }
       await recordEdit(user.client, user.id, sessionId, "duplicate", [], [data]);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
@@ -229,6 +249,9 @@ export async function POST(request: NextRequest) {
       }));
       const { data, error } = await user.client.from(TABLE).insert(rows).select("*");
       if (error || !data || data.length !== rows.length) throw new ApiError(`Track repeats could not be created: ${error?.message ?? "missing rows"}`, 500);
+      const repeatedIds = data.map((row) => String(row.id));
+      try { await copyLaneProcessing(user.client, user.id, sessionId, laneId, repeatedIds); }
+      catch (cause) { await removeFailedCopies(user.client, user.id, sessionId, repeatedIds); throw new ApiError(`Track repeats could not preserve their sound: ${cause instanceof Error ? cause.message : "processing copy failed"}`, 500); }
       await recordEdit(user.client, user.id, sessionId, "duplicate", [], data);
       const repeated = await Promise.all(data.map(async (row) => lane(row, await sign(user.client, user.id, sessionId, String(row.source_uri)))));
       return NextResponse.json({ lanes: repeated }, { status: 201, headers: { "Cache-Control": "no-store" } });

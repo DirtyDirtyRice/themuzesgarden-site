@@ -662,7 +662,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
         lane.id,
         atPlayPosition ? playheadRef.current : undefined,
       );
+      const processing = await loadDawPrivateBusProcessing(sessionId);
       setLanes((current) => [...current, copy].sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+      setSends(processing.sends);
+      setInserts(processing.inserts);
       setHistoryRevision((current) => current + 1);
       setMovementNotice(atPlayPosition
         ? `${copy.name} was copied to the play position.`
@@ -678,7 +681,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     setMovementNotice(undefined);
     try {
       const { lanes: repeats } = await repeatDawPrivateAudioLane(sessionId, lane.id, repeatCount);
+      const processing = await loadDawPrivateBusProcessing(sessionId);
       setLanes((current) => [...current, ...repeats].sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+      setSends(processing.sends);
+      setInserts(processing.inserts);
       setHistoryRevision((current) => current + 1);
       setMovementNotice(`${lane.name} now repeats ${repeatCount} times in a row.`);
     } catch (cause) {
