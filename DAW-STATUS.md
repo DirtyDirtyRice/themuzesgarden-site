@@ -1237,6 +1237,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused multi-repeat, copy, transform, and Undo-history tests passed (13 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined private-lane table, copy workflow, and edit history are reused.
 
+## Completed milestone - Move Track Ending to Play Position
+
+- Every audio track now clearly separates Start at Play Position from the new End at Play Position action.
+- A musician can stop playback where a performance should finish and align the track ending there without calculating its start time.
+- Ending placement uses the audible trimmed duration and correctly follows active slow-down, speed-up, and bypassed speed processing.
+- A move that would push audio before the beginning of the song or outside the safe timeline is refused with a plain-language explanation.
+- Only the track's song position changes; the private source recording and all existing edits remain preserved, and successful movement uses the durable Undo history.
+- Focused ending-placement, movement, transform, and Undo-history tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined track arrangement API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
