@@ -1217,6 +1217,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused placement, movement, and Undo-policy tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined track arrangement API and Undo history are reused.
 
+## Completed milestone - Repeat a Track After It Finishes
+
+- Every audio track now has a plainly named Repeat This Track After It Finishes action for repeating a riff, beat, vocal, or song section without calculating its ending.
+- The repeated copy starts at the audible end of the original after trimming and active speed changes, preventing unexpected overlap or silence for slowed-down and sped-up tracks.
+- Bypassed speed processing correctly uses the original audible duration.
+- Repeated copies preserve the source recording, trim, volume, pan, Mute, Solo, fades, routing, speed, pitch, processing algorithm, quality, and bypass setting.
+- The original private recording is never changed, successful repeats create the existing durable Undo history, and the musician receives a plain-language confirmation.
+- Focused repeat, transform, and Undo-history tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined copy API and private-lane edit history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

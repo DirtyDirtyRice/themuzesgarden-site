@@ -162,6 +162,8 @@ export async function POST(request: NextRequest) {
           originalStartSeconds: Number(stored.timeline_start_seconds),
           sourceInSeconds: Number(stored.source_in_seconds),
           sourceOutSeconds: Number(stored.source_out_seconds),
+          stretchRatio: Number(stored.stretch_ratio ?? 1),
+          transformBypassed: Boolean(stored.transform_bypassed),
           playPositionSeconds: body.timelineStartSeconds === undefined ? undefined : Number(body.timelineStartSeconds),
         });
         arrangement = parseTimelineDawPrivateLaneArrangement({
@@ -183,6 +185,9 @@ export async function POST(request: NextRequest) {
         comp_id: stored.comp_id, comp_render_checksum: stored.comp_render_checksum,
         muted: stored.muted, soloed: stored.soloed, gain: stored.gain, pan: stored.pan,
         fade_in_seconds: stored.fade_in_seconds, fade_out_seconds: stored.fade_out_seconds,
+        stretch_ratio: stored.stretch_ratio, pitch_semitones: stored.pitch_semitones,
+        transform_algorithm: stored.transform_algorithm, transform_quality: stored.transform_quality,
+        transform_bypassed: stored.transform_bypassed,
         bus_id: stored.bus_id,
       }).select("*").single();
       if (error || !data) throw new ApiError(`Private audio lane could not be duplicated: ${error?.message ?? "missing row"}`, 500);
