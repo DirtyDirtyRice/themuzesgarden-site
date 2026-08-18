@@ -735,8 +735,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("one-second-earlier")}>Move Selected 1 Second Earlier</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("one-second-later")}>Move Selected 1 Second Later</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("play-position")}>Move Selected to Play Position</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "align-start" }, `${selectedIds.size} selected tracks now start together.`)}>Align Selected Starts</button>
         </div>
-        <p className="mt-2 text-xs text-white/55">Check two or more tracks below. They move as one group and keep the same spacing between performances.</p>
+        <p className="mt-2 text-xs text-white/55">Check two or more tracks below. Move keeps their spacing. Align Selected Starts lines up layered performances at the earliest selected start.</p>
       </div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} />

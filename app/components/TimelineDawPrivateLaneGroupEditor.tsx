@@ -7,6 +7,7 @@ const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm fon
 
 export type PrivateLaneGroupEditInput =
   | { groupAction: "move"; deltaSeconds: number }
+  | { groupAction: "align-start" }
   | { groupAction: "mix"; muted: boolean; gain: number; pan: number }
   | { groupAction: "fade"; fadeInSeconds: number; fadeOutSeconds: number };
 

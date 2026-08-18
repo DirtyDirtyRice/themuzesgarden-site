@@ -19,6 +19,17 @@ describe("private lane group edit policy", () => {
     expect(lanes.map((lane) => lane.timelineStartSeconds + (edit.action === "move" ? edit.deltaSeconds : 0))).toEqual([1.25, 3.25]);
   });
 
+  it("aligns selected starts to the earliest selected track", () => {
+    expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "align-start" }, lanes)).toEqual({
+      action: "align-start",
+      timelineStartSeconds: 1,
+    });
+    expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "align-start" }, [
+      { ...lanes[0], id: "c" },
+      { ...lanes[0], id: "d" },
+    ])).toThrow(/already start together/);
+  });
+
   it("validates common mixer and fade values across the selection", () => {
     expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "mix", muted: true, gain: 1.2, pan: -0.25 }, lanes)).toEqual({ action: "mix", muted: true, gain: 1.2, pan: -0.25 });
     expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "fade", fadeInSeconds: 0.25, fadeOutSeconds: 0.5 }, lanes)).toMatchObject({ action: "fade" });

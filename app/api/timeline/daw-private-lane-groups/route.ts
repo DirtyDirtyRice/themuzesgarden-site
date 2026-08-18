@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     const changedAt = new Date().toISOString();
     const after = selected.data.map((row) => {
       if (edit.action === "move") return { ...row, timeline_start_seconds: Number(row.timeline_start_seconds) + edit.deltaSeconds, updated_at: changedAt };
+      if (edit.action === "align-start") return { ...row, timeline_start_seconds: edit.timelineStartSeconds, updated_at: changedAt };
       if (edit.action === "mix") return { ...row, muted: edit.muted, gain: edit.gain, pan: edit.pan, updated_at: changedAt };
       if (edit.action === "audibility") return { ...row, muted: edit.unmute ? false : row.muted, soloed: edit.clearSolo ? false : row.soloed, updated_at: changedAt };
       const sampleRate = Number(row.sample_rate);

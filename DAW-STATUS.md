@@ -1307,6 +1307,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused individual movement, group movement, atomic group edit, and Undo-history tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined arrangement API, atomic group edit, and Undo history are reused.
 
+## Completed milestone - Align Selected Track Starts
+
+- Musicians can now select two or more audio tracks and press **Align Selected Starts** to make layered performances begin at exactly the same song position.
+- The earliest selected track becomes the alignment point, so the operation never unexpectedly pushes the group later in the song.
+- The entire selection is saved as one atomic edit and one durable Undo step; a partial alignment cannot be left behind.
+- The control refuses selections that already start together and keeps every private source recording, mix setting, effect, automation curve, timing repair, and audio repair unchanged.
+- Focused group-alignment and Undo-policy tests passed (5 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
