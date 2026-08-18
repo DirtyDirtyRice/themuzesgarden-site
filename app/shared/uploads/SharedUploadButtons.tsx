@@ -5,6 +5,7 @@ import { projectUploadAccept } from "./projectUploadHelpers";
 
 type Props = {
   disabled?: boolean;
+  busy?: boolean;
   onFilesSelected: (files: File[]) => void;
 };
 
@@ -13,6 +14,7 @@ const buttonClass =
 
 export default function SharedUploadButtons({
   disabled = false,
+  busy = false,
   onFilesSelected,
 }: Props) {
   const uploadFileRef = useRef<HTMLInputElement | null>(null);
@@ -31,19 +33,19 @@ export default function SharedUploadButtons({
       <button
         type="button"
         className={buttonClass}
-        disabled={disabled}
+        disabled={disabled || busy}
         onClick={() => uploadFileRef.current?.click()}
       >
-        Upload File
+        {busy ? "Uploading..." : "Upload File"}
       </button>
 
       <button
         type="button"
         className={buttonClass}
-        disabled={disabled}
+        disabled={disabled || busy}
         onClick={() => uploadFolderRef.current?.click()}
       >
-        Upload Folder
+        {busy ? "Uploading..." : "Upload Folder"}
       </button>
 
       <input

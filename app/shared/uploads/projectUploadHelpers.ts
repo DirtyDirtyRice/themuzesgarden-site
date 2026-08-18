@@ -23,6 +23,15 @@ const FOLDER = "uploads";
 export const projectUploadAccept =
   ".wav,.mp3,.flac,.aiff,.aif,audio/wav,audio/mpeg,audio/flac,audio/aiff";
 
+export function shouldStartProjectUpload(files: File[], uploading: boolean) {
+  return files.length > 0 && !uploading;
+}
+
+export function projectUploadProgressMessage(fileCount: number) {
+  const safeCount = Math.max(0, Math.floor(fileCount));
+  return `Uploading and linking ${safeCount} file${safeCount === 1 ? "" : "s"}...`;
+}
+
 export function isSupportedProjectAudioFile(file: File) {
   const name = file.name.toLowerCase();
 

@@ -89,6 +89,8 @@ export function useProjectSetlistController({
   const projectLibrary = useProjectLibraryLinking({
     projectId: id,
     supabase: projectSupabase,
+    userId: user?.id ?? null,
+    projectOwnerId: projectOverview.project?.owner_id ?? null,
     setSetlistOrder: updateSetlistOrderWithPersistence,
     setNowPlayingId,
     setPreviewTrackId,
@@ -205,6 +207,7 @@ export function useProjectSetlistController({
     ...projectLibrary,
     ...projectPlayback,
     id,
+    userId: user?.id ?? null,
     tab,
     setTab,
     showKeys,
@@ -229,19 +232,19 @@ export function useProjectSetlistController({
     audioRef,
     handleSaveProjectDescription: projectOverview.saveProjectDescription,
     handleSaveProjectSettings: projectOverview.saveProjectSettings,
-    handleRefreshOverview: () => {
-      void projectLibrary.loadOverviewDock();
-      void projectOverview.loadProject();
+    handleRefreshOverview: async () => {
+      await Promise.all([
+        projectLibrary.loadOverviewDock(),
+        projectOverview.loadProject(),
+      ]);
     },
-    handleRefreshLibrary: () => {
-      void projectLibrary.loadLibrary();
+    handleRefreshLibrary: async () => {
+      await projectLibrary.loadLibrary();
     },
     handleUnlinkTrack: (trackId: string) => {
       void projectLibrary.unlinkTrack(trackId);
     },
-    handleLinkTrack: (trackId: string) => {
-      void projectLibrary.linkTrack(trackId);
-    },
+    handleLinkTrack: (trackId: string) => projectLibrary.linkTrack(trackId),
     handleSetTrackVisibility: (
       trackId: string,
       visibility: "private" | "public",

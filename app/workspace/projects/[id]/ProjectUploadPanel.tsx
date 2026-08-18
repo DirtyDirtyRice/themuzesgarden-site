@@ -9,7 +9,6 @@ type Props = {
   uploading: boolean;
   uploadMessage: string | null;
   uploadError: string | null;
-  onUploadFiles: () => void;
   onClearFiles: () => void;
 };
 
@@ -23,7 +22,6 @@ export default function ProjectUploadPanel({
   uploading,
   uploadMessage,
   uploadError,
-  onUploadFiles,
   onClearFiles,
 }: Props) {
   if (
@@ -63,15 +61,6 @@ export default function ProjectUploadPanel({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={onUploadFiles}
-            disabled={uploading || selectedFiles.length === 0}
-            className={actionButtonClass}
-          >
-            {uploading ? "Uploading..." : "Upload + Link"}
-          </button>
-
-          <button
-            type="button"
             onClick={onClearFiles}
             disabled={uploading}
             className={actionButtonClass}
@@ -108,6 +97,11 @@ export default function ProjectUploadPanel({
 
       {selectedFiles.length > 0 ? (
         <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+          <div className="text-sm font-bold text-white">
+            {uploading
+              ? "Uploading and linking automatically..."
+              : "Files waiting to upload"}
+          </div>
           {selectedFiles.map((file) => (
             <div
               key={`${file.name}-${file.size}-${file.lastModified}`}

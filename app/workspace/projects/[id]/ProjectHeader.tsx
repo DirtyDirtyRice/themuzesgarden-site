@@ -9,6 +9,9 @@ type ProjectDownloadFormat = "wav" | "mp3" | "flac" | "aiff" | "original";
 type Props = {
   project: Project | null;
   rightSlot?: React.ReactNode;
+  uploadBusy?: boolean;
+  uploadStatus?: string | null;
+  uploadFailed?: boolean;
   onFilesSelected: (files: File[]) => void;
 };
 
@@ -73,6 +76,9 @@ function downloadProjectManifest(project: Project, format: ProjectDownloadFormat
 export default function ProjectHeader({
   project,
   rightSlot,
+  uploadBusy = false,
+  uploadStatus = null,
+  uploadFailed = false,
   onFilesSelected,
 }: Props) {
   const [downloadFormat, setDownloadFormat] =
@@ -137,8 +143,24 @@ export default function ProjectHeader({
           Send To
         </button>
 
-        <SharedUploadButtons onFilesSelected={onFilesSelected} />
+        <SharedUploadButtons
+          busy={uploadBusy}
+          onFilesSelected={onFilesSelected}
+        />
       </div>
+
+      {uploadStatus ? (
+        <div
+          role={uploadFailed ? "alert" : "status"}
+          className={`rounded-xl border p-3 text-sm font-bold ${
+            uploadFailed
+              ? "border-red-400/60 bg-red-950/40 text-red-100"
+              : "border-emerald-400/60 bg-emerald-950/40 text-emerald-100"
+          }`}
+        >
+          {uploadStatus}
+        </div>
+      ) : null}
     </div>
   );
 }

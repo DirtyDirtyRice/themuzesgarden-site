@@ -1175,6 +1175,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Recovery works even for a song with only one track, unavailable actions are disabled, and success is confirmed in plain language.
 - Focused group, history, mixer, and reset tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined atomic group-edit procedure and track history are reused.
+
+## Completed milestone - One-Step Project Upload and Link
+
+- Upload File and Upload Folder on a project now perform the complete job immediately after selection: upload the audio, add it to the Library, and link it into the open project.
+- The hidden second Upload + Link step has been removed, so musicians do not need to search farther down the page to finish an upload.
+- Both top buttons show Uploading while work is active, prevent accidental duplicate starts, and display the final success or exact failure beside the buttons.
+- New project uploads use the signed-in owner and begin private, matching the safe default for musician projects.
+- Project linking is now awaited and verified; the screen cannot report success when storage completed but the project link failed.
+- Focused one-step upload tests passed (3 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing audio bucket, Library storage, and project-track link system are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

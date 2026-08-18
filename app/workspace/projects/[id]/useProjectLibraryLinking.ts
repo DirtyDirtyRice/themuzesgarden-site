@@ -73,8 +73,8 @@ export function useProjectLibraryLinking(args: UseProjectLibraryLinkingArgs) {
     return true;
   }, [supabase, projectId]);
 
-const ensureTracksLoadedOnce = useCallback(async () => {
-    if (allTracks.length > 0) {
+const ensureTracksLoadedOnce = useCallback(async (force = false) => {
+    if (!force && allTracks.length > 0) {
       return allTracks;
     }
 
@@ -160,7 +160,7 @@ if (!isOwner) {
     setLoadingLibrary(true);
 
     try {
-      await ensureTracksLoadedOnce();
+      await ensureTracksLoadedOnce(true);
       await refreshLinkedIdsOnly();
     } catch (e: any) {
       setLibraryErr(e?.message ?? "Failed to load library links");
@@ -192,7 +192,7 @@ if (!isOwner) {
       try {
         if (!supabase) throw new Error("Supabase client not found.");
         if (!looksLikeUuid(projectId)) throw new Error("Invalid project id format.");
-        if (linkedTrackIds.has(trackId)) return;
+        if (linkedTrackIds.has(trackId)) return true;
 
         await ensureProjectExists();
 
@@ -212,7 +212,7 @@ if (!isOwner) {
           .limit(1);
 
         if (existingErr) throw new Error(existingErr.message);
-        if (Array.isArray(existing) && existing.length > 0) return;
+        if (Array.isArray(existing) && existing.length > 0) return true;
 
         const { error } = await supabase
           .from("project_tracks")
@@ -238,6 +238,7 @@ const linkedTrack =
         );
 
         setSetlistOrder?.((prev) => (prev.includes(trackId) ? prev : [...prev, trackId]));
+        return true;
       } catch (e: any) {
         setLinkedTrackIds((prev) => {
           const next = new Set(prev);
@@ -248,6 +249,7 @@ const linkedTrack =
         const msg = e?.message ?? "Link failed";
         setLibraryErr(msg);
         setOverviewErr(msg);
+        return false;
       } finally {
         setLinkBusyId(null);
       }

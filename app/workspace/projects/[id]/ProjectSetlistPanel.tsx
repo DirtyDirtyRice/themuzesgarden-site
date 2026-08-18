@@ -15,6 +15,8 @@ import { clamp01 } from "./projectDetailsUtils";
 import type { ProjectSetlistControllerState } from "./projectSetlistController";
 import {
   summarizeUploadResult,
+  projectUploadProgressMessage,
+  shouldStartProjectUpload,
   uploadProjectAudioFiles,
   type UploadedProjectItem,
 } from "../../../shared/uploads/projectUploadHelpers";
@@ -31,8 +33,10 @@ export default function ProjectSetlistPanel({
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  async function handleUploadFiles() {
-    if (selectedFiles.length === 0) return;
+  async function handleUploadFiles(files: File[]) {
+    if (!shouldStartProjectUpload(files, uploading)) return;
+
+    setSelectedFiles(files);
 
     setUploading(true);
     setUploadError(null);
@@ -41,13 +45,18 @@ export default function ProjectSetlistPanel({
 
     try {
       const result = await uploadProjectAudioFiles({
-        files: selectedFiles,
-        visibility: "shared",
-        userId: null,
+        files,
+        visibility: "private",
+        userId: controller.userId,
       });
 
       for (const item of result.uploadedItems) {
-        await controller.handleLinkTrack(item.trackId);
+        const linked = await controller.handleLinkTrack(item.trackId);
+        if (!linked) {
+          throw new Error(
+            `${item.name} uploaded, but it could not be linked to this project.`,
+          );
+        }
       }
 
       setUploadedItems((current) => [...result.uploadedItems, ...current]);
@@ -74,7 +83,16 @@ export default function ProjectSetlistPanel({
         header={
           <ProjectHeader
             project={controller.project}
-            onFilesSelected={setSelectedFiles}
+            uploadBusy={uploading}
+            uploadStatus={
+              uploading
+                ? projectUploadProgressMessage(selectedFiles.length)
+                : uploadError ?? uploadMessage
+            }
+            uploadFailed={Boolean(uploadError)}
+            onFilesSelected={(files) => {
+              void handleUploadFiles(files);
+            }}
             rightSlot={
               <div className="break-all text-xs text-white/45">
                 ID: {controller.id}
@@ -170,7 +188,6 @@ export default function ProjectSetlistPanel({
         uploading={uploading}
         uploadMessage={uploadMessage}
         uploadError={uploadError}
-        onUploadFiles={handleUploadFiles}
         onClearFiles={() => {
           setSelectedFiles([]);
           setSkippedFiles([]);
