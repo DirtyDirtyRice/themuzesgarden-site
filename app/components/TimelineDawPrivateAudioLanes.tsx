@@ -37,6 +37,7 @@ import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } 
 import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
 import { resolveTimelineDawMusicianTrackFade } from "@/lib/timeline/TimelineDawMusicianTrackFade";
 import { createTimelineDawMusicianTrackRemovalMessage } from "@/lib/timeline/TimelineDawMusicianTrackRemoval";
+import { resetTimelineDawMusicianTrackMix } from "@/lib/timeline/TimelineDawMusicianTrackMixReset";
 import TimelineDawTransientEditor from "@/app/components/TimelineDawTransientEditor";
 import TimelineDawWarpEditor from "@/app/components/TimelineDawWarpEditor";
 import TimelineDawPrivateMasterBus from "@/app/components/TimelineDawPrivateMasterBus";
@@ -340,6 +341,25 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function resetTrackMix(lane: DawPrivateAudioLane, control: "volume" | "pan" | "both") {
+    const pending = saveTimersRef.current.get(lane.id);
+    if (pending) clearTimeout(pending);
+    saveTimersRef.current.delete(lane.id);
+    setBusy(true);
+    setError(undefined);
+    setMovementNotice(undefined);
+    try {
+      const mix = resetTimelineDawMusicianTrackMix(lane.mix, control);
+      const { lane: saved } = await updateDawPrivateAudioLaneMix(sessionId, lane.id, mix);
+      setLanes((current) => current.map((candidate) => candidate.id === saved.id ? saved : candidate));
+      if (control !== "pan") dispatchTimelineDawPrivateMixChange({ sourceKind: "lane", sourceId: lane.id, parameter: "gain", value: saved.mix.gain });
+      if (control !== "volume") dispatchTimelineDawPrivateMixChange({ sourceKind: "lane", sourceId: lane.id, parameter: "pan", value: saved.mix.pan });
+      setMovementNotice(`${saved.name} ${control === "volume" ? "volume is back to normal" : control === "pan" ? "is centered" : "volume is normal and pan is centered"}.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Track volume and pan could not be reset.");
+    } finally { setBusy(false); }
+  }
+
   async function fadeAtPlayPosition(lane: DawPrivateAudioLane, edge: "in" | "out") {
     setBusy(true);
     setError(undefined);
@@ -618,6 +638,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <button type="button" aria-pressed={lane.mix.soloed} className={`${button} ${lane.mix.soloed ? "!bg-amber-300" : ""}`} onClick={() => queueMix(lane, { soloed: !lane.mix.soloed })}>{lane.mix.soloed ? "Soloed" : "Solo"}</button>
                   <label className="text-xs font-black text-white/55">Gain {lane.mix.gain.toFixed(2)}Ã—<input className="mt-1 block w-full accent-violet-300" type="range" min={0} max={2} step={0.01} value={lane.mix.gain} onChange={(event) => queueMix(lane, { gain: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Pan {lane.mix.pan === 0 ? "C" : lane.mix.pan < 0 ? `L${Math.round(Math.abs(lane.mix.pan) * 100)}` : `R${Math.round(lane.mix.pan * 100)}`}<input className="mt-1 block w-full accent-violet-300" type="range" min={-1} max={1} step={0.01} value={lane.mix.pan} onChange={(event) => queueMix(lane, { pan: Number(event.target.value) })} /></label>
+                  <div className="flex flex-wrap gap-2 md:col-span-4"><button type="button" className={button} disabled={busy || lane.mix.gain === 1} onClick={() => void resetTrackMix(lane, "volume")}>Return Volume to Normal</button><button type="button" className={button} disabled={busy || lane.mix.pan === 0} onClick={() => void resetTrackMix(lane, "pan")}>Center Left / Right</button><button type="button" className={button} disabled={busy || (lane.mix.gain === 1 && lane.mix.pan === 0)} onClick={() => void resetTrackMix(lane, "both")}>Reset Volume and Center</button></div>
                 </div>
                 <div className="mt-3"><div className="flex justify-between text-xs font-black"><span>Peak</span><span className={meter.clipped ? "text-red-300" : "text-emerald-200"}>{meter.clipped ? "CLIP" : `${meter.peakDbfs.toFixed(1)} dBFS`}</span></div><div className="mt-1 h-2 overflow-hidden rounded-full bg-black"><div className={`h-full transition-[width] duration-100 ${meter.clipped ? "bg-red-400" : "bg-emerald-400"}`} style={{ width: `${Math.max(0, Math.min(100, ((meter.peakDbfs + 60) / 60) * 100))}%` }} /></div></div>
                 <audio ref={audioRefFor(lane)} src={lane.playbackUrl} crossOrigin="anonymous" preload="metadata" />

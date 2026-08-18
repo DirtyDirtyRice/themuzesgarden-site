@@ -1155,6 +1155,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Track history now uses musician language for moves, cuts, copies, fades, removals, group edits, and speed or pitch changes instead of technical region terminology.
 - Focused removal, history, Undo, and fade tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined removal API, preserved private master, and durable Undo history are reused.
+
+## Completed milestone - One-Click Volume and Pan Reset
+
+- Every audio track now has Return Volume to Normal, Center Left / Right, and Reset Volume and Center actions beside its gain and pan sliders.
+- Resets save immediately at exact normal-volume and center values, so musicians do not need precise mouse movement to recover a mix setting.
+- Volume-only reset preserves pan; pan-only reset preserves volume; every reset preserves Mute, Solo, routing, effects, fades, edits, and the private recording.
+- Any unfinished delayed slider save is cancelled before a reset, preventing an older slider movement from unexpectedly overwriting the musician's chosen reset.
+- The live monitoring graph receives the saved reset values immediately, and a plain-language confirmation names the track and result.
+- Focused mixer, reset, and safety tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing durable track-mix API and live monitoring events are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
