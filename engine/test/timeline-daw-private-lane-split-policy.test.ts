@@ -42,4 +42,13 @@ describe("private lane split policy", () => {
     expect(split.sourceSplitSeconds).toBe(4);
     expect(split.timelineSplitSeconds).toBe(12);
   });
+
+  it("protects timeline-length fades when cutting stretched audio", () => {
+    expect(() => parseTimelineDawPrivateLaneSplit(
+      { timelineSplitSeconds: 12 }, 48_000, 10, 0, 4, 3, 0, 2, false,
+    )).toThrow(/outside the existing edge fades/);
+    expect(parseTimelineDawPrivateLaneSplit(
+      { timelineSplitSeconds: 14 }, 48_000, 10, 0, 4, 3, 0, 2, false,
+    ).timelineSplitSeconds).toBe(14);
+  });
 });

@@ -35,6 +35,7 @@ import {
 import { resolveTimelineDawPrivateRoutingAudibility } from "@/lib/timeline/TimelineDawPrivateBusPolicy";
 import { TimelineDawPrivateLaneMonitorGraph, type TimelineDawPrivateLaneMeter } from "@/lib/timeline/TimelineDawPrivateLaneMonitorGraph";
 import { detectTimelineDawPrivateLaneCrossfades } from "@/lib/timeline/TimelineDawPrivateLaneFadePolicy";
+import { resolveTimelineDawMusicianTrackFade } from "@/lib/timeline/TimelineDawMusicianTrackFade";
 import TimelineDawTransientEditor from "@/app/components/TimelineDawTransientEditor";
 import TimelineDawWarpEditor from "@/app/components/TimelineDawWarpEditor";
 import TimelineDawPrivateMasterBus from "@/app/components/TimelineDawPrivateMasterBus";
@@ -338,6 +339,31 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function fadeAtPlayPosition(lane: DawPrivateAudioLane, edge: "in" | "out") {
+    setBusy(true);
+    setError(undefined);
+    setMovementNotice(undefined);
+    try {
+      const fade = resolveTimelineDawMusicianTrackFade({
+        timelineStartSeconds: lane.timelineStartSeconds,
+        sourceInSeconds: lane.sourceInSeconds,
+        sourceOutSeconds: lane.sourceOutSeconds,
+        stretchRatio: lane.transform.stretchRatio,
+        transformBypassed: lane.transform.bypassed,
+        playPositionSeconds: playheadRef.current,
+        edge,
+        currentFadeInSeconds: lane.fade.inSeconds,
+        currentFadeOutSeconds: lane.fade.outSeconds,
+      });
+      const { lane: saved } = await updateDawPrivateAudioLaneFade(sessionId, lane.id, fade);
+      setLanes((current) => current.map((candidate) => candidate.id === saved.id ? saved : candidate));
+      setHistoryRevision((current) => current + 1);
+      setMovementNotice(`${saved.name} fade ${edge === "in" ? "in finishes" : "out begins"} at the play position.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Track fade could not be saved.");
+    } finally { setBusy(false); }
+  }
+
   async function moveTrack(lane: DawPrivateAudioLane, destinationSeconds: number) {
     setBusy(true);
     setError(undefined);
@@ -577,6 +603,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Make Copy After This Track</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane, true)}>Make Copy at Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void splitAtPlayhead(lane)}>Cut into Two at Play Position</button></div>
                 </div>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <div className="flex flex-wrap items-center gap-2 sm:col-span-3"><span className="text-xs font-black text-white/70">Fade at play position:</span><button type="button" className={button} disabled={busy} onClick={() => void fadeAtPlayPosition(lane, "in")}>Fade In Until Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void fadeAtPlayPosition(lane, "out")}>Fade Out From Play Position</button></div>
                   <label className="text-xs font-black text-white/55">Fade in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.sourceOutSeconds - lane.sourceInSeconds} step={1 / lane.audio.sampleRate} value={lane.fade.inSeconds} onChange={(event) => editFade(lane.id, { inSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Fade out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.sourceOutSeconds - lane.sourceInSeconds} step={1 / lane.audio.sampleRate} value={lane.fade.outSeconds} onChange={(event) => editFade(lane.id, { outSeconds: Number(event.target.value) })} /></label>
                   <button type="button" className={`${button} self-end`} disabled={busy} onClick={() => void saveFade(lane)}>Save Fades</button>

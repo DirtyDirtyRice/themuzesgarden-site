@@ -239,7 +239,8 @@ export async function POST(request: NextRequest) {
       const { data: stored, error: storedError } = await user.client.from(TABLE).select("*")
         .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).single();
       if (storedError || !stored) throw new ApiError("Private audio lane was not found.", 404);
-      const durationFrames = Math.round((Number(stored.source_out_seconds) - Number(stored.source_in_seconds)) * Number(stored.sample_rate));
+      const stretch = Boolean(stored.transform_bypassed) ? 1 : Number(stored.stretch_ratio ?? 1);
+      const durationFrames = Math.round((Number(stored.source_out_seconds) - Number(stored.source_in_seconds)) * stretch * Number(stored.sample_rate));
       let fade;
       try { fade = parseTimelineDawPrivateLaneFade(body, Number(stored.sample_rate), durationFrames); }
       catch (cause) { throw new ApiError(cause instanceof Error ? cause.message : "Private lane fade settings are invalid.", 400); }

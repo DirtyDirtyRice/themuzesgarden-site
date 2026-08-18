@@ -1135,6 +1135,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Unsafe cuts at a track edge or through an existing outer fade are refused, while a successful cut immediately confirms the track name and exact position in plain language.
 - Focused cutting, copying, trimming, and Undo tests passed (13 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing atomic private-lane split procedure and edit-history system are reused.
+
+## Completed milestone - One-Click Fades at Play Position
+
+- Every audio track now has Fade In Until Play Position and Fade Out From Play Position actions beside its existing detailed fade settings.
+- A musician can listen, stop at the desired point, and create the fade immediately without calculating seconds or remembering a separate save step.
+- Fade length follows the audible song timeline for normal, stretched, and bypassed tracks, so the result lands where the musician actually hears the play position.
+- The server now validates fades against the audible arranged duration, and track cutting protects those timeline-length fades correctly on stretched audio.
+- A fade outside the track or overlapping the opposite fade is refused; successful saves create existing Undo history and produce a plain-language confirmation.
+- Focused fade, cut, and Undo tests passed (14 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing durable private-lane fade columns, API, monitoring envelope, and edit history are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.

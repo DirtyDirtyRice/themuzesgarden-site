@@ -33,7 +33,8 @@ export function parseTimelineDawPrivateLaneSplit(
   }
   const leftFrameCount = localFrame;
   const rightFrameCount = durationFrames - localFrame;
-  if (Math.round(fadeInSeconds * sampleRate) > leftFrameCount || Math.round(fadeOutSeconds * sampleRate) > rightFrameCount) {
+  if (Math.round((fadeInSeconds / effectiveStretch) * sampleRate) > leftFrameCount
+    || Math.round((fadeOutSeconds / effectiveStretch) * sampleRate) > rightFrameCount) {
     throw new Error("Lane split must be outside the existing edge fades.");
   }
   return {
