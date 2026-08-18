@@ -1207,6 +1207,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused musician controls, transform-engine, and history tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined transform API, elastic audio engine, and Undo history are reused.
 
+## Completed milestone - Move a Track to Another Track
+
+- Every audio track now lets a musician choose another track as a simple placement guide.
+- Start with Chosen Track lines up both starting points, while Place After Chosen Track puts the moving track immediately after the chosen performance finishes.
+- After-track placement follows the chosen track's audible trimmed and stretched duration, including bypassed speed processing, so musicians do not calculate seconds.
+- The selected track's private source recording, trim, fades, effects, mix, routing, and other edits are preserved; only its song position changes.
+- Successful placement uses the existing durable move and Undo history, refreshes playback alignment, and confirms the result in plain language. Failed moves never display a false success message.
+- Focused placement, movement, and Undo-policy tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined track arrangement API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
