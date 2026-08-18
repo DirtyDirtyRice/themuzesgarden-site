@@ -481,6 +481,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
+      <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <details className="mt-3 rounded-xl border border-white/10 p-3">
         <summary className="cursor-pointer text-sm font-black text-white/60">Advanced version-family tools</summary>
         <TimelineDawAudioFamilyIntake sessionId={sessionId} />
@@ -493,7 +494,6 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
       <TimelineDawPrivateCollaboration sessionId={sessionId} targets={[...lanes.map(l=>({id:l.id,kind:"lane" as const,name:l.name})),...buses.map(b=>({id:b.id,kind:"bus" as const,name:b.name}))]} />
       <TimelineDawPrivateTemplates sessionId={sessionId} onApplied={()=>window.location.reload()} />
       <TimelineDawPrivateBounceQueue sessionId={sessionId} targets={[...lanes.map(lane=>({id:lane.id,kind:"lane" as const,name:lane.name})),...buses.map(bus=>({id:bus.id,kind:"bus" as const,name:bus.name}))]} />
-      <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <TimelineDawPrivateBusMixer detectorSources={[...lanes.map(l=>({id:l.id,kind:"lane" as const,name:l.name})),...buses.map(b=>({id:b.id,kind:"bus" as const,name:b.name}))]} buses={buses} sends={sends} inserts={inserts} meters={busMeters} busy={busy} onSave={(bus) => void saveBus(bus)} onDelete={(bus) => void deleteBus(bus)} onSend={(send) => void persistSend(send)} onInsert={(insert) => void persistInsert(insert)} />
       <TimelineDawPrivateFreezePanel sessionId={sessionId} lanes={lanes} buses={buses} freezes={freezes} onChange={setFreezes} />
       <TimelineDawPrivateAutomationEditor sessionId={sessionId} sources={[...lanes.map((lane)=>({id:lane.id,kind:"lane" as const,name:lane.name,sampleRate:lane.audio.sampleRate,baseGain:lane.mix.gain,basePan:lane.mix.pan})),...buses.map((bus)=>({id:bus.id,kind:"bus" as const,name:bus.name,sampleRate:lanes[0]?.audio.sampleRate??48000,baseGain:bus.mix.gain,basePan:bus.mix.pan}))]} envelopes={automation} onChange={setAutomation} />

@@ -1095,6 +1095,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Successful changes update the track immediately and produce a plain-language confirmation; failed saves leave a visible error instead of pretending the change persisted.
 - Focused naming, movement, and trimming tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing private audio-lane name column, owner authorization, and session confinement are reused.
+
+## Completed milestone - Visible Musician Track Undo and Redo
+
+- Undo and Redo are now visible in the main track workspace instead of being buried inside Advanced mixing, automation, collaboration, and recovery.
+- The controls plainly say Undo Last Track Edit and Redo Track Edit, including the exact saved action that will be reversed or restored.
+- Accidental moves, trims, splits, fades, duplicates, removals, group edits, and transform edits remain protected by the existing durable edit-history system.
+- Undo and Redo continue rejecting stale track state rather than overwriting newer work, and successful recovery now produces an immediate plain-language confirmation.
+- Recent technical history is collapsed under Show recent track edits so recovery remains easy without adding visual clutter to normal music work.
+- Focused Undo, naming, and trimming tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages after the active compiler completed its extended local run.
+- No database migration was required; the existing owner-confined lane history and conflict-safe restore procedure are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
