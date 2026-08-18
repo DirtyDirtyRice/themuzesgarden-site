@@ -398,10 +398,14 @@ export function splitDawPrivateAudioLane(
   });
 }
 
-export function duplicateDawPrivateAudioLane(sessionId: string, laneId: string): Promise<{ lane: DawPrivateAudioLane }> {
+export function duplicateDawPrivateAudioLane(
+  sessionId: string,
+  laneId: string,
+  timelineStartSeconds?: number,
+): Promise<{ lane: DawPrivateAudioLane }> {
   return request("/api/timeline/daw-private-audio-lanes", {
     method: "POST",
-    body: JSON.stringify({ action: "duplicate", sessionId, laneId }),
+    body: JSON.stringify({ action: "duplicate", sessionId, laneId, timelineStartSeconds }),
   });
 }
 

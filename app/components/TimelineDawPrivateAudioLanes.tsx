@@ -487,13 +487,18 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
-  async function duplicate(lane: DawPrivateAudioLane) {
+  async function duplicate(lane: DawPrivateAudioLane, atPlayPosition = false) {
     setBusy(true);
     setError(undefined);
     try {
-      const { lane: copy } = await duplicateDawPrivateAudioLane(sessionId, lane.id);
+      const { lane: copy } = await duplicateDawPrivateAudioLane(
+        sessionId,
+        lane.id,
+        atPlayPosition ? playheadRef.current : undefined,
+      );
       setLanes((current) => [...current, copy].sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
       setHistoryRevision((current) => current + 1);
+      setMovementNotice(`${copy.name} was copied to ${copy.timelineStartSeconds.toFixed(2)} seconds.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Lane could not be duplicated.");
     } finally { setBusy(false); }
@@ -568,7 +573,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceOutSeconds} onChange={(event) => editArrangement(lane.id, { sourceOutSeconds: Number(event.target.value) })} /></label>
-                  <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Duplicate Lane</button><button type="button" className={button} disabled={busy} onClick={() => void splitAtPlayhead(lane)}>Split at Playhead</button></div>
+                  <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Make Copy After This Track</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane, true)}>Make Copy at Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void splitAtPlayhead(lane)}>Split at Playhead</button></div>
                 </div>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-[1fr_1fr_auto]">
                   <label className="text-xs font-black text-white/55">Fade in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.sourceOutSeconds - lane.sourceInSeconds} step={1 / lane.audio.sampleRate} value={lane.fade.inSeconds} onChange={(event) => editFade(lane.id, { inSeconds: Number(event.target.value) })} /></label>

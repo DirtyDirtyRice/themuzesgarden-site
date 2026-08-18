@@ -9,6 +9,7 @@ import { parseTimelineDawPrivateLaneTransform } from "@/lib/timeline/TimelineDaw
 import { parseTimelineDawPrivateLaneSplit } from "@/lib/timeline/TimelineDawPrivateLaneSplitPolicy";
 import { createTimelineDawPrivateLaneEditReceipt, type TimelineDawPrivateLaneEditOperation } from "@/lib/timeline/TimelineDawPrivateLaneEditHistoryPolicy";
 import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
+import { resolveTimelineDawMusicianTrackCopyPosition } from "@/lib/timeline/TimelineDawMusicianTrackCopy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -155,12 +156,22 @@ export async function POST(request: NextRequest) {
       const { data: stored, error: storedError } = await user.client.from(TABLE).select("*")
         .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).single();
       if (storedError || !stored) throw new ApiError("Private audio lane was not found.", 404);
-      const nextStart = Number(stored.timeline_start_seconds) + Number(stored.source_out_seconds) - Number(stored.source_in_seconds);
-      const arrangement = parseTimelineDawPrivateLaneArrangement({
-        timelineStartSeconds: nextStart,
-        sourceInSeconds: stored.source_in_seconds,
-        sourceOutSeconds: stored.source_out_seconds,
-      }, Number(stored.sample_rate), Number(stored.frame_count));
+      let arrangement;
+      try {
+        const nextStart = resolveTimelineDawMusicianTrackCopyPosition({
+          originalStartSeconds: Number(stored.timeline_start_seconds),
+          sourceInSeconds: Number(stored.source_in_seconds),
+          sourceOutSeconds: Number(stored.source_out_seconds),
+          playPositionSeconds: body.timelineStartSeconds === undefined ? undefined : Number(body.timelineStartSeconds),
+        });
+        arrangement = parseTimelineDawPrivateLaneArrangement({
+          timelineStartSeconds: nextStart,
+          sourceInSeconds: stored.source_in_seconds,
+          sourceOutSeconds: stored.source_out_seconds,
+        }, Number(stored.sample_rate), Number(stored.frame_count));
+      } catch (cause) {
+        throw new ApiError(cause instanceof Error ? cause.message : "Copy position is invalid.", 400);
+      }
       const copyId = `timeline-daw-private-lane-${crypto.randomUUID()}`;
       const { data, error } = await user.client.from(TABLE).insert({
         id: copyId, owner_id: user.id, session_id: sessionId,

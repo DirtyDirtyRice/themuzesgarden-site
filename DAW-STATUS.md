@@ -1115,6 +1115,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Stopping or completing the preview restores the normal transport-ready graph, and leaving the Studio clears the preview timer and audio safely.
 - Focused preview, Undo, and trimming tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing private playback URLs and in-browser monitoring graph are reused.
+
+## Completed milestone - Copy Track at Play Position
+
+- Every audio track now has a Make Copy at Play Position action for repeating a chorus, harmony, riff, sound, or other performance exactly where the musician has stopped playback.
+- The existing copy behavior remains available with the clearer Make Copy After This Track label, so both common placement choices require one click and no timestamp calculation.
+- A copy preserves the original track's private audio source, edits, trims, fades, mix, routing, processing, and provenance while remaining a separate editable track.
+- Requested play positions are validated inside the song timeline and saved with millisecond precision; invalid positions cannot create a misplaced track.
+- Successful copying immediately reorders the visible track list, creates the existing durable Undo history entry, and confirms the new track name and position in plain language.
+- Focused copying, movement, trimming, and Undo tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined private-lane duplicate API and edit-history system are reused.
 ## Working rules
 
 - Preserve existing architecture and user data.
