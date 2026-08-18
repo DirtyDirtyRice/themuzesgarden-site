@@ -1336,6 +1336,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused sequencing, group-alignment, audible-timing, and Undo-policy tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
 
+## Completed milestone - Ten-Millisecond Track Nudging
+
+- Every audio track now has **0.01 Second Earlier** and **0.01 Second Later** controls for precise timing correction of vocals, drums, doubled parts, and layered performances.
+- Selected groups receive matching 0.01-second controls, moving all chosen tracks together while preserving their exact spacing.
+- The existing 0.1-second and 1-second controls remain available for medium and large moves, so musicians can choose the useful adjustment size without typing numbers.
+- Movement remains safely rounded to millisecond precision, clamps individual tracks at the start of the song, and refuses unsafe group movement outside the session timeline.
+- Every successful change saves immediately and uses the existing durable Undo history without changing private audio or other track edits.
+- Focused individual movement, group movement, alignment, sequencing, and safety tests passed (17 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined arrangement API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

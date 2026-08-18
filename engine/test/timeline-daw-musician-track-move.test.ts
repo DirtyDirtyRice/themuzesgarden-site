@@ -17,4 +17,10 @@ describe("TimelineDawMusicianTrackMove", () => {
     expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 8.25, changeSeconds: 0.1 })).toBe(8.35);
     expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 0.05, changeSeconds: -0.1 })).toBe(0);
   });
+
+  it("fine-tunes a track by one hundredth of a second", () => {
+    expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 8.25, changeSeconds: -0.01 })).toBe(8.24);
+    expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 8.25, changeSeconds: 0.01 })).toBe(8.26);
+    expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 0.005, changeSeconds: -0.01 })).toBe(0);
+  });
 });

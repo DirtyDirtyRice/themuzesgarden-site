@@ -1,4 +1,6 @@
 export type TimelineDawMusicianGroupMoveMode =
+  | "hundredth-second-earlier"
+  | "hundredth-second-later"
   | "tenth-second-earlier"
   | "tenth-second-later"
   | "one-second-earlier"
@@ -18,8 +20,12 @@ export function resolveTimelineDawMusicianGroupMove(input: {
   }
 
   const earliestStart = Math.min(...tracks.map((track) => track.timelineStartSeconds));
-  const deltaSeconds = input.mode === "tenth-second-earlier"
-    ? -0.1
+  const deltaSeconds = input.mode === "hundredth-second-earlier"
+    ? -0.01
+    : input.mode === "hundredth-second-later"
+      ? 0.01
+      : input.mode === "tenth-second-earlier"
+        ? -0.1
     : input.mode === "tenth-second-later"
       ? 0.1
       : input.mode === "one-second-earlier"
