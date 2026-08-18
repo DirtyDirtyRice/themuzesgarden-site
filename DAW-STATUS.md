@@ -1227,6 +1227,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused repeat, transform, and Undo-history tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined copy API and private-lane edit history are reused.
 
+## Completed milestone - Repeat a Track Several Times
+
+- Every audio track now offers Repeat Once, Repeat 2 Times, and Repeat 4 Times for quickly building repeated riffs, beats, vocals, and song sections.
+- All repeats are placed consecutively from the audible ending of the original, including trimmed, slowed-down, sped-up, and speed-bypassed tracks.
+- Two- and four-repeat actions are inserted as one all-or-nothing server operation, preventing a failed request from leaving only part of the requested pattern.
+- Every repeated track preserves the source recording, trim, volume, pan, Mute, Solo, fades, routing, speed, pitch, processing algorithm, quality, and bypass setting.
+- The complete repeat group creates one durable Undo history entry, and successful actions confirm the exact number of repeats in plain language.
+- Focused multi-repeat, copy, transform, and Undo-history tests passed (13 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined private-lane table, copy workflow, and edit history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

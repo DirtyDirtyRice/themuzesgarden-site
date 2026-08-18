@@ -411,6 +411,17 @@ export function duplicateDawPrivateAudioLane(
   });
 }
 
+export function repeatDawPrivateAudioLane(
+  sessionId: string,
+  laneId: string,
+  repeatCount: 2 | 4,
+): Promise<{ lanes: DawPrivateAudioLane[] }> {
+  return request("/api/timeline/daw-private-audio-lanes", {
+    method: "POST",
+    body: JSON.stringify({ action: "repeat", sessionId, laneId, repeatCount }),
+  });
+}
+
 export function updateDawPrivateAudioLaneMix(
   sessionId: string,
   laneId: string,

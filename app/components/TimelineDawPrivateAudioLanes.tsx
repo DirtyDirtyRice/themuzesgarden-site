@@ -9,6 +9,7 @@ import {
   deleteDawPrivateBus,
   arrangeDawPrivateAudioLane,
   duplicateDawPrivateAudioLane,
+  repeatDawPrivateAudioLane,
   editDawPrivateLaneGroup,
   loadDawPrivateAudioLanes,
   loadDawPrivateBuses,
@@ -650,6 +651,20 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
     } finally { setBusy(false); }
   }
 
+  async function repeatSeveral(lane: DawPrivateAudioLane, repeatCount: 2 | 4) {
+    setBusy(true);
+    setError(undefined);
+    setMovementNotice(undefined);
+    try {
+      const { lanes: repeats } = await repeatDawPrivateAudioLane(sessionId, lane.id, repeatCount);
+      setLanes((current) => [...current, ...repeats].sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds));
+      setHistoryRevision((current) => current + 1);
+      setMovementNotice(`${lane.name} now repeats ${repeatCount} times in a row.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Track repeats could not be created.");
+    } finally { setBusy(false); }
+  }
+
   async function remove(lane: DawPrivateAudioLane) {
     const message = createTimelineDawMusicianTrackRemovalMessage(lane.name);
     if (!window.confirm(message.confirmation)) return;
@@ -744,7 +759,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                   <label className="text-xs font-black text-white/55">Timeline start (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={86400} step={0.001} value={lane.timelineStartSeconds} onChange={(event) => editArrangement(lane.id, { timelineStartSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source in (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceInSeconds} onChange={(event) => editArrangement(lane.id, { sourceInSeconds: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Source out (s)<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-2 py-1 text-white" type="number" min={0} max={lane.audio.durationSeconds} step={1 / lane.audio.sampleRate} value={lane.sourceOutSeconds} onChange={(event) => editArrangement(lane.id, { sourceOutSeconds: Number(event.target.value) })} /></label>
-                  <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Repeat This Track After It Finishes</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane, true)}>Make Copy at Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void splitAtPlayhead(lane)}>Cut into Two at Play Position</button></div>
+                  <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane)}>Save Arrangement</button><button type="button" className={button} disabled={busy} onClick={() => void saveArrangement(lane, true)}>Reset Full Source</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane)}>Repeat Once</button><button type="button" className={button} disabled={busy} onClick={() => void repeatSeveral(lane, 2)}>Repeat 2 Times</button><button type="button" className={button} disabled={busy} onClick={() => void repeatSeveral(lane, 4)}>Repeat 4 Times</button><button type="button" className={button} disabled={busy} onClick={() => void duplicate(lane, true)}>Make Copy at Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void splitAtPlayhead(lane)}>Cut into Two at Play Position</button></div>
                 </div>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-[1fr_1fr_auto]">
                   <div className="flex flex-wrap items-center gap-2 sm:col-span-3"><span className="text-xs font-black text-white/70">Fade at play position:</span><button type="button" className={button} disabled={busy} onClick={() => void fadeAtPlayPosition(lane, "in")}>Fade In Until Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void fadeAtPlayPosition(lane, "out")}>Fade Out From Play Position</button></div>

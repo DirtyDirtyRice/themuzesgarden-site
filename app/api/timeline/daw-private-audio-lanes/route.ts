@@ -10,6 +10,7 @@ import { parseTimelineDawPrivateLaneSplit } from "@/lib/timeline/TimelineDawPriv
 import { createTimelineDawPrivateLaneEditReceipt, type TimelineDawPrivateLaneEditOperation } from "@/lib/timeline/TimelineDawPrivateLaneEditHistoryPolicy";
 import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
 import { resolveTimelineDawMusicianTrackCopyPosition } from "@/lib/timeline/TimelineDawMusicianTrackCopy";
+import { resolveTimelineDawMusicianTrackRepeatPositions } from "@/lib/timeline/TimelineDawMusicianTrackRepeat";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -193,6 +194,44 @@ export async function POST(request: NextRequest) {
       if (error || !data) throw new ApiError(`Private audio lane could not be duplicated: ${error?.message ?? "missing row"}`, 500);
       await recordEdit(user.client, user.id, sessionId, "duplicate", [], [data]);
       return NextResponse.json({ lane: lane(data, await sign(user.client, user.id, sessionId, String(data.source_uri))) }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (body.action === "repeat") {
+      const laneId = typeof body.laneId === "string" ? body.laneId.trim() : "";
+      if (!laneId) throw new ApiError("laneId is required.", 400);
+      const { data: stored, error: storedError } = await user.client.from(TABLE).select("*")
+        .eq("id", laneId).eq("owner_id", user.id).eq("session_id", sessionId).single();
+      if (storedError || !stored) throw new ApiError("Private audio lane was not found.", 404);
+      let positions: number[];
+      try {
+        positions = resolveTimelineDawMusicianTrackRepeatPositions({
+          originalStartSeconds: Number(stored.timeline_start_seconds),
+          sourceInSeconds: Number(stored.source_in_seconds), sourceOutSeconds: Number(stored.source_out_seconds),
+          stretchRatio: Number(stored.stretch_ratio ?? 1), transformBypassed: Boolean(stored.transform_bypassed),
+          repeatCount: Number(body.repeatCount),
+        });
+      } catch (cause) {
+        throw new ApiError(cause instanceof Error ? cause.message : "Repeat positions are invalid.", 400);
+      }
+      const rows = positions.map((timelineStartSeconds, index) => ({
+        id: `timeline-daw-private-lane-${crypto.randomUUID()}`, owner_id: user.id, session_id: sessionId,
+        name: `${String(stored.name).slice(0, 108)} Repeat ${index + 1}`,
+        source_id: stored.source_id, source_uri: stored.source_uri, source_checksum: stored.source_checksum,
+        sample_rate: stored.sample_rate, channel_count: stored.channel_count, frame_count: stored.frame_count,
+        duration_seconds: stored.duration_seconds, timeline_start_seconds: timelineStartSeconds,
+        source_in_seconds: stored.source_in_seconds, source_out_seconds: stored.source_out_seconds,
+        comp_id: stored.comp_id, comp_render_checksum: stored.comp_render_checksum,
+        muted: stored.muted, soloed: stored.soloed, gain: stored.gain, pan: stored.pan,
+        fade_in_seconds: stored.fade_in_seconds, fade_out_seconds: stored.fade_out_seconds,
+        stretch_ratio: stored.stretch_ratio, pitch_semitones: stored.pitch_semitones,
+        transform_algorithm: stored.transform_algorithm, transform_quality: stored.transform_quality,
+        transform_bypassed: stored.transform_bypassed, bus_id: stored.bus_id,
+      }));
+      const { data, error } = await user.client.from(TABLE).insert(rows).select("*");
+      if (error || !data || data.length !== rows.length) throw new ApiError(`Track repeats could not be created: ${error?.message ?? "missing rows"}`, 500);
+      await recordEdit(user.client, user.id, sessionId, "duplicate", [], data);
+      const repeated = await Promise.all(data.map(async (row) => lane(row, await sign(user.client, user.id, sessionId, String(row.source_uri)))));
+      return NextResponse.json({ lanes: repeated }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
 
     if (body.action === "split") {
