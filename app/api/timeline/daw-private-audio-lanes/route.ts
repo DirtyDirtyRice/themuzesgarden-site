@@ -11,7 +11,7 @@ import { createTimelineDawPrivateLaneEditReceipt, type TimelineDawPrivateLaneEdi
 import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMusicianTrackName";
 import { resolveTimelineDawMusicianTrackCopyPosition } from "@/lib/timeline/TimelineDawMusicianTrackCopy";
 import { resolveTimelineDawMusicianTrackRepeatPositions } from "@/lib/timeline/TimelineDawMusicianTrackRepeat";
-import { buildTimelineDawMusicianTrackProcessingCopies } from "@/lib/timeline/TimelineDawMusicianTrackProcessingCopy";
+import { buildTimelineDawMusicianTrackAutomationCopies, buildTimelineDawMusicianTrackProcessingCopies } from "@/lib/timeline/TimelineDawMusicianTrackProcessingCopy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,19 +44,29 @@ async function requireSession(ownerId: string, token: string, sessionId: string)
   if (!await createTimelineDawWorkspaceServer(ownerId, token).get(ownerId, sessionId)) throw new ApiError("DAW session was not found.", 404);
 }
 async function copyLaneProcessing(client: SupabaseClient, ownerId: string, sessionId: string, sourceLaneId: string, targetLaneIds: string[]) {
-  const [sends, inserts] = await Promise.all([
+  const [sends, inserts, automationEnvelopes] = await Promise.all([
     client.from("timeline_daw_private_sends").select("destination_bus_id,level,pre_fader,muted").eq("owner_id", ownerId).eq("session_id", sessionId).eq("source_kind", "lane").eq("source_id", sourceLaneId),
     client.from("timeline_daw_private_inserts").select("slot,effect,bypassed,parameters,latency_samples,sidechain").eq("owner_id", ownerId).eq("session_id", sessionId).eq("source_kind", "lane").eq("source_id", sourceLaneId),
+    client.from("timeline_daw_private_automation_envelopes").select("id,parameter,bypassed").eq("owner_id", ownerId).eq("session_id", sessionId).eq("source_kind", "lane").eq("source_id", sourceLaneId),
   ]);
-  if (sends.error || inserts.error) throw new Error(sends.error?.message ?? inserts.error?.message ?? "Track effects could not be read.");
+  if (sends.error || inserts.error || automationEnvelopes.error) throw new Error(sends.error?.message ?? inserts.error?.message ?? automationEnvelopes.error?.message ?? "Track sound settings could not be read.");
+  const envelopeIds = (automationEnvelopes.data ?? []).map((row) => row.id);
+  const automationPoints = envelopeIds.length
+    ? await client.from("timeline_daw_private_automation_points").select("envelope_id,sample_position,value,interpolation").eq("owner_id", ownerId).in("envelope_id", envelopeIds)
+    : { data: [], error: null };
+  if (automationPoints.error) throw new Error(automationPoints.error.message);
   const copies = buildTimelineDawMusicianTrackProcessingCopies({ ownerId, sessionId, targetLaneIds, sends: sends.data ?? [], inserts: inserts.data ?? [], id: () => crypto.randomUUID() });
+  const automationCopies = buildTimelineDawMusicianTrackAutomationCopies({ ownerId, sessionId, targetLaneIds, envelopes: automationEnvelopes.data ?? [], points: automationPoints.data ?? [], id: () => crypto.randomUUID() });
   if (copies.sends.length) { const saved = await client.from("timeline_daw_private_sends").insert(copies.sends); if (saved.error) throw new Error(saved.error.message); }
   if (copies.inserts.length) { const saved = await client.from("timeline_daw_private_inserts").insert(copies.inserts); if (saved.error) throw new Error(saved.error.message); }
+  if (automationCopies.envelopes.length) { const saved = await client.from("timeline_daw_private_automation_envelopes").insert(automationCopies.envelopes); if (saved.error) throw new Error(saved.error.message); }
+  if (automationCopies.points.length) { const saved = await client.from("timeline_daw_private_automation_points").insert(automationCopies.points); if (saved.error) throw new Error(saved.error.message); }
 }
 async function removeFailedCopies(client: SupabaseClient, ownerId: string, sessionId: string, laneIds: string[]) {
   await Promise.all([
     client.from("timeline_daw_private_sends").delete().eq("owner_id", ownerId).eq("session_id", sessionId).in("source_id", laneIds),
     client.from("timeline_daw_private_inserts").delete().eq("owner_id", ownerId).eq("session_id", sessionId).in("source_id", laneIds),
+    client.from("timeline_daw_private_automation_envelopes").delete().eq("owner_id", ownerId).eq("session_id", sessionId).eq("source_kind", "lane").in("source_id", laneIds),
   ]);
   await client.from(TABLE).delete().eq("owner_id", ownerId).eq("session_id", sessionId).in("id", laneIds);
 }

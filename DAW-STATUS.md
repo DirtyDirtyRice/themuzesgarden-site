@@ -1277,6 +1277,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused copy, repeat, mixer-processing, and Undo-history tests passed (15 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined insert, send, audio-lane, and Undo-history tables are reused.
 
+## Completed milestone - Copies Keep Their Volume and Pan Movement
+
+- Repeat Once, Repeat 2 Times, Repeat 4 Times, and Copy to Play Position now preserve track volume and left-right pan automation.
+- Every copied automation curve keeps its original timing, values, smooth or stepped movement, and bypass state while receiving separate editable records for the new track.
+- Multiple repeated tracks each receive their own complete automation envelopes and points instead of sharing or changing the original track's automation.
+- If automation cannot be preserved, the server removes the unfinished copied track or repeat group and reports the problem instead of leaving a partial musical result.
+- The track area reloads automation after copying, so the preserved volume and pan movement takes effect immediately without refreshing the page.
+- Focused copy, repeat, automation, mixer-processing, and Undo-history tests passed (18 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined automation envelope, automation point, audio-lane, and Undo-history tables are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
