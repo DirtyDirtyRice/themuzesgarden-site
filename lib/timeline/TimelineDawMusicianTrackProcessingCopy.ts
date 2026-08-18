@@ -1,7 +1,11 @@
+import type { TimelineDawPrivateClipRepairState } from "./TimelineDawPrivateClipRepairPolicy";
+
 type StoredSend = { destination_bus_id: unknown; level: unknown; pre_fader: unknown; muted: unknown };
 type StoredInsert = { slot: unknown; effect: unknown; bypassed: unknown; parameters: unknown; latency_samples?: unknown; sidechain?: unknown };
 type StoredAutomationEnvelope = { id: unknown; parameter: unknown; bypassed: unknown };
 type StoredAutomationPoint = { envelope_id: unknown; sample_position: unknown; value: unknown; interpolation: unknown };
+type StoredWarpMap = { markers: unknown };
+type StoredClipRepair = { bypassed: unknown; gain_points: unknown; spectral_repairs: unknown };
 
 export function buildTimelineDawMusicianTrackProcessingCopies(input: {
   ownerId: string;
@@ -58,4 +62,35 @@ export function buildTimelineDawMusicianTrackAutomationCopies(input: {
     }
   }
   return { envelopes, points };
+}
+
+export function buildTimelineDawMusicianTrackRepairCopies(input: {
+  ownerId: string;
+  sessionId: string;
+  targetLaneIds: string[];
+  warpMap?: StoredWarpMap | null;
+  clipRepair?: StoredClipRepair | null;
+  clipRepairChecksum: (state: TimelineDawPrivateClipRepairState) => string;
+}) {
+  if (!input.ownerId || !input.sessionId || !input.targetLaneIds.length || input.targetLaneIds.some((id) => !id)) {
+    throw new Error("Track repair copy targets are invalid.");
+  }
+  return {
+    warpMaps: input.warpMap ? input.targetLaneIds.map((laneId) => ({
+      owner_id: input.ownerId, session_id: input.sessionId, lane_id: laneId,
+      markers: input.warpMap?.markers, revision: 1,
+    })) : [],
+    clipRepairs: input.clipRepair ? input.targetLaneIds.map((laneId) => {
+      const state: TimelineDawPrivateClipRepairState = {
+        laneId, revision: 0, bypassed: Boolean(input.clipRepair?.bypassed),
+        gainPoints: Array.isArray(input.clipRepair?.gain_points) ? input.clipRepair.gain_points as TimelineDawPrivateClipRepairState["gainPoints"] : [],
+        spectralRepairs: Array.isArray(input.clipRepair?.spectral_repairs) ? input.clipRepair.spectral_repairs as TimelineDawPrivateClipRepairState["spectralRepairs"] : [],
+      };
+      return {
+        id: `timeline-daw-private-clip-repair-${laneId}`, owner_id: input.ownerId, session_id: input.sessionId,
+        lane_id: laneId, revision: state.revision, bypassed: state.bypassed, gain_points: state.gainPoints,
+        spectral_repairs: state.spectralRepairs, state_checksum: input.clipRepairChecksum(state),
+      };
+    }) : [],
+  };
 }

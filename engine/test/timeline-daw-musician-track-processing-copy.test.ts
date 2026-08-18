@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTimelineDawMusicianTrackAutomationCopies, buildTimelineDawMusicianTrackProcessingCopies } from "../../lib/timeline/TimelineDawMusicianTrackProcessingCopy";
+import { buildTimelineDawMusicianTrackAutomationCopies, buildTimelineDawMusicianTrackProcessingCopies, buildTimelineDawMusicianTrackRepairCopies } from "../../lib/timeline/TimelineDawMusicianTrackProcessingCopy";
 
 describe("musician track processing copies", () => {
   it("copies every send and insert to every repeated track", () => {
@@ -40,12 +40,34 @@ describe("musician track processing copies", () => {
     expect(result.points.every((point) => result.envelopes.some((envelope) => envelope.id === point.envelope_id))).toBe(true);
   });
 
+  it("copies warp timing and audio repairs into independent track records", () => {
+    const result = buildTimelineDawMusicianTrackRepairCopies({
+      ownerId: "owner", sessionId: "song", targetLaneIds: ["copy-a", "copy-b"],
+      warpMap: { markers: [{ sourceFrame: 100, destinationFrame: 120, protected: false }] },
+      clipRepair: {
+        bypassed: false,
+        gain_points: [{ frame: 0, gainDb: -3 }],
+        spectral_repairs: [{ id: "hum", startFrame: 0, endFrame: 100, lowHz: 50, highHz: 70, attenuationDb: -12, bypassed: false, provenance: "manual" }],
+      },
+      clipRepairChecksum: (state) => `checksum-${state.laneId}-${state.revision}`,
+    });
+    expect(result.warpMaps).toEqual([
+      { owner_id: "owner", session_id: "song", lane_id: "copy-a", markers: [{ sourceFrame: 100, destinationFrame: 120, protected: false }], revision: 1 },
+      { owner_id: "owner", session_id: "song", lane_id: "copy-b", markers: [{ sourceFrame: 100, destinationFrame: 120, protected: false }], revision: 1 },
+    ]);
+    expect(result.clipRepairs).toHaveLength(2);
+    expect(result.clipRepairs[1]).toMatchObject({ lane_id: "copy-b", revision: 0, state_checksum: "checksum-copy-b-0", gain_points: [{ frame: 0, gainDb: -3 }] });
+    expect(result.clipRepairs[0].id).not.toBe(result.clipRepairs[1].id);
+  });
+
   it("allows tracks without processing and rejects missing targets", () => {
     expect(buildTimelineDawMusicianTrackProcessingCopies({ ownerId: "owner", sessionId: "song", targetLaneIds: ["copy"], sends: [], inserts: [], id: () => "id" }))
       .toEqual({ sends: [], inserts: [] });
     expect(() => buildTimelineDawMusicianTrackProcessingCopies({ ownerId: "owner", sessionId: "song", targetLaneIds: [], sends: [], inserts: [], id: () => "id" }))
       .toThrow(/targets are invalid/);
     expect(() => buildTimelineDawMusicianTrackAutomationCopies({ ownerId: "owner", sessionId: "song", targetLaneIds: [], envelopes: [], points: [], id: () => "id" }))
+      .toThrow(/targets are invalid/);
+    expect(() => buildTimelineDawMusicianTrackRepairCopies({ ownerId: "owner", sessionId: "song", targetLaneIds: [], clipRepairChecksum: () => "checksum" }))
       .toThrow(/targets are invalid/);
   });
 });

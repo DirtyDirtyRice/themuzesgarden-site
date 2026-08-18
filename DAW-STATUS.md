@@ -1287,6 +1287,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused copy, repeat, automation, mixer-processing, and Undo-history tests passed (18 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined automation envelope, automation point, audio-lane, and Undo-history tables are reused.
 
+## Completed milestone - Copies Keep Their Timing and Audio Repairs
+
+- Repeat Once, Repeat 2 Times, Repeat 4 Times, and Copy to Play Position now preserve warp timing corrections, clip-gain fixes, and spectral repairs.
+- Every new track receives independent warp and repair records, so a musician can change the copy later without changing the original track.
+- Repeated tracks keep repaired level changes, repaired frequency ranges, repair bypass choices, and timing markers instead of unexpectedly returning to untreated audio.
+- Repair integrity checksums are regenerated for each copied track, while repair and warp edit histories begin clean for the independently editable copy.
+- If timing or repair preservation fails, the server removes the unfinished copy or repeat group and reports the problem instead of leaving an incomplete musical result.
+- Focused copy, repeat, warp, clip-repair, and Undo-history tests passed (22 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined warp-map, clip-repair, audio-lane, and Undo-history tables are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
