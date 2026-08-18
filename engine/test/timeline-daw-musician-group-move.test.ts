@@ -12,6 +12,11 @@ describe("musician multi-track movement", () => {
     expect(resolveTimelineDawMusicianGroupMove({ tracks, mode: "one-second-later" })).toBe(1);
   });
 
+  it("fine-tunes selected tracks together by one tenth of a second", () => {
+    expect(resolveTimelineDawMusicianGroupMove({ tracks, mode: "tenth-second-earlier" })).toBe(-0.1);
+    expect(resolveTimelineDawMusicianGroupMove({ tracks, mode: "tenth-second-later" })).toBe(0.1);
+  });
+
   it("moves the earliest selected track to the play position and preserves spacing", () => {
     const delta = resolveTimelineDawMusicianGroupMove({ tracks, mode: "play-position", playPositionSeconds: 10 });
     expect(delta).toBe(7);

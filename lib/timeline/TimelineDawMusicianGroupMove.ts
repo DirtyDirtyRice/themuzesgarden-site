@@ -1,4 +1,6 @@
 export type TimelineDawMusicianGroupMoveMode =
+  | "tenth-second-earlier"
+  | "tenth-second-later"
   | "one-second-earlier"
   | "one-second-later"
   | "play-position";
@@ -16,11 +18,15 @@ export function resolveTimelineDawMusicianGroupMove(input: {
   }
 
   const earliestStart = Math.min(...tracks.map((track) => track.timelineStartSeconds));
-  const deltaSeconds = input.mode === "one-second-earlier"
-    ? -1
-    : input.mode === "one-second-later"
-      ? 1
-      : Number(input.playPositionSeconds) - earliestStart;
+  const deltaSeconds = input.mode === "tenth-second-earlier"
+    ? -0.1
+    : input.mode === "tenth-second-later"
+      ? 0.1
+      : input.mode === "one-second-earlier"
+        ? -1
+        : input.mode === "one-second-later"
+          ? 1
+          : Number(input.playPositionSeconds) - earliestStart;
   const roundedDelta = Math.round(deltaSeconds * 1_000) / 1_000;
 
   if (!Number.isFinite(roundedDelta)) {

@@ -1297,6 +1297,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused copy, repeat, warp, clip-repair, and Undo-history tests passed (22 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined warp-map, clip-repair, audio-lane, and Undo-history tables are reused.
 
+## Completed milestone - Fine Track Alignment
+
+- Every audio track now has 0.1 Second Earlier and 0.1 Second Later controls for tightening vocals, drums, doubled parts, and layered performances without typing timeline numbers.
+- Selected track groups also move one tenth of a second earlier or later while preserving the exact spacing between all selected performances.
+- Fine movement saves immediately, refreshes the audible arrangement, and uses the existing durable Undo history.
+- Movement is rounded safely to millisecond precision, and attempts to push any selected track before the beginning or beyond the safe song range are refused.
+- Existing one-second movement and move-to-play-position controls remain available for larger arrangement changes.
+- Focused individual movement, group movement, atomic group edit, and Undo-history tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined arrangement API, atomic group edit, and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

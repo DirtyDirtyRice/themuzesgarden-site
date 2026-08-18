@@ -585,11 +585,15 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
         mode,
         playPositionSeconds: playheadRef.current,
       });
-      const direction = mode === "one-second-earlier"
-        ? "one second earlier"
-        : mode === "one-second-later"
-          ? "one second later"
-          : "to the play position";
+      const direction = mode === "tenth-second-earlier"
+        ? "one tenth of a second earlier"
+        : mode === "tenth-second-later"
+          ? "one tenth of a second later"
+          : mode === "one-second-earlier"
+            ? "one second earlier"
+            : mode === "one-second-later"
+              ? "one second later"
+              : "to the play position";
       await applyGroupEdit(
         { groupAction: "move", deltaSeconds },
         `${selectedTracks.length} selected tracks moved ${direction}. Their spacing stayed the same.`,
@@ -726,6 +730,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
           <span className="text-sm font-black text-cyan-100">Move tracks together: {selectedIds.size} selected</span>
           <button type="button" className={button} disabled={busy || !lanes.length || selectedIds.size === lanes.length} onClick={() => setSelectedIds(new Set(lanes.map((lane) => lane.id)))}>Select All Tracks</button>
           <button type="button" className={button} disabled={busy || !selectedIds.size} onClick={() => setSelectedIds(new Set())}>Clear Selection</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("tenth-second-earlier")}>Move Selected 0.1 Second Earlier</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("tenth-second-later")}>Move Selected 0.1 Second Later</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("one-second-earlier")}>Move Selected 1 Second Earlier</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("one-second-later")}>Move Selected 1 Second Later</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void moveSelectedTracks("play-position")}>Move Selected to Play Position</button>
@@ -773,7 +779,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
                 <TimelineDawWarpEditor sessionId={sessionId} laneId={lane.id} frameCount={lane.audio.frameCount} sampleRate={lane.audio.sampleRate} onChange={(markers)=>setWarpMaps(x=>({...x,[lane.id]:markers}))} />
                 <label className="mt-3 block text-xs font-black text-white/55">Output routing<select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={lane.busId ?? ""} onChange={(event) => void assignBus(lane, event.target.value || null)}><option value="">Master</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label><label className="ml-3 text-xs font-black text-white/55">Parallel send<select aria-label={`${lane.name} parallel send`} className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" defaultValue="" onChange={(event) => { if (event.target.value) void persistSend({ sourceKind: "lane", sourceId: lane.id, destinationBusId: event.target.value, level: 0.5, preFader: false, muted: false }); event.currentTarget.value = ""; }}><option value="">Add sendâ€¦</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label>
                 <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/50 p-3 sm:grid-cols-3">
-                  <div className="flex flex-wrap items-center gap-2 sm:col-span-3"><span className="text-xs font-black text-white/70">Move this track:</span><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: -1 }))}>1 Second Earlier</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: 1 }))}>1 Second Later</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, playheadRef.current)}>Start at Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrackEndToPlayPosition(lane)}>End at Play Position</button></div>
+                  <div className="flex flex-wrap items-center gap-2 sm:col-span-3"><span className="text-xs font-black text-white/70">Move this track:</span><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: -0.1 }))}>0.1 Second Earlier</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: 0.1 }))}>0.1 Second Later</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: -1 }))}>1 Second Earlier</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, resolveTimelineDawMusicianTrackMove({ currentStartSeconds: lane.timelineStartSeconds, changeSeconds: 1 }))}>1 Second Later</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrack(lane, playheadRef.current)}>Start at Play Position</button><button type="button" className={button} disabled={busy} onClick={() => void moveTrackEndToPlayPosition(lane)}>End at Play Position</button></div>
                   <div className="flex flex-wrap items-center gap-2 rounded-lg border border-cyan-300/20 bg-cyan-300/5 p-2 sm:col-span-3">
                     <span className="text-xs font-black text-cyan-100">Move by another track:</span>
                     <select aria-label={`Placement guide for ${lane.name}`} className="min-w-48 rounded-lg border border-white/20 bg-black px-2 py-2 text-xs text-white" value={placementTargets[lane.id] ?? ""} onChange={(event) => setPlacementTargets((current) => ({ ...current, [lane.id]: event.target.value }))} disabled={busy || lanes.length < 2}>

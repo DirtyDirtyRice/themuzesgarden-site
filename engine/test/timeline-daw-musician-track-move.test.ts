@@ -11,4 +11,10 @@ describe("TimelineDawMusicianTrackMove", () => {
   it("moves directly to the play position with millisecond precision", () => {
     expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 3, destinationSeconds: 12.3456 })).toBe(12.346);
   });
+
+  it("fine-tunes a track by one tenth of a second", () => {
+    expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 8.25, changeSeconds: -0.1 })).toBe(8.15);
+    expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 8.25, changeSeconds: 0.1 })).toBe(8.35);
+    expect(resolveTimelineDawMusicianTrackMove({ currentStartSeconds: 0.05, changeSeconds: -0.1 })).toBe(0);
+  });
 });
