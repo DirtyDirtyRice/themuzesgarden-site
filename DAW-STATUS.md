@@ -1257,6 +1257,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused timing, waveform, movement, repeat, and transform tests passed (15 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; this milestone corrects musician-facing timing projections while preserving every private recording and edit.
 
+## Completed milestone - Speed-Aware Automatic Crossfades
+
+- Automatic smooth transitions now calculate overlap from each track's audible ending instead of its unprocessed source-file ending.
+- Crossfades start and finish correctly for trimmed, slowed-down, sped-up, and speed-bypassed tracks.
+- A speed change that removes an audible overlap no longer creates a false transition, while a slowed track that genuinely overlaps the next track receives the correct equal-power transition.
+- Sample-rate and channel compatibility protections remain enforced before any automatic crossfade is applied.
+- The transition panel now uses plain musician language and readable timing instead of technical wording and corrupted separators.
+- Focused crossfade, fade, timing, and transform tests passed (13 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing real-time equal-power envelope system is reused with corrected audible timing.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

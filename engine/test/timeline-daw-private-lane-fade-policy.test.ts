@@ -30,4 +30,16 @@ describe("private lane fade policy", () => {
       .toEqual([{ outgoingLaneId: "a", incomingLaneId: "b", startSeconds: 1.5, endSeconds: 2, durationSeconds: 0.5 }]);
     expect(detectTimelineDawPrivateLaneCrossfades([lane("a", 0, 2), lane("b", 1.5, 2, 44_100)])).toEqual([]);
   });
+
+  it("detects transitions from audible speed-changed endings", () => {
+    const lane = (id: string, start: number, stretchRatio: number, bypassed = false) => ({
+      id, timelineStartSeconds: start, sourceInSeconds: 0, sourceOutSeconds: 2,
+      transform: { stretchRatio, bypassed }, audio: { sampleRate: 48_000, channelCount: 2 },
+    });
+    expect(detectTimelineDawPrivateLaneCrossfades([lane("slow", 0, 1.5), lane("next", 2.5, 1)]))
+      .toEqual([{ outgoingLaneId: "slow", incomingLaneId: "next", startSeconds: 2.5, endSeconds: 3, durationSeconds: 0.5 }]);
+    expect(detectTimelineDawPrivateLaneCrossfades([lane("fast", 0, 0.5), lane("next", 1.5, 1)])).toEqual([]);
+    expect(detectTimelineDawPrivateLaneCrossfades([lane("bypassed", 0, 1.5, true), lane("next", 1.5, 1)]))
+      .toEqual([{ outgoingLaneId: "bypassed", incomingLaneId: "next", startSeconds: 1.5, endSeconds: 2, durationSeconds: 0.5 }]);
+  });
 });

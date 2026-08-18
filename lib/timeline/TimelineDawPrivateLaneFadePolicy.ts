@@ -18,6 +18,7 @@ type CrossfadeLane = {
   timelineStartSeconds: number;
   sourceInSeconds: number;
   sourceOutSeconds: number;
+  transform?: { stretchRatio: number; bypassed: boolean };
   audio: { sampleRate: number; channelCount: number };
 };
 
@@ -66,8 +67,14 @@ export function detectTimelineDawPrivateLaneCrossfades(lanes: CrossfadeLane[]): 
   for (let index = 0; index < ordered.length - 1; index += 1) {
     const outgoing = ordered[index];
     const incoming = ordered[index + 1];
-    const outgoingEnd = outgoing.timelineStartSeconds + outgoing.sourceOutSeconds - outgoing.sourceInSeconds;
-    const incomingEnd = incoming.timelineStartSeconds + incoming.sourceOutSeconds - incoming.sourceInSeconds;
+    const outgoingEnd = resolveTimelineDawMusicianTrackTiming({
+      timelineStartSeconds: outgoing.timelineStartSeconds, sourceInSeconds: outgoing.sourceInSeconds, sourceOutSeconds: outgoing.sourceOutSeconds,
+      stretchRatio: outgoing.transform?.stretchRatio ?? 1, transformBypassed: outgoing.transform?.bypassed ?? false,
+    }).audibleEndSeconds;
+    const incomingEnd = resolveTimelineDawMusicianTrackTiming({
+      timelineStartSeconds: incoming.timelineStartSeconds, sourceInSeconds: incoming.sourceInSeconds, sourceOutSeconds: incoming.sourceOutSeconds,
+      stretchRatio: incoming.transform?.stretchRatio ?? 1, transformBypassed: incoming.transform?.bypassed ?? false,
+    }).audibleEndSeconds;
     const compatible = outgoing.audio.sampleRate === incoming.audio.sampleRate
       && outgoing.audio.channelCount === incoming.audio.channelCount;
     if (!compatible || incoming.timelineStartSeconds >= outgoingEnd || incomingEnd <= outgoingEnd) continue;
@@ -81,3 +88,4 @@ export function detectTimelineDawPrivateLaneCrossfades(lanes: CrossfadeLane[]): 
   }
   return transitions;
 }
+import { resolveTimelineDawMusicianTrackTiming } from "./TimelineDawMusicianTrackTiming";
