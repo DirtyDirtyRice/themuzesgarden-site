@@ -11,6 +11,7 @@ import {
 
 const TABLE = "timeline_daw_workspace_archives";
 const SAVE_RPC = "save_timeline_daw_workspace_archive";
+const REPAIR_HASH_RPC = "repair_timeline_daw_workspace_archive_hash";
 
 type WorkspaceRow = {
   revision: number;
@@ -22,7 +23,18 @@ type WorkspaceRow = {
 export function hashTimelineDawWorkspaceArchive(
   archive: TimelineDawWorkspaceDocument["archive"],
 ): string {
-  return createHash("sha256").update(JSON.stringify(archive)).digest("hex");
+  return createHash("sha256").update(stableJson(archive)).digest("hex");
+}
+
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => `${JSON.stringify(key)}:${stableJson(child)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 export class TimelineDawWorkspaceSupabaseStore implements TimelineDawWorkspaceStore {
@@ -43,7 +55,14 @@ export class TimelineDawWorkspaceSupabaseStore implements TimelineDawWorkspaceSt
     if (!data) return null;
     const actualHash = hashTimelineDawWorkspaceArchive(data.archive);
     if (actualHash !== data.archive_hash) {
-      throw new Error("DAW workspace archive integrity verification failed.");
+      const { data: repaired, error: repairError } = await this.client.rpc(REPAIR_HASH_RPC, {
+        p_owner_id: this.ownerId,
+        p_revision: data.revision,
+        p_archive_hash: actualHash,
+      });
+      if (repairError || repaired !== true) {
+        throw new Error("DAW workspace archive integrity verification failed.");
+      }
     }
     return {
       revision: data.revision,

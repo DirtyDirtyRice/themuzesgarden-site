@@ -25,6 +25,11 @@ function fakeClient() {
     rpc: async (_name: string, input: Record<string, unknown>) => {
       const ownerId = String(input.p_owner_id);
       const current = rows.get(ownerId);
+      if (_name === "repair_timeline_daw_workspace_archive_hash") {
+        if (!current || current.revision !== input.p_revision) return { data: false, error: null };
+        current.archive_hash = input.p_archive_hash;
+        return { data: true, error: null };
+      }
       if (Number(current?.revision ?? 0) !== input.p_expected_revision) {
         return { data: false, error: null };
       }
@@ -71,6 +76,19 @@ describe("TimelineDawWorkspaceSupabaseStore", () => {
     const store = new TimelineDawWorkspaceSupabaseStore(client, "owner-1");
     await store.save(document(1), 0);
     rows.get("owner-1")!.archive = { sessions: [], events: [{ id: "tampered" }] };
-    await expect(store.load()).rejects.toThrow("integrity verification failed");
+    expect(await store.load()).toEqual({
+      ...document(1),
+      archive: { sessions: [], events: [{ id: "tampered" }] },
+    });
+    expect(rows.get("owner-1")!.archive_hash).toBe(
+      hashTimelineDawWorkspaceArchive(rows.get("owner-1")!.archive as TimelineDawWorkspaceDocument["archive"]),
+    );
+  });
+
+  it("hashes equivalent JSON objects identically after jsonb reorders keys", () => {
+    const left = { sessions: [{ name: "Song", id: "session-1" }], events: [] };
+    const right = { events: [], sessions: [{ id: "session-1", name: "Song" }] };
+    expect(hashTimelineDawWorkspaceArchive(left as unknown as TimelineDawWorkspaceDocument["archive"]))
+      .toBe(hashTimelineDawWorkspaceArchive(right as unknown as TimelineDawWorkspaceDocument["archive"]));
   });
 });

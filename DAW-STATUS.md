@@ -1356,6 +1356,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused spacing, sequencing, audible-timing, and safety tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
 
+## Completed milestone - Live DAW Workspace Archive Recovery
+
+- Existing DAW workspaces now reopen after Supabase JSON storage changes the order of object keys.
+- Workspace integrity hashes now use stable, recursively sorted JSON, so the same saved musical data always produces the same checksum.
+- A narrowly owner-authorized repair function upgrades an affected legacy checksum in place without changing the workspace revision, sessions, tracks, or private audio.
+- Future saves use the stable checksum automatically, while authentication, owner matching, revision matching, and checksum-format checks remain enforced.
+- Focused workspace storage tests passed (5 tests), including JSON key reordering and legacy checksum repair; TypeScript and the full production build also passed.
+- Database migration `20260819103000_repair_timeline_daw_workspace_archive_hash.sql` was reviewed and applied to provide the owner-confined repair operation.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
