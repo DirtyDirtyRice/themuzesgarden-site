@@ -9,7 +9,7 @@ export type PrivateLaneGroupEditInput =
   | { groupAction: "move"; deltaSeconds: number }
   | { groupAction: "align-start" }
   | { groupAction: "align-end" }
-  | { groupAction: "sequence" }
+  | { groupAction: "sequence"; sequenceGapSeconds?: number }
   | { groupAction: "mix"; muted: boolean; gain: number; pan: number }
   | { groupAction: "fade"; fadeInSeconds: number; fadeOutSeconds: number };
 

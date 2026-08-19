@@ -52,6 +52,18 @@ describe("private lane group edit policy", () => {
     ])).toThrow(/already placed one after another/);
   });
 
+  it("adds requested space between sequenced tracks", () => {
+    expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 0.1 }, [
+      { ...lanes[0], timelineStartSeconds: 1, sourceOutSeconds: 3 },
+      { ...lanes[1], timelineStartSeconds: 8, sourceInSeconds: 0, sourceOutSeconds: 2 },
+    ])).toEqual({ action: "sequence", timelineStartSecondsById: { a: 1, b: 4.1 } });
+    expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 1 }, [
+      { ...lanes[0], timelineStartSeconds: 1, sourceOutSeconds: 3 },
+      { ...lanes[1], timelineStartSeconds: 8, sourceInSeconds: 0, sourceOutSeconds: 2 },
+    ])).toEqual({ action: "sequence", timelineStartSecondsById: { a: 1, b: 5 } });
+    expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 61 }, lanes)).toThrow(/between 0 and 60/);
+  });
+
   it("validates common mixer and fade values across the selection", () => {
     expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "mix", muted: true, gain: 1.2, pan: -0.25 }, lanes)).toEqual({ action: "mix", muted: true, gain: 1.2, pan: -0.25 });
     expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "fade", fadeInSeconds: 0.25, fadeOutSeconds: 0.5 }, lanes)).toMatchObject({ action: "fade" });

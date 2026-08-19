@@ -1346,6 +1346,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused individual movement, group movement, alignment, sequencing, and safety tests passed (17 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined arrangement API and Undo history are reused.
 
+## Completed milestone - Space Between Selected Tracks
+
+- Musicians can now select two or more tracks and place them in order with either **0.1 Second Gaps** or **1 Second Gaps**.
+- The 0.1-second option adds a short breath between clips; the 1-second option adds a clearly audible pause without requiring timeline calculations.
+- Tracks keep their current left-to-right order and begin from the earliest selected track's existing position.
+- Every new start uses the previous track's truthful trimmed and speed-adjusted audible ending, including slowed, sped-up, and speed-bypassed audio.
+- The complete spaced sequence is saved atomically as one Undo step, and invalid or unsafe spacing is refused without partial movement.
+- Focused spacing, sequencing, audible-timing, and safety tests passed (11 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined atomic group-edit API and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

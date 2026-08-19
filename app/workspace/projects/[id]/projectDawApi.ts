@@ -332,6 +332,7 @@ export function editDawPrivateLaneGroup(input: {
   laneIds: string[];
   groupAction: "move" | "align-start" | "align-end" | "sequence" | "mix" | "fade" | "audibility";
   deltaSeconds?: number;
+  sequenceGapSeconds?: number;
   muted?: boolean;
   gain?: number;
   pan?: number;

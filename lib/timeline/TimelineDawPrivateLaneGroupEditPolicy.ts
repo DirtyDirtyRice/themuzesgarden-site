@@ -66,6 +66,10 @@ export function parseTimelineDawPrivateLaneGroupEdit(value: unknown, lanes: Time
     return { action: "align-end", timelineStartSecondsById };
   }
   if (input.groupAction === "sequence") {
+    const gapSeconds = input.sequenceGapSeconds === undefined ? 0 : Math.round(Number(input.sequenceGapSeconds) * 1_000) / 1_000;
+    if (!Number.isFinite(gapSeconds) || gapSeconds < 0 || gapSeconds > 60) {
+      throw new Error("Space between selected tracks must be between 0 and 60 seconds.");
+    }
     const ordered = [...lanes].sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds || a.id.localeCompare(b.id));
     let nextStart = ordered[0].timelineStartSeconds;
     const timelineStartSecondsById: Record<string, number> = {};
@@ -78,10 +82,10 @@ export function parseTimelineDawPrivateLaneGroupEdit(value: unknown, lanes: Time
         throw new Error("Selected tracks cannot fit one after another inside the session timeline.");
       }
       timelineStartSecondsById[lane.id] = roundedStart;
-      nextStart = nextEnd;
+      nextStart = nextEnd + gapSeconds;
     }
     if (lanes.every((lane) => lane.timelineStartSeconds === timelineStartSecondsById[lane.id])) {
-      throw new Error("The selected tracks are already placed one after another.");
+      throw new Error(gapSeconds ? "The selected tracks already have that spacing." : "The selected tracks are already placed one after another.");
     }
     return { action: "sequence", timelineStartSecondsById };
   }

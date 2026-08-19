@@ -744,8 +744,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "align-start" }, `${selectedIds.size} selected tracks now start together.`)}>Align Selected Starts</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "align-end" }, `${selectedIds.size} selected tracks now end together.`)}>Align Selected Endings</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "sequence" }, `${selectedIds.size} selected tracks now play one after another.`)}>Place Selected One After Another</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 0.1 }, `${selectedIds.size} selected tracks now have a 0.1-second space between them.`)}>Place Selected with 0.1 Second Gaps</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 1 }, `${selectedIds.size} selected tracks now have a 1-second space between them.`)}>Place Selected with 1 Second Gaps</button>
         </div>
-        <p className="mt-2 text-xs text-white/55">Check two or more tracks below. Move keeps their spacing. Align layers their starts or endings. Place One After Another makes a continuous sequence in their current order.</p>
+        <p className="mt-2 text-xs text-white/55">Check two or more tracks below. Move keeps their spacing. Align layers their starts or endings. Place makes a continuous sequence—or adds a short or full-second pause—in their current order.</p>
       </div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} />
