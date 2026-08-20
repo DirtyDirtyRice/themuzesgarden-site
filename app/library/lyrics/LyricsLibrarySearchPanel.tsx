@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import type { LyricEntry } from "./lyricsTypes";
+import { formatLyricSectionSpacing, getLyricFileFormat } from "./lyricsFormatting";
 
 type LyricsSearchMode = "title" | "letter" | "all";
 
@@ -98,9 +99,17 @@ function getComparableLyricBody(entry: LyricEntry): string {
 }
 
 function getDisplayLyricBody(entry: LyricEntry): string {
-  const cleanedBody = getComparableLyricBody(entry);
+  const titleLine = normalizeComparableLine(entry.title);
+  const cleanedBody = entry.body
+    .split(/\r?\n/)
+    .filter((line) => {
+      if (!line.trim()) return true;
+      if (isImportPlaceholderLine(line)) return false;
+      return normalizeComparableLine(line) !== titleLine;
+    })
+    .join("\n");
 
-  return cleanedBody || entry.body;
+  return formatLyricSectionSpacing(cleanedBody) || formatLyricSectionSpacing(entry.body);
 }
 
 function buildLyricsTitleGroups(entries: LyricEntry[]): LyricsTitleGroup[] {
@@ -161,22 +170,30 @@ export default function LyricsLibrarySearchPanel({
 }: LyricsLibrarySearchPanelProps) {
   const [searchMode, setSearchMode] = useState<LyricsSearchMode>("title");
   const [selectedLetter, setSelectedLetter] = useState("A");
+  const [txtOnly, setTxtOnly] = useState(false);
+  const [pdfOnly, setPdfOnly] = useState(false);
 
   const hasSearchValue = searchValue.trim().length > 0;
 
   const displayEntries = useMemo(() => {
-    if (searchMode === "all") return filteredEntries;
+    const formatFiltered = filteredEntries.filter((entry) => {
+      if (!txtOnly && !pdfOnly) return true;
+      const format = getLyricFileFormat(entry);
+      return (txtOnly && format === "txt") || (pdfOnly && format === "pdf");
+    });
+
+    if (searchMode === "all") return formatFiltered;
 
     if (searchMode === "letter") {
-      return filteredEntries.filter((entry) =>
+      return formatFiltered.filter((entry) =>
         entry.title.trim().toUpperCase().startsWith(selectedLetter)
       );
     }
 
-    if (hasSearchValue) return filteredEntries;
+    if (hasSearchValue) return formatFiltered;
 
     return [];
-  }, [filteredEntries, hasSearchValue, searchMode, selectedLetter]);
+  }, [filteredEntries, hasSearchValue, pdfOnly, searchMode, selectedLetter, txtOnly]);
 
   const titleGroups = useMemo(
     () => buildLyricsTitleGroups(displayEntries),
@@ -215,6 +232,17 @@ export default function LyricsLibrarySearchPanel({
           Save Shown TXT
         </button>
       </div>
+
+      <fieldset className="mt-4 flex flex-wrap gap-4 rounded-xl border border-white/15 p-3">
+        <legend className="px-2 text-xs font-black text-white/65">File type results</legend>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-white">
+          <input type="checkbox" checked={txtOnly} onChange={(event) => setTxtOnly(event.target.checked)} /> TXT only
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-white">
+          <input type="checkbox" checked={pdfOnly} onChange={(event) => setPdfOnly(event.target.checked)} /> PDF only
+        </label>
+        <span className="text-xs text-white/55">Check both to show TXT and PDF together. Leave both clear to show every type.</span>
+      </fieldset>
 
       <div className="mt-5 grid gap-3 md:grid-cols-[220px_1fr]">
         <select
@@ -299,8 +327,8 @@ export default function LyricsLibrarySearchPanel({
 
                 {!group.hasReadableLyrics ? (
                   <p className="mt-2 text-sm text-white/60">
-                    This import has no readable lyric text yet. DOC, DOCX, and
-                    PDF files are placeholders until text extraction is wired.
+                    This import has no readable lyric text yet. DOC and DOCX
+                    files remain placeholders; TXT and PDF text is extracted now.
                   </p>
                 ) : null}
               </div>

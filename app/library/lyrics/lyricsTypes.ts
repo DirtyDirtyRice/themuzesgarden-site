@@ -33,6 +33,7 @@ export type LyricEntry = {
   readiness?: LyricEntryReadiness;
   notes?: string;
   lastViewedAt?: string;
+  sourceFileExtension?: string;
 };
 
 export type LyricsLibraryStats = {

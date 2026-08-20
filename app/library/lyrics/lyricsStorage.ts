@@ -17,6 +17,12 @@ export function normalizeEntry(entry: Partial<LyricEntry>): LyricEntry {
     body: entry.body || "",
     createdAt: entry.createdAt || now,
     updatedAt: entry.updatedAt || entry.createdAt || now,
+    status: entry.status,
+    source: entry.source,
+    readiness: entry.readiness,
+    notes: entry.notes,
+    lastViewedAt: entry.lastViewedAt,
+    sourceFileExtension: entry.sourceFileExtension,
   };
 }
 

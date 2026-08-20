@@ -44,15 +44,15 @@ export function buildBaseImportReport(
   failedFiles: number
 ): LyricImportReport {
   const txtFiles = allFiles.filter((file) =>
-    [".txt", ".text", ".md", ".markdown"].includes(
+    ["txt", "text", "md", "markdown"].includes(
       getFileExtension(file.name)
     )
   );
   const docxFiles = allFiles.filter(
-    (file) => getFileExtension(file.name) === ".docx"
+    (file) => getFileExtension(file.name) === "docx"
   );
   const pdfFiles = allFiles.filter(
-    (file) => getFileExtension(file.name) === ".pdf"
+    (file) => getFileExtension(file.name) === "pdf"
   );
   const futureFiles = allFiles.filter((file) => isFutureLyricFile(file.name));
   const blockedFiles = allFiles.filter((file) => isBlockedLyricFile(file.name));
@@ -120,6 +120,8 @@ export async function importLyricFilesFromFileList({
         body: fileText.trim() || "Empty imported lyric file.",
         createdAt: now,
         updatedAt: now,
+        source: "file-import",
+        sourceFileExtension: getFileExtension(file.name),
       });
     } catch {
       failedFiles += 1;

@@ -1415,6 +1415,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused exact-match, atomic group-edit, movement, mixer, fade, and safety tests passed (12 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined atomic group-edit function, transform columns, and Undo history are reused.
 
+## Completed milestone - Lyric TXT/PDF Search and Section Spacing
+
+- Lyric search now has clear **TXT only** and **PDF only** checkboxes; musicians can select either format, select both together, or leave both clear to see every lyric type.
+- New imports store their original file extension, while older saved lyrics remain filterable through their existing import tags.
+- TXT and PDF imports preserve readable line endings, and Verse, Chorus, Pre-Chorus, Bridge, Intro, Outro, Hook, Refrain, Breakdown, Interlude, Solo, and Instrumental headings receive a blank line before and after the section.
+- Search results no longer discard the saved blank lines while removing duplicated import headings, so verses and choruses display as readable lyric blocks without changing any lyric wording.
+- Focused formatting and legacy-format tests passed (2 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; lyric source type remains in the existing browser-owned lyric record.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

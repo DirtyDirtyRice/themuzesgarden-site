@@ -1,4 +1,5 @@
 import type { DirectoryPickerWindow, LyricEntry } from "./lyricsTypes";
+import { formatLyricSectionSpacing } from "./lyricsFormatting";
 
 const READABLE_EXTENSIONS = [
   "txt",
@@ -20,6 +21,7 @@ const FUTURE_EXTENSIONS = [
 
 type PdfTextItem = {
   str?: string;
+  hasEOL?: boolean;
 };
 
 type PdfTextContent = {
@@ -80,7 +82,7 @@ export async function readLyricImportFile(file: File): Promise<string> {
   const extension = getFileExtension(file.name);
 
   if (extension === "txt" || extension === "text" || extension === "md") {
-    return readTextFile(file);
+    return formatLyricSectionSpacing(await readTextFile(file));
   }
 
   if (extension === "pdf") {
@@ -244,11 +246,10 @@ export async function readPdfTextFile(file: File): Promise<string> {
       const page = await pdfDocument.getPage(pageNumber);
       const textContent = await page.getTextContent();
 
-      const pageText = textContent.items
-        .map((item) => item.str || "")
-        .join("\n")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
+      const pageText = formatLyricSectionSpacing(textContent.items
+        .map((item) => `${item.str || ""}${item.hasEOL ? "\n" : " "}`)
+        .join("")
+        .replace(/[ \t]+\n/g, "\n"));
 
       if (pageText) {
         pageTexts.push(pageText);
