@@ -61,6 +61,7 @@ import { TimelineDawPrivateBusGraph } from "@/lib/timeline/TimelineDawPrivateBus
 import TimelineDawPrivateClipRepairEditor from "@/app/components/TimelineDawPrivateClipRepairEditor";
 import TimelineDawAudioFamilyIntake from "@/app/components/TimelineDawAudioFamilyIntake";
 import TimelineDawMusicianImport from "@/app/components/TimelineDawMusicianImport";
+import TimelineDawMusicianTempoKeyMatch from "@/app/components/TimelineDawMusicianTempoKeyMatch";
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
@@ -626,6 +627,28 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     }
   }
 
+  async function applyExactTempoAndKey(
+    lane: DawPrivateAudioLane,
+    transform: DawPrivateAudioLane["transform"],
+    description: string,
+  ) {
+    setBusy(true);
+    setError(undefined);
+    setMovementNotice(undefined);
+    try {
+      const { lane: saved } = await updateDawPrivateAudioLaneTransform(sessionId, lane.id, transform);
+      setLanes((current) => current.map((item) => item.id === saved.id ? saved : item));
+      setHistoryRevision((current) => current + 1);
+      synchronize(playheadRef.current, transportStateRef.current === "playing");
+      setMovementNotice(`${saved.name}: ${description}. Original audio was preserved.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Exact BPM and key could not be saved.");
+      throw cause;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function restoreAllTrackSound(mode: "solo" | "mute" | "both") {
     if (!lanes.length) return;
     setBusy(true);
@@ -825,6 +848,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
                   </div>
                   <p className="mt-2 text-xs text-white/55">Current: {lane.transform.stretchRatio === 1 ? "original speed" : `${lane.transform.stretchRatio.toFixed(2)}× time`} · {lane.transform.pitchSemitones === 0 ? "original pitch" : `${lane.transform.pitchSemitones > 0 ? "+" : ""}${lane.transform.pitchSemitones.toFixed(1)} semitones`}</p>
                 </div>
+                <TimelineDawMusicianTempoKeyMatch
+                  trackName={lane.name}
+                  current={lane.transform}
+                  busy={busy}
+                  onApply={(transform, description) => applyExactTempoAndKey(lane, transform, description)}
+                />
                 <details className="mt-3 rounded-xl border border-white/10 p-3"><summary className="cursor-pointer text-xs font-black text-white/55">Advanced speed and pitch settings</summary><div className="mt-3 flex flex-wrap gap-2"><label className="text-xs">Stretch<input className="ml-1 w-20 bg-black" type="number" min={0.25} max={4} step={0.01} value={lane.transform.stretchRatio} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,stretchRatio:Number(e.target.value)}}:y))}/></label><label className="text-xs">Pitch<input className="ml-1 w-20 bg-black" type="number" min={-24} max={24} step={0.1} value={lane.transform.pitchSemitones} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,pitchSemitones:Number(e.target.value)}}:y))}/></label><select className="bg-black" value={lane.transform.algorithm} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,algorithm:(e.target.value === "resample" ? "resample" : "preserve-pitch")}}:y))}><option value="preserve-pitch">Preserve pitch</option><option value="resample">Resample</option></select><select className="bg-black" aria-label="Elastic quality" value={lane.transform.quality} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,quality:(e.target.value === "draft"||e.target.value === "high"?e.target.value:"balanced")}}:y))}><option value="draft">Draft</option><option value="balanced">Balanced</option><option value="high">High</option></select><button className={button} disabled={busy} onClick={()=>void updateDawPrivateAudioLaneTransform(sessionId,lane.id,lane.transform).then(({lane:saved})=>{setLanes(x=>x.map(y=>y.id===saved.id?saved:y));setHistoryRevision(x=>x+1)})}>Save Advanced Settings</button></div></details>
                 <div className="mt-3 grid gap-3 md:grid-cols-[auto_auto_1fr_1fr]">
                   <button type="button" aria-pressed={lane.mix.muted} className={`${button} ${lane.mix.muted ? "!bg-red-300" : ""}`} onClick={() => queueMix(lane, { muted: !lane.mix.muted })}>{lane.mix.muted ? "Muted" : "Mute"}</button>

@@ -1394,6 +1394,17 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused import-placement tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing protected source, audio-family, and private-lane systems are reused.
 
+## Completed milestone - Exact BPM and Key Matching
+
+- Every audio track now has an **Exact BPM and Key Match** panel where musicians can enter the track's current BPM and key plus the BPM and key they want.
+- A plain-language preview shows the exact time change and semitone movement before anything is saved.
+- BPM matching calculates the precise stretch ratio instead of making musicians repeatedly press 10% speed buttons.
+- Key matching chooses the shortest safe pitch movement, including sharp and flat key names such as F# and Bb.
+- Applying the match uses high-quality pitch-preserving processing, saves through the existing durable track-transform and Undo history, and leaves the original private recording untouched.
+- Invalid BPM values, unknown keys, and unsafe stretch amounts are refused with a useful explanation instead of partially changing a track.
+- Focused exact-match, existing speed-and-pitch, transform-safety, and Undo-policy tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined track-transform API and protected audio sources are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
