@@ -1375,6 +1375,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused existing-song selection and MP3 conversion tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing project-song links, protected render-source storage, version families, and private audio lanes are reused.
 
+## Completed milestone - Calm Neutral Site and DAW Visual Foundation
+
+- The whole site and DAW now use a warm gray studio palette instead of high-glare black surfaces and stark white controls, making long writing, editing, and recording sessions easier on the eyes.
+- Navigation, cards, the Global Player, forms, and ordinary controls share consistent neutral surfaces with dark readable text and quieter borders.
+- The active page and selected controls remain clearly darker, while musical track colors and status colors stay available for meaningful DAW feedback.
+- Keyboard users now receive a strong teal focus outline on buttons, links, and form controls so the current action is easier to locate.
+- Focused theme-token and legacy dark-shell checks passed, and Chrome visual review confirmed the neutral shell and readable controls; the full production build passed with 76 generated pages.
+- No database migration was required; this milestone changes presentation only and preserves every project, song, private file, and DAW session.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

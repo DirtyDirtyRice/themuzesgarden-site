@@ -1,16 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
+  /* CALM STUDIO THEME
+     Warm neutral surfaces reduce glare during long writing, editing, and
+     recording sessions. Track colors remain available for musical meaning. */
+  --background: #d8d6d0;
 
   /* TEXT SYSTEM */
-  --text-strong: rgba(255, 255, 255, 0.95);
-  --text-normal: rgba(255, 255, 255, 0.82);
+  --text-strong: #202320;
+  --text-normal: #343834;
+  --text-muted: #656a65;
 
   /* STRUCTURE */
-  --border-subtle: rgba(255, 255, 255, 0.12);
-  --surface-subtle: rgba(255, 255, 255, 0.03);
-  --surface-strong: rgba(255, 255, 255, 0.06);
+  --border-subtle: #aaa79f;
+  --surface-subtle: #e4e2dc;
+  --surface-strong: #f0eee8;
+  --control-background: #f5f3ed;
+  --control-border: #85847e;
+  --selected-background: #343a36;
+  --selected-foreground: #f8f7f2;
+  --focus-ring: #416f72;
 }
 
 @theme inline {
@@ -86,7 +95,37 @@ a {
 main,
 section,
 article {
-  background: #000000;
+  background: var(--background);
+}
+
+/* Tailwind's original dark shell is still used throughout older screens.
+   Translate only neutral black surfaces into the calm palette; musical
+   track colors and status colors remain untouched. */
+header,
+nav,
+[class~="bg-black"],
+[class*="bg-black/"],
+[class*="!bg-black"],
+[class*="bg-[#080"],
+[class*="bg-[#090"],
+[class*="bg-[#0a0"],
+[class*="bg-[#0b0"],
+[class*="bg-[#0c0"] {
+  background: var(--surface-strong) !important;
+  color: var(--text-normal) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+[class~="text-white"] {
+  color: var(--text-strong) !important;
+}
+
+[class*="text-white/"] {
+  color: var(--text-muted) !important;
+}
+
+[class*="border-white"] {
+  border-color: var(--border-subtle) !important;
 }
 
 /* ---------------------------------------------------------
@@ -104,7 +143,7 @@ article {
 div[data-surface],
 section,
 article {
-  background: #000000 !important;
+  background: var(--surface-subtle) !important;
   color: var(--text-normal) !important;
   border: 1px solid var(--border-subtle) !important;
 }
@@ -129,18 +168,18 @@ button,
 input[type="button"],
 input[type="submit"],
 input[type="reset"] {
-  background: #ffffff !important;
-  color: #000000 !important;
-  border: 1px solid #ffffff !important;
+  background: var(--control-background) !important;
+  color: var(--text-strong) !important;
+  border: 1px solid var(--control-border) !important;
   border-radius: 0.75rem !important;
   transition: all 0.15s ease !important;
 }
 
 button *,
 [role="button"] * {
-  color: #000000 !important;
-  fill: #000000 !important;
-  stroke: #000000 !important;
+  color: var(--text-strong) !important;
+  fill: var(--text-strong) !important;
+  stroke: var(--text-strong) !important;
 }
 
 /* ACTIVE / SELECTED */
@@ -160,9 +199,9 @@ button[data-state="on"],
 
 header a[aria-current="page"],
 nav a[aria-current="page"] {
-  background: #000000 !important;
-  color: #ffffff !important;
-  border: 1px solid #ffffff !important;
+  background: var(--selected-background) !important;
+  color: var(--selected-foreground) !important;
+  border: 1px solid var(--selected-background) !important;
 }
 
 button[aria-pressed="true"] *,
@@ -181,9 +220,9 @@ button[data-state="on"] *,
 
 header a[aria-current="page"] *,
 nav a[aria-current="page"] * {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-  stroke: #ffffff !important;
+  color: var(--selected-foreground) !important;
+  fill: var(--selected-foreground) !important;
+  stroke: var(--selected-foreground) !important;
 }
 
 /* ---------------------------------------------------------
@@ -193,14 +232,24 @@ nav a[aria-current="page"] * {
 input,
 textarea,
 select {
-  background: #000000;
+  background: var(--control-background);
   color: var(--text-normal);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--control-border);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 /* ---------------------------------------------------------
@@ -208,8 +257,8 @@ textarea::placeholder {
 --------------------------------------------------------- */
 
 ::selection {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--text-strong);
+  background: #9fc7c8;
+  color: #172021;
 }
 
 /* ---------------------------------------------------------
@@ -222,7 +271,7 @@ textarea::placeholder {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
+  background: #8f8d86;
   border-radius: 999px;
 }
 
@@ -249,4 +298,15 @@ a:hover,
 [role="button"]:hover {
   opacity: 0.92;
   transform: scale(0.99);
+}
+
+/* The player intentionally uses Tailwind's important utility form. Keeping
+   this override in the same cascade layer lets the calm theme win without
+   rewriting the player's behavior or its meaningful active states. */
+@layer utilities {
+  [class*="!bg-black"] {
+    background: var(--control-background) !important;
+    color: var(--text-normal) !important;
+    border-color: var(--control-border) !important;
+  }
 }
