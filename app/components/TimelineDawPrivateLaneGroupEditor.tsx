@@ -11,7 +11,8 @@ export type PrivateLaneGroupEditInput =
   | { groupAction: "align-end" }
   | { groupAction: "sequence"; sequenceGapSeconds?: number }
   | { groupAction: "mix"; muted: boolean; gain: number; pan: number }
-  | { groupAction: "fade"; fadeInSeconds: number; fadeOutSeconds: number };
+  | { groupAction: "fade"; fadeInSeconds: number; fadeOutSeconds: number }
+  | { groupAction: "transform"; transformById: Record<string, DawPrivateAudioLane["transform"]> };
 
 export default function TimelineDawPrivateLaneGroupEditor({ lanes, selectedIds, busy, onSelection, onApply }: {
   lanes: DawPrivateAudioLane[];

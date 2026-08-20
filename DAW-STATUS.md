@@ -1405,6 +1405,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused exact-match, existing speed-and-pitch, transform-safety, and Undo-policy tests passed (10 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined track-transform API and protected audio sources are reused.
 
+## Completed milestone - Match Selected Tracks to One BPM and Key
+
+- Musicians can now select two or more layered tracks and open **Match Selected Tracks to One BPM and Key** instead of adjusting every version separately.
+- One shared desired BPM and key is entered for the comparison, while each selected track receives its own current BPM and key fields.
+- Every track displays its exact time-stretch and semitone preview before the group is saved.
+- The server validates that there is exactly one safe plan for every selected track; missing, extra, invalid, or unsafe plans stop the complete operation before any track changes.
+- All selected transforms are committed atomically as one durable Undo step, use high-quality pitch-preserving processing, and leave every original private recording untouched.
+- Focused exact-match, atomic group-edit, movement, mixer, fade, and safety tests passed (12 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined atomic group-edit function, transform columns, and Undo history are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

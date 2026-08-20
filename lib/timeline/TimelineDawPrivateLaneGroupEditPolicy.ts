@@ -1,3 +1,5 @@
+import { parseTimelineDawPrivateLaneTransform, type TimelineDawPrivateLaneTransform } from "./TimelineDawPrivateLaneTransformPolicy";
+
 export type TimelineDawPrivateLaneGroupTarget = {
   id: string;
   timelineStartSeconds: number;
@@ -15,7 +17,8 @@ export type TimelineDawPrivateLaneGroupEdit =
   | { action: "sequence"; timelineStartSecondsById: Record<string, number> }
   | { action: "mix"; muted: boolean; gain: number; pan: number }
   | { action: "fade"; fadeInSeconds: number; fadeOutSeconds: number }
-  | { action: "audibility"; clearSolo: boolean; unmute: boolean };
+  | { action: "audibility"; clearSolo: boolean; unmute: boolean }
+  | { action: "transform"; transformById: Record<string, TimelineDawPrivateLaneTransform> };
 
 export function parseTimelineDawPrivateLaneGroupEdit(value: unknown, lanes: TimelineDawPrivateLaneGroupTarget[]): TimelineDawPrivateLaneGroupEdit {
   if (!value || typeof value !== "object") throw new Error("Group edit is required.");
@@ -28,6 +31,20 @@ export function parseTimelineDawPrivateLaneGroupEdit(value: unknown, lanes: Time
     return { action: "audibility", clearSolo: input.clearSolo, unmute: input.unmute };
   }
   if (lanes.length < 2) throw new Error("Select at least two distinct private tracks.");
+  if (input.groupAction === "transform") {
+    if (!input.transformById || typeof input.transformById !== "object" || Array.isArray(input.transformById)) {
+      throw new Error("Every selected track needs a BPM and key match plan.");
+    }
+    const supplied = input.transformById as Record<string, unknown>;
+    const selectedIds = new Set(lanes.map((lane) => lane.id));
+    if (Object.keys(supplied).length !== lanes.length || Object.keys(supplied).some((id) => !selectedIds.has(id))) {
+      throw new Error("The BPM and key plans must match the selected tracks exactly.");
+    }
+    return {
+      action: "transform",
+      transformById: Object.fromEntries(lanes.map((lane) => [lane.id, parseTimelineDawPrivateLaneTransform(supplied[lane.id])])),
+    };
+  }
   if (input.groupAction === "move") {
     const deltaSeconds = Math.round(Number(input.deltaSeconds) * 1_000) / 1_000;
     if (!Number.isFinite(deltaSeconds) || lanes.some((lane) => lane.timelineStartSeconds + deltaSeconds < 0 || lane.timelineStartSeconds + deltaSeconds > 86_400)) {

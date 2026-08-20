@@ -62,6 +62,7 @@ import TimelineDawPrivateClipRepairEditor from "@/app/components/TimelineDawPriv
 import TimelineDawAudioFamilyIntake from "@/app/components/TimelineDawAudioFamilyIntake";
 import TimelineDawMusicianImport from "@/app/components/TimelineDawMusicianImport";
 import TimelineDawMusicianTempoKeyMatch from "@/app/components/TimelineDawMusicianTempoKeyMatch";
+import TimelineDawMusicianSelectedTempoKeyMatch from "@/app/components/TimelineDawMusicianSelectedTempoKeyMatch";
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
@@ -792,6 +793,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       <TimelineDawPrivateFreezePanel sessionId={sessionId} lanes={lanes} buses={buses} freezes={freezes} onChange={setFreezes} />
       <TimelineDawPrivateAutomationEditor sessionId={sessionId} sources={[...lanes.map((lane)=>({id:lane.id,kind:"lane" as const,name:lane.name,sampleRate:lane.audio.sampleRate,baseGain:lane.mix.gain,basePan:lane.mix.pan})),...buses.map((bus)=>({id:bus.id,kind:"bus" as const,name:bus.name,sampleRate:lanes[0]?.audio.sampleRate??48000,baseGain:bus.mix.gain,basePan:bus.mix.pan}))]} envelopes={automation} onChange={setAutomation} />
       <TimelineDawPrivateLaneGroupEditor lanes={lanes} selectedIds={selectedIds} busy={busy} onSelection={setSelectedIds} onApply={(edit) => void applyGroupEdit(edit)} />
+      <TimelineDawMusicianSelectedTempoKeyMatch
+        lanes={lanes}
+        selectedIds={selectedIds}
+        busy={busy}
+        onApply={(transformById, description) => applyGroupEdit({ groupAction: "transform", transformById }, `${description}. All originals were preserved.`)}
+      />
       </details>
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic smooth transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} into {incoming?.name}: {crossfade.startSeconds.toFixed(2)} to {crossfade.endSeconds.toFixed(2)} seconds ({crossfade.durationSeconds.toFixed(2)}-second transition)</p>; })}</div> : null}
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}

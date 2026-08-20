@@ -70,6 +70,17 @@ describe("private lane group edit policy", () => {
     expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "fade", fadeInSeconds: 0.6, fadeOutSeconds: 0.5 }, lanes)).toThrow(/fit every selected/);
   });
 
+  it("validates an exact transform for every selected track as one edit", () => {
+    const a = { stretchRatio: 0.8, pitchSemitones: 2, algorithm: "preserve-pitch", quality: "high", bypassed: false };
+    const b = { stretchRatio: 1.25, pitchSemitones: -1, algorithm: "preserve-pitch", quality: "high", bypassed: false };
+    expect(parseTimelineDawPrivateLaneGroupEdit({ groupAction: "transform", transformById: { a, b } }, lanes))
+      .toEqual({ action: "transform", transformById: { a, b } });
+    expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "transform", transformById: { a } }, lanes))
+      .toThrow(/match the selected tracks exactly/);
+    expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "transform", transformById: { a, b: { ...b, stretchRatio: 10 } } }, lanes))
+      .toThrow(/Stretch ratio/);
+  });
+
   it("requires a distinct multi-region selection and bounded positions", () => {
     expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "move", deltaSeconds: 1 }, lanes.slice(0, 1))).toThrow(/at least two/);
     expect(() => parseTimelineDawPrivateLaneGroupEdit({ groupAction: "move", deltaSeconds: -2 }, lanes)).toThrow(/inside the session/);

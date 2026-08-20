@@ -52,6 +52,10 @@ export async function POST(request: NextRequest) {
       if (edit.action === "sequence") return { ...row, timeline_start_seconds: edit.timelineStartSecondsById[String(row.id)], updated_at: changedAt };
       if (edit.action === "mix") return { ...row, muted: edit.muted, gain: edit.gain, pan: edit.pan, updated_at: changedAt };
       if (edit.action === "audibility") return { ...row, muted: edit.unmute ? false : row.muted, soloed: edit.clearSolo ? false : row.soloed, updated_at: changedAt };
+      if (edit.action === "transform") {
+        const transform = edit.transformById[String(row.id)];
+        return { ...row, stretch_ratio: transform.stretchRatio, pitch_semitones: transform.pitchSemitones, transform_algorithm: transform.algorithm, transform_quality: transform.quality, transform_bypassed: transform.bypassed, updated_at: changedAt };
+      }
       const sampleRate = Number(row.sample_rate);
       return { ...row, fade_in_seconds: Math.round(edit.fadeInSeconds * sampleRate) / sampleRate, fade_out_seconds: Math.round(edit.fadeOutSeconds * sampleRate) / sampleRate, updated_at: changedAt };
     }).sort((a, b) => String(a.id).localeCompare(String(b.id)));
