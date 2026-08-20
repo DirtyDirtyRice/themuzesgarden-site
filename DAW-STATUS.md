@@ -1384,6 +1384,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused theme-token and legacy dark-shell checks passed, and Chrome visual review confirmed the neutral shell and readable controls; the full production build passed with 76 generated pages.
 - No database migration was required; this milestone changes presentation only and preserves every project, song, private file, and DAW session.
 
+## Completed milestone - Layer Imported Song Versions Together
+
+- When musicians select two or three songs already in a project, **Import Into Arrangement** now asks how those songs should be placed before making the protected DAW copies.
+- **Layer Together** is the default comparison choice: every version starts at 0:00 on its own track, making performances, mixes, tempos, and keys easier to compare directly.
+- **One After Another** remains available for musicians who want the selected songs arranged as a listening sequence instead.
+- The placement choices appear only when they are useful—after two or three songs are selected—and explain the result in plain language before import.
+- The completion message confirms which arrangement was created, while all Library originals remain unchanged and private source protection, duplicate detection, and safe stopping are preserved.
+- Focused import-placement tests passed (7 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing protected source, audio-family, and private-lane systems are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

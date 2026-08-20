@@ -1,4 +1,5 @@
 export type TimelineDawMusicianImportKind = "full-song" | "stems" | "alternate-versions";
+export type TimelineDawMusicianImportPlacement = "layered" | "sequential";
 
 export type TimelineDawMusicianImportPlan = {
   familyName: string;
@@ -34,6 +35,7 @@ export function createTimelineDawMusicianImportPlan(input: {
   kind: TimelineDawMusicianImportKind;
   files: Array<{ name: string; size: number }>;
   requestedName?: string;
+  placement?: TimelineDawMusicianImportPlacement;
 }): TimelineDawMusicianImportPlan {
   if (!input.files.length) throw new Error("Choose at least one WAV or MP3 file.");
   if (input.files.some((file) => !AUDIO_EXTENSION.test(file.name))) {
@@ -50,7 +52,9 @@ export function createTimelineDawMusicianImportPlan(input: {
   const firstName = withoutExtension(input.files[0].name) || "Musician Import";
   const familyName = (requestedName || firstName).slice(0, 120);
   const role = input.kind === "stems" ? "stem" : input.kind === "full-song" ? "finished" : "demo";
-  const laneMode = input.kind === "alternate-versions" ? "sequential" : "aligned";
+  const laneMode = input.kind === "alternate-versions"
+    ? input.placement === "layered" ? "aligned" : "sequential"
+    : "aligned";
 
   return {
     familyName,

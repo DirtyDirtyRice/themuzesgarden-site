@@ -11,6 +11,7 @@ import {
   timelineDawMusicianImportDescription,
   toggleTimelineDawExistingProjectSong,
   type TimelineDawMusicianImportKind,
+  type TimelineDawMusicianImportPlacement,
 } from "@/lib/timeline/TimelineDawMusicianImportPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
@@ -29,6 +30,7 @@ export default function TimelineDawMusicianImport({ sessionId, projectId }: { se
   const [projectSongs, setProjectSongs] = useState<SupabaseTrack[]>([]);
   const [songQuery, setSongQuery] = useState("");
   const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
+  const [existingSongPlacement, setExistingSongPlacement] = useState<TimelineDawMusicianImportPlacement>("layered");
   const [loadingSongs, setLoadingSongs] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const cancelled = useRef(false);
@@ -95,7 +97,7 @@ export default function TimelineDawMusicianImport({ sessionId, projectId }: { se
     setProgress({ done: 0, total: selected.length, duplicates: 0, failed: 0 });
     try {
       const importKind: TimelineDawMusicianImportKind = selected.length === 1 ? "full-song" : "alternate-versions";
-      const plan = createTimelineDawMusicianImportPlan({ kind: importKind, files: selected.map((song) => ({ name: `${song.title}.mp3`, size: 1 })), requestedName: name || selected[0].title });
+      const plan = createTimelineDawMusicianImportPlan({ kind: importKind, files: selected.map((song) => ({ name: `${song.title}.mp3`, size: 1 })), requestedName: name || selected[0].title, placement: existingSongPlacement });
       const { family } = await api({ action: "create-family", name: plan.familyName, description: "Existing project songs imported as protected arrangement copies. Original library songs are unchanged." });
       let imported = 0, duplicates = 0, failed = 0;
       for (let index = 0; index < selected.length && !cancelled.current; index += 1) {
@@ -116,7 +118,10 @@ export default function TimelineDawMusicianImport({ sessionId, projectId }: { se
       if (!imported) throw new Error(duplicates ? "Those songs are already safely imported in this session." : "The selected project songs could not be imported.");
       await api({ action: "create-lanes", familyId: family.id, mode: plan.laneMode });
       window.dispatchEvent(new CustomEvent("muzes:daw-family-lanes", { detail: { sessionId } }));
-      setMessage(`${imported} project ${imported === 1 ? "song" : "songs"} placed in the arrangement. Library originals are unchanged.`);
+      const placementMessage = selected.length > 1 && existingSongPlacement === "layered"
+        ? "Each version starts together on its own track."
+        : selected.length > 1 ? "The songs play one after another on separate tracks." : "";
+      setMessage(`${imported} project ${imported === 1 ? "song" : "songs"} placed in the arrangement. ${placementMessage} Library originals are unchanged.`);
       setSelectedSongIds([]); setName("");
     } finally { setBusy(false); }
   }
@@ -132,6 +137,21 @@ export default function TimelineDawMusicianImport({ sessionId, projectId }: { se
         <input className={`${field} min-w-[16rem] flex-1`} value={songQuery} disabled={busy} onChange={(event) => setSongQuery(event.target.value)} placeholder="Search project songs by title" aria-label="Search existing project songs" />
         <button type="button" className={button} disabled={busy || !selectedSongIds.length} onClick={() => void runExistingSongImport().catch((cause) => setError(cause instanceof Error ? cause.message : "Project songs could not be imported."))}>{busy && selectedSongIds.length ? `Placing ${progress.done}/${progress.total}` : `Place Selected Songs (${selectedSongIds.length})`}</button>
       </div>
+      {selectedSongIds.length > 1 ? <fieldset className="mt-2 rounded-lg border border-white/10 p-2">
+        <legend className="px-1 text-xs font-black text-white/70">How should these songs be placed?</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className={`cursor-pointer rounded-lg border p-3 ${existingSongPlacement === "layered" ? "border-cyan-200 bg-cyan-200 text-black" : "border-white/15 bg-black text-white"}`}>
+            <input className="mr-2" type="radio" name="existing-song-placement" value="layered" checked={existingSongPlacement === "layered"} disabled={busy} onChange={() => setExistingSongPlacement("layered")} />
+            <span className="font-black">Layer Together</span>
+            <span className="mt-1 block text-xs opacity-70">Each version starts at 0:00 on its own track for direct comparison.</span>
+          </label>
+          <label className={`cursor-pointer rounded-lg border p-3 ${existingSongPlacement === "sequential" ? "border-cyan-200 bg-cyan-200 text-black" : "border-white/15 bg-black text-white"}`}>
+            <input className="mr-2" type="radio" name="existing-song-placement" value="sequential" checked={existingSongPlacement === "sequential"} disabled={busy} onChange={() => setExistingSongPlacement("sequential")} />
+            <span className="font-black">One After Another</span>
+            <span className="mt-1 block text-xs opacity-70">Each song begins after the previous song ends.</span>
+          </label>
+        </div>
+      </fieldset> : null}
       <div className="mt-2 max-h-52 space-y-1 overflow-auto rounded-lg border border-white/10 bg-black p-2" aria-label="Songs already in this project">
         {loadingSongs ? <p className="text-xs text-white/50">Loading project songs…</p> : matchingProjectSongs.length ? matchingProjectSongs.map((song) => <label key={song.id} className="flex cursor-pointer items-center gap-2 rounded-lg p-2 text-sm hover:bg-white/5"><input type="checkbox" checked={selectedSongIds.includes(song.id)} disabled={busy} onChange={() => { try { setSelectedSongIds((current) => toggleTimelineDawExistingProjectSong(current, song.id)); setError(undefined); } catch (cause) { setError(cause instanceof Error ? cause.message : "No more songs can be selected."); } }} /><span className="font-bold">{song.title}</span><span className="text-xs text-white/40">{song.visibility}</span></label>) : <p className="text-xs text-white/50">No matching linked songs were found in this project.</p>}
       </div>

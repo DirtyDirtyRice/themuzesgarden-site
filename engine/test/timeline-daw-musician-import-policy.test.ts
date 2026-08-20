@@ -42,6 +42,18 @@ describe("TimelineDawMusicianImportPolicy", () => {
     }).laneMode).toBe("sequential");
   });
 
+  it("layers alternate versions at the same start when requested", () => {
+    expect(createTimelineDawMusicianImportPlan({
+      kind: "alternate-versions",
+      placement: "layered",
+      files: [
+        { name: "Version A.mp3", size: 100 },
+        { name: "Version B.mp3", size: 100 },
+        { name: "Version C.mp3", size: 100 },
+      ],
+    }).laneMode).toBe("aligned");
+  });
+
   it("holds incomplete or incompatible imports before upload", () => {
     expect(() => createTimelineDawMusicianImportPlan({ kind: "full-song", files: [] }))
       .toThrow("Choose at least one");
