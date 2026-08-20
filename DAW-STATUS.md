@@ -1365,6 +1365,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused workspace storage tests passed (5 tests), including JSON key reordering and legacy checksum repair; TypeScript and the full production build also passed.
 - Database migration `20260819103000_repair_timeline_daw_workspace_archive_hash.sql` was reviewed and applied to provide the owner-confined repair operation.
 
+## Completed milestone - Import Existing Project Songs Into Arrangement
+
+- Musicians can now search the songs already linked to the current project and select up to three directly inside **Import Into Arrangement**.
+- **Place Selected Songs** creates protected DAW arrangement copies without requiring musicians to download their own songs and upload them again.
+- Existing MP3 songs are decoded in the musician's browser and converted into the DAW's protected WAV source format before lanes are created; original Library files are never moved, renamed, overwritten, or made public.
+- One selected song becomes a full-song lane, while two or three selected versions are placed sequentially on separate lanes for comparison and spacing work.
+- The picker shows only songs linked to the active project, supports multi-word title and folder searching, enforces the three-song limit, and retains the existing duplicate and safe-stop protections.
+- Focused existing-song selection and MP3 conversion tests passed (9 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing project-song links, protected render-source storage, version families, and private audio lanes are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

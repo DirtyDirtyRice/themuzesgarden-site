@@ -75,7 +75,7 @@ import { resolveTimelineDawMusicianTrackTiming } from "@/lib/timeline/TimelineDa
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
-export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId: string }) {
+export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: { sessionId: string; projectId: string }) {
   const [lanes, setLanes] = useState<DawPrivateAudioLane[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -750,7 +750,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId }: { sessionId:
         <p className="mt-2 text-xs text-white/55">Check two or more tracks below. Move keeps their spacing. Align layers their starts or endings. Place makes a continuous sequence—or adds a short or full-second pause—in their current order.</p>
       </div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
-      <TimelineDawMusicianImport sessionId={sessionId} />
+      <TimelineDawMusicianImport sessionId={sessionId} projectId={projectId} />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <details className="mt-3 rounded-xl border border-white/10 p-3">

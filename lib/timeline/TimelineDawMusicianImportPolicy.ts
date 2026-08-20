@@ -9,6 +9,23 @@ export type TimelineDawMusicianImportPlan = {
 
 const AUDIO_EXTENSION = /\.(wav|mp3)$/i;
 
+export type TimelineDawExistingProjectSong = { id: string; title: string; path: string };
+
+export function filterTimelineDawExistingProjectSongs<T extends TimelineDawExistingProjectSong>(songs: T[], query: string): T[] {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return songs;
+  return songs.filter((song) => {
+    const haystack = `${song.title} ${song.path}`.toLowerCase();
+    return words.every((word) => haystack.includes(word));
+  });
+}
+
+export function toggleTimelineDawExistingProjectSong(selectedIds: string[], songId: string, maximum = 3): string[] {
+  if (selectedIds.includes(songId)) return selectedIds.filter((id) => id !== songId);
+  if (selectedIds.length >= maximum) throw new Error(`Choose no more than ${maximum} project songs at once.`);
+  return [...selectedIds, songId];
+}
+
 function withoutExtension(name: string): string {
   return name.replace(AUDIO_EXTENSION, "").trim();
 }

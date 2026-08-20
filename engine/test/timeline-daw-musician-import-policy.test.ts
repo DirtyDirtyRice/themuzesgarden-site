@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   createTimelineDawMusicianImportPlan,
+  filterTimelineDawExistingProjectSongs,
   timelineDawMusicianImportDescription,
+  toggleTimelineDawExistingProjectSong,
 } from "../../lib/timeline/TimelineDawMusicianImportPolicy";
 
 describe("TimelineDawMusicianImportPolicy", () => {
@@ -51,5 +53,24 @@ describe("TimelineDawMusicianImportPolicy", () => {
       kind: "stems",
       files: [{ name: "notes.pdf", size: 50 }],
     })).toThrow("WAV and MP3");
+  });
+});
+
+describe("existing project song picker", () => {
+  const songs = [
+    { id: "hard", title: "Out of Tune 1 Hard", path: "private/out of tune1 hard.mp3" },
+    { id: "soft", title: "Out of Tune 1 Soft", path: "private/out of tune1 soft.mp3" },
+    { id: "other", title: "Another Song", path: "public/another.mp3" },
+  ];
+
+  it("finds project songs using all title or path words", () => {
+    expect(filterTimelineDawExistingProjectSongs(songs, "out tune").map((song) => song.id)).toEqual(["hard", "soft"]);
+    expect(filterTimelineDawExistingProjectSongs(songs, "private soft").map((song) => song.id)).toEqual(["soft"]);
+  });
+
+  it("selects and removes songs while enforcing the three-song limit", () => {
+    expect(toggleTimelineDawExistingProjectSong(["hard"], "soft")).toEqual(["hard", "soft"]);
+    expect(toggleTimelineDawExistingProjectSong(["hard", "soft"], "hard")).toEqual(["soft"]);
+    expect(() => toggleTimelineDawExistingProjectSong(["a", "b", "c"], "d")).toThrow("no more than 3");
   });
 });

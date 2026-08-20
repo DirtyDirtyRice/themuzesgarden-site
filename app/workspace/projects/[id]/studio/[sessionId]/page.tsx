@@ -241,7 +241,7 @@ export default function ProjectDawSessionPage() {
       <ProjectDawTimeline session={session} />
       </div>
       <div data-daw-focus-area="mix" className="space-y-6 scroll-mt-24">
-      <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} />
+      <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} projectId={projectId} />
 
       <ProjectDawDeviceDiagnostics />
       </div>
