@@ -57,6 +57,18 @@ export function isTimelineDawRiffAuditionCurrent(expectedGeneration: number, cur
   return Number.isInteger(expectedGeneration) && expectedGeneration === currentGeneration;
 }
 
+export function createTimelineDawRiffAuditionProgress(index: number, trackCount: number, repeatCount: number) {
+  const safeTrackCount = Math.max(1, Math.floor(trackCount));
+  const safeRepeatCount = Math.max(1, Math.floor(repeatCount));
+  const safeIndex = Math.min(safeTrackCount * safeRepeatCount - 1, Math.max(0, Math.floor(index)));
+  return {
+    trackNumber: safeIndex % safeTrackCount + 1,
+    trackCount: safeTrackCount,
+    passNumber: Math.floor(safeIndex / safeTrackCount) + 1,
+    passCount: safeRepeatCount,
+  };
+}
+
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];
 
 function cosine(left: number[], right: number[]): number {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionSequence, findTimelineDawRiffMatches, isTimelineDawRiffAuditionCurrent } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
+import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionProgress, createTimelineDawRiffAuditionSequence, findTimelineDawRiffMatches, isTimelineDawRiffAuditionCurrent } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
 
 describe("musician riff matching", () => {
 test("colors a repeated real waveform shape only when every track reaches 90 percent", () => {
@@ -57,5 +57,11 @@ test("repeats the complete selected-track riff comparison three times in order",
 test("prevents a delayed riff from restarting after the musician presses stop", () => {
   expect(isTimelineDawRiffAuditionCurrent(4, 4)).toBe(true);
   expect(isTimelineDawRiffAuditionCurrent(4, 5)).toBe(false);
+});
+
+test("reports the current track and pass during a repeated three-track comparison", () => {
+  expect(createTimelineDawRiffAuditionProgress(4, 3, 3)).toEqual({
+    trackNumber: 2, trackCount: 3, passNumber: 2, passCount: 3,
+  });
 });
 });

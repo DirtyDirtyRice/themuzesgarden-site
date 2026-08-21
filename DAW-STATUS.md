@@ -1474,6 +1474,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused analysis, sequencing, repeat-order, timing, audition, and cancellation tests passed (6 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; this milestone strengthens the existing private preview safety controls.
 
+## Completed milestone - Show Riff Comparison Progress
+
+- While a matching-riff audition is playing, the panel now plainly identifies the track the musician is hearing.
+- The live message shows **Track X of Y** and **Pass A of B**, so both the one-pass comparison and the three-pass repeated comparison are easy to follow.
+- Progress advances as each selected song version begins, and it clears immediately when the comparison is stopped or finishes.
+- The status uses an accessible polite live announcement, so screen-reader users receive the same changing track and pass information.
+- Progress is temporary and does not change arrangement positions, transforms, selection, mix, history, or original recordings.
+- Focused analysis, sequencing, repeat-order, timing, audition, cancellation, and progress tests passed (7 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined private preview sequence is reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
