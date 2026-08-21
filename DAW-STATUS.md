@@ -1424,6 +1424,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused formatting and legacy-format tests passed (2 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required; lyric source type remains in the existing browser-owned lyric record.
 
+## Completed milestone - Find 90% Matching Riffs Across Selected Tracks
+
+- Musicians can select two or more layered audio tracks and run **Find Matching Riffs in Selected Tracks** inside the real project Studio.
+- The analysis uses each selected track's prepared private waveform and attack shape, searches the other selected tracks for the strongest corresponding region, and requires every track to meet the 90% threshold before reporting a riff family.
+- Matching regions receive the same stable color on every selected track, with the match percentage and exact time range available directly on each colored region.
+- Silent or flat regions are rejected so they cannot be falsely reported as matching musical ideas, and an honest no-match message appears when nothing clears the threshold.
+- The panel clearly explains that this first stage compares real sound patterns rather than claiming exact MIDI-style note transcription; original audio, timing, BPM/key transforms, and project data are never changed.
+- Focused match/no-match tests passed (2 tests), TypeScript passed, and the complete production build compiled and generated successfully.
+- No database migration was required; the existing owner-confined private lanes and prepared waveform evidence are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

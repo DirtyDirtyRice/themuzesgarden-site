@@ -63,6 +63,7 @@ import TimelineDawAudioFamilyIntake from "@/app/components/TimelineDawAudioFamil
 import TimelineDawMusicianImport from "@/app/components/TimelineDawMusicianImport";
 import TimelineDawMusicianTempoKeyMatch from "@/app/components/TimelineDawMusicianTempoKeyMatch";
 import TimelineDawMusicianSelectedTempoKeyMatch from "@/app/components/TimelineDawMusicianSelectedTempoKeyMatch";
+import TimelineDawMusicianRiffMatch from "@/app/components/TimelineDawMusicianRiffMatch";
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
@@ -799,6 +800,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         busy={busy}
         onApply={(transformById, description) => applyGroupEdit({ groupAction: "transform", transformById }, `${description}. All originals were preserved.`)}
       />
+      <TimelineDawMusicianRiffMatch lanes={lanes} selectedIds={selectedIds} waveforms={waveforms} />
       </details>
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic smooth transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} into {incoming?.name}: {crossfade.startSeconds.toFixed(2)} to {crossfade.endSeconds.toFixed(2)} seconds ({crossfade.durationSeconds.toFixed(2)}-second transition)</p>; })}</div> : null}
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}
