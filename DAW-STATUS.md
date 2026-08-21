@@ -1484,6 +1484,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused analysis, sequencing, repeat-order, timing, audition, cancellation, and progress tests passed (7 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined private preview sequence is reused.
 
+## Completed milestone - Skip to the Next Riff Comparison Track
+
+- During a multi-track matching-riff comparison, musicians now have a clear **Skip to Next Track** button beside the Stop control.
+- Pressing Skip immediately pauses the current riff and starts the next selected song version without ending the complete comparison.
+- In a repeated three-pass comparison, Skip follows the existing order and continues into the next pass when appropriate.
+- Skipping the final item safely finishes and clears the comparison instead of trying to play beyond the prepared sequence.
+- The Skip control appears only for multi-track comparison playback, so single-riff audition remains uncluttered.
+- Focused analysis, sequencing, repeat-order, timing, audition, cancellation, progress, and skip tests passed (8 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; this milestone reuses the existing owner-confined private preview sequence and cancellation protections.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

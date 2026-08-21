@@ -69,6 +69,12 @@ export function createTimelineDawRiffAuditionProgress(index: number, trackCount:
   };
 }
 
+export function createTimelineDawRiffAuditionNextIndex(index: number, sequenceLength: number) {
+  const safeLength = Math.max(0, Math.floor(sequenceLength));
+  const nextIndex = Math.max(0, Math.floor(index)) + 1;
+  return nextIndex < safeLength ? nextIndex : null;
+}
+
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];
 
 function cosine(left: number[], right: number[]): number {
