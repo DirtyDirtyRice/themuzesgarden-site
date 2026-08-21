@@ -19,6 +19,26 @@ export type TimelineDawRiffMatch = {
   regions: TimelineDawRiffRegion[];
 };
 
+export function createTimelineDawRiffAudition(input: {
+  sourceInSeconds: number;
+  regionStartSeconds: number;
+  regionEndSeconds: number;
+  stretchRatio: number;
+  transformBypassed: boolean;
+  playbackRate: number;
+}) {
+  const regionDuration = input.regionEndSeconds - input.regionStartSeconds;
+  if (!Number.isFinite(regionDuration) || regionDuration <= 0) throw new Error("Matching region has no audio to play.");
+  if (!Number.isFinite(input.playbackRate) || input.playbackRate <= 0) throw new Error("Track playback speed is invalid.");
+  const arrangedDuration = regionDuration * (input.transformBypassed ? 1 : input.stretchRatio);
+  return {
+    sourceStartSeconds: input.sourceInSeconds + input.regionStartSeconds,
+    playbackRate: input.playbackRate,
+    durationSeconds: arrangedDuration,
+    stopAfterMilliseconds: Math.max(1, Math.ceil(arrangedDuration * 1000)),
+  };
+}
+
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];
 
 function cosine(left: number[], right: number[]): number {

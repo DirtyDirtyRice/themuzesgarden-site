@@ -1434,6 +1434,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused match/no-match tests passed (2 tests), TypeScript passed, and the complete production build compiled and generated successfully.
 - No database migration was required; the existing owner-confined private lanes and prepared waveform evidence are reused.
 
+## Completed milestone - Audition Matching Riffs Across Tracks
+
+- Every colored matching-riff region is now a playable control, and each region also has a clearly labeled **Hear riff** button for musicians who prefer text controls.
+- A musician can hear the same-colored idea in one selected track and then immediately audition its counterpart in each other selected track without manually locating timestamps.
+- Riff audition starts at the exact detected source position, respects the track's saved BPM/key playback transformation, and stops automatically at the detected region ending.
+- Audition is temporary and isolated: it does not change track selection, Solo/Mute, arrangement timing, transforms, project history, or original audio.
+- Keyboard focus and descriptive labels identify the riff family, track, match percentage, and time range so the comparison is usable without relying only on color.
+- Focused analysis/no-match/audition tests passed (3 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; this milestone reuses the existing private audio graph and preview safety behavior.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

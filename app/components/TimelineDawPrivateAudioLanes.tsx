@@ -64,6 +64,7 @@ import TimelineDawMusicianImport from "@/app/components/TimelineDawMusicianImpor
 import TimelineDawMusicianTempoKeyMatch from "@/app/components/TimelineDawMusicianTempoKeyMatch";
 import TimelineDawMusicianSelectedTempoKeyMatch from "@/app/components/TimelineDawMusicianSelectedTempoKeyMatch";
 import TimelineDawMusicianRiffMatch from "@/app/components/TimelineDawMusicianRiffMatch";
+import { createTimelineDawRiffAudition } from "@/lib/timeline/TimelineDawMusicianRiffMatch";
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
@@ -548,6 +549,37 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     }
   }
 
+  async function previewRiff(laneId: string, regionStartSeconds: number, regionEndSeconds: number) {
+    const lane = lanes.find((candidate) => candidate.id === laneId);
+    if (!lane) return;
+    setError(undefined);
+    stopTrackPreview();
+    const audio = audioRefs.current.get(lane.id);
+    const graph = graphRefs.current.get(lane.id);
+    if (!audio || !graph) { setError(`${lane.name} is not ready to preview yet.`); return; }
+    try {
+      const plan = createTimelineDawRiffAudition({
+        sourceInSeconds: lane.sourceInSeconds,
+        regionStartSeconds,
+        regionEndSeconds,
+        stretchRatio: lane.transform.stretchRatio,
+        transformBypassed: lane.transform.bypassed,
+        playbackRate: timelineDawPrivateLanePlaybackRate(lane.transform),
+      });
+      audio.preservesPitch = lane.transform.algorithm === "preserve-pitch";
+      audio.playbackRate = plan.playbackRate;
+      audio.currentTime = plan.sourceStartSeconds;
+      graph.applyEnvelope({ ...lane.mix, muted: false, soloed: false, gain: lane.mix.gain * (master.muted ? 0 : master.gain) }, true, 0, plan.durationSeconds, 0, 0);
+      await graph.resume();
+      await audio.play();
+      setPreviewLaneId(lane.id);
+      previewTimerRef.current = setTimeout(() => stopTrackPreview(lane), plan.stopAfterMilliseconds);
+    } catch (cause) {
+      stopTrackPreview(lane);
+      setError(cause instanceof Error ? cause.message : `${lane.name} riff could not be previewed.`);
+    }
+  }
+
   async function saveBus(input: { busId?: string; name: string; muted: boolean; soloed: boolean; gain: number; pan: number }) {
     setBusy(true); setError(undefined);
     try { const { bus } = await saveDawPrivateBus(sessionId, input); setBuses((current) => [...current.filter((item) => item.id !== bus.id), bus]); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "gain", value: bus.mix.gain }); dispatchTimelineDawPrivateMixChange({ sourceKind: "bus", sourceId: bus.id, parameter: "pan", value: bus.mix.pan }); }
@@ -800,7 +832,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         busy={busy}
         onApply={(transformById, description) => applyGroupEdit({ groupAction: "transform", transformById }, `${description}. All originals were preserved.`)}
       />
-      <TimelineDawMusicianRiffMatch lanes={lanes} selectedIds={selectedIds} waveforms={waveforms} />
+      <TimelineDawMusicianRiffMatch lanes={lanes} selectedIds={selectedIds} waveforms={waveforms} onAudition={(laneId, startSeconds, endSeconds) => void previewRiff(laneId, startSeconds, endSeconds)} />
       </details>
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic smooth transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} into {incoming?.name}: {crossfade.startSeconds.toFixed(2)} to {crossfade.endSeconds.toFixed(2)} seconds ({crossfade.durationSeconds.toFixed(2)}-second transition)</p>; })}</div> : null}
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}

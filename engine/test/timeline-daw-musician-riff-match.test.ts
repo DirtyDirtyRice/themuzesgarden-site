@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { findTimelineDawRiffMatches } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
+import { createTimelineDawRiffAudition, findTimelineDawRiffMatches } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
 
 describe("musician riff matching", () => {
 test("colors a repeated real waveform shape only when every track reaches 90 percent", () => {
@@ -21,5 +21,16 @@ test("does not report a family when one selected track is unlike the others", ()
     { laneId: "b", name: "B", peaks: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0], durationSeconds: 16 },
   ], { threshold: 0.9, windowBins: 16 });
   expect(matches).toHaveLength(0);
+});
+
+test("auditions exactly one matched region and honors the saved track speed", () => {
+  expect(createTimelineDawRiffAudition({
+    sourceInSeconds: 12,
+    regionStartSeconds: 4,
+    regionEndSeconds: 7,
+    stretchRatio: 1.25,
+    transformBypassed: false,
+    playbackRate: 0.8,
+  })).toEqual({ sourceStartSeconds: 16, playbackRate: 0.8, durationSeconds: 3.75, stopAfterMilliseconds: 3750 });
 });
 });
