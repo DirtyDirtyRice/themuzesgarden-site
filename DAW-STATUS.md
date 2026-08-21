@@ -1494,6 +1494,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused analysis, sequencing, repeat-order, timing, audition, cancellation, progress, and skip tests passed (8 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; this milestone reuses the existing owner-confined private preview sequence and cancellation protections.
 
+## Completed milestone - Go Back to the Previous Riff Comparison Track
+
+- During matching-riff comparison playback, musicians can now press **Previous Riff Track** to immediately replay the version directly before the current one.
+- Going back pauses the current riff first, then starts the previous selected track at its exact detected region with its saved BPM/key playback transformation.
+- The control follows the complete comparison order, including moving back across pass boundaries during a repeated three-pass comparison.
+- The Previous button stays hidden on the first item because there is no earlier comparison track, avoiding a control that cannot do anything.
+- Previous, Skip, Stop, and automatic advancement share the same timer and cancellation protections, preventing two tracks from starting at once.
+- Focused analysis, sequencing, repeat-order, timing, audition, cancellation, progress, skip, and previous-track tests passed (9 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined private preview sequence is reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

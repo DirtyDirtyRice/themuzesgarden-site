@@ -75,6 +75,11 @@ export function createTimelineDawRiffAuditionNextIndex(index: number, sequenceLe
   return nextIndex < safeLength ? nextIndex : null;
 }
 
+export function createTimelineDawRiffAuditionPreviousIndex(index: number) {
+  const safeIndex = Math.max(0, Math.floor(index));
+  return safeIndex > 0 ? safeIndex - 1 : null;
+}
+
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];
 
 function cosine(left: number[], right: number[]): number {
