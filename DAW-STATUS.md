@@ -1464,6 +1464,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused sequence, repeat-order, timing, analysis, and audition tests passed (5 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined private audio graph and safe automatic stopping are reused.
 
+## Completed milestone - Stop Matching Riff Comparison Immediately
+
+- A clear red **Stop Riff Comparison** button now appears directly in the matching-riff panel whenever a single riff, one-pass comparison, or three-pass comparison is playing.
+- Pressing Stop immediately pauses every private track, clears the current playback timer, and returns the DAW to its existing stopped play position.
+- A cancellation generation guard prevents an audio promise or delayed comparison step from restarting another track after the musician has pressed Stop.
+- The Stop button disappears when no riff audition is active, keeping the panel simple while making the emergency action obvious when it is needed.
+- Stopping remains temporary and does not alter arrangement positions, transforms, selection, mix, history, or original recordings.
+- Focused analysis, sequencing, repeat-order, timing, audition, and cancellation tests passed (6 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; this milestone strengthens the existing private preview safety controls.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

@@ -64,7 +64,7 @@ import TimelineDawMusicianImport from "@/app/components/TimelineDawMusicianImpor
 import TimelineDawMusicianTempoKeyMatch from "@/app/components/TimelineDawMusicianTempoKeyMatch";
 import TimelineDawMusicianSelectedTempoKeyMatch from "@/app/components/TimelineDawMusicianSelectedTempoKeyMatch";
 import TimelineDawMusicianRiffMatch from "@/app/components/TimelineDawMusicianRiffMatch";
-import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionSequence } from "@/lib/timeline/TimelineDawMusicianRiffMatch";
+import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionSequence, isTimelineDawRiffAuditionCurrent } from "@/lib/timeline/TimelineDawMusicianRiffMatch";
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
@@ -87,6 +87,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
   const [placementTargets, setPlacementTargets] = useState<Record<string, string>>({});
   const [previewLaneId, setPreviewLaneId] = useState<string>();
+  const [riffAuditionActive, setRiffAuditionActive] = useState(false);
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -107,6 +108,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const busGraphRefs = useRef(new Map<string, TimelineDawPrivateBusGraph>());
   const saveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const riffAuditionGenerationRef = useRef(0);
   const audioCallbacksRef = useRef(new Map<string, (element: HTMLAudioElement | null) => void>());
   const playheadRef = useRef(0);
   const transportStateRef = useRef<"playing" | "paused" | "stopped">("stopped");
@@ -509,6 +511,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   }
 
   function stopTrackPreview(lane?: DawPrivateAudioLane) {
+    riffAuditionGenerationRef.current += 1;
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     previewTimerRef.current = null;
     audioRefs.current.forEach((audio) => audio.pause());
@@ -517,6 +520,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       if (audio) audio.currentTime = lane.sourceInSeconds;
     }
     setPreviewLaneId(undefined);
+    setRiffAuditionActive(false);
     synchronize(playheadRef.current, false);
   }
 
@@ -554,6 +558,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     if (!lane) return;
     setError(undefined);
     stopTrackPreview();
+    const generation = riffAuditionGenerationRef.current;
     const audio = audioRefs.current.get(lane.id);
     const graph = graphRefs.current.get(lane.id);
     if (!audio || !graph) { setError(`${lane.name} is not ready to preview yet.`); return; }
@@ -572,7 +577,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       graph.applyEnvelope({ ...lane.mix, muted: false, soloed: false, gain: lane.mix.gain * (master.muted ? 0 : master.gain) }, true, 0, plan.durationSeconds, 0, 0);
       await graph.resume();
       await audio.play();
+      if (!isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) { audio.pause(); return; }
       setPreviewLaneId(lane.id);
+      setRiffAuditionActive(true);
       previewTimerRef.current = setTimeout(() => stopTrackPreview(lane), plan.stopAfterMilliseconds);
     } catch (cause) {
       stopTrackPreview(lane);
@@ -582,6 +589,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
 
   function previewRiffFamily(regions: Array<{ laneId: string; startSeconds: number; endSeconds: number }>, repeatCount = 1) {
     stopTrackPreview();
+    const generation = riffAuditionGenerationRef.current;
     const plans = createTimelineDawRiffAuditionSequence(regions.flatMap((region) => {
       const lane = lanes.find((candidate) => candidate.id === region.laneId);
       return lane ? [{
@@ -595,6 +603,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       }] : [];
     }), repeatCount);
     const playNext = async (index: number) => {
+      if (!isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) return;
       const plan = plans[index];
       if (!plan) { stopTrackPreview(); return; }
       const lane = lanes.find((candidate) => candidate.id === plan.laneId);
@@ -609,8 +618,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         graph.applyEnvelope({ ...lane.mix, muted: false, soloed: false, gain: lane.mix.gain * (master.muted ? 0 : master.gain) }, true, 0, plan.durationSeconds, 0, 0);
         await graph.resume();
         await audio.play();
+        if (!isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) { audio.pause(); return; }
         setPreviewLaneId(lane.id);
-        previewTimerRef.current = setTimeout(() => { audio.pause(); void playNext(index + 1); }, plan.stopAfterMilliseconds);
+        setRiffAuditionActive(true);
+        previewTimerRef.current = setTimeout(() => { audio.pause(); if (isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) void playNext(index + 1); }, plan.stopAfterMilliseconds);
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : "Matching riffs could not be compared.");
         stopTrackPreview(lane);
@@ -871,7 +882,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         busy={busy}
         onApply={(transformById, description) => applyGroupEdit({ groupAction: "transform", transformById }, `${description}. All originals were preserved.`)}
       />
-      <TimelineDawMusicianRiffMatch lanes={lanes} selectedIds={selectedIds} waveforms={waveforms} onAudition={(laneId, startSeconds, endSeconds) => void previewRiff(laneId, startSeconds, endSeconds)} onAuditionFamily={previewRiffFamily} />
+      <TimelineDawMusicianRiffMatch lanes={lanes} selectedIds={selectedIds} waveforms={waveforms} onAudition={(laneId, startSeconds, endSeconds) => void previewRiff(laneId, startSeconds, endSeconds)} onAuditionFamily={previewRiffFamily} auditionActive={riffAuditionActive} onStopAudition={() => stopTrackPreview()} />
       </details>
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic smooth transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} into {incoming?.name}: {crossfade.startSeconds.toFixed(2)} to {crossfade.endSeconds.toFixed(2)} seconds ({crossfade.durationSeconds.toFixed(2)}-second transition)</p>; })}</div> : null}
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}

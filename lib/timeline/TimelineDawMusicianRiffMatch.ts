@@ -53,6 +53,10 @@ export function createTimelineDawRiffAuditionSequence(inputs: Array<{
   return Array.from({ length: safeRepeatCount }, (_, passIndex) => singlePass.map((plan) => ({ ...plan, passIndex }))).flat();
 }
 
+export function isTimelineDawRiffAuditionCurrent(expectedGeneration: number, currentGeneration: number) {
+  return Number.isInteger(expectedGeneration) && expectedGeneration === currentGeneration;
+}
+
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];
 
 function cosine(left: number[], right: number[]): number {
