@@ -39,6 +39,18 @@ export function createTimelineDawRiffAudition(input: {
   };
 }
 
+export function createTimelineDawRiffAuditionSequence(inputs: Array<{
+  laneId: string;
+  sourceInSeconds: number;
+  regionStartSeconds: number;
+  regionEndSeconds: number;
+  stretchRatio: number;
+  transformBypassed: boolean;
+  playbackRate: number;
+}>) {
+  return inputs.map(({ laneId, ...input }) => ({ laneId, ...createTimelineDawRiffAudition(input) }));
+}
+
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];
 
 function cosine(left: number[], right: number[]): number {

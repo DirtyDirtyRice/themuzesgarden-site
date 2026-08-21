@@ -1444,6 +1444,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused analysis/no-match/audition tests passed (3 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; this milestone reuses the existing private audio graph and preview safety behavior.
 
+## Completed milestone - Compare Matching Riffs Back to Back
+
+- Every matching-riff family now has one **Hear Across All Selected Tracks** button that plays the same-colored idea through the selected song versions in order.
+- The comparison uses each detected region's exact source position, respects every track's saved BPM/key playback transformation, advances automatically, and stops after the final version.
+- Musicians can still audition one track at a time, while the new group control removes the need to hunt for and press every individual riff button.
+- The audition remains private and temporary: it does not change the arrangement, transforms, track selection, project history, or original audio.
+- The control has a descriptive text label and keyboard focus, so the workflow does not depend on recognizing colors alone.
+- Focused sequence, timing, analysis, and audition tests passed (4 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined private audio graph and riff-region evidence are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

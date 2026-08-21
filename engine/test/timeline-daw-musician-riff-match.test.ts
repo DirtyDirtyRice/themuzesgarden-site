@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createTimelineDawRiffAudition, findTimelineDawRiffMatches } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
+import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionSequence, findTimelineDawRiffMatches } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
 
 describe("musician riff matching", () => {
 test("colors a repeated real waveform shape only when every track reaches 90 percent", () => {
@@ -32,5 +32,15 @@ test("auditions exactly one matched region and honors the saved track speed", ()
     transformBypassed: false,
     playbackRate: 0.8,
   })).toEqual({ sourceStartSeconds: 16, playbackRate: 0.8, durationSeconds: 3.75, stopAfterMilliseconds: 3750 });
+});
+
+test("keeps selected-track order when preparing a back-to-back riff comparison", () => {
+  const sequence = createTimelineDawRiffAuditionSequence([
+    { laneId: "version-1", sourceInSeconds: 0, regionStartSeconds: 2, regionEndSeconds: 4, stretchRatio: 1, transformBypassed: true, playbackRate: 1 },
+    { laneId: "version-2", sourceInSeconds: 5, regionStartSeconds: 3, regionEndSeconds: 6, stretchRatio: 1.2, transformBypassed: false, playbackRate: 0.9 },
+  ]);
+  expect(sequence.map((item) => item.laneId)).toEqual(["version-1", "version-2"]);
+  expect(sequence[1]).toMatchObject({ sourceStartSeconds: 8, stopAfterMilliseconds: 3600 });
+  expect(sequence[1].durationSeconds).toBeCloseTo(3.6);
 });
 });
