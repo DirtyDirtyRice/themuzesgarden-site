@@ -1504,6 +1504,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused analysis, sequencing, repeat-order, timing, audition, cancellation, progress, skip, and previous-track tests passed (9 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined private preview sequence is reused.
 
+## Completed milestone - Replay the Current Riff Comparison Track
+
+- During a multi-track matching-riff comparison, musicians can now press **Replay Current Riff** to immediately restart the exact version they are hearing.
+- Replay returns to the detected beginning of that matched region and keeps the track's saved BPM/key playback transformation.
+- The comparison stays on the same track and pass, then continues forward automatically when the replay finishes.
+- Replay safely clears the old timer and pauses the current audio before restarting, preventing overlapping copies of the riff.
+- The control appears only during multi-track comparison playback and works alongside Previous, Skip, and Stop.
+- Focused analysis, sequencing, repeat-order, timing, audition, cancellation, progress, previous, skip, and replay tests passed (10 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined private preview sequence is reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
