@@ -43,4 +43,14 @@ test("keeps selected-track order when preparing a back-to-back riff comparison",
   expect(sequence[1]).toMatchObject({ sourceStartSeconds: 8, stopAfterMilliseconds: 3600 });
   expect(sequence[1].durationSeconds).toBeCloseTo(3.6);
 });
+
+test("repeats the complete selected-track riff comparison three times in order", () => {
+  const sequence = createTimelineDawRiffAuditionSequence([
+    { laneId: "version-1", sourceInSeconds: 0, regionStartSeconds: 2, regionEndSeconds: 4, stretchRatio: 1, transformBypassed: true, playbackRate: 1 },
+    { laneId: "version-2", sourceInSeconds: 0, regionStartSeconds: 3, regionEndSeconds: 5, stretchRatio: 1, transformBypassed: true, playbackRate: 1 },
+  ], 3);
+  expect(sequence.map((item) => `${item.passIndex}:${item.laneId}`)).toEqual([
+    "0:version-1", "0:version-2", "1:version-1", "1:version-2", "2:version-1", "2:version-2",
+  ]);
+});
 });

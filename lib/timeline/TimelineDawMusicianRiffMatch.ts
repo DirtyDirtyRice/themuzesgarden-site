@@ -47,8 +47,10 @@ export function createTimelineDawRiffAuditionSequence(inputs: Array<{
   stretchRatio: number;
   transformBypassed: boolean;
   playbackRate: number;
-}>) {
-  return inputs.map(({ laneId, ...input }) => ({ laneId, ...createTimelineDawRiffAudition(input) }));
+}>, repeatCount = 1) {
+  const safeRepeatCount = Math.min(10, Math.max(1, Math.floor(repeatCount)));
+  const singlePass = inputs.map(({ laneId, ...input }) => ({ laneId, ...createTimelineDawRiffAudition(input) }));
+  return Array.from({ length: safeRepeatCount }, (_, passIndex) => singlePass.map((plan) => ({ ...plan, passIndex }))).flat();
 }
 
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];

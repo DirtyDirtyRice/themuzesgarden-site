@@ -580,7 +580,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     }
   }
 
-  function previewRiffFamily(regions: Array<{ laneId: string; startSeconds: number; endSeconds: number }>) {
+  function previewRiffFamily(regions: Array<{ laneId: string; startSeconds: number; endSeconds: number }>, repeatCount = 1) {
     stopTrackPreview();
     const plans = createTimelineDawRiffAuditionSequence(regions.flatMap((region) => {
       const lane = lanes.find((candidate) => candidate.id === region.laneId);
@@ -593,7 +593,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         transformBypassed: lane.transform.bypassed,
         playbackRate: timelineDawPrivateLanePlaybackRate(lane.transform),
       }] : [];
-    }));
+    }), repeatCount);
     const playNext = async (index: number) => {
       const plan = plans[index];
       if (!plan) { stopTrackPreview(); return; }

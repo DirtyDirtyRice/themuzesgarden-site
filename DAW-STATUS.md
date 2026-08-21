@@ -1454,6 +1454,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused sequence, timing, analysis, and audition tests passed (4 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined private audio graph and riff-region evidence are reused.
 
+## Completed milestone - Repeat Matching Riff Comparison
+
+- Every matching-riff family now has a **Repeat Comparison 3 Times** control for focused listening without repeatedly pressing individual track buttons.
+- One complete pass plays the matching idea through every selected song version in order; the full order then repeats twice more and stops automatically.
+- Every repeated region keeps its exact detected source position and the track's saved BPM/key playback transformation, so musicians hear the same truthful comparison on every pass.
+- The existing single-track and one-pass comparison controls remain available for quicker checks.
+- Repeated audition is private and temporary and does not change arrangement positions, transforms, selection, history, or original recordings.
+- Focused sequence, repeat-order, timing, analysis, and audition tests passed (5 tests), TypeScript passed, and the full production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined private audio graph and safe automatic stopping are reused.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
