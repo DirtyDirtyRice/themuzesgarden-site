@@ -77,6 +77,7 @@ import { parseTimelineDawMusicianTrackName } from "@/lib/timeline/TimelineDawMus
 import { createTimelineDawMusicianTrackPreview } from "@/lib/timeline/TimelineDawMusicianTrackPreview";
 import { resolveTimelineDawMusicianTrackTiming } from "@/lib/timeline/TimelineDawMusicianTrackTiming";
 import { parseTimelineDawTrackLocks, serializeTimelineDawTrackLocks, toggleTimelineDawTrackLock } from "@/lib/timeline/TimelineDawTrackLockPolicy";
+import { parseTimelineDawTrackColors, setTimelineDawTrackColor, TIMELINE_DAW_TRACK_COLORS, type TimelineDawTrackColorName, type TimelineDawTrackColors } from "@/lib/timeline/TimelineDawTrackColorPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -98,6 +99,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [selectedIds, setSelectedIds] = useState(new Set<string>());
   const [lockedIds, setLockedIds] = useState(new Set<string>());
   const loadedTrackLocksRef = useRef<string | null>(null);
+  const [trackColors, setTrackColors] = useState<TimelineDawTrackColors>({});
+  const loadedTrackColorsRef = useRef<string | null>(null);
   const [buses, setBuses] = useState<DawPrivateBus[]>([]);
   const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [sends, setSends] = useState<DawPrivateSend[]>([]);
@@ -137,6 +140,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const laneIdentityKey = useMemo(() => lanes.map((lane) => lane.id).sort().join("|"), [lanes]);
   const trackLockStorageKey = `muzes:daw-track-locks:v1:${sessionId}`;
   const trackLockLoadKey = `${trackLockStorageKey}:${laneIdentityKey}`;
+  const trackColorStorageKey = `muzes:daw-track-colors:v1:${sessionId}`;
+  const trackColorLoadKey = `${trackColorStorageKey}:${laneIdentityKey}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -151,6 +156,20 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   useEffect(() => {
     if (loadedTrackLocksRef.current === trackLockLoadKey) localStorage.setItem(trackLockStorageKey, serializeTimelineDawTrackLocks(lockedIds));
   }, [lockedIds, trackLockLoadKey, trackLockStorageKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setTrackColors(parseTimelineDawTrackColors(localStorage.getItem(trackColorStorageKey), laneIdentityKey ? laneIdentityKey.split("|") : []));
+      loadedTrackColorsRef.current = trackColorLoadKey;
+    });
+    return () => { cancelled = true; };
+  }, [laneIdentityKey, trackColorLoadKey, trackColorStorageKey]);
+
+  useEffect(() => {
+    if (loadedTrackColorsRef.current === trackColorLoadKey) localStorage.setItem(trackColorStorageKey, JSON.stringify(trackColors));
+  }, [trackColorLoadKey, trackColorStorageKey, trackColors]);
   const effectiveFades = useMemo(() => {
     const result = new Map(lanes.map((lane) => [lane.id, { ...lane.fade }]));
     for (const crossfade of crossfades) {
@@ -992,11 +1011,13 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
           {lanes.map((lane) => {
             const meter = meters[lane.id] ?? { peakAmplitude: 0, peakDbfs: -96, clipped: false };
             const locked = lockedIds.has(lane.id);
+            const trackColorName = trackColors[lane.id] ?? "cyan";
+            const trackColor = TIMELINE_DAW_TRACK_COLORS[trackColorName];
             return (
-              <li key={lane.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+              <li key={lane.id} className="rounded-xl border bg-white/[0.04] p-3" style={{ borderColor: trackColor }}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-start gap-2"><input type="checkbox" aria-label={`Select ${lane.name}`} checked={selectedIds.has(lane.id)} onChange={(event) => setSelectedIds((current) => { const next = new Set(current); if (event.target.checked) next.add(lane.id); else next.delete(lane.id); return next; })} /><div><p className="font-black">{lane.name}</p><p className="text-xs text-white/45">Start {lane.timelineStartSeconds.toFixed(2)}s · End {resolveTimelineDawMusicianTrackTiming({ timelineStartSeconds: lane.timelineStartSeconds, sourceInSeconds: lane.sourceInSeconds, sourceOutSeconds: lane.sourceOutSeconds, stretchRatio: lane.transform.stretchRatio, transformBypassed: lane.transform.bypassed }).audibleEndSeconds.toFixed(2)}s · Length {resolveTimelineDawMusicianTrackTiming({ timelineStartSeconds: lane.timelineStartSeconds, sourceInSeconds: lane.sourceInSeconds, sourceOutSeconds: lane.sourceOutSeconds, stretchRatio: lane.transform.stretchRatio, transformBypassed: lane.transform.bypassed }).audibleDurationSeconds.toFixed(2)}s · {lane.audio.channelCount}ch · {lane.audio.sampleRate.toLocaleString()} Hz{lane.provenance ? ` · comp ${lane.provenance.compId}` : " · recording"}</p><button type="button" className="mt-1 text-xs font-black text-cyan-200" onClick={() => setSelectedIds(new Set([lane.id]))}>Select only</button></div></div>
-                  <div className="flex flex-wrap gap-2"><button type="button" className={locked ? "rounded-xl border border-amber-300 bg-amber-200 px-3 py-2 text-sm font-black text-amber-950" : button} aria-pressed={locked} onClick={() => { setLockedIds((current) => toggleTimelineDawTrackLock(current, lane.id)); setMovementNotice(`${lane.name} is now ${locked ? "unlocked and editable" : "locked against accidental edits"}.`); }}>{locked ? "Unlock Track" : "Lock Track"}</button><button type="button" className={button} disabled={busy || locked} onClick={() => void remove(lane)}>Remove Track from Song</button></div>
+                  <div className="flex flex-wrap gap-2"><label className="rounded-xl border border-white/25 bg-black px-3 py-2 text-xs font-black">Track Color <select className="ml-2 bg-black" value={trackColorName} onChange={(event) => setTrackColors((current) => setTimelineDawTrackColor(current, lane.id, event.target.value as TimelineDawTrackColorName))}>{Object.keys(TIMELINE_DAW_TRACK_COLORS).map((color) => <option key={color} value={color}>{color[0].toUpperCase() + color.slice(1)}</option>)}</select></label><button type="button" className={locked ? "rounded-xl border border-amber-300 bg-amber-200 px-3 py-2 text-sm font-black text-amber-950" : button} aria-pressed={locked} onClick={() => { setLockedIds((current) => toggleTimelineDawTrackLock(current, lane.id)); setMovementNotice(`${lane.name} is now ${locked ? "unlocked and editable" : "locked against accidental edits"}.`); }}>{locked ? "Unlock Track" : "Lock Track"}</button><button type="button" className={button} disabled={busy || locked} onClick={() => void remove(lane)}>Remove Track from Song</button></div>
                 </div>
                 {locked ? <p role="status" className="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">Locked: listening is available, but arrangement and sound edits are blocked.</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2"><button type="button" className={button} onClick={() => previewLaneId === lane.id ? stopTrackPreview(lane) : void previewTrack(lane)}>{previewLaneId === lane.id ? "Stop Track Preview" : "Hear This Track Alone"}</button><span className="self-center text-xs text-white/45">Temporary preview only—your Solo, Mute, and mix settings are not changed.</span></div>

@@ -1554,6 +1554,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused track-lock policy tests passed (2 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
 - No database migration was required; locking is an accidental-edit safety guard and never changes or deletes source recordings.
 
+## Completed milestone - Custom Track Colors
+
+- Every private audio track now has a **Track Color** selector with six clear musician-facing choices: Cyan, Violet, Rose, Amber, Emerald, and Blue.
+- The complete track card border immediately reflects the selected color, making larger arrangements and alternate versions easier to scan.
+- Color selection remains available when a track is locked because it changes only workspace organization, not audio, timing, processing, or source data.
+- Colors persist in session-scoped browser metadata containing only exact lane IDs and allowlisted color names.
+- Restored color data is validated against both the current session lanes and the fixed palette; malformed, foreign, and invented values are discarded.
+- Focused track-color policy tests passed (2 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; track colors never alter private recordings or Library records.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
