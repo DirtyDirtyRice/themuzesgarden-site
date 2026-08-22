@@ -1,6 +1,6 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 21, 2026
+Last updated: August 22, 2026
 
 ## Current objective
 
@@ -37,7 +37,8 @@ THE MUZES GARDEN DAW
 ├── Mixing and effects
 │   ├── gain, pan, mute, solo, buses, sends and master bus ...... DONE
 │   ├── inserts, automation, freeze and delay compensation ...... DONE
-│   ├── folder/subgroup shared processing ....................... MUST DO
+│   ├── folder/subgroup shared volume, mute and solo ............ DONE
+│   ├── folder effects insert chain and sends ................... MUST DO
 │   └── musician-facing effect presets and preset browser ....... MUST DO
 ├── MIDI
 │   ├── sequencing, controller events and quantization ......... DONE
@@ -1671,6 +1672,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Folder membership and collapsed state persist as validated session-scoped browser metadata containing only generated folder IDs, names, exact current lane IDs, and a boolean.
 - Focused folder and existing atomic group-edit tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration was required; subgroup audio processing remains a separate MUST DO branch.
+
+## Completed milestone - Folder Subgroup Volume, Mute, and Solo
+
+- Every track folder now has one shared volume control plus explicit **Mute Folder** and **Solo Folder** actions.
+- Folder gain multiplies each member track's existing automated clip/lane gain during normal transport playback; it does not overwrite individual track levels.
+- Muting a folder silences all of its members, while soloing one or more folders makes only those folders audible and leaves ungrouped/unsoloed folders silent.
+- Individual track mute, solo, pan, automation, fades, effects, and arrangement settings remain intact underneath the shared subgroup layer.
+- Shared processing state persists inside the existing validated session-scoped folder metadata and safely defaults older saved folders to 100% volume, unmuted, and unsoloed.
+- Focused folder playback and group-edit tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; folder effects inserts and sends remain the next separate MUST DO milestone.
 
 ## Working rules
 
