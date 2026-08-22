@@ -19,7 +19,7 @@ THE MUZES GARDEN DAW
 │   ├── import, waveform, move, trim, split, repeat, fades ..... DONE
 │   ├── selection, group editing, undo/redo and snapshots ...... DONE
 │   ├── track locking, colors and keyboard shortcuts ........... DONE
-│   └── track folders and collapsible arrangement groups ....... MUST DO
+│   └── track folders and collapsible arrangement groups ....... DONE
 ├── Regions
 │   ├── name sections (Verse, Chorus, Solo, etc.) .............. DONE
 │   ├── color-coded bounded start/end regions .................. DONE
@@ -37,6 +37,7 @@ THE MUZES GARDEN DAW
 ├── Mixing and effects
 │   ├── gain, pan, mute, solo, buses, sends and master bus ...... DONE
 │   ├── inserts, automation, freeze and delay compensation ...... DONE
+│   ├── folder/subgroup shared processing ....................... MUST DO
 │   └── musician-facing effect presets and preset browser ....... MUST DO
 ├── MIDI
 │   ├── sequencing, controller events and quantization ......... DONE
@@ -1660,6 +1661,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - The loop changes no arrangement, label, mix, source recording, Library record, or durable private data.
 - Focused region looping, editing, and audition sequencing tests passed (20 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration was required.
+
+## Completed milestone - Track Folders and Collapsible Groups
+
+- Musicians can select two or more ungrouped private tracks, name a folder, and create one organizational folder without changing audio or arrangement timing.
+- Every folder shows its member track names and includes clear **Collapse Tracks** and **Expand Tracks** controls for reducing large-session visual clutter.
+- Folder names can be edited directly, and **Remove Folder Only** explicitly preserves every member track in the song.
+- One track cannot belong to two folders; restored folders discard foreign lane IDs, overlaps, malformed names, single-track containers, and invalid collapsed state.
+- Folder membership and collapsed state persist as validated session-scoped browser metadata containing only generated folder IDs, names, exact current lane IDs, and a boolean.
+- Focused folder and existing atomic group-edit tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; subgroup audio processing remains a separate MUST DO branch.
 
 ## Working rules
 

@@ -80,6 +80,7 @@ import { parseTimelineDawTrackLocks, serializeTimelineDawTrackLocks, toggleTimel
 import { parseTimelineDawTrackColors, setTimelineDawTrackColor, TIMELINE_DAW_TRACK_COLORS, type TimelineDawTrackColorName, type TimelineDawTrackColors } from "@/lib/timeline/TimelineDawTrackColorPolicy";
 import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrackShortcutPolicy";
 import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextIndex, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel, type TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
+import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimelineDawTrackFolder, renameTimelineDawTrackFolder, toggleTimelineDawTrackFolder, type TimelineDawTrackFolders } from "@/lib/timeline/TimelineDawTrackFolderPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -109,6 +110,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [loopingRegionId, setLoopingRegionId] = useState<string>();
   const [regionStarts, setRegionStarts] = useState<Record<string, number>>({});
   const loadedRegionLabelsRef = useRef<string | null>(null);
+  const [trackFolders, setTrackFolders] = useState<TimelineDawTrackFolders>({});
+  const [folderNameDraft, setFolderNameDraft] = useState("");
+  const [folderRenameDrafts, setFolderRenameDrafts] = useState<Record<string, string>>({});
+  const loadedTrackFoldersRef = useRef<string | null>(null);
   const [buses, setBuses] = useState<DawPrivateBus[]>([]);
   const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [sends, setSends] = useState<DawPrivateSend[]>([]);
@@ -153,6 +158,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const regionLabelStorageKey = `muzes:daw-region-labels:v1:${sessionId}`;
   const regionLabelLaneBounds = useMemo(() => Object.fromEntries(lanes.map((lane) => [lane.id, lane.sourceOutSeconds - lane.sourceInSeconds])), [lanes]);
   const regionLabelLoadKey = `${regionLabelStorageKey}:${laneIdentityKey}:${JSON.stringify(regionLabelLaneBounds)}`;
+  const trackFolderStorageKey = `muzes:daw-track-folders:v1:${sessionId}`;
+  const trackFolderLoadKey = `${trackFolderStorageKey}:${laneIdentityKey}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -195,6 +202,20 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   useEffect(() => {
     if (loadedRegionLabelsRef.current === regionLabelLoadKey) localStorage.setItem(regionLabelStorageKey, JSON.stringify(regionLabels));
   }, [regionLabelLoadKey, regionLabelStorageKey, regionLabels]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setTrackFolders(parseTimelineDawTrackFolders(localStorage.getItem(trackFolderStorageKey), laneIdentityKey ? laneIdentityKey.split("|") : []));
+      loadedTrackFoldersRef.current = trackFolderLoadKey;
+    });
+    return () => { cancelled = true; };
+  }, [laneIdentityKey, trackFolderLoadKey, trackFolderStorageKey]);
+
+  useEffect(() => {
+    if (loadedTrackFoldersRef.current === trackFolderLoadKey) localStorage.setItem(trackFolderStorageKey, JSON.stringify(trackFolders));
+  }, [trackFolderLoadKey, trackFolderStorageKey, trackFolders]);
 
   useEffect(() => {
     const handleTrackShortcut = (event: KeyboardEvent) => {
@@ -1076,6 +1097,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       <TimelineDawPrivateFreezePanel sessionId={sessionId} lanes={lanes} buses={buses} freezes={freezes} onChange={setFreezes} />
       <TimelineDawPrivateAutomationEditor sessionId={sessionId} sources={[...lanes.map((lane)=>({id:lane.id,kind:"lane" as const,name:lane.name,sampleRate:lane.audio.sampleRate,baseGain:lane.mix.gain,basePan:lane.mix.pan})),...buses.map((bus)=>({id:bus.id,kind:"bus" as const,name:bus.name,sampleRate:lanes[0]?.audio.sampleRate??48000,baseGain:bus.mix.gain,basePan:bus.mix.pan}))]} envelopes={automation} onChange={setAutomation} />
       <TimelineDawPrivateLaneGroupEditor lanes={lanes} selectedIds={selectedIds} busy={busy} onSelection={setSelectedIds} onApply={(edit) => void applyGroupEdit(edit)} />
+      <section className="mt-4 rounded-xl border border-violet-300/25 bg-violet-300/[0.06] p-3" aria-label="Track folders">
+        <div className="flex flex-wrap items-end gap-2"><label className="min-w-52 flex-1 text-xs font-black text-violet-100">New folder name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={folderNameDraft} maxLength={80} placeholder="Vocals, Guitars, Drums…" onChange={(event) => setFolderNameDraft(event.target.value)} /></label><button type="button" className={button} disabled={selectedIds.size < 2 || !folderNameDraft.trim() || [...selectedIds].some((laneId) => Object.values(trackFolders).some((folder) => folder.laneIds.includes(laneId)))} onClick={() => { const name = folderNameDraft.trim(); const id = crypto.randomUUID(); setTrackFolders((current) => createTimelineDawTrackFolder(current, { id, name, laneIds: [...selectedIds], collapsed: false })); setFolderNameDraft(""); setSelectedIds(new Set()); setMovementNotice(`${name} folder created. Its tracks are unchanged.`); }}>Create Folder from Selected Tracks</button><span className="text-xs text-white/45">Select at least two ungrouped tracks. Removing a folder never removes its tracks.</span></div>
+        {Object.values(trackFolders).length ? <ol className="mt-3 grid gap-2">{Object.values(trackFolders).map((folder) => <li key={folder.id} className="rounded-lg border border-violet-300/20 bg-black/40 p-2"><div className="flex flex-wrap items-end gap-2"><label className="min-w-44 flex-1 text-xs font-black text-white/70">Folder name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={folderRenameDrafts[folder.id] ?? folder.name} maxLength={80} onChange={(event) => setFolderRenameDrafts((current) => ({ ...current, [folder.id]: event.target.value }))} /></label><button type="button" className={button} disabled={!(folderRenameDrafts[folder.id] ?? folder.name).trim() || (folderRenameDrafts[folder.id] ?? folder.name).trim() === folder.name} onClick={() => { const name = (folderRenameDrafts[folder.id] ?? folder.name).trim(); setTrackFolders((current) => renameTimelineDawTrackFolder(current, folder.id, name)); setFolderRenameDrafts((current) => { const next = { ...current }; delete next[folder.id]; return next; }); setMovementNotice(`${folder.name} folder renamed ${name}.`); }}>Save Folder Name</button><button type="button" className={button} aria-expanded={!folder.collapsed} onClick={() => setTrackFolders((current) => toggleTimelineDawTrackFolder(current, folder.id))}>{folder.collapsed ? `Expand ${folder.laneIds.length} Tracks` : `Collapse ${folder.laneIds.length} Tracks`}</button><button type="button" className={button} onClick={() => { setTrackFolders((current) => removeTimelineDawTrackFolder(current, folder.id)); setMovementNotice(`${folder.name} folder removed. All ${folder.laneIds.length} tracks remain in the song.`); }}>Remove Folder Only</button></div><p className="mt-1 text-xs text-white/50">{folder.laneIds.map((laneId) => lanes.find((lane) => lane.id === laneId)?.name).filter(Boolean).join(", ")}</p></li>)}</ol> : <p className="mt-2 text-xs text-white/45">No track folders yet.</p>}
+      </section>
       <TimelineDawMusicianSelectedTempoKeyMatch
         lanes={lanes}
         selectedIds={selectedIds}
@@ -1088,7 +1113,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}
             {lanes.length ? (
         <ol className="mt-4 grid gap-2">
-          {lanes.map((lane) => {
+          {lanes.filter((lane) => !Object.values(trackFolders).some((folder) => folder.collapsed && folder.laneIds.includes(lane.id))).map((lane) => {
             const meter = meters[lane.id] ?? { peakAmplitude: 0, peakDbfs: -96, clipped: false };
             const locked = lockedIds.has(lane.id);
             const trackColorName = trackColors[lane.id] ?? "cyan";
