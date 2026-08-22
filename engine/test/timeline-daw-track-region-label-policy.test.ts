@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds } from "../../lib/timeline/TimelineDawTrackRegionLabelPolicy";
+import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel } from "../../lib/timeline/TimelineDawTrackRegionLabelPolicy";
 
 describe("DAW track region label policy", () => {
   it("converts the timeline playhead into stretched track-local seconds", () => {
@@ -29,5 +29,12 @@ describe("DAW track region label policy", () => {
       { laneId: "a", startSeconds: 20, endSeconds: 24 },
     ]);
     expect(labels[0].name).toBe("Chorus");
+  });
+
+  it("renames and moves a saved boundary only when the complete region stays valid", () => {
+    const labels = { a: [{ id: "r1", laneId: "a", name: "Verse", startSeconds: 2, endSeconds: 6, color: "cyan" as const }] };
+    expect(updateTimelineDawTrackRegionLabel(labels, "a", "r1", { name: " Pre-Chorus ", startSeconds: 3 }, 10).a[0]).toMatchObject({ name: "Pre-Chorus", startSeconds: 3, endSeconds: 6 });
+    expect(updateTimelineDawTrackRegionLabel(labels, "a", "r1", { startSeconds: 7 }, 10)).toBe(labels);
+    expect(updateTimelineDawTrackRegionLabel(labels, "a", "r1", { endSeconds: 11 }, 10)).toBe(labels);
   });
 });

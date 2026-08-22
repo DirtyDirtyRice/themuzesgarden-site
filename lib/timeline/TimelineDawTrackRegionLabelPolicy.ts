@@ -65,6 +65,23 @@ export function removeTimelineDawTrackRegionLabel(labels: TimelineDawTrackRegion
   return next;
 }
 
+export function updateTimelineDawTrackRegionLabel(
+  labels: TimelineDawTrackRegionLabels,
+  laneId: string,
+  id: string,
+  patch: Partial<Pick<TimelineDawTrackRegionLabel, "name" | "startSeconds" | "endSeconds">>,
+  sourceDurationSeconds: number,
+): TimelineDawTrackRegionLabels {
+  const current = (labels[laneId] ?? []).find((label) => label.id === id);
+  if (!current) return labels;
+  const updated = { ...current, ...patch, name: (patch.name ?? current.name).trim() };
+  if (!updated.name || updated.name.length > 80
+    || !Number.isFinite(updated.startSeconds) || updated.startSeconds < 0
+    || !Number.isFinite(updated.endSeconds) || updated.endSeconds <= updated.startSeconds
+    || updated.endSeconds > sourceDurationSeconds) return labels;
+  return { ...labels, [laneId]: (labels[laneId] ?? []).map((label) => label.id === id ? updated : label) };
+}
+
 export function createTimelineDawTrackRegionSequence(labels: TimelineDawTrackRegionLabel[]): Array<{ laneId: string; startSeconds: number; endSeconds: number }> {
   return [...labels]
     .sort((left, right) => left.startSeconds - right.startSeconds || left.endSeconds - right.endSeconds || left.id.localeCompare(right.id))

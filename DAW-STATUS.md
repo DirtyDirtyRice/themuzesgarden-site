@@ -25,7 +25,7 @@ THE MUZES GARDEN DAW
 │   ├── color-coded bounded start/end regions .................. DONE
 │   ├── hear one exact named region ............................ DONE
 │   ├── play all, repeat, previous, replay, pause, next, stop .. DONE
-│   ├── rename or adjust a saved region directly ............... MUST DO
+│   ├── rename or adjust a saved region directly ............... DONE
 │   └── loop one named region continuously ..................... MUST DO
 ├── Three-version riff comparison
 │   ├── tempo/key alignment and matching-riff detection ........ DONE
@@ -1640,6 +1640,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - The sequence reuses the protected riff-audition timer, generation cancellation, source transform, and non-overlap safeguards instead of creating a separate audio path.
 - Focused region and audition sequencing tests passed (18 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration or new stored private data was required.
+
+## Completed milestone - Direct Named Region Editing
+
+- Every saved named region now has an editable name with an explicit **Save Region Name** action.
+- **Move Start Here** and **Move End Here** place either saved boundary at the current track-relative play position without recreating the label.
+- Boundary guards reject a start at or after the ending, an ending at or before the start, and any value outside the trimmed source duration.
+- Renaming trims surrounding whitespace, preserves the region ID, color, opposite boundary, and track assignment, and rejects empty or oversized names.
+- Edited regions immediately feed the existing single-region and automatic multi-region audition controls while leaving source recordings and arrangements unchanged.
+- Focused region editing and audition sequencing tests passed (19 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or additional private data class was required; the existing validated session-scoped label record is updated in place.
 
 ## Working rules
 
