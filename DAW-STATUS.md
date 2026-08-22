@@ -39,7 +39,7 @@ THE MUZES GARDEN DAW
 │   ├── inserts, automation, freeze and delay compensation ...... DONE
 │   ├── folder/subgroup shared volume, mute and solo ............ DONE
 │   ├── folder effects insert chain and sends ................... DONE
-│   ├── professional Grid, Slip, Shuffle and Spot modes ......... MUST DO
+│   ├── professional Grid, Slip, Shuffle and Spot modes ......... DONE
 │   └── musician-facing effect presets and preset browser ....... MUST DO
 ├── MIDI
 │   ├── sequencing, controller events and quantization ......... DONE
@@ -56,7 +56,18 @@ THE MUZES GARDEN DAW
     └── real musician end-to-end acceptance test ................ MUST DO
 ```
 
-## Latest completed milestone - Owner Password Recovery
+## Latest completed DAW milestone - Professional Edit Modes
+
+- The arrangement workspace now provides four musician-selectable editing modes: Grid, Slip, Shuffle, and Spot.
+- Grid moves selected clips against the active snap interval while preserving grouped offsets and source audio.
+- Slip moves the selected clips' source-audio window without changing their timeline placement or duration.
+- Shuffle closes the selected clips' original gap and opens room at their new destination on affected tracks.
+- Spot accepts an exact timeline position to place the selected clip or grouped selection without rounding it to the grid.
+- Pointer dragging, keyboard nudging, the existing clip-history undo path, and grouped selections all use the same edit-mode policy.
+- Focused edit-mode and multitrack tests passed (30 tests), TypeScript passed, and targeted lint reported only pre-existing legacy hook debt in the timeline component.
+- No database migration was required; edit operations remain nondestructive browser-workspace state.
+
+## Previously completed milestone - Owner Password Recovery
 
 - Member Access now includes a complete Forgot Your Password flow for the existing owner account.
 - The owner enters an email and Supabase sends a secure recovery link without the UI revealing whether that address is registered.

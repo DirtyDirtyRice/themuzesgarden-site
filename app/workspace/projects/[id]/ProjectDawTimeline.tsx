@@ -18,7 +18,6 @@ import {
   createTimelineCrossfades,
   createTimelineWaveformBars,
   duplicateSelectedTimelineClips,
-  moveSelectedTimelineClips,
   moveTimelineAutomationPoint,
   moveTimelineLane,
   moveTimelineLaneEffect,
@@ -63,6 +62,11 @@ import {
   type TimelineDawAutomationPoint,
 } from "../../../../lib/timeline/TimelineDawMultitrackViewModel";
 import { getUploadedTracks } from "../../../../lib/uploadedTracks";
+import {
+  applyTimelineDawEditModeMove,
+  timelineDawEditModeDescription,
+  type TimelineDawEditMode,
+} from "../../../../lib/timeline/TimelineDawEditModePolicy";
 import type { DawSession } from "./projectDawTypes";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
@@ -207,6 +211,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [zoom, setZoom] = useState(1);
   const [follow, setFollow] = useState(true);
   const [snapSeconds, setSnapSeconds] = useState(1);
+  const [editMode, setEditMode] = useState<TimelineDawEditMode>("grid");
+  const [spotSeconds, setSpotSeconds] = useState(0);
   const [loop, setLoop] = useState<LoopDetail>({
     sessionId: session.id,
     enabled: false,
@@ -1551,9 +1557,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   function editSelected(action: "move-left" | "move-right" | "trim-start" | "trim-end" | "split") {
     if (!selectedClip) return;
     if (action === "move-left") {
-      applyClipEdit((value) => moveSelectedTimelineClips(value, -editStep));
+      applyClipEdit((value) => applyTimelineDawEditModeMove(value, {
+        mode: editMode, deltaSeconds: -editStep, gridSeconds: snapSeconds,
+      }));
     } else if (action === "move-right") {
-      applyClipEdit((value) => moveSelectedTimelineClips(value, editStep));
+      applyClipEdit((value) => applyTimelineDawEditModeMove(value, {
+        mode: editMode, deltaSeconds: editStep, gridSeconds: snapSeconds,
+      }));
     } else if (action === "trim-start") {
       applyClipEdit((value) => trimTimelineClip(value, selectedClip.id, "start", editStep));
     } else if (action === "trim-end") {
@@ -1681,7 +1691,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       ? rawDelta
       : snapTimelineSeconds(anchor + rawDelta, snapSeconds) - anchor;
     if (drag.mode === "move") {
-      setClips(moveSelectedTimelineClips(drag.originClips, deltaSeconds));
+      setClips(applyTimelineDawEditModeMove(drag.originClips, {
+        mode: editMode, deltaSeconds, gridSeconds: snapSeconds,
+      }));
     } else if (drag.mode === "fade-in" || drag.mode === "fade-out") {
       const originFade = drag.mode === "fade-in"
         ? originClip?.fadeInSeconds ?? 0
@@ -1811,7 +1823,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             direction * editStep,
           ));
         } else {
-          applyClipEdit((value) => moveSelectedTimelineClips(value, direction * editStep));
+          applyClipEdit((value) => applyTimelineDawEditModeMove(value, {
+            mode: editMode, deltaSeconds: direction * editStep, gridSeconds: snapSeconds,
+          }));
         }
       } else if (event.key.toLowerCase() === "s") {
         event.preventDefault();
@@ -1888,6 +1902,53 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           <button type="button" onClick={() => setZoom((value) => clampTimelineZoom(value + 0.25))}
             className="rounded-lg border border-white/15 px-3 py-2 font-black" aria-label="Zoom timeline in">+</button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 bg-white/[0.025] px-5 py-3">
+        <span className="mr-1 text-xs font-black uppercase tracking-wider text-cyan-200/70">Edit mode</span>
+        {(["grid", "slip", "shuffle", "spot"] as TimelineDawEditMode[]).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => setEditMode(mode)}
+            aria-pressed={editMode === mode}
+            className={`rounded-lg border px-3 py-2 text-xs font-black capitalize ${
+              editMode === mode
+                ? "border-cyan-300 bg-cyan-300 text-black"
+                : "border-white/15 text-white/65"
+            }`}
+          >
+            {mode}
+          </button>
+        ))}
+        {editMode === "spot" ? (
+          <>
+            <label className="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-black">
+              <span className="text-white/45">Position</span>
+              <input
+                type="number"
+                min={0}
+                max={duration}
+                step={0.01}
+                value={spotSeconds}
+                onChange={(event) => setSpotSeconds(Math.max(0, Number(event.target.value) || 0))}
+                aria-label="Exact clip position in seconds"
+                className="w-20 bg-transparent font-mono text-cyan-200 outline-none"
+              />
+            </label>
+            <button
+              type="button"
+              disabled={!selectedClip}
+              onClick={() => applyClipEdit((value) => applyTimelineDawEditModeMove(value, {
+                mode: "spot", deltaSeconds: 0, gridSeconds: snapSeconds, spotSeconds,
+              }))}
+              className="rounded-lg bg-cyan-300 px-3 py-2 text-xs font-black text-black disabled:opacity-30"
+            >
+              Spot Selected
+            </button>
+          </>
+        ) : null}
+        <span className="text-xs text-white/40">{timelineDawEditModeDescription(editMode)}</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-b border-white/10 bg-white/[0.025] px-5 py-3">
