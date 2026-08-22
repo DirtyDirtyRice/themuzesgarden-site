@@ -1544,6 +1544,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - The Hybrid arrangement is saved locally under the current private lane-set identity and contains only lane IDs, labels, colors, and region times—not audio data or private storage URLs.
 - Focused riff and Hybrid edit tests passed (14 tests), TypeScript passed, targeted lint passed, and no database migration was required.
 
+## Completed milestone - Track Locking Against Accidental Edits
+
+- Every private audio track now has a clear **Lock Track / Unlock Track** control beside its removal control.
+- A locked track remains available for safe listening while its common movement, trim, cut, repeat, copy, fade, rename, routing, speed, pitch, mixer, and removal paths reject edits.
+- Advanced waveform, repair, transient, and warp editors are withheld while the track is locked, closing alternate editing paths.
+- Group edits stop when any selected track is locked instead of silently changing only part of the selected arrangement.
+- Lock state is session-scoped browser metadata containing only exact lane IDs; restored IDs are validated against the lanes currently in the session and malformed or foreign values are discarded.
+- Focused track-lock policy tests passed (2 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; locking is an accidental-edit safety guard and never changes or deletes source recordings.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
