@@ -64,3 +64,9 @@ export function removeTimelineDawTrackRegionLabel(labels: TimelineDawTrackRegion
   else delete next[laneId];
   return next;
 }
+
+export function createTimelineDawTrackRegionSequence(labels: TimelineDawTrackRegionLabel[]): Array<{ laneId: string; startSeconds: number; endSeconds: number }> {
+  return [...labels]
+    .sort((left, right) => left.startSeconds - right.startSeconds || left.endSeconds - right.endSeconds || left.id.localeCompare(right.id))
+    .map(({ laneId, startSeconds, endSeconds }) => ({ laneId, startSeconds, endSeconds }));
+}

@@ -1,10 +1,57 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 15, 2026
+Last updated: August 21, 2026
 
 ## Current objective
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
+
+## Current DAW tree - DONE / MUST DO
+
+```text
+THE MUZES GARDEN DAW
+├── Session, transport, playhead, zoom, scrolling ............. DONE
+├── Recording
+│   ├── input checks, levels, latency, count-in, metronome .... DONE
+│   ├── interruption/crash recovery and saved takes ........... DONE
+│   └── punch range and multi-pass loop recording ............. DONE
+├── Tracks and arrangement
+│   ├── import, waveform, move, trim, split, repeat, fades ..... DONE
+│   ├── selection, group editing, undo/redo and snapshots ...... DONE
+│   ├── track locking, colors and keyboard shortcuts ........... DONE
+│   └── track folders and collapsible arrangement groups ....... MUST DO
+├── Regions
+│   ├── name sections (Verse, Chorus, Solo, etc.) .............. DONE
+│   ├── color-coded bounded start/end regions .................. DONE
+│   ├── hear one exact named region ............................ DONE
+│   ├── play all, repeat, previous, replay, pause, next, stop .. DONE
+│   ├── rename or adjust a saved region directly ............... MUST DO
+│   └── loop one named region continuously ..................... MUST DO
+├── Three-version riff comparison
+│   ├── tempo/key alignment and matching-riff detection ........ DONE
+│   ├── color-coded riff families and exact-section audition ... DONE
+│   └── automatic cross-version comparison controls ............ DONE
+├── Hybrid edit track
+│   ├── copy/cut/duplicate/reorder matched riffs ............... DONE
+│   └── audition assembled hybrid edit without source changes .. DONE
+├── Mixing and effects
+│   ├── gain, pan, mute, solo, buses, sends and master bus ...... DONE
+│   ├── inserts, automation, freeze and delay compensation ...... DONE
+│   └── musician-facing effect presets and preset browser ....... MUST DO
+├── MIDI
+│   ├── sequencing, controller events and quantization ......... DONE
+│   └── virtual-instrument preview and MIDI export .............. DONE
+├── Recovery, collaboration and review
+│   ├── history, snapshots, comments and guarded restore ........ DONE
+│   └── private collaborator/beta workflow and evidence ......... DONE
+├── Export
+│   ├── private WAV/MP3 render, stems ZIP and interchange ....... DONE
+│   └── musician export presets and loudness targets ............ MUST DO
+└── Final production readiness
+    ├── large-session performance and memory pass ............... MUST DO
+    ├── accessibility and keyboard-command completion ........... MUST DO
+    └── real musician end-to-end acceptance test ................ MUST DO
+```
 
 ## Latest completed milestone - Owner Password Recovery
 
@@ -1583,6 +1630,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Region metadata is session-scoped browser data containing only current lane IDs, bounded times, allowlisted colors, labels, and generated IDs; malformed, foreign, out-of-range, and invented-color values are discarded.
 - Focused region conversion, validation, addition, and removal tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration was required.
+
+## Completed milestone - Automatic Named Region Playback
+
+- Tracks with two or more named regions now include **Play All Regions** and **Repeat All Regions 3 Times** controls.
+- Playback sorts the labels from earliest to latest, auditions only each exact bounded section, and advances automatically without changing the arrangement or source recordings.
+- While the sequence is active, the same track card exposes **Previous Region**, **Replay Region**, **Pause/Resume Regions**, **Next Region**, and **Stop Regions**.
+- Live progress identifies the current region, total region count, and repeat pass; Previous is disabled at the beginning of the sequence.
+- The sequence reuses the protected riff-audition timer, generation cancellation, source transform, and non-overlap safeguards instead of creating a separate audio path.
+- Focused region and audition sequencing tests passed (18 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or new stored private data was required.
 
 ## Working rules
 

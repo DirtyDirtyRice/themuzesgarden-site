@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addTimelineDawTrackRegionLabel, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds } from "../../lib/timeline/TimelineDawTrackRegionLabelPolicy";
+import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds } from "../../lib/timeline/TimelineDawTrackRegionLabelPolicy";
 
 describe("DAW track region label policy", () => {
   it("converts the timeline playhead into stretched track-local seconds", () => {
@@ -17,5 +17,17 @@ describe("DAW track region label policy", () => {
     const added = addTimelineDawTrackRegionLabel({}, { id: "r1", laneId: "a", name: "Verse", startSeconds: 1, endSeconds: 3, color: "cyan" });
     expect(added.a).toHaveLength(1);
     expect(removeTimelineDawTrackRegionLabel({ ...added, b: [{ id: "r2", laneId: "b", name: "Solo", startSeconds: 2, endSeconds: 4, color: "amber" }] }, "a", "r1")).toEqual({ b: [{ id: "r2", laneId: "b", name: "Solo", startSeconds: 2, endSeconds: 4, color: "amber" }] });
+  });
+
+  it("plays named regions in musical timeline order without changing the labels", () => {
+    const labels = [
+      { id: "chorus", laneId: "a", name: "Chorus", startSeconds: 20, endSeconds: 24, color: "rose" as const },
+      { id: "verse", laneId: "a", name: "Verse", startSeconds: 4, endSeconds: 8, color: "cyan" as const },
+    ];
+    expect(createTimelineDawTrackRegionSequence(labels)).toEqual([
+      { laneId: "a", startSeconds: 4, endSeconds: 8 },
+      { laneId: "a", startSeconds: 20, endSeconds: 24 },
+    ]);
+    expect(labels[0].name).toBe("Chorus");
   });
 });
