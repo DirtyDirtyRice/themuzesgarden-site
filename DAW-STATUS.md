@@ -38,7 +38,8 @@ THE MUZES GARDEN DAW
 │   ├── gain, pan, mute, solo, buses, sends and master bus ...... DONE
 │   ├── inserts, automation, freeze and delay compensation ...... DONE
 │   ├── folder/subgroup shared volume, mute and solo ............ DONE
-│   ├── folder effects insert chain and sends ................... MUST DO
+│   ├── folder effects insert chain and sends ................... DONE
+│   ├── professional Grid, Slip, Shuffle and Spot modes ......... MUST DO
 │   └── musician-facing effect presets and preset browser ....... MUST DO
 ├── MIDI
 │   ├── sequencing, controller events and quantization ......... DONE
@@ -1682,6 +1683,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Shared processing state persists inside the existing validated session-scoped folder metadata and safely defaults older saved folders to 100% volume, unmuted, and unsoloed.
 - Focused folder playback and group-edit tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration was required; folder effects inserts and sends remain the next separate MUST DO milestone.
+
+## Completed milestone - Folder Shared Insert Chains and Sends
+
+- Every folder can now route all of its current member tracks to one existing durable private bus in a single owner/session-scoped server operation.
+- The selected bus supplies the folder's shared Gain, Filter, Compressor, Gate, sidechain, latency compensation, automation, volume, pan, mute, and solo processing chain.
+- A routed folder shows the current number of active inserts and active sends and can create a real post-fader parallel send from its shared bus to another bus.
+- Self-sends are rejected to prevent an immediate feedback route, folder lane IDs are deduplicated and bounded, and every member is verified against the authenticated private session before the batch update.
+- Routing back to Master cleanly removes the shared bus assignment while preserving each track, folder, source recording, and Library record.
+- Focused folder, batch-routing, and bus-processing tests passed (9 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; this milestone reuses the established durable private buses, inserts, sends, and RLS boundaries.
 
 ## Working rules
 

@@ -6,6 +6,7 @@ import { createTimelineDawElasticPlan, timelineDawPrivateLanePlaybackRate } from
 import {
   addDawPrivateAudioLane,
   assignDawPrivateLaneBus,
+  assignDawPrivateFolderBus,
   deleteDawPrivateBus,
   arrangeDawPrivateAudioLane,
   duplicateDawPrivateAudioLane,
@@ -81,6 +82,7 @@ import { parseTimelineDawTrackColors, setTimelineDawTrackColor, TIMELINE_DAW_TRA
 import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrackShortcutPolicy";
 import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextIndex, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel, type TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimelineDawTrackFolder, renameTimelineDawTrackFolder, resolveTimelineDawTrackFolderPlayback, toggleTimelineDawTrackFolder, updateTimelineDawTrackFolderMix, type TimelineDawTrackFolders } from "@/lib/timeline/TimelineDawTrackFolderPolicy";
+import { parseTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -113,6 +115,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [trackFolders, setTrackFolders] = useState<TimelineDawTrackFolders>({});
   const [folderNameDraft, setFolderNameDraft] = useState("");
   const [folderRenameDrafts, setFolderRenameDrafts] = useState<Record<string, string>>({});
+  const [folderBusTargets, setFolderBusTargets] = useState<Record<string, string>>({});
+  const [folderSendTargets, setFolderSendTargets] = useState<Record<string, string>>({});
   const loadedTrackFoldersRef = useRef<string | null>(null);
   const [buses, setBuses] = useState<DawPrivateBus[]>([]);
   const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
@@ -878,6 +882,26 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     finally { setBusy(false); }
   }
 
+  function currentFolderBusId(folderId: string) {
+    const folder = trackFolders[folderId];
+    if (!folder) return null;
+    const ids = [...new Set(folder.laneIds.map((laneId) => lanes.find((lane) => lane.id === laneId)?.busId ?? null))];
+    return ids.length === 1 ? ids[0] : null;
+  }
+
+  async function routeFolderToBus(folderId: string, busId: string | null) {
+    const folder = trackFolders[folderId];
+    if (!folder) return;
+    setBusy(true); setError(undefined);
+    try {
+      const saved = await assignDawPrivateFolderBus(sessionId, folder.laneIds, busId);
+      const byId = new Map(saved.lanes.map((item) => [item.laneId, item]));
+      setLanes((current) => current.map((lane) => { const update = byId.get(lane.id); return update ? { ...lane, busId: update.busId, updatedAt: update.updatedAt } : lane; }));
+      setMovementNotice(`${folder.name} now shares ${busId ? `${buses.find((bus) => bus.id === busId)?.name ?? "the selected bus"} inserts and sends` : "the master output"}.`);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Folder bus routing could not be saved."); }
+    finally { setBusy(false); }
+  }
+
   async function moveSelectedTracks(mode: TimelineDawMusicianGroupMoveMode) {
     const selectedTracks = lanes.filter((lane) => selectedIds.has(lane.id));
     try {
@@ -1101,6 +1125,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       <section className="mt-4 rounded-xl border border-violet-300/25 bg-violet-300/[0.06] p-3" aria-label="Track folders">
         <div className="flex flex-wrap items-end gap-2"><label className="min-w-52 flex-1 text-xs font-black text-violet-100">New folder name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={folderNameDraft} maxLength={80} placeholder="Vocals, Guitars, Drums…" onChange={(event) => setFolderNameDraft(event.target.value)} /></label><button type="button" className={button} disabled={selectedIds.size < 2 || !folderNameDraft.trim() || [...selectedIds].some((laneId) => Object.values(trackFolders).some((folder) => folder.laneIds.includes(laneId)))} onClick={() => { const name = folderNameDraft.trim(); const id = crypto.randomUUID(); setTrackFolders((current) => createTimelineDawTrackFolder(current, { id, name, laneIds: [...selectedIds], collapsed: false, gain: 1, muted: false, soloed: false })); setFolderNameDraft(""); setSelectedIds(new Set()); setMovementNotice(`${name} folder created. Its tracks are unchanged.`); }}>Create Folder from Selected Tracks</button><span className="text-xs text-white/45">Select at least two ungrouped tracks. Removing a folder never removes its tracks.</span></div>
         {Object.values(trackFolders).length ? <ol className="mt-3 grid gap-2">{Object.values(trackFolders).map((folder) => <li key={folder.id} className="rounded-lg border border-violet-300/20 bg-black/40 p-2"><div className="flex flex-wrap items-end gap-2"><label className="min-w-44 flex-1 text-xs font-black text-white/70">Folder name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={folderRenameDrafts[folder.id] ?? folder.name} maxLength={80} onChange={(event) => setFolderRenameDrafts((current) => ({ ...current, [folder.id]: event.target.value }))} /></label><button type="button" className={button} disabled={!(folderRenameDrafts[folder.id] ?? folder.name).trim() || (folderRenameDrafts[folder.id] ?? folder.name).trim() === folder.name} onClick={() => { const name = (folderRenameDrafts[folder.id] ?? folder.name).trim(); setTrackFolders((current) => renameTimelineDawTrackFolder(current, folder.id, name)); setFolderRenameDrafts((current) => { const next = { ...current }; delete next[folder.id]; return next; }); setMovementNotice(`${folder.name} folder renamed ${name}.`); }}>Save Folder Name</button><button type="button" className={button} aria-expanded={!folder.collapsed} onClick={() => setTrackFolders((current) => toggleTimelineDawTrackFolder(current, folder.id))}>{folder.collapsed ? `Expand ${folder.laneIds.length} Tracks` : `Collapse ${folder.laneIds.length} Tracks`}</button><button type="button" className={button} onClick={() => { setTrackFolders((current) => removeTimelineDawTrackFolder(current, folder.id)); setMovementNotice(`${folder.name} folder removed. All ${folder.laneIds.length} tracks remain in the song.`); }}>Remove Folder Only</button></div><div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-violet-300/15 p-2"><label className="min-w-52 flex-1 text-xs font-black text-violet-100">Folder volume {Math.round(folder.gain * 100)}%<input className="block w-full accent-violet-300" type="range" min={0} max={2} step={0.01} value={folder.gain} onChange={(event) => setTrackFolders((current) => updateTimelineDawTrackFolderMix(current, folder.id, { gain: Number(event.target.value) }))} /></label><button type="button" className={folder.muted ? "rounded-xl border border-amber-300 bg-amber-200 px-3 py-2 text-sm font-black text-amber-950" : button} aria-pressed={folder.muted} onClick={() => setTrackFolders((current) => updateTimelineDawTrackFolderMix(current, folder.id, { muted: !folder.muted }))}>{folder.muted ? "Unmute Folder" : "Mute Folder"}</button><button type="button" className={folder.soloed ? "rounded-xl border border-cyan-300 bg-cyan-200 px-3 py-2 text-sm font-black text-cyan-950" : button} aria-pressed={folder.soloed} onClick={() => setTrackFolders((current) => updateTimelineDawTrackFolderMix(current, folder.id, { soloed: !folder.soloed }))}>{folder.soloed ? "Unsolo Folder" : "Solo Folder"}</button><span className="text-xs text-white/45">Shared playback control; individual track settings stay intact.</span></div><p className="mt-1 text-xs text-white/50">{folder.laneIds.map((laneId) => lanes.find((lane) => lane.id === laneId)?.name).filter(Boolean).join(", ")}</p></li>)}</ol> : <p className="mt-2 text-xs text-white/45">No track folders yet.</p>}
+        {Object.values(trackFolders).length ? <div className="mt-3 grid gap-2">{Object.values(trackFolders).map((folder) => { const sharedBusId = currentFolderBusId(folder.id); const sharedBus = buses.find((bus) => bus.id === sharedBusId); const insertCount = inserts.filter((item) => item.sourceKind === "bus" && item.sourceId === sharedBusId && !item.bypassed).length; const sendCount = sends.filter((item) => item.sourceKind === "bus" && item.sourceId === sharedBusId && !item.muted).length; return <div key={`${folder.id}-routing`} className="rounded-lg border border-fuchsia-300/20 bg-fuchsia-300/[0.05] p-2"><p className="text-xs font-black text-fuchsia-100">{folder.name} shared effects and sends</p><div className="mt-2 flex flex-wrap items-center gap-2"><select aria-label={`${folder.name} shared effects bus`} className="min-w-48 rounded-lg border border-white/20 bg-black px-2 py-2 text-xs text-white" value={folderBusTargets[folder.id] ?? sharedBusId ?? ""} onChange={(event) => setFolderBusTargets((current) => ({ ...current, [folder.id]: event.target.value }))}><option value="">Master output (no shared bus)</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select><button type="button" className={button} disabled={busy || (folderBusTargets[folder.id] ?? sharedBusId ?? "") === (sharedBusId ?? "")} onClick={() => void routeFolderToBus(folder.id, folderBusTargets[folder.id] || null)}>Route Folder to Shared Bus</button>{sharedBus ? <><span className="text-xs text-white/55">{sharedBus.name}: {insertCount} active inserts · {sendCount} active sends</span><select aria-label={`${folder.name} new parallel send`} className="rounded-lg border border-white/20 bg-black px-2 py-2 text-xs text-white" value={folderSendTargets[folder.id] ?? ""} onChange={(event) => setFolderSendTargets((current) => ({ ...current, [folder.id]: event.target.value }))}><option value="">Choose parallel send destination</option>{buses.filter((bus) => bus.id !== sharedBus.id).map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select><button type="button" className={button} disabled={!folderSendTargets[folder.id]} onClick={() => { const destination = folderSendTargets[folder.id]; if (!destination) return; void persistSend(parseTimelineDawTrackFolderSend(sharedBus.id, destination)); setFolderSendTargets((current) => ({ ...current, [folder.id]: "" })); setMovementNotice(`${folder.name} now sends in parallel from ${sharedBus.name} to ${buses.find((bus) => bus.id === destination)?.name ?? "the selected bus"}.`); }}>Add Shared Send</button></> : <span className="text-xs text-white/45">Choose an existing bus to share its Gain, Filter, Compressor, Gate, sidechain, and sends. Create or edit buses in the Bus Mixer above.</span>}</div></div>; })}</div> : null}
       </section>
       <TimelineDawMusicianSelectedTempoKeyMatch
         lanes={lanes}
