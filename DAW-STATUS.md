@@ -1534,6 +1534,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused pause/resume and riff-control tests passed (12 tests), TypeScript passed, focused helper/component lint passed, and the full production build passed with 76 generated pages; the large lane component retains its previously recorded React-ref lint debt.
 - No database migration was required; pause state is temporary and does not change arrangements, transforms, selection, history, or original audio.
 
+## Completed milestone - Protected Track 4 Hybrid Riff Edit
+
+- Matching-riff results now open a clearly labeled **Track 4 — Hybrid Edit** arrangement beneath the three source versions.
+- Every detected riff/version combination has a **Copy** control that pastes only its source reference and exact detected range into the Hybrid track; no original audio is rewritten or deleted.
+- Hybrid clips retain the matching family color and show their source song and timestamp.
+- Musicians can audition one Hybrid clip, move it earlier or later in the arrangement, duplicate it, cut it from the Hybrid track, or clear the complete Hybrid arrangement.
+- **Play Hybrid Edit** plays the arranged clips from top to bottom and automatically advances to the next source region using the existing protected audition sequence.
+- The Hybrid arrangement is saved locally under the current private lane-set identity and contains only lane IDs, labels, colors, and region times—not audio data or private storage URLs.
+- Focused riff and Hybrid edit tests passed (14 tests), TypeScript passed, targeted lint passed, and no database migration was required.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

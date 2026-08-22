@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionNextIndex, createTimelineDawRiffAuditionPreviousIndex, createTimelineDawRiffAuditionProgress, createTimelineDawRiffAuditionRemainingMilliseconds, createTimelineDawRiffAuditionReplayIndex, createTimelineDawRiffAuditionSequence, findTimelineDawRiffMatches, isTimelineDawRiffAuditionCurrent } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
+import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionNextIndex, createTimelineDawRiffAuditionPreviousIndex, createTimelineDawRiffAuditionProgress, createTimelineDawRiffAuditionRemainingMilliseconds, createTimelineDawRiffAuditionReplayIndex, createTimelineDawRiffAuditionSequence, cutTimelineDawHybridRiffClip, duplicateTimelineDawHybridRiffClip, findTimelineDawRiffMatches, isTimelineDawRiffAuditionCurrent, moveTimelineDawHybridRiffClip, pasteTimelineDawHybridRiffClip } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
 
 describe("musician riff matching", () => {
 test("colors a repeated real waveform shape only when every track reaches 90 percent", () => {
@@ -97,5 +97,30 @@ test("replays the current comparison track without leaving the prepared sequence
 test("preserves the remaining riff time while a comparison is paused", () => {
   expect(createTimelineDawRiffAuditionRemainingMilliseconds(4000, 1250)).toBe(2750);
   expect(createTimelineDawRiffAuditionRemainingMilliseconds(4000, 5000)).toBe(1);
+});
+
+test("builds a protected hybrid track from copied riff regions", () => {
+  const first = pasteTimelineDawHybridRiffClip([], {
+    riffId: "riff-1", color: "#2563eb", laneId: "version-1", laneName: "Version 1",
+    startSeconds: 12, endSeconds: 16,
+  });
+  const second = pasteTimelineDawHybridRiffClip(first, {
+    riffId: "riff-2", color: "#16a34a", laneId: "version-3", laneName: "Version 3",
+    startSeconds: 30, endSeconds: 34,
+  });
+  expect(second.map((clip) => clip.id)).toEqual(["hybrid-riff:1", "hybrid-riff:2"]);
+  expect(second.map((clip) => clip.laneId)).toEqual(["version-1", "version-3"]);
+});
+
+test("reorders, duplicates, and cuts hybrid clips without changing source references", () => {
+  const clips = [
+    { id: "hybrid-riff:1", riffId: "riff-1", color: "#2563eb", laneId: "a", laneName: "A", startSeconds: 1, endSeconds: 3 },
+    { id: "hybrid-riff:2", riffId: "riff-2", color: "#16a34a", laneId: "b", laneName: "B", startSeconds: 5, endSeconds: 8 },
+  ];
+  const moved = moveTimelineDawHybridRiffClip(clips, "hybrid-riff:2", -1);
+  expect(moved.map((clip) => clip.id)).toEqual(["hybrid-riff:2", "hybrid-riff:1"]);
+  const duplicated = duplicateTimelineDawHybridRiffClip(moved, "hybrid-riff:2");
+  expect(duplicated[2]).toMatchObject({ id: "hybrid-riff:3", laneId: "b", startSeconds: 5, endSeconds: 8 });
+  expect(cutTimelineDawHybridRiffClip(duplicated, "hybrid-riff:1").map((clip) => clip.id)).toEqual(["hybrid-riff:2", "hybrid-riff:3"]);
 });
 });

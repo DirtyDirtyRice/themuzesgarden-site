@@ -19,6 +19,63 @@ export type TimelineDawRiffMatch = {
   regions: TimelineDawRiffRegion[];
 };
 
+export type TimelineDawHybridRiffClip = {
+  id: string;
+  riffId: string;
+  color: string;
+  laneId: string;
+  laneName: string;
+  startSeconds: number;
+  endSeconds: number;
+};
+
+export function pasteTimelineDawHybridRiffClip(
+  clips: TimelineDawHybridRiffClip[],
+  input: Omit<TimelineDawHybridRiffClip, "id">,
+): TimelineDawHybridRiffClip[] {
+  const sequence = clips.reduce((highest, clip) => {
+    const value = Number(clip.id.match(/:(\d+)$/)?.[1] ?? 0);
+    return Math.max(highest, value);
+  }, 0) + 1;
+  return [...clips, { ...input, id: `hybrid-riff:${sequence}` }];
+}
+
+export function moveTimelineDawHybridRiffClip(
+  clips: TimelineDawHybridRiffClip[],
+  clipId: string,
+  direction: -1 | 1,
+): TimelineDawHybridRiffClip[] {
+  const index = clips.findIndex((clip) => clip.id === clipId);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= clips.length) return clips;
+  const next = [...clips];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
+export function duplicateTimelineDawHybridRiffClip(
+  clips: TimelineDawHybridRiffClip[],
+  clipId: string,
+): TimelineDawHybridRiffClip[] {
+  const source = clips.find((clip) => clip.id === clipId);
+  if (!source) return clips;
+  return pasteTimelineDawHybridRiffClip(clips, {
+    riffId: source.riffId,
+    color: source.color,
+    laneId: source.laneId,
+    laneName: source.laneName,
+    startSeconds: source.startSeconds,
+    endSeconds: source.endSeconds,
+  });
+}
+
+export function cutTimelineDawHybridRiffClip(
+  clips: TimelineDawHybridRiffClip[],
+  clipId: string,
+): TimelineDawHybridRiffClip[] {
+  return clips.filter((clip) => clip.id !== clipId);
+}
+
 export function createTimelineDawRiffAudition(input: {
   sourceInSeconds: number;
   regionStartSeconds: number;
