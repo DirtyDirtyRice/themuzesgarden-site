@@ -26,7 +26,7 @@ THE MUZES GARDEN DAW
 │   ├── hear one exact named region ............................ DONE
 │   ├── play all, repeat, previous, replay, pause, next, stop .. DONE
 │   ├── rename or adjust a saved region directly ............... DONE
-│   └── loop one named region continuously ..................... MUST DO
+│   └── loop one named region continuously ..................... DONE
 ├── Three-version riff comparison
 │   ├── tempo/key alignment and matching-riff detection ........ DONE
 │   ├── color-coded riff families and exact-section audition ... DONE
@@ -1650,6 +1650,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Edited regions immediately feed the existing single-region and automatic multi-region audition controls while leaving source recordings and arrangements unchanged.
 - Focused region editing and audition sequencing tests passed (19 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration or additional private data class was required; the existing validated session-scoped label record is updated in place.
+
+## Completed milestone - Continuous Named Region Looping
+
+- Every saved named region now includes a clear **Loop Region** action that repeats only its exact bounded audio section until the musician stops it.
+- The active region changes to **Stop Loop** and displays a live looping status naming the section, so continuous playback is never ambiguous.
+- Each pass restarts at the saved source-relative beginning and preserves the track's active speed, pitch, gain, master gain, and protected private-audio routing.
+- Loop advancement uses the existing audition generation and timer cancellation protections, preventing stale timers or overlapping audio after Stop, another preview, or another loop begins.
+- The loop changes no arrangement, label, mix, source recording, Library record, or durable private data.
+- Focused region looping, editing, and audition sequencing tests passed (20 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required.
 
 ## Working rules
 

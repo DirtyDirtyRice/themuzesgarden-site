@@ -87,3 +87,10 @@ export function createTimelineDawTrackRegionSequence(labels: TimelineDawTrackReg
     .sort((left, right) => left.startSeconds - right.startSeconds || left.endSeconds - right.endSeconds || left.id.localeCompare(right.id))
     .map(({ laneId, startSeconds, endSeconds }) => ({ laneId, startSeconds, endSeconds }));
 }
+
+export function createTimelineDawTrackRegionLoopNextIndex(currentIndex: number, sequenceLength: number, loopForever: boolean): number | null {
+  if (!Number.isInteger(currentIndex) || !Number.isInteger(sequenceLength) || sequenceLength < 1 || currentIndex < 0 || currentIndex >= sequenceLength) return null;
+  const nextIndex = currentIndex + 1;
+  if (nextIndex < sequenceLength) return nextIndex;
+  return loopForever ? 0 : null;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel } from "../../lib/timeline/TimelineDawTrackRegionLabelPolicy";
+import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextIndex, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel } from "../../lib/timeline/TimelineDawTrackRegionLabelPolicy";
 
 describe("DAW track region label policy", () => {
   it("converts the timeline playhead into stretched track-local seconds", () => {
@@ -36,5 +36,13 @@ describe("DAW track region label policy", () => {
     expect(updateTimelineDawTrackRegionLabel(labels, "a", "r1", { name: " Pre-Chorus ", startSeconds: 3 }, 10).a[0]).toMatchObject({ name: "Pre-Chorus", startSeconds: 3, endSeconds: 6 });
     expect(updateTimelineDawTrackRegionLabel(labels, "a", "r1", { startSeconds: 7 }, 10)).toBe(labels);
     expect(updateTimelineDawTrackRegionLabel(labels, "a", "r1", { endSeconds: 11 }, 10)).toBe(labels);
+  });
+
+  it("restarts a continuous region sequence only when looping is enabled", () => {
+    expect(createTimelineDawTrackRegionLoopNextIndex(0, 1, true)).toBe(0);
+    expect(createTimelineDawTrackRegionLoopNextIndex(0, 1, false)).toBeNull();
+    expect(createTimelineDawTrackRegionLoopNextIndex(0, 2, true)).toBe(1);
+    expect(createTimelineDawTrackRegionLoopNextIndex(1, 2, true)).toBe(0);
+    expect(createTimelineDawTrackRegionLoopNextIndex(2, 2, true)).toBeNull();
   });
 });
