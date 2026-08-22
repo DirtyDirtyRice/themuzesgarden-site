@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionNextIndex, createTimelineDawRiffAuditionPreviousIndex, createTimelineDawRiffAuditionProgress, createTimelineDawRiffAuditionReplayIndex, createTimelineDawRiffAuditionSequence, findTimelineDawRiffMatches, isTimelineDawRiffAuditionCurrent } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
+import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionNextIndex, createTimelineDawRiffAuditionPreviousIndex, createTimelineDawRiffAuditionProgress, createTimelineDawRiffAuditionRemainingMilliseconds, createTimelineDawRiffAuditionReplayIndex, createTimelineDawRiffAuditionSequence, findTimelineDawRiffMatches, isTimelineDawRiffAuditionCurrent } from "../../lib/timeline/TimelineDawMusicianRiffMatch";
 
 describe("musician riff matching", () => {
 test("colors a repeated real waveform shape only when every track reaches 90 percent", () => {
@@ -44,6 +44,17 @@ test("keeps selected-track order when preparing a back-to-back riff comparison",
   expect(sequence[1].durationSeconds).toBeCloseTo(3.6);
 });
 
+test("automatically advances through every matching riff in one song", () => {
+  const sequence = createTimelineDawRiffAuditionSequence([
+    { laneId: "version-1", sourceInSeconds: 0, regionStartSeconds: 2, regionEndSeconds: 4, stretchRatio: 1, transformBypassed: true, playbackRate: 1 },
+    { laneId: "version-1", sourceInSeconds: 0, regionStartSeconds: 12, regionEndSeconds: 15, stretchRatio: 1, transformBypassed: true, playbackRate: 1 },
+    { laneId: "version-1", sourceInSeconds: 0, regionStartSeconds: 24, regionEndSeconds: 26, stretchRatio: 1, transformBypassed: true, playbackRate: 1 },
+  ]);
+  expect(sequence.map((item) => [item.laneId, item.sourceStartSeconds])).toEqual([
+    ["version-1", 2], ["version-1", 12], ["version-1", 24],
+  ]);
+});
+
 test("repeats the complete selected-track riff comparison three times in order", () => {
   const sequence = createTimelineDawRiffAuditionSequence([
     { laneId: "version-1", sourceInSeconds: 0, regionStartSeconds: 2, regionEndSeconds: 4, stretchRatio: 1, transformBypassed: true, playbackRate: 1 },
@@ -81,5 +92,10 @@ test("replays the current comparison track without leaving the prepared sequence
   expect(createTimelineDawRiffAuditionReplayIndex(1, 3)).toBe(1);
   expect(createTimelineDawRiffAuditionReplayIndex(8, 3)).toBe(2);
   expect(createTimelineDawRiffAuditionReplayIndex(0, 0)).toBeNull();
+});
+
+test("preserves the remaining riff time while a comparison is paused", () => {
+  expect(createTimelineDawRiffAuditionRemainingMilliseconds(4000, 1250)).toBe(2750);
+  expect(createTimelineDawRiffAuditionRemainingMilliseconds(4000, 5000)).toBe(1);
 });
 });

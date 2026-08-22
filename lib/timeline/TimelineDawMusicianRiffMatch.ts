@@ -86,6 +86,12 @@ export function createTimelineDawRiffAuditionReplayIndex(index: number, sequence
   return Math.min(safeLength - 1, Math.max(0, Math.floor(index)));
 }
 
+export function createTimelineDawRiffAuditionRemainingMilliseconds(totalMilliseconds: number, elapsedMilliseconds: number) {
+  if (!Number.isFinite(totalMilliseconds) || totalMilliseconds <= 0) return 1;
+  const safeElapsed = Number.isFinite(elapsedMilliseconds) ? Math.max(0, elapsedMilliseconds) : 0;
+  return Math.max(1, Math.ceil(totalMilliseconds - safeElapsed));
+}
+
 const COLORS = ["#2563eb", "#16a34a", "#9333ea", "#ea580c", "#db2777", "#0891b2"];
 
 function cosine(left: number[], right: number[]): number {

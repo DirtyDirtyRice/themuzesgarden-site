@@ -1514,6 +1514,26 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused analysis, sequencing, repeat-order, timing, audition, cancellation, progress, previous, skip, and replay tests passed (10 tests), TypeScript passed, and the full production build passed with 76 generated pages.
 - No database migration was required; the existing owner-confined private preview sequence is reused.
 
+## Completed milestone - Play Every Matching Riff in One Song
+
+- Each selected song version now receives one **Play All Matching Riffs** control after matching-riff analysis.
+- Pressing the control plays riff 1 in that song and automatically advances through every remaining colored matching riff in family order.
+- The other selected versions remain silent, allowing musicians to study one complete performance before comparing it with another version.
+- Existing single-riff, across-all-tracks, and repeated comparison controls remain available.
+- Playback uses each exact detected source range and the song's saved BPM/key transformation, then stops safely after the final riff.
+- Focused riff sequencing tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner-confined audition sequence is reused and every original recording remains unchanged.
+
+## Completed milestone - Pause and Resume Riff Comparison
+
+- Multi-item riff playback now exposes a clear **Pause Riff Comparison** control alongside Previous, Replay, Skip, and Stop.
+- Pausing immediately stops the current audio and preserves the exact unplayed milliseconds in the detected riff region.
+- **Resume Riff Comparison** continues from the paused audio position, waits only the preserved remaining duration, and then advances through the existing sequence.
+- The live progress message identifies the paused song, track position, and pass while the sequence is held.
+- Stop, skip, replay, previous, and cancellation-generation protections clear stale timers and prevent overlapping or restarted playback.
+- Focused pause/resume and riff-control tests passed (12 tests), TypeScript passed, focused helper/component lint passed, and the full production build passed with 76 generated pages; the large lane component retains its previously recorded React-ref lint debt.
+- No database migration was required; pause state is temporary and does not change arrangements, transforms, selection, history, or original audio.
+
 ## Working rules
 
 - Preserve existing architecture and user data.
