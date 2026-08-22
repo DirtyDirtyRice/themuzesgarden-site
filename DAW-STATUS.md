@@ -1564,6 +1564,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused track-color policy tests passed (2 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
 - No database migration was required; track colors never alter private recordings or Library records.
 
+## Completed milestone - Selected Track Keyboard Shortcuts
+
+- The private DAW now supports two simple selected-track shortcuts: **L** locks or unlocks one selected track, and **H** starts or stops its temporary solo preview.
+- Shortcuts operate only when exactly one track is selected, preventing ambiguous changes across a multi-track selection.
+- Keyboard handling remains inactive while the musician types in an input, textarea, menu, or editable field and ignores Ctrl, Command, and Alt combinations.
+- A visible keyboard guide is placed beside the existing track-selection and group-edit controls.
+- Locking continues to change only the session-scoped safety metadata, while hearing a track remains a temporary preview that does not modify mute, solo, mix, timing, or source audio.
+- Focused shortcut policy tests passed (2 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
+- No database migration was required.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

@@ -78,6 +78,7 @@ import { createTimelineDawMusicianTrackPreview } from "@/lib/timeline/TimelineDa
 import { resolveTimelineDawMusicianTrackTiming } from "@/lib/timeline/TimelineDawMusicianTrackTiming";
 import { parseTimelineDawTrackLocks, serializeTimelineDawTrackLocks, toggleTimelineDawTrackLock } from "@/lib/timeline/TimelineDawTrackLockPolicy";
 import { parseTimelineDawTrackColors, setTimelineDawTrackColor, TIMELINE_DAW_TRACK_COLORS, type TimelineDawTrackColorName, type TimelineDawTrackColors } from "@/lib/timeline/TimelineDawTrackColorPolicy";
+import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrackShortcutPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -170,6 +171,32 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   useEffect(() => {
     if (loadedTrackColorsRef.current === trackColorLoadKey) localStorage.setItem(trackColorStorageKey, JSON.stringify(trackColors));
   }, [trackColorLoadKey, trackColorStorageKey, trackColors]);
+
+  useEffect(() => {
+    const handleTrackShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const action = resolveTimelineDawTrackShortcut({
+        key: event.key,
+        selectedCount: selectedIds.size,
+        editableTarget: Boolean(target?.closest("input, textarea, select, [contenteditable='true']")),
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+      });
+      if (!action) return;
+      const lane = lanes.find((candidate) => selectedIds.has(candidate.id));
+      if (!lane) return;
+      event.preventDefault();
+      if (action === "toggle-lock") {
+        const locked = lockedIds.has(lane.id);
+        setLockedIds((current) => toggleTimelineDawTrackLock(current, lane.id));
+        setMovementNotice(`${lane.name} is now ${locked ? "unlocked and editable" : "locked against accidental edits"}.`);
+      } else if (previewLaneId === lane.id) stopTrackPreview(lane);
+      else void previewTrack(lane);
+    };
+    document.addEventListener("keydown", handleTrackShortcut);
+    return () => document.removeEventListener("keydown", handleTrackShortcut);
+  }, [lanes, lockedIds, previewLaneId, selectedIds]);
   const effectiveFades = useMemo(() => {
     const result = new Map(lanes.map((lane) => [lane.id, { ...lane.fade }]));
     for (const crossfade of crossfades) {
@@ -975,6 +1002,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 1 }, `${selectedIds.size} selected tracks now have a 1-second space between them.`)}>Place Selected with 1 Second Gaps</button>
         </div>
         <p className="mt-2 text-xs text-white/55">Check two or more tracks below. Move keeps their spacing. Align layers their starts or endings. Place makes a continuous sequence—or adds a short or full-second pause—in their current order.</p>
+        <p className="mt-2 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white/65"><strong>Selected-track keyboard:</strong> L locks or unlocks one selected track · H hears or stops one selected track. Shortcuts stay off while typing in any field or menu.</p>
       </div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} projectId={projectId} />
