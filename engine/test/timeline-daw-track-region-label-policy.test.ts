@@ -1,0 +1,21 @@
+import { describe, expect, it } from "vitest";
+import { addTimelineDawTrackRegionLabel, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds } from "../../lib/timeline/TimelineDawTrackRegionLabelPolicy";
+
+describe("DAW track region label policy", () => {
+  it("converts the timeline playhead into stretched track-local seconds", () => {
+    expect(timelineDawTrackLocalSeconds({ playheadSeconds: 14, timelineStartSeconds: 10, sourceDurationSeconds: 20, stretchRatio: 2, transformBypassed: false })).toBe(2);
+    expect(timelineDawTrackLocalSeconds({ playheadSeconds: 40, timelineStartSeconds: 10, sourceDurationSeconds: 20, stretchRatio: 2, transformBypassed: true })).toBe(20);
+  });
+
+  it("restores only bounded labels belonging to current lanes", () => {
+    const stored = JSON.stringify({ a: [{ id: "one", laneId: "a", name: " Chorus ", startSeconds: 2, endSeconds: 5, color: "rose" }, { id: "bad", laneId: "a", name: "Bad", startSeconds: 8, endSeconds: 20, color: "cyan" }], foreign: [{ id: "x", laneId: "foreign", name: "X", startSeconds: 0, endSeconds: 1, color: "cyan" }] });
+    expect(parseTimelineDawTrackRegionLabels(stored, { a: 10 })).toEqual({ a: [{ id: "one", laneId: "a", name: "Chorus", startSeconds: 2, endSeconds: 5, color: "rose" }] });
+    expect(parseTimelineDawTrackRegionLabels("broken", { a: 10 })).toEqual({});
+  });
+
+  it("adds and removes a named region without touching another lane", () => {
+    const added = addTimelineDawTrackRegionLabel({}, { id: "r1", laneId: "a", name: "Verse", startSeconds: 1, endSeconds: 3, color: "cyan" });
+    expect(added.a).toHaveLength(1);
+    expect(removeTimelineDawTrackRegionLabel({ ...added, b: [{ id: "r2", laneId: "b", name: "Solo", startSeconds: 2, endSeconds: 4, color: "amber" }] }, "a", "r1")).toEqual({ b: [{ id: "r2", laneId: "b", name: "Solo", startSeconds: 2, endSeconds: 4, color: "amber" }] });
+  });
+});

@@ -1574,6 +1574,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused shortcut policy tests passed (2 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
 - No database migration was required.
 
+## Completed milestone - Named Track Regions
+
+- Every private audio track now includes a **Named Regions** workspace for labeling exact sections such as Verse, Chorus, Bridge, and Solo.
+- Musicians set the beginning at the current play position, move forward, and save the ending; the DAW converts stretched timeline positions into the track's correct source-relative region.
+- Each saved label shows its exact start and end, follows the track color, and includes **Hear Region** playback that stops at the labeled ending.
+- Labels can be added to locked tracks because they organize and audition the workspace without changing audio, timing, mix, processing, or source recordings.
+- Region metadata is session-scoped browser data containing only current lane IDs, bounded times, allowlisted colors, labels, and generated IDs; malformed, foreign, out-of-range, and invented-color values are discarded.
+- Focused region conversion, validation, addition, and removal tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required.
+
 ## Working rules
 
 - Preserve existing architecture and user data.

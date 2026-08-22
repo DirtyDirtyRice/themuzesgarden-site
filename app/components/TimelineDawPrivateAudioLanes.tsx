@@ -79,6 +79,7 @@ import { resolveTimelineDawMusicianTrackTiming } from "@/lib/timeline/TimelineDa
 import { parseTimelineDawTrackLocks, serializeTimelineDawTrackLocks, toggleTimelineDawTrackLock } from "@/lib/timeline/TimelineDawTrackLockPolicy";
 import { parseTimelineDawTrackColors, setTimelineDawTrackColor, TIMELINE_DAW_TRACK_COLORS, type TimelineDawTrackColorName, type TimelineDawTrackColors } from "@/lib/timeline/TimelineDawTrackColorPolicy";
 import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrackShortcutPolicy";
+import { addTimelineDawTrackRegionLabel, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, type TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -102,6 +103,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const loadedTrackLocksRef = useRef<string | null>(null);
   const [trackColors, setTrackColors] = useState<TimelineDawTrackColors>({});
   const loadedTrackColorsRef = useRef<string | null>(null);
+  const [regionLabels, setRegionLabels] = useState<TimelineDawTrackRegionLabels>({});
+  const [regionNameDrafts, setRegionNameDrafts] = useState<Record<string, string>>({});
+  const [regionStarts, setRegionStarts] = useState<Record<string, number>>({});
+  const loadedRegionLabelsRef = useRef<string | null>(null);
   const [buses, setBuses] = useState<DawPrivateBus[]>([]);
   const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [sends, setSends] = useState<DawPrivateSend[]>([]);
@@ -143,6 +148,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const trackLockLoadKey = `${trackLockStorageKey}:${laneIdentityKey}`;
   const trackColorStorageKey = `muzes:daw-track-colors:v1:${sessionId}`;
   const trackColorLoadKey = `${trackColorStorageKey}:${laneIdentityKey}`;
+  const regionLabelStorageKey = `muzes:daw-region-labels:v1:${sessionId}`;
+  const regionLabelLaneBounds = useMemo(() => Object.fromEntries(lanes.map((lane) => [lane.id, lane.sourceOutSeconds - lane.sourceInSeconds])), [lanes]);
+  const regionLabelLoadKey = `${regionLabelStorageKey}:${laneIdentityKey}:${JSON.stringify(regionLabelLaneBounds)}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -171,6 +179,20 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   useEffect(() => {
     if (loadedTrackColorsRef.current === trackColorLoadKey) localStorage.setItem(trackColorStorageKey, JSON.stringify(trackColors));
   }, [trackColorLoadKey, trackColorStorageKey, trackColors]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setRegionLabels(parseTimelineDawTrackRegionLabels(localStorage.getItem(regionLabelStorageKey), regionLabelLaneBounds));
+      loadedRegionLabelsRef.current = regionLabelLoadKey;
+    });
+    return () => { cancelled = true; };
+  }, [regionLabelLaneBounds, regionLabelLoadKey, regionLabelStorageKey]);
+
+  useEffect(() => {
+    if (loadedRegionLabelsRef.current === regionLabelLoadKey) localStorage.setItem(regionLabelStorageKey, JSON.stringify(regionLabels));
+  }, [regionLabelLoadKey, regionLabelStorageKey, regionLabels]);
 
   useEffect(() => {
     const handleTrackShortcut = (event: KeyboardEvent) => {
@@ -649,6 +671,33 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     }
   }
 
+  function currentTrackLocalSeconds(lane: DawPrivateAudioLane) {
+    return timelineDawTrackLocalSeconds({
+      playheadSeconds: playheadRef.current,
+      timelineStartSeconds: lane.timelineStartSeconds,
+      sourceDurationSeconds: lane.sourceOutSeconds - lane.sourceInSeconds,
+      stretchRatio: lane.transform.stretchRatio,
+      transformBypassed: lane.transform.bypassed,
+    });
+  }
+
+  function saveRegionLabel(lane: DawPrivateAudioLane) {
+    const startSeconds = regionStarts[lane.id];
+    const endSeconds = currentTrackLocalSeconds(lane);
+    const name = (regionNameDrafts[lane.id] ?? "").trim();
+    if (!Number.isFinite(startSeconds)) { setError("Set the region start first."); return; }
+    if (!name) { setError("Name this region before saving it."); return; }
+    if (endSeconds <= startSeconds) { setError("Move the play position after the region start, then save the end."); return; }
+    setRegionLabels((current) => addTimelineDawTrackRegionLabel(current, {
+      id: crypto.randomUUID(), laneId: lane.id, name, startSeconds, endSeconds,
+      color: trackColors[lane.id] ?? "cyan",
+    }));
+    setRegionStarts((current) => { const next = { ...current }; delete next[lane.id]; return next; });
+    setRegionNameDrafts((current) => ({ ...current, [lane.id]: "" }));
+    setError(undefined);
+    setMovementNotice(`${name} saved on ${lane.name}.`);
+  }
+
   async function previewRiff(laneId: string, regionStartSeconds: number, regionEndSeconds: number) {
     const lane = lanes.find((candidate) => candidate.id === laneId);
     if (!lane) return;
@@ -1049,6 +1098,17 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
                 </div>
                 {locked ? <p role="status" className="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">Locked: listening is available, but arrangement and sound edits are blocked.</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2"><button type="button" className={button} onClick={() => previewLaneId === lane.id ? stopTrackPreview(lane) : void previewTrack(lane)}>{previewLaneId === lane.id ? "Stop Track Preview" : "Hear This Track Alone"}</button><span className="self-center text-xs text-white/45">Temporary preview only—your Solo, Mute, and mix settings are not changed.</span></div>
+                <section className="mt-3 rounded-xl border border-white/10 bg-black/50 p-3" aria-label={`${lane.name} labeled regions`}>
+                  <p className="text-sm font-black" style={{ color: trackColor }}>Named Regions</p>
+                  <p className="mt-1 text-xs text-white/55">Place the play position, set the start, move it forward, then save the end. Labels are safe to add even while this track is locked.</p>
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <label className="min-w-48 flex-1 text-xs font-black text-white/70">Region name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={regionNameDrafts[lane.id] ?? ""} maxLength={80} placeholder="Verse, Chorus, Solo…" onChange={(event) => setRegionNameDrafts((current) => ({ ...current, [lane.id]: event.target.value }))} /></label>
+                    <button type="button" className={button} onClick={() => { const seconds = currentTrackLocalSeconds(lane); setRegionStarts((current) => ({ ...current, [lane.id]: seconds })); setMovementNotice(`Region start set at ${seconds.toFixed(2)} seconds on ${lane.name}.`); }}>Set Region Start</button>
+                    <button type="button" className={button} disabled={!Number.isFinite(regionStarts[lane.id]) || !(regionNameDrafts[lane.id] ?? "").trim()} onClick={() => saveRegionLabel(lane)}>Save Region End</button>
+                    {Number.isFinite(regionStarts[lane.id]) ? <span className="self-center text-xs font-black text-cyan-100">Start: {regionStarts[lane.id].toFixed(2)}s</span> : null}
+                  </div>
+                  {(regionLabels[lane.id] ?? []).length ? <ol className="mt-3 grid gap-2">{(regionLabels[lane.id] ?? []).map((label) => <li key={label.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-white/[0.04] px-3 py-2" style={{ borderColor: TIMELINE_DAW_TRACK_COLORS[label.color] }}><span className="text-sm font-black">{label.name} · {label.startSeconds.toFixed(2)}–{label.endSeconds.toFixed(2)}s</span><span className="flex gap-2"><button type="button" className={button} onClick={() => void previewRiff(lane.id, label.startSeconds, label.endSeconds)}>Hear Region</button><button type="button" className={button} onClick={() => { setRegionLabels((current) => removeTimelineDawTrackRegionLabel(current, lane.id, label.id)); setMovementNotice(`${label.name} label removed from ${lane.name}.`); }}>Remove Label</button></span></li>)}</ol> : <p className="mt-2 text-xs text-white/45">No named regions saved on this track yet.</p>}
+                </section>
                 <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><label className="min-w-52 flex-1 text-xs font-black text-white/70">Track name<input className="mt-1 block w-full rounded-lg border border-white/20 bg-black px-3 py-2 text-white disabled:opacity-40" disabled={locked} value={nameDrafts[lane.id] ?? lane.name} maxLength={120} onChange={(event) => setNameDrafts((current) => ({ ...current, [lane.id]: event.target.value }))} /></label><button type="button" className={button} disabled={busy || locked || (nameDrafts[lane.id] ?? lane.name).trim() === lane.name} onClick={() => void saveTrackName(lane)}>Save Track Name</button></div>
                 {!locked ? <TimelineDawPrivateLaneWaveform lane={lane} waveform={waveforms[lane.source.checksum]} timelineExtentSeconds={timelineExtentSeconds} onEdit={(patch) => editArrangement(lane.id, patch)} /> : null}
                 {!locked ? <TimelineDawPrivateClipRepairEditor sessionId={sessionId} lane={lane} onChange={(repair) => setClipRepairs((current) => current[repair.laneId]?.checksum === repair.checksum ? current : { ...current, [repair.laneId]: repair })} /> : null}
