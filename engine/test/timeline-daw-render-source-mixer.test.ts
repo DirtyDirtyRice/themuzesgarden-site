@@ -51,4 +51,17 @@ describe("TimelineDawRenderSourceMixer", () => {
       "owner-1",
     )).rejects.toThrow(/sample rate/i);
   });
+
+  it("applies the saved delivery peak ceiling before encoding", async () => {
+    const store = new InMemoryTimelineDawRenderSourceStore();
+    const source = await store.save({
+      ownerId: "owner-1", sessionId: "session-1", name: "master.wav",
+      bytes: wav([0, 0.25, -0.5, 0.25, 0]),
+    });
+    const channels = await new TimelineDawRenderSourceMixer(store).resolve(
+      job({ sourceIds: [source.uri], normalizePeakDb: -6 }),
+      "owner-1",
+    );
+    expect(Math.max(...Array.from(channels[0], Math.abs))).toBeCloseTo(10 ** (-6 / 20), 5);
+  });
 });

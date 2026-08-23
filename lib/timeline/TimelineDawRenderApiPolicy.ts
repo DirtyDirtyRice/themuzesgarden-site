@@ -3,7 +3,7 @@ import type { TimelineDawRenderCommand } from "./TimelineDawRenderService";
 const allowedKeys = new Set([
   "action", "sessionId", "expectedWorkspaceRevision", "name", "target", "sourceIds",
   "startSample", "endSample", "sampleRate", "bitDepth", "channels", "format",
-  "normalizePeakDb", "dither",
+  "normalizePeakDb", "dither", "deliveryPresetId", "targetLufs", "truePeakDbtp",
 ]);
 const targets = new Set(["mix", "stem", "selection"]);
 const formats = new Set(["wav", "flac", "mp3"]);
@@ -64,6 +64,16 @@ export function parseTimelineDawRenderCommand(raw: unknown): TimelineDawRenderCo
   if (value.dither !== undefined && typeof value.dither !== "boolean") {
     throw new Error("dither must be a boolean.");
   }
+  const deliveryPresetId = value.deliveryPresetId == null
+    ? null : text(value.deliveryPresetId, "deliveryPresetId", 80);
+  const targetLufs = value.targetLufs == null ? null : value.targetLufs;
+  const truePeakDbtp = value.truePeakDbtp == null ? null : value.truePeakDbtp;
+  if (targetLufs !== null && (typeof targetLufs !== "number" || !Number.isFinite(targetLufs) || targetLufs < -36 || targetLufs > -5)) {
+    throw new Error("targetLufs must be null or from -36 to -5.");
+  }
+  if (truePeakDbtp !== null && (typeof truePeakDbtp !== "number" || !Number.isFinite(truePeakDbtp) || truePeakDbtp < -12 || truePeakDbtp > 0)) {
+    throw new Error("truePeakDbtp must be null or from -12 to 0.");
+  }
   if (value.format === "mp3" && (value.bitDepth !== 16 || channels > 2)) {
     throw new Error("MP3 requires 16-bit mono or stereo output.");
   }
@@ -74,6 +84,6 @@ export function parseTimelineDawRenderCommand(raw: unknown): TimelineDawRenderCo
     sourceIds: [...new Set(sourceIds)], startSample, endSample, sampleRate,
     bitDepth: value.bitDepth as 16 | 24 | 32, channels,
     format: value.format as TimelineDawRenderCommand["format"],
-    normalizePeakDb, dither: value.dither ?? false,
+    normalizePeakDb, dither: value.dither ?? false, deliveryPresetId, targetLufs, truePeakDbtp,
   };
 }

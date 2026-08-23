@@ -13,6 +13,7 @@ describe("TimelineDawRenderApiPolicy", () => {
     expect(parseTimelineDawRenderCommand(valid)).toEqual({
       ...valid, sessionId: "session-1", name: "Main Mix", sourceIds: ["master"],
       normalizePeakDb: null, dither: false,
+      deliveryPresetId: null, targetLufs: null, truePeakDbtp: null,
     });
   });
   it("strictly rejects unsupported fields and invalid output specifications", () => {

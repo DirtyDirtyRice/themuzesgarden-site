@@ -49,14 +49,24 @@ THE MUZES GARDEN DAW
 │   └── private collaborator/beta workflow and evidence ......... DONE
 ├── Export
 │   ├── private WAV/MP3 render, stems ZIP and interchange ....... DONE
-│   └── musician export presets and loudness targets ............ MUST DO
+│   └── musician export presets and loudness targets ............ DONE
 └── Final production readiness
     ├── large-session performance and memory pass ............... MUST DO
     ├── accessibility and keyboard-command completion ........... MUST DO
     └── real musician end-to-end acceptance test ................ MUST DO
 ```
 
-## Latest completed DAW milestone - Effect Preset Browser
+## Latest completed DAW milestone - Export Presets and Loudness Targets
+
+- Render & Export now provides five musician-facing delivery presets: Streaming Master, Spoken Word / Podcast, CD Master, Dynamic Master Archive, and Mix Stems Delivery.
+- Each preset configures the real render target, format, sample rate, bit depth, channel count, output dither, integrated LUFS target, and true-peak ceiling.
+- Musicians can refine LUFS and dBTP values within strict professional bounds before saving a render specification.
+- Delivery preset identity, loudness target, and true-peak ceiling persist in the owner-protected render history and appear on saved render cards.
+- The private render source mixer now applies the saved peak ceiling to PCM before WAV encoding; source artifacts remain unchanged.
+- Focused export-preset, API-policy, render-engine, and source-mixer tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required because render history already persists inside the private versioned DAW workspace archive.
+
+## Previously completed DAW milestone - Effect Preset Browser
 
 - The native EQ, compressor, reverb, and delay editors now share a searchable musician-facing preset browser.
 - Twenty curated presets cover vocals, instruments, drums, mix/bus processing, and creative sound design.

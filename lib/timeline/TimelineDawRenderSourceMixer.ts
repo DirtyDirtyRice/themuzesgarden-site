@@ -46,6 +46,17 @@ export class TimelineDawRenderSourceMixer {
         }
       }
     }
+    if (job.normalizePeakDb !== null) {
+      let peak = 0;
+      for (const channel of channels) for (const sample of channel) peak = Math.max(peak, Math.abs(sample));
+      const ceiling = 10 ** (job.normalizePeakDb / 20);
+      if (peak > 0) {
+        const gain = ceiling / peak;
+        for (const channel of channels) {
+          for (let frame = 0; frame < channel.length; frame += 1) channel[frame] *= gain;
+        }
+      }
+    }
     return channels;
   }
 }

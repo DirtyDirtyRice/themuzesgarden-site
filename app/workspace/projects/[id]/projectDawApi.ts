@@ -172,6 +172,9 @@ export function prepareDawRender(input: {
   format: TimelineRenderFormat;
   normalizePeakDb?: number | null;
   dither?: boolean;
+  deliveryPresetId?: string | null;
+  targetLufs?: number | null;
+  truePeakDbtp?: number | null;
 }): Promise<{ receipt: { workspaceRevision: number; job: TimelineOfflineRenderJob } }> {
   return request("/api/timeline/daw-renders", {
     method: "POST",

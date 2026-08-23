@@ -9,6 +9,11 @@ import type {
 import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
 import ProjectDawInterchangeWorkspace from "./ProjectDawInterchangeWorkspace";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
+import {
+  getTimelineDawExportPreset,
+  timelineDawExportPresets,
+  type TimelineDawExportPresetId,
+} from "@/lib/timeline/TimelineDawExportPresetPolicy";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -28,6 +33,9 @@ export default function ProjectDawExportWorkspace({
   const [sampleRate, setSampleRate] = useState(48000);
   const [channels, setChannels] = useState(2);
   const [bitDepth, setBitDepth] = useState<16 | 24 | 32>(24);
+  const [deliveryPresetId, setDeliveryPresetId] = useState<TimelineDawExportPresetId>("streaming");
+  const [targetLufs, setTargetLufs] = useState(-14);
+  const [truePeakDbtp, setTruePeakDbtp] = useState(-1);
   const [durationSeconds, setDurationSeconds] = useState(180);
   const [sources, setSources] = useState("");
   const [sourceFiles, setSourceFiles] = useState<File[]>([]);
@@ -153,6 +161,7 @@ export default function ProjectDawExportWorkspace({
         startSample: 0, endSample: Math.round(durationSeconds * sampleRate), sampleRate,
         bitDepth: format === "mp3" ? 16 : bitDepth, channels, format,
         dither: format === "wav" && bitDepth === 16,
+        deliveryPresetId, targetLufs, truePeakDbtp, normalizePeakDb: truePeakDbtp,
       });
       setJobs((current) => [...current, receipt.receipt.job]);
       setSelectedJob(receipt.receipt.job);
@@ -202,12 +211,42 @@ export default function ProjectDawExportWorkspace({
         <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-black uppercase text-amber-200">PCM WAV worker connected</span>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <label className="rounded-xl border border-emerald-300/25 bg-emerald-300/[0.06] p-3 md:col-span-2 xl:col-span-3">
+          <span className="text-xs font-black uppercase tracking-wider text-emerald-200">Delivery preset</span>
+          <select
+            className={`${field} mt-2 w-full`}
+            value={deliveryPresetId}
+            onChange={(event) => {
+              const preset = getTimelineDawExportPreset(event.target.value);
+              setDeliveryPresetId(preset.id);
+              setTarget(preset.target); setFormat(preset.format); setSampleRate(preset.sampleRate);
+              setBitDepth(preset.bitDepth); setChannels(preset.channels);
+              setTargetLufs(preset.targetLufs); setTruePeakDbtp(preset.truePeakDbtp);
+            }}
+            aria-label="Musician export preset"
+          >
+            {timelineDawExportPresets.map((preset) => (
+              <option key={preset.id} value={preset.id}>{preset.name}</option>
+            ))}
+          </select>
+          <span className="mt-2 block text-xs text-white/50">
+            {getTimelineDawExportPreset(deliveryPresetId).description}
+          </span>
+        </label>
         <input className={field} value={name} onChange={(event) => setName(event.target.value)} aria-label="Export name" />
         <select className={field} value={target} onChange={(event) => setTarget(event.target.value as TimelineRenderTarget)} aria-label="Export target"><option value="mix">Full mix</option><option value="stem">Stems</option><option value="selection">Selection</option></select>
         <select className={field} value={format} onChange={(event) => setFormat(event.target.value as TimelineRenderFormat)} aria-label="Export format"><option value="wav">WAV</option><option value="flac">FLAC</option><option value="mp3">MP3</option></select>
         <select className={field} value={sampleRate} onChange={(event) => setSampleRate(Number(event.target.value))} aria-label="Sample rate"><option value={44100}>44.1 kHz</option><option value={48000}>48 kHz</option><option value={96000}>96 kHz</option></select>
         <select className={field} value={channels} onChange={(event) => setChannels(Number(event.target.value))} aria-label="Channel count"><option value={1}>Mono</option><option value={2}>Stereo</option></select>
         <select className={field} value={format === "mp3" ? 16 : bitDepth} disabled={format === "mp3"} onChange={(event) => setBitDepth(Number(event.target.value) as 16 | 24 | 32)} aria-label="Bit depth"><option value={16}>16-bit</option><option value={24}>24-bit</option><option value={32}>32-bit float</option></select>
+        <label className="rounded-xl border border-white/20 bg-black px-3 py-2 text-xs font-black text-white/55">
+          Loudness target
+          <span className="flex items-center gap-2"><input className="mt-1 w-full bg-transparent text-white outline-none" type="number" min={-36} max={-5} step={0.1} value={targetLufs} onChange={(event) => setTargetLufs(Number(event.target.value))} aria-label="Integrated loudness target" /> LUFS</span>
+        </label>
+        <label className="rounded-xl border border-white/20 bg-black px-3 py-2 text-xs font-black text-white/55">
+          True-peak ceiling
+          <span className="flex items-center gap-2"><input className="mt-1 w-full bg-transparent text-white outline-none" type="number" min={-12} max={0} step={0.1} value={truePeakDbtp} onChange={(event) => setTruePeakDbtp(Number(event.target.value))} aria-label="True peak ceiling" /> dBTP</span>
+        </label>
         <input className={field} type="number" min={0.001} step={0.001} value={durationSeconds} onChange={(event) => setDurationSeconds(Number(event.target.value))} aria-label="Duration in seconds" />
         <input className={`${field} md:col-span-2 xl:col-span-3`} value={sources} readOnly aria-label="Private render source identifiers" placeholder="Upload one or more WAV sources below" />
         <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,.mp3,audio/wav,audio/mpeg" onChange={(event) => setSourceFiles(Array.from(event.target.files ?? []))} aria-label="WAV or MP3 render source files" />
@@ -233,6 +272,7 @@ export default function ProjectDawExportWorkspace({
                 <button type="button" onClick={() => setSelectedJob(job)} className="w-full text-left">
                 <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-black">{job.name}</span><span className="text-xs font-black uppercase text-emerald-200">{job.state}</span></div>
                 <p className="mt-1 text-sm text-white/55">{job.target} Â· {job.format.toUpperCase()} Â· {job.sampleRate.toLocaleString()} Hz Â· {job.bitDepth}-bit Â· {job.totalFrames.toLocaleString()} frames</p>
+                {job.targetLufs != null ? <p className="mt-1 text-xs font-bold text-emerald-200">Target {job.targetLufs} LUFS · ceiling {job.truePeakDbtp} dBTP · {job.deliveryPresetId ?? "custom"}</p> : null}
                 <p className="mt-1 text-xs text-white/35">{job.id} Â· {job.renderedFrames.toLocaleString()}/{job.totalFrames.toLocaleString()} frames</p>
                 </button>
                 {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>{job.target === "stem" ? "Download private stem ZIP" : "Download private WAV"}</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>{job.target === "stem" ? "Create private ZIP link" : "Create private WAV link"}</button> : null}
