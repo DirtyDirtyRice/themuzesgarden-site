@@ -53,10 +53,22 @@ THE MUZES GARDEN DAW
 └── Final production readiness
     ├── large-session performance and memory pass ............... DONE
     ├── accessibility and keyboard-command completion ........... DONE
-    └── real musician end-to-end acceptance test ................ MUST DO
+    ├── real-musician end-to-end acceptance gate ................ DONE
+    └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Accessibility and Keyboard Commands
+## Latest completed DAW milestone - Real-Musician Acceptance Gate
+
+- The private owner-musician report now gives one explicit ACCEPTANCE PASSED or ACCEPTANCE HELD decision across the complete protected-source, import, audition, edit, mix, recovery, and export journey.
+- A pass requires all seven latest musician observations to pass alongside their durable technical evidence; the human audition no longer remains incorrectly unresolved after a real listening pass.
+- Missing observations, missing technical proof, failed/confusing/blocked results, and any “too many steps” usability flag hold acceptance and list the exact unresolved path.
+- The completed guided test links directly to the final report and explains that Technical Checks must be run before refreshing the certificate.
+- The downloadable private JSON report includes the same deterministic acceptance decision while continuing to omit embedded screenshot image data.
+- Focused owner-musician, technical-test, and report-gate tests passed (11 tests), TypeScript passed, touched-file lint passed, and the production build passed with 76 generated pages.
+- No human listening judgment was fabricated: the gate is complete, but final owner sign-off remains MUST DO until the musician performs and passes all seven steps.
+- No database migration was required; the gate derives its result from existing owner-scoped durable technical receipts and private musician observations.
+
+## Previously completed DAW milestone - Accessibility and Keyboard Commands
 
 - Clip editing now uses one tested keyboard-command policy for move, trim, split, archive, copy, paste, duplicate, undo, and redo.
 - Ctrl/Cmd + Shift + Z and Ctrl/Cmd + Y provide clip redo without also triggering mixer history; mixer undo/redo remains available when no clip is selected.

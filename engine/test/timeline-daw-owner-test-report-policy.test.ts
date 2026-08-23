@@ -24,4 +24,33 @@ describe("TimelineDawOwnerTestReportPolicy", () => {
     expect(report.findings.find((item) => item.step === "import")?.status).toBe("verified");
     expect(report.findings.find((item) => item.step === "audition")?.status).toBe("human-required");
   });
+
+  it("passes the final gate only after all seven real-musician checks pass", () => {
+    const observations = (["protect", "import", "audition", "edit", "mix", "recover", "export"] as const)
+      .map((step) => observation(step, "pass"));
+    const report = buildTimelineDawOwnerTestReport({
+      generatedAt: "2026-08-15T08:00:00.000Z",
+      technicalResults: evaluateTimelineDawTechnicalTest(completeEvidence).results,
+      observations,
+    });
+    expect(report.acceptance).toMatchObject({
+      status: "passed",
+      passed: true,
+      verifiedCount: 7,
+      requiredCount: 7,
+      blockers: [],
+    });
+    expect(report.findings.find((item) => item.step === "audition")?.status).toBe("verified");
+  });
+
+  it("holds a passing observation when the musician reports excessive steps", () => {
+    const confusing = { ...observation("edit", "pass"), excessiveSteps: true };
+    const report = buildTimelineDawOwnerTestReport({
+      generatedAt: "2026-08-15T08:00:00.000Z",
+      technicalResults: evaluateTimelineDawTechnicalTest(completeEvidence).results,
+      observations: [confusing],
+    });
+    expect(report.acceptance.passed).toBe(false);
+    expect(report.findings.find((item) => item.step === "edit")?.status).toBe("attention-required");
+  });
 });
