@@ -72,6 +72,11 @@ import {
   getTimelineDawEffectPreset,
   type TimelineDawEffectPresetCategory,
 } from "../../../../lib/timeline/TimelineDawEffectPresetBrowserPolicy";
+import {
+  createTimelineDawLaneWindow,
+  indexTimelineDawItemsByTrack,
+  timelineDawClipHistoryLimit,
+} from "../../../../lib/timeline/TimelineDawLargeSessionPolicy";
 import type { DawSession } from "./projectDawTypes";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
@@ -219,6 +224,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [zoom, setZoom] = useState(1);
   const [follow, setFollow] = useState(true);
   const [snapSeconds, setSnapSeconds] = useState(1);
+  const [lanePage, setLanePage] = useState(0);
   const [editMode, setEditMode] = useState<TimelineDawEditMode>("grid");
   const [spotSeconds, setSpotSeconds] = useState(0);
   const [loop, setLoop] = useState<LoopDetail>({
@@ -303,6 +309,32 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     : 0;
   const referenceGain = timelineReferenceMatchGain(masterLevel, referenceLevel, referenceMatch);
   const matchedReferenceLevel = Math.min(1, referenceLevel * referenceGain);
+  const laneWindow = useMemo(
+    () => createTimelineDawLaneWindow(lanes.length, lanePage),
+    [lanePage, lanes.length],
+  );
+  const visibleLaneEntries = useMemo(
+    () => lanes.slice(laneWindow.start, laneWindow.end)
+      .map((lane, offset) => ({ lane, index: laneWindow.start + offset })),
+    [laneWindow.end, laneWindow.start, lanes],
+  );
+  const clipsByTrack = useMemo(
+    () => indexTimelineDawItemsByTrack(clips.filter((clip) => !clip.archived)),
+    [clips],
+  );
+  const automationByTrack = useMemo(
+    () => indexTimelineDawItemsByTrack(automation.filter((point) => !point.archived)),
+    [automation],
+  );
+  const waveformBarsByClipId = useMemo(() => {
+    const result = new Map<string, number[]>();
+    for (const { lane } of visibleLaneEntries) {
+      for (const clip of clipsByTrack.get(lane.trackId) ?? []) {
+        result.set(clip.id, createTimelineWaveformBars(`${session.id}:${clip.id}`, 80));
+      }
+    }
+    return result;
+  }, [clipsByTrack, session.id, visibleLaneEntries]);
   const visibleEffectPresets = selectedEffect
     ? browseTimelineDawEffectPresets({
         kind: selectedEffect.effect.kind,
@@ -1554,12 +1586,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const archivedMarkers = markers.filter((marker) => marker.archived);
   const selectedAutomation = automation.find((point) => point.selected && !point.archived) ?? null;
   const editStep = snapSeconds || (zoom >= 4 ? 0.25 : zoom >= 2 ? 0.5 : 1);
+  const clipHistoryLimit = timelineDawClipHistoryLimit(clips.length);
 
   function applyClipEdit(
     edit: (current: TimelineDawClipState[]) => TimelineDawClipState[],
   ) {
     const snapshot = clips.map((clip) => ({ ...clip }));
-    setClipHistory((history) => [...history.slice(-19), snapshot]);
+    setClipHistory((history) => [...history.slice(-(clipHistoryLimit - 1)), snapshot]);
     setClips(edit(clips));
   }
 
@@ -1674,7 +1707,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
       ? clips.map((clip) => ({ ...clip }))
       : selectTimelineClip(clips, clipId);
     clipDragRef.current = { clipId, mode, originX: event.clientX, originClips };
-    setClipHistory((history) => [...history.slice(-19), originClips]);
+    setClipHistory((history) => [...history.slice(-(clipHistoryLimit - 1)), originClips]);
     setClips(originClips);
     updateLane(trackId, { selected: true });
     setFollow(false);
@@ -4012,10 +4045,22 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         </div>
       ) : null}
 
+      {laneWindow.pageCount > 1 ? (
+        <div className="flex flex-wrap items-center gap-2 border-b border-cyan-300/15 bg-cyan-300/[0.045] px-5 py-3">
+          <strong className="text-xs font-black uppercase tracking-wider text-cyan-200">Large Session Mode</strong>
+          <span className="text-xs text-white/50">
+            Tracks {laneWindow.start + 1}–{laneWindow.end} of {laneWindow.totalCount} · only the visible track window is rendered
+          </span>
+          <button type="button" disabled={laneWindow.page === 0} onClick={() => setLanePage((page) => Math.max(0, page - 1))} className="ml-auto rounded-lg border border-white/15 px-3 py-1.5 text-xs font-black disabled:opacity-30">Previous Tracks</button>
+          <span className="font-mono text-xs text-white/45">{laneWindow.page + 1}/{laneWindow.pageCount}</span>
+          <button type="button" disabled={laneWindow.page === laneWindow.pageCount - 1} onClick={() => setLanePage((page) => Math.min(laneWindow.pageCount - 1, page + 1))} className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-black disabled:opacity-30">Next Tracks</button>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-[220px_minmax(0,1fr)]">
         <div className="border-r border-white/10 bg-[#0a0a0a]">
           <div className="h-12 border-b border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-white/35">Tracks</div>
-          {lanes.map((lane, index) => {
+          {visibleLaneEntries.map(({ lane, index }) => {
             const track = trackById.get(lane.trackId);
             const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
             const automatedValue = timelineAutomationValueAt(
@@ -4255,17 +4300,14 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                 </button>
               ))}
             </div>
-            {lanes.map((lane, laneIndex) => {
+            {visibleLaneEntries.map(({ lane, index: laneIndex }) => {
               const track = trackById.get(lane.trackId);
               const groupBus = lane.groupId === "none" ? null : groupBuses[lane.groupId];
               const audible = !lane.muted && !groupBus?.muted && (!anySoloed || lane.soloed);
-              const laneClips = clips.filter((clip) => clip.trackId === lane.trackId && !clip.archived);
+              const laneClips = clipsByTrack.get(lane.trackId) ?? [];
               const crossfades = createTimelineCrossfades(laneClips);
-              const laneAutomation = automation
-                .filter((point) =>
-                  point.trackId === lane.trackId
-                  && point.parameter === automationParameter
-                  && !point.archived)
+              const laneAutomation = (automationByTrack.get(lane.trackId) ?? [])
+                .filter((point) => point.parameter === automationParameter)
                 .sort((left, right) => left.seconds - right.seconds);
               const automationTop = (value: number) => automationParameter === "volume"
                 ? 88 - value * 72
@@ -4287,7 +4329,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                     </div>
                   ))}
                   {laneClips.map((clip) => {
-                    const bars = createTimelineWaveformBars(`${session.id}:${clip.id}`, 80);
+                    const bars = waveformBarsByClipId.get(clip.id) ?? [];
                     const left = timelinePlayheadPercent(clip.timelineStartSeconds, duration);
                     const right = timelinePlayheadPercent(clip.timelineEndSeconds, duration);
                     return (

@@ -51,12 +51,23 @@ THE MUZES GARDEN DAW
 │   ├── private WAV/MP3 render, stems ZIP and interchange ....... DONE
 │   └── musician export presets and loudness targets ............ DONE
 └── Final production readiness
-    ├── large-session performance and memory pass ............... MUST DO
+    ├── large-session performance and memory pass ............... DONE
     ├── accessibility and keyboard-command completion ........... MUST DO
     └── real musician end-to-end acceptance test ................ MUST DO
 ```
 
-## Latest completed DAW milestone - Export Presets and Loudness Targets
+## Latest completed DAW milestone - Large-Session Performance
+
+- Arrangement sessions above twelve tracks now enter an explicit Large Session Mode with bounded Previous/Next track windows.
+- A 119-track session mounts at most twelve mixer strips and twelve arrangement lanes at once instead of rendering all 238 heavy row surfaces together.
+- Active clips and automation points are indexed by track in one pass, replacing repeated full-array filtering for every visible lane.
+- Waveform bars are generated once per visible clip window and reused during the render instead of being regenerated inside every clip component pass.
+- Full clip-state undo history scales from twenty snapshots to ten above 250 clips and five above 1,000 clips, limiting memory growth while retaining recovery.
+- Track ordering, grouped editing, saved lane state, audio routing, and source artifacts still operate on the complete session; windowing changes presentation only.
+- Focused large-session and multitrack tests passed (29 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; no private audio or session data was moved into new browser storage.
+
+## Previously completed DAW milestone - Export Presets and Loudness Targets
 
 - Render & Export now provides five musician-facing delivery presets: Streaming Master, Spoken Word / Podcast, CD Master, Dynamic Master Archive, and Mix Stems Delivery.
 - Each preset configures the real render target, format, sample rate, bit depth, channel count, output dither, integrated LUFS target, and true-peak ceiling.
