@@ -40,7 +40,7 @@ THE MUZES GARDEN DAW
 │   ├── folder/subgroup shared volume, mute and solo ............ DONE
 │   ├── folder effects insert chain and sends ................... DONE
 │   ├── professional Grid, Slip, Shuffle and Spot modes ......... DONE
-│   └── musician-facing effect presets and preset browser ....... MUST DO
+│   └── musician-facing effect presets and preset browser ....... DONE
 ├── MIDI
 │   ├── sequencing, controller events and quantization ......... DONE
 │   └── virtual-instrument preview and MIDI export .............. DONE
@@ -56,7 +56,17 @@ THE MUZES GARDEN DAW
     └── real musician end-to-end acceptance test ................ MUST DO
 ```
 
-## Latest completed DAW milestone - Professional Edit Modes
+## Latest completed DAW milestone - Effect Preset Browser
+
+- The native EQ, compressor, reverb, and delay editors now share a searchable musician-facing preset browser.
+- Twenty curated presets cover vocals, instruments, drums, mix/bus processing, and creative sound design.
+- Each preset includes a plain-language purpose, musical category, searchable tags, and visible Amount/Mix values.
+- Applying a preset changes its real Amount and Mix settings together with its name; preset selection is not cosmetic.
+- Search and category filtering remain local presentation state and never store track names, audio, or other private workspace content.
+- Focused preset-browser and multitrack tests passed (29 tests), TypeScript passed, targeted policy lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; existing lane-effect persistence stores the applied preset and parameters.
+
+## Previously completed DAW milestone - Professional Edit Modes
 
 - The arrangement workspace now provides four musician-selectable editing modes: Grid, Slip, Shuffle, and Spot.
 - Grid moves selected clips against the active snap interval while preserving grouped offsets and source audio.

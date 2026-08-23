@@ -67,6 +67,11 @@ import {
   timelineDawEditModeDescription,
   type TimelineDawEditMode,
 } from "../../../../lib/timeline/TimelineDawEditModePolicy";
+import {
+  browseTimelineDawEffectPresets,
+  getTimelineDawEffectPreset,
+  type TimelineDawEffectPresetCategory,
+} from "../../../../lib/timeline/TimelineDawEffectPresetBrowserPolicy";
 import type { DawSession } from "./projectDawTypes";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
@@ -155,6 +160,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [automation, setAutomation] = useState<TimelineDawAutomationPoint[]>([]);
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
   const [effectClipboard, setEffectClipboard] = useState<TimelineDawLaneEffect[]>([]);
+  const [effectPresetQuery, setEffectPresetQuery] = useState("");
+  const [effectPresetCategory, setEffectPresetCategory] =
+    useState<TimelineDawEffectPresetCategory>("all");
   const [reverbReturn, setReverbReturn] = useState(0.35);
   const [delayReturn, setDelayReturn] = useState(0.3);
   const [groupBuses, setGroupBuses] = useState<TimelineGroupBuses>(defaultGroupBuses);
@@ -295,12 +303,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     : 0;
   const referenceGain = timelineReferenceMatchGain(masterLevel, referenceLevel, referenceMatch);
   const matchedReferenceLevel = Math.min(1, referenceLevel * referenceGain);
-  const effectPresets: Record<TimelineDawEffectKind, string[]> = {
-    eq: ["Balanced", "Vocal Presence", "Bass Cleanup", "Air"],
-    compressor: ["Vocal Glue", "Punch", "Gentle Bus", "Limiter"],
-    reverb: ["Studio Room", "Plate", "Large Hall", "Dream"],
-    delay: ["Quarter Note", "Eighth Note", "Slapback", "Ping Pong"],
-  };
+  const visibleEffectPresets = selectedEffect
+    ? browseTimelineDawEffectPresets({
+        kind: selectedEffect.effect.kind,
+        category: effectPresetCategory,
+        query: effectPresetQuery,
+      })
+    : [];
 
   useEffect(() => {
     let current = true;
@@ -3808,18 +3817,23 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
             onChange={(event) => {
               if (comparingSnapshot || comparedMixerCheckpointId) return;
+              const preset = getTimelineDawEffectPreset(
+                selectedEffect.effect.kind,
+                event.target.value,
+              );
+              if (!preset) return;
               setLanes((value) => updateTimelineLaneEffect(
                 value,
                 selectedEffect.lane.trackId,
                 selectedEffect.effect.id,
-                { preset: event.target.value },
+                { preset: preset.name, amount: preset.amount, mix: preset.mix },
               ));
             }}
             className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black text-violet-100 disabled:opacity-30"
             aria-label="Effect preset"
           >
-            {effectPresets[selectedEffect.effect.kind].map((preset) => (
-              <option key={preset} value={preset}>{preset}</option>
+            {browseTimelineDawEffectPresets({ kind: selectedEffect.effect.kind }).map((preset) => (
+              <option key={preset.id} value={preset.name}>{preset.name}</option>
             ))}
           </select>
           <label className="flex items-center gap-2 text-[10px] font-black text-white/45">
@@ -3922,6 +3936,77 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
             )}
             className="rounded-lg border border-cyan-300/25 px-3 py-2 text-xs font-black text-cyan-100"
           >Copy Rack</button>
+          <div className="basis-full rounded-xl border border-violet-300/20 bg-black/55 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <strong className="text-xs font-black uppercase tracking-wider text-violet-200">
+                Preset Browser
+              </strong>
+              <input
+                type="search"
+                maxLength={80}
+                value={effectPresetQuery}
+                onChange={(event) => setEffectPresetQuery(event.target.value)}
+                placeholder="Search sound, use, or character"
+                aria-label="Search effect presets"
+                className="min-w-56 flex-1 rounded-lg border border-white/15 bg-black px-3 py-2 text-xs text-white outline-none focus:border-violet-300"
+              />
+              <select
+                value={effectPresetCategory}
+                onChange={(event) => setEffectPresetCategory(
+                  event.target.value as TimelineDawEffectPresetCategory,
+                )}
+                aria-label="Effect preset category"
+                className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black text-violet-100"
+              >
+                <option value="all">All uses</option>
+                <option value="vocals">Vocals</option>
+                <option value="instruments">Instruments</option>
+                <option value="drums">Drums</option>
+                <option value="mix">Mix and buses</option>
+                <option value="creative">Creative</option>
+              </select>
+              <span className="text-[10px] text-white/40" aria-live="polite">
+                {visibleEffectPresets.length} matching preset{visibleEffectPresets.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {visibleEffectPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  disabled={comparingSnapshot || Boolean(comparedMixerCheckpointId)}
+                  onClick={() => setLanes((value) => updateTimelineLaneEffect(
+                    value,
+                    selectedEffect.lane.trackId,
+                    selectedEffect.effect.id,
+                    { preset: preset.name, amount: preset.amount, mix: preset.mix },
+                  ))}
+                  aria-pressed={selectedEffect.effect.preset === preset.name}
+                  className={`rounded-lg border p-2 text-left disabled:opacity-30 ${
+                    selectedEffect.effect.preset === preset.name
+                      ? "border-violet-300 bg-violet-300/20"
+                      : "border-white/10 bg-white/[0.025]"
+                  }`}
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <strong className="text-xs text-white">{preset.name}</strong>
+                    <span className="text-[9px] font-black uppercase text-violet-200/60">
+                      {preset.category}
+                    </span>
+                  </span>
+                  <span className="mt-1 block text-[10px] text-white/45">{preset.description}</span>
+                  <span className="mt-1 block font-mono text-[9px] text-cyan-200/55">
+                    Amount {Math.round(preset.amount * 100)}% · Mix {Math.round(preset.mix * 100)}%
+                  </span>
+                </button>
+              ))}
+              {!visibleEffectPresets.length ? (
+                <p className="rounded-lg border border-dashed border-white/15 p-3 text-xs text-white/45">
+                  No presets match. Clear the search or choose All uses.
+                </p>
+              ) : null}
+            </div>
+          </div>
           <button type="button" onClick={() => setSelectedEffectId(null)}
             className="rounded-lg bg-white/10 px-3 py-2 text-xs font-black">Close</button>
         </div>
