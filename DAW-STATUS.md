@@ -52,11 +52,22 @@ THE MUZES GARDEN DAW
 │   └── musician export presets and loudness targets ............ DONE
 └── Final production readiness
     ├── large-session performance and memory pass ............... DONE
-    ├── accessibility and keyboard-command completion ........... MUST DO
+    ├── accessibility and keyboard-command completion ........... DONE
     └── real musician end-to-end acceptance test ................ MUST DO
 ```
 
-## Latest completed DAW milestone - Large-Session Performance
+## Latest completed DAW milestone - Accessibility and Keyboard Commands
+
+- Clip editing now uses one tested keyboard-command policy for move, trim, split, archive, copy, paste, duplicate, undo, and redo.
+- Ctrl/Cmd + Shift + Z and Ctrl/Cmd + Y provide clip redo without also triggering mixer history; mixer undo/redo remains available when no clip is selected.
+- Shortcuts ignore editable form fields, unsupported modifier combinations, and held-key repeats, protecting text entry and preventing accidental repeated destructive edits.
+- Every clip exposes its keyboard shortcuts to assistive technology and identifies whether it is selected, with a linked on-screen command guide.
+- Visible fade-in, fade-out, trim-start, and trim-end handles are now reachable by Tab, expose slider values, and support precise Arrow-key editing.
+- A polite screen-reader status region announces completed clip edits, clipboard actions, undo/redo, fades, and trims without moving keyboard focus.
+- Focused keyboard, track-shortcut, and transport tests passed (21 tests), TypeScript passed, targeted new-policy lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; accessibility status is presentation-only and no private session information enters new storage.
+
+## Previously completed DAW milestone - Large-Session Performance
 
 - Arrangement sessions above twelve tracks now enter an explicit Large Session Mode with bounded Previous/Next track windows.
 - A 119-track session mounts at most twelve mixer strips and twelve arrangement lanes at once instead of rendering all 238 heavy row surfaces together.

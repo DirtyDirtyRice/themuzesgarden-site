@@ -77,6 +77,12 @@ import {
   indexTimelineDawItemsByTrack,
   timelineDawClipHistoryLimit,
 } from "../../../../lib/timeline/TimelineDawLargeSessionPolicy";
+import {
+  describeTimelineDawClipKeyboardCommand,
+  isTimelineDawEditableTarget,
+  resolveTimelineDawClipKeyboardCommand,
+  type TimelineDawClipKeyboardCommand,
+} from "../../../../lib/timeline/TimelineDawKeyboardCommandPolicy";
 import type { DawSession } from "./projectDawTypes";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
@@ -160,7 +166,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   const [lanes, setLanes] = useState<TimelineDawLaneState[]>([]);
   const [clips, setClips] = useState<TimelineDawClipState[]>([]);
   const [clipHistory, setClipHistory] = useState<TimelineDawClipState[][]>([]);
+  const [clipRedoHistory, setClipRedoHistory] = useState<TimelineDawClipState[][]>([]);
   const [clipClipboard, setClipClipboard] = useState<TimelineDawClipState[]>([]);
+  const [accessibilityStatus, setAccessibilityStatus] = useState("DAW keyboard controls ready.");
   const [markers, setMarkers] = useState<TimelineDawMarkerState[]>([]);
   const [automation, setAutomation] = useState<TimelineDawAutomationPoint[]>([]);
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
@@ -569,6 +577,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   useEffect(() => {
     const handleMixerHistory = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z") return;
+      if (clips.some((clip) => clip.selected && !clip.archived)) return;
       const target = event.target as HTMLElement | null;
       if (
         target?.isContentEditable
@@ -580,7 +589,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     };
     window.addEventListener("keydown", handleMixerHistory);
     return () => window.removeEventListener("keydown", handleMixerHistory);
-  }, [mixerRedoHistory, mixerUndoHistory]);
+  }, [clips, mixerRedoHistory, mixerUndoHistory]);
 
   useEffect(() => {
     const overloaded = masterInputLevel > limiterCeiling;
@@ -1593,6 +1602,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   ) {
     const snapshot = clips.map((clip) => ({ ...clip }));
     setClipHistory((history) => [...history.slice(-(clipHistoryLimit - 1)), snapshot]);
+    setClipRedoHistory([]);
     setClips(edit(clips));
   }
 
@@ -1631,7 +1641,27 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
   function undoClipEdit() {
     setClipHistory((history) => {
       const previous = history.at(-1);
-      if (previous) setClips(previous.map((clip) => ({ ...clip })));
+      if (previous) {
+        setClipRedoHistory((redo) => [
+          ...redo.slice(-(clipHistoryLimit - 1)),
+          clips.map((clip) => ({ ...clip })),
+        ]);
+        setClips(previous.map((clip) => ({ ...clip })));
+      }
+      return history.slice(0, -1);
+    });
+  }
+
+  function redoClipEdit() {
+    setClipRedoHistory((history) => {
+      const next = history.at(-1);
+      if (next) {
+        setClipHistory((undo) => [
+          ...undo.slice(-(clipHistoryLimit - 1)),
+          clips.map((clip) => ({ ...clip })),
+        ]);
+        setClips(next.map((clip) => ({ ...clip })));
+      }
       return history.slice(0, -1);
     });
   }
@@ -1822,67 +1852,58 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
 
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (
-        target?.isContentEditable
-        || target?.tagName === "INPUT"
-        || target?.tagName === "TEXTAREA"
-        || target?.tagName === "SELECT"
-      ) return;
-      if (event.ctrlKey || event.metaKey) {
-        const key = event.key.toLowerCase();
-        if (key === "z") {
-          event.preventDefault();
-          undoClipEdit();
-        } else if (key === "c" && selectedClip) {
-          event.preventDefault();
-          copyClips();
-        } else if (key === "v" && clipClipboard.length) {
-          event.preventDefault();
-          pasteClips();
-        } else if (key === "d" && selectedClip) {
-          event.preventDefault();
-          duplicateClips();
-        }
-        return;
+      const command = resolveTimelineDawClipKeyboardCommand({
+        key: event.key,
+        repeat: event.repeat,
+        editableTarget: isTimelineDawEditableTarget(event.target),
+        selectedCount: selectedClips.length,
+        clipboardCount: clipClipboard.length,
+        canUndo: clipHistory.length > 0,
+        canRedo: clipRedoHistory.length > 0,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+        altKey: event.altKey,
+      });
+      if (!command) return;
+      event.preventDefault();
+      const direction = command.endsWith("left") ? -1 : 1;
+      if (command === "undo") undoClipEdit();
+      else if (command === "redo") redoClipEdit();
+      else if (command === "copy") copyClips();
+      else if (command === "paste") pasteClips();
+      else if (command === "duplicate") duplicateClips();
+      else if (command === "split") editSelected("split");
+      else if (command === "archive") applyClipEdit(archiveSelectedTimelineClips);
+      else if (command === "move-left" || command === "move-right") {
+        applyClipEdit((value) => applyTimelineDawEditModeMove(value, {
+          mode: editMode,
+          deltaSeconds: direction * editStep,
+          gridSeconds: snapSeconds,
+        }));
+      } else if (selectedClip && command.startsWith("trim-start")) {
+        applyClipEdit((value) => trimTimelineClip(
+          value, selectedClip.id, "start", direction * editStep,
+        ));
+      } else if (selectedClip && command.startsWith("trim-end")) {
+        applyClipEdit((value) => trimTimelineClip(
+          value, selectedClip.id, "end", direction * editStep,
+        ));
       }
-      if (!selectedClip) return;
-      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-        event.preventDefault();
-        const direction = event.key === "ArrowLeft" ? -1 : 1;
-        if (event.altKey) {
-          applyClipEdit((value) => trimTimelineClip(
-            value,
-            selectedClip.id,
-            "start",
-            direction * editStep,
-          ));
-        } else if (event.shiftKey) {
-          applyClipEdit((value) => trimTimelineClip(
-            value,
-            selectedClip.id,
-            "end",
-            direction * editStep,
-          ));
-        } else {
-          applyClipEdit((value) => applyTimelineDawEditModeMove(value, {
-            mode: editMode, deltaSeconds: direction * editStep, gridSeconds: snapSeconds,
-          }));
-        }
-      } else if (event.key.toLowerCase() === "s") {
-        event.preventDefault();
-        editSelected("split");
-      } else if (event.key === "Delete" || event.key === "Backspace") {
-        event.preventDefault();
-        applyClipEdit(archiveSelectedTimelineClips);
-      }
+      setAccessibilityStatus(describeTimelineDawClipKeyboardCommand(
+        command as TimelineDawClipKeyboardCommand,
+        selectedClips.length,
+      ));
     }
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
   });
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/15 bg-[#050505]">
+    <section aria-label="Multitrack arrangement workspace" className="overflow-hidden rounded-3xl border border-white/15 bg-[#050505]">
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {accessibilityStatus}
+      </p>
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 p-5">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">Multitrack Timeline</p>
@@ -4337,6 +4358,8 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                         key={clip.id}
                         role="button"
                         tabIndex={0}
+                        aria-describedby="daw-clip-keyboard-help"
+                        aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight Alt+ArrowLeft Alt+ArrowRight S Delete Control+C Meta+C Control+D Meta+D"
                         onPointerDown={(event) => startClipDrag(event, clip.id, "move", lane.trackId)}
                         onPointerMove={continueClipDrag}
                         onPointerUp={finishClipDrag}
@@ -4359,7 +4382,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           left: `${left}%`,
                           width: `${Math.max(0.25, right - left)}%`,
                         }}
-                        aria-label={`Select ${track?.title || lane.trackId} clip from ${clock(clip.timelineStartSeconds)} to ${clock(clip.timelineEndSeconds)}`}
+                        aria-label={`${clip.selected ? "Selected" : "Select"} ${track?.title || lane.trackId} clip from ${clock(clip.timelineStartSeconds)} to ${clock(clip.timelineEndSeconds)}`}
                       >
                         <div
                           className="pointer-events-none absolute inset-y-0 left-0 z-[13] border-r border-cyan-100/70 bg-gradient-to-r from-black/75 to-transparent"
@@ -4370,6 +4393,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           style={{ width: `${Math.min(100, (clip.fadeOutSeconds / Math.max(0.25, clip.timelineEndSeconds - clip.timelineStartSeconds)) * 100)}%` }}
                         />
                         <div
+                          role="slider"
+                          tabIndex={0}
+                          aria-label={`Fade in for ${track?.title || lane.trackId}`}
+                          aria-valuemin={0}
+                          aria-valuemax={clip.timelineEndSeconds - clip.timelineStartSeconds}
+                          aria-valuenow={clip.fadeInSeconds}
+                          aria-valuetext={`${clip.fadeInSeconds.toFixed(2)} seconds`}
                           className="absolute left-3 top-0 z-30 h-4 w-4 -translate-x-1/2 cursor-ew-resize touch-none rounded-b bg-cyan-200 text-center text-[9px] font-black text-black"
                           style={{ left: `${(clip.fadeInSeconds / Math.max(0.25, clip.timelineEndSeconds - clip.timelineStartSeconds)) * 100}%` }}
                           onPointerDown={(event) => {
@@ -4379,9 +4409,26 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           onPointerMove={continueClipDrag}
                           onPointerUp={finishClipDrag}
                           onPointerCancel={finishClipDrag}
+                          onKeyDown={(event) => {
+                            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const direction = event.key === "ArrowLeft" ? -1 : 1;
+                            applyClipEdit((value) => setTimelineClipFade(
+                              value, clip.id, "in", clip.fadeInSeconds + direction * editStep,
+                            ));
+                            setAccessibilityStatus(`Fade in ${direction < 0 ? "reduced" : "increased"} to ${Math.max(0, clip.fadeInSeconds + direction * editStep).toFixed(2)} seconds.`);
+                          }}
                           title={`Fade in ${clip.fadeInSeconds.toFixed(2)}s`}
                         >F</div>
                         <div
+                          role="slider"
+                          tabIndex={0}
+                          aria-label={`Fade out for ${track?.title || lane.trackId}`}
+                          aria-valuemin={0}
+                          aria-valuemax={clip.timelineEndSeconds - clip.timelineStartSeconds}
+                          aria-valuenow={clip.fadeOutSeconds}
+                          aria-valuetext={`${clip.fadeOutSeconds.toFixed(2)} seconds`}
                           className="absolute right-3 top-0 z-30 h-4 w-4 translate-x-1/2 cursor-ew-resize touch-none rounded-b bg-violet-200 text-center text-[9px] font-black text-black"
                           style={{ right: `${(clip.fadeOutSeconds / Math.max(0.25, clip.timelineEndSeconds - clip.timelineStartSeconds)) * 100}%` }}
                           onPointerDown={(event) => {
@@ -4391,9 +4438,26 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           onPointerMove={continueClipDrag}
                           onPointerUp={finishClipDrag}
                           onPointerCancel={finishClipDrag}
+                          onKeyDown={(event) => {
+                            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const direction = event.key === "ArrowLeft" ? -1 : 1;
+                            applyClipEdit((value) => setTimelineClipFade(
+                              value, clip.id, "out", clip.fadeOutSeconds + direction * editStep,
+                            ));
+                            setAccessibilityStatus(`Fade out ${direction < 0 ? "reduced" : "increased"} to ${Math.max(0, clip.fadeOutSeconds + direction * editStep).toFixed(2)} seconds.`);
+                          }}
                           title={`Fade out ${clip.fadeOutSeconds.toFixed(2)}s`}
                         >F</div>
                         <div
+                          role="slider"
+                          tabIndex={0}
+                          aria-label={`Trim start of ${track?.title || lane.trackId}`}
+                          aria-valuemin={0}
+                          aria-valuemax={clip.timelineEndSeconds - 0.25}
+                          aria-valuenow={clip.timelineStartSeconds}
+                          aria-valuetext={clock(clip.timelineStartSeconds)}
                           className="absolute inset-y-0 left-0 z-20 w-3 cursor-ew-resize border-r border-white/30 bg-black/25 hover:bg-rose-300/40"
                           onPointerDown={(event) => {
                             event.stopPropagation();
@@ -4402,7 +4466,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           onPointerMove={continueClipDrag}
                           onPointerUp={finishClipDrag}
                           onPointerCancel={finishClipDrag}
-                          aria-hidden="true"
+                          onKeyDown={(event) => {
+                            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const direction = event.key === "ArrowLeft" ? -1 : 1;
+                            applyClipEdit((value) => trimTimelineClip(
+                              value, clip.id, "start", direction * editStep,
+                            ));
+                            setAccessibilityStatus(`Clip start moved ${direction < 0 ? "left" : "right"}.`);
+                          }}
                         />
                         <span className="pointer-events-none flex h-full items-center gap-px px-3" aria-hidden="true">
                           {bars.map((height, index) => (
@@ -4413,6 +4486,13 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           {track?.title || lane.trackId}
                         </span>
                         <div
+                          role="slider"
+                          tabIndex={0}
+                          aria-label={`Trim end of ${track?.title || lane.trackId}`}
+                          aria-valuemin={clip.timelineStartSeconds + 0.25}
+                          aria-valuemax={duration}
+                          aria-valuenow={clip.timelineEndSeconds}
+                          aria-valuetext={clock(clip.timelineEndSeconds)}
                           className="absolute inset-y-0 right-0 z-20 w-3 cursor-ew-resize border-l border-white/30 bg-black/25 hover:bg-rose-300/40"
                           onPointerDown={(event) => {
                             event.stopPropagation();
@@ -4421,7 +4501,16 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
                           onPointerMove={continueClipDrag}
                           onPointerUp={finishClipDrag}
                           onPointerCancel={finishClipDrag}
-                          aria-hidden="true"
+                          onKeyDown={(event) => {
+                            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const direction = event.key === "ArrowLeft" ? -1 : 1;
+                            applyClipEdit((value) => trimTimelineClip(
+                              value, clip.id, "end", direction * editStep,
+                            ));
+                            setAccessibilityStatus(`Clip end moved ${direction < 0 ? "left" : "right"}.`);
+                          }}
                         />
                       </div>
                     );
@@ -4523,7 +4612,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span>{clips.length - archivedClips.length} active · {archivedClips.length} archived · edits and lane order saved on this device</span>
         <span className="font-mono">{clock(elapsed)} / {clock(duration)}</span>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 bg-white/[0.02] px-5 py-2 text-[10px] font-bold uppercase tracking-wide text-white/30">
+      <div id="daw-clip-keyboard-help" className="flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 bg-white/[0.02] px-5 py-2 text-[10px] font-bold uppercase tracking-wide text-white/30">
         <span>Ctrl/Cmd + click: multiselect</span>
         <span>Arrow: move</span>
         <span>Shift + Arrow: trim end</span>
@@ -4532,6 +4621,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
         <span>Delete: archive</span>
         <span>Ctrl/Cmd + C/V: copy/paste</span>
         <span>Ctrl/Cmd + D: duplicate</span>
+        <span>Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y: redo</span>
         <span>Loop In/Out: use playhead</span>
         <span>Ctrl/Cmd + Z: undo</span>
       </div>
