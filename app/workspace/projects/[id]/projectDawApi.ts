@@ -191,10 +191,39 @@ export type DawRenderSource = {
 
 export async function uploadDawRenderSource(sessionId: string, file: File): Promise<{ source: DawRenderSource; audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number } }> {
   const prepared = await prepareTimelineDawAudioImport(file);
-  const body = new FormData();
-  body.set("sessionId", sessionId);
-  body.set("file", prepared.file);
-  return request("/api/timeline/daw-render-sources", { method: "POST", body });
+  if (prepared.file.size <= 0 || prepared.file.size > 268_435_456) {
+    throw new Error("WAV source size must be from 1 byte to 256 MB.");
+  }
+  const client = requireProjectSupabase();
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user?.id) throw new Error("Sign in to upload private DAW audio.");
+  const digest = await crypto.subtle.digest("SHA-256", await prepared.file.arrayBuffer());
+  const checksum = `sha256:${Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, "0")).join("")}`;
+  const safeName = prepared.file.name.trim().replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-180);
+  const sourceId = `timeline-daw-source-${checksum.slice(7, 23)}`;
+  const path = `${auth.user.id}/${sessionId}/${sourceId}-${safeName}`;
+  const { error: uploadError } = await client.storage.from("timeline-daw-render-sources").upload(path, prepared.file, {
+    contentType: "audio/wav",
+    cacheControl: "private, max-age=0, no-store",
+    upsert: true,
+  });
+  if (uploadError) throw new Error(`Private WAV upload failed: ${uploadError.message}`);
+  try {
+    return await request("/api/timeline/daw-render-sources", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "register-upload",
+        sessionId,
+        path,
+        name: prepared.file.name,
+        byteLength: prepared.file.size,
+        checksum,
+      }),
+    });
+  } catch (cause) {
+    await client.storage.from("timeline-daw-render-sources").remove([path]);
+    throw cause;
+  }
 }
 
 export type DawRecordingTake = {
