@@ -98,7 +98,11 @@ export async function POST(request: NextRequest) {
           })
         : await new TimelineDawRenderExecutionService(
             workspaceStore,
-            new TimelineDawRenderSupabaseArtifactStore(user.client, user.id),
+            new TimelineDawRenderSupabaseArtifactStore(user.client, user.id, {
+              supabaseUrl: environment("NEXT_PUBLIC_SUPABASE_URL"),
+              anonKey: environment("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+              accessToken: user.token,
+            }),
           ).execute({
             actorId: user.id,
             sessionId: command.sessionId,

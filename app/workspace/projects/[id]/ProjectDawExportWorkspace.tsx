@@ -143,8 +143,9 @@ export default function ProjectDawExportWorkspace({
         await load();
         setNotice("The workspace changed. Render history was reloaded; review it and retry.");
       } else {
-        setError(cause instanceof Error ? cause.message : "PCM WAV execution failed.");
+        const message = cause instanceof Error ? cause.message : "PCM WAV execution failed.";
         await load();
+        setError(message);
       }
     } finally {
       setBusy(false);
