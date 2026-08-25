@@ -55,6 +55,9 @@ import { TIMELINE_DAW_MUSICIAN_ACTION, TIMELINE_DAW_MUSICIAN_SESSION_STATE } fro
 const buttonClass =
   "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
 
+const workspacePanelClass = "rounded-3xl border border-white/15 bg-[#080808] p-4";
+const workspaceSummaryClass = "cursor-pointer text-xl font-black marker:text-cyan-300";
+
 export default function ProjectDawSessionPage() {
   const params = useParams();
   const projectId = String(params.id ?? "");
@@ -226,43 +229,58 @@ export default function ProjectDawSessionPage() {
 
       <TimelineDawStudioFocusRestore sessionId={session.id} />
 
-      <div data-daw-focus-area="transport" className="scroll-mt-24">
-      <ProjectDawTransport
-        session={session}
-        workspaceRevision={snapshot.workspaceRevision}
-        onWorkspaceRevision={handleWorkspaceRevision}
-      />
-      </div>
+      <section aria-labelledby="daw-work-area-heading" className="space-y-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Choose one work area</p>
+          <h2 id="daw-work-area-heading" className="mt-1 text-2xl font-black">Only the section you choose will open</h2>
+          <p className="mt-1 text-sm text-white/60">Choose a heading below. Opening another heading closes the previous one.</p>
+        </div>
 
-      <div data-daw-focus-area="record" className="scroll-mt-24">
-      <ProjectDawRecordingWorkspace session={session} />
-      </div>
-      <div data-daw-focus-area="arrange" className="scroll-mt-24">
-      <ProjectDawTimeline session={session} />
-      </div>
-      <div data-daw-focus-area="mix" className="space-y-6 scroll-mt-24">
-      <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} projectId={projectId} />
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Play and stop the song</summary>
+        <div data-daw-focus-area="transport" className="mt-5 scroll-mt-24">
+          <ProjectDawTransport session={session} workspaceRevision={snapshot.workspaceRevision} onWorkspaceRevision={handleWorkspaceRevision} />
+        </div>
+      </details>
 
-      <ProjectDawDeviceDiagnostics />
-      </div>
-      <div data-daw-focus-area="recover" className="scroll-mt-24">
-      <ProjectDawRecoveryWorkspace
-        session={session}
-        workspaceRevision={snapshot.workspaceRevision}
-        onWorkspaceRevision={handleWorkspaceRevision}
-      />
-      </div>
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Record audio</summary>
+        <div data-daw-focus-area="record" className="mt-5 scroll-mt-24">
+          <ProjectDawRecordingWorkspace session={session} />
+        </div>
+      </details>
 
-      <div id="daw-export-workspace" data-daw-focus-area="export" className="scroll-mt-24">
-      <ProjectDawExportWorkspace
-        session={session}
-        workspaceRevision={snapshot.workspaceRevision}
-        onWorkspaceRevision={handleWorkspaceRevision}
-      />
-      </div>
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Tracks, editing, and MIDI</summary>
+        <div data-daw-focus-area="arrange" className="mt-5 scroll-mt-24">
+          <ProjectDawTimeline session={session} />
+        </div>
+      </details>
 
-      <details className="rounded-3xl border border-white/15 bg-[#080808] p-4">
-        <summary className="cursor-pointer text-xl font-black">Lessons and owner checks <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Mix tracks and effects</summary>
+        <div data-daw-focus-area="mix" className="mt-5 space-y-6 scroll-mt-24">
+          <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} projectId={projectId} />
+          <ProjectDawDeviceDiagnostics />
+        </div>
+      </details>
+
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Save or recover work</summary>
+        <div data-daw-focus-area="recover" className="mt-5 scroll-mt-24">
+          <ProjectDawRecoveryWorkspace session={session} workspaceRevision={snapshot.workspaceRevision} onWorkspaceRevision={handleWorkspaceRevision} />
+        </div>
+      </details>
+
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Export the song</summary>
+        <div id="daw-export-workspace" data-daw-focus-area="export" className="mt-5 scroll-mt-24">
+          <ProjectDawExportWorkspace session={session} workspaceRevision={snapshot.workspaceRevision} onWorkspaceRevision={handleWorkspaceRevision} />
+        </div>
+      </details>
+
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Lessons and owner checks <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
         <div data-daw-focus-area="guide" className="mt-5 space-y-6 scroll-mt-24">
         <TimelineDawVisualGuide sessionId={session.id} />
         <TimelineDawTechnicalTestRunner sessionId={session.id} />
@@ -271,8 +289,8 @@ export default function ProjectDawSessionPage() {
         </div>
       </details>
 
-      <details className="rounded-3xl border border-white/15 bg-[#080808] p-4">
-        <summary className="cursor-pointer text-xl font-black">Beta testing tools <span className="ml-2 text-sm font-normal text-white/50">Owner tools</span></summary>
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Beta testing tools <span className="ml-2 text-sm font-normal text-white/50">Owner tools</span></summary>
         <div data-daw-focus-area="beta" className="mt-5 space-y-6 scroll-mt-24">
         <TimelineDawBetaWorkflow sessionId={session.id} />
         <TimelineDawBetaFeedback sessionId={session.id} />
@@ -285,8 +303,8 @@ export default function ProjectDawSessionPage() {
         </div>
       </details>
 
-      <details className="rounded-3xl border border-white/15 bg-[#080808] p-4">
-        <summary className="cursor-pointer text-xl font-black">Mastering and support tools <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Mastering and support tools <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
         <div data-daw-focus-area="mastering" className="mt-5 space-y-6 scroll-mt-24">
         <TimelineDawNormalizationRevisions sessionId={session.id} onLanesChanged={() => setNormalizationLaneRevision((value) => value + 1)} />
         <TimelineDawNormalizationOperations sessionId={session.id} />
@@ -302,8 +320,8 @@ export default function ProjectDawSessionPage() {
         </div>
       </details>
 
-      <details className="rounded-3xl border border-white/15 bg-black p-5">
-      <summary className="cursor-pointer text-xl font-black">Technical engine readiness <span className="ml-2 text-sm font-normal text-white/50">Advanced details</span></summary>
+      <details name="daw-workspace-area" data-daw-workspace-panel className="rounded-3xl border border-white/15 bg-black p-5">
+      <summary className={workspaceSummaryClass}>Technical engine readiness <span className="ml-2 text-sm font-normal text-white/50">Advanced details</span></summary>
       <section className="mt-5">
         <div className="mb-3">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-white/45">
@@ -358,6 +376,7 @@ export default function ProjectDawSessionPage() {
         </ol>
       </section>
       </details>
+      </section>
     </main>
   );
 }
