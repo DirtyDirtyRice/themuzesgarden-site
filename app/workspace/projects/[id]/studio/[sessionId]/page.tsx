@@ -253,7 +253,7 @@ export default function ProjectDawSessionPage() {
       />
       </div>
 
-      <div data-daw-focus-area="export" className="scroll-mt-24">
+      <div id="daw-export-workspace" data-daw-focus-area="export" className="scroll-mt-24">
       <ProjectDawExportWorkspace
         session={session}
         workspaceRevision={snapshot.workspaceRevision}

@@ -30,7 +30,7 @@ export const TIMELINE_DAW_OWNER_TEST_DEFINITIONS: TimelineDawOwnerTestDefinition
   { step: "edit", title: "Make one reversible edit", instruction: "Move, trim, split, or arrange one item, then listen to the change.", destination: "#beta-workflow-edit", proof: "editCount" },
   { step: "mix", title: "Make one Quick Mix decision", instruction: "Change one level, pan, mute, solo, send, route, or native mix preset.", destination: "#musician-quick-mix", proof: "mixControlCount" },
   { step: "recover", title: "Prove recovery works", instruction: "Create a named recovery snapshot before export.", destination: "#private-session-snapshots", proof: "snapshotCount" },
-  { step: "export", title: "Verify the delivered file", instruction: "Create and download one completed, checksum-protected export.", destination: "#beta-workflow-export", proof: "completedExportCount" },
+  { step: "export", title: "Verify the delivered file", instruction: "Create and download one completed, checksum-protected export.", destination: "#daw-export-workspace", proof: "completedExportCount" },
 ];
 
 export function evaluateTimelineDawOwnerTest(observations: TimelineDawOwnerTestObservation[], evidence: TimelineDawOwnerTestEvidence) {
