@@ -13,7 +13,7 @@ export type TimelineDawSessionClipQuantizationChoice = "global" | TimelineDawSes
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
-export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "tap-tempo" | "queue-stop" | "launch-queued" | "cancel-queued" | "stop";
+export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "tap-tempo" | "tempo-down" | "tempo-up" | "queue-stop" | "launch-queued" | "cancel-queued" | "stop";
 export type TimelineDawSessionClipLaunchMode = "one-shot" | "loop";
 export type TimelineDawSessionClipLaunchChoice = "global" | TimelineDawSessionClipLaunchMode;
 export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
@@ -329,6 +329,8 @@ export function resolveTimelineDawSessionKeyboardCommand(input: {
   if (key === "n") return "next";
   if (key === "k") return "pause-resume";
   if (key === "t") return "tap-tempo";
+  if (key === "[") return "tempo-down";
+  if (key === "]") return "tempo-up";
   if (key === "q") return "queue-stop";
   if (key === "enter") return "launch-queued";
   if (key === "escape") return "cancel-queued";
@@ -448,7 +450,7 @@ export function resolveTimelineDawSessionClipKeyboardCommand(
   hasActiveClip: boolean,
   canGoPrevious: boolean,
 ) {
-  if (!hasActiveClip || command === "stop" || command === "tap-tempo" || command === "queue-stop" || command === "launch-queued" || command === "cancel-queued") return null;
+  if (!hasActiveClip || command === "stop" || command === "tap-tempo" || command === "tempo-down" || command === "tempo-up" || command === "queue-stop" || command === "launch-queued" || command === "cancel-queued") return null;
   if (command === "previous" && !canGoPrevious) return null;
   return command;
 }
