@@ -240,7 +240,7 @@ export default function TimelineDawSessionView({
   }
 
   function downloadLiveSetPlan() {
-    const plan = createTimelineDawSessionLiveSetPlan({ createdAt: new Date().toISOString(), bpm, launchQuantization: quantization, defaultClipLaunchMode: clipLaunchMode, clipLaunchChoices, clipQuantizationChoices, clipPlayCounts, defaultFollowAction: followAction, sceneOrderIds: scenes.map((scene) => scene.id), sceneFollowChoices, scenePlayCounts: resolvedScenePlayCounts, sceneFollowTargetIds });
+    const plan = createTimelineDawSessionLiveSetPlan({ createdAt: new Date().toISOString(), bpm, beatsPerBar, launchQuantization: quantization, defaultClipLaunchMode: clipLaunchMode, clipLaunchChoices, clipQuantizationChoices, clipPlayCounts, defaultFollowAction: followAction, sceneOrderIds: scenes.map((scene) => scene.id), sceneFollowChoices, scenePlayCounts: resolvedScenePlayCounts, sceneFollowTargetIds });
     const url = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -258,6 +258,7 @@ export default function TimelineDawSessionView({
       if (file.size > 1_000_000) throw new Error("Live Set Plans must be 1 MB or smaller.");
       const plan = parseTimelineDawSessionLiveSetPlan(JSON.parse(await file.text()) as unknown);
       setBpm(plan.bpm);
+      setBeatsPerBar(plan.beatsPerBar);
       setQuantization(plan.launchQuantization);
       setClipLaunchMode(plan.defaultClipLaunchMode);
       setClipLaunchChoices(plan.clipLaunchChoices);

@@ -399,20 +399,23 @@ describe("Timeline DAW Session View policy", () => {
 
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {
     const plan = createTimelineDawSessionLiveSetPlan({
-      createdAt: "2026-08-26T18:00:00.000Z", bpm: 128, launchQuantization: "bar", defaultFollowAction: "next",
+      createdAt: "2026-08-26T18:00:00.000Z", bpm: 128, beatsPerBar: 7, launchQuantization: "bar", defaultFollowAction: "next",
       defaultClipLaunchMode: "loop", clipLaunchChoices: { "verse:drums": "one-shot" }, clipQuantizationChoices: { "verse:drums": "beat" }, clipPlayCounts: { "verse:drums": 4 },
       sceneOrderIds: ["chorus", "verse", "chorus"], sceneFollowChoices: { chorus: "loop", verse: "global" }, scenePlayCounts: { chorus: 4, verse: 2 }, sceneFollowTargetIds: { verse: "chorus" },
     });
     expect(plan.sceneOrderIds).toEqual(["chorus", "verse"]);
     expect(parseTimelineDawSessionLiveSetPlan(JSON.parse(JSON.stringify(plan)) as unknown)).toEqual(plan);
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, bpm: 500 })).toThrow("between 30 and 300");
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, beatsPerBar: 13 })).toThrow("2 through 12");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, scenePlayCounts: { verse: 17 } })).toThrow("invalid scene play counts");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, launchQuantization: "random" })).toThrow("invalid launch settings");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipLaunchChoices: { verse: "random" } })).toThrow("invalid clip launch choices");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipQuantizationChoices: { verse: "random" } })).toThrow("invalid clip quantization choices");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipPlayCounts: { verse: 17 } })).toThrow("invalid clip play counts");
-    const legacy = Object.fromEntries(Object.entries(plan).filter(([key]) => !["defaultClipLaunchMode", "clipLaunchChoices", "clipQuantizationChoices", "clipPlayCounts"].includes(key)));
-    expect(parseTimelineDawSessionLiveSetPlan({ ...legacy, schema: "muzes-daw-session-live-set/v1" })).toMatchObject({ schema: "muzes-daw-session-live-set/v2", defaultClipLaunchMode: "one-shot", clipLaunchChoices: {}, clipQuantizationChoices: {}, clipPlayCounts: {} });
+    const legacyV2 = Object.fromEntries(Object.entries(plan).filter(([key]) => key !== "beatsPerBar"));
+    expect(parseTimelineDawSessionLiveSetPlan({ ...legacyV2, schema: "muzes-daw-session-live-set/v2" })).toMatchObject({ schema: "muzes-daw-session-live-set/v3", beatsPerBar: 4, defaultClipLaunchMode: "loop" });
+    const legacyV1 = Object.fromEntries(Object.entries(plan).filter(([key]) => !["beatsPerBar", "defaultClipLaunchMode", "clipLaunchChoices", "clipQuantizationChoices", "clipPlayCounts"].includes(key)));
+    expect(parseTimelineDawSessionLiveSetPlan({ ...legacyV1, schema: "muzes-daw-session-live-set/v1" })).toMatchObject({ schema: "muzes-daw-session-live-set/v3", beatsPerBar: 4, defaultClipLaunchMode: "one-shot", clipLaunchChoices: {}, clipQuantizationChoices: {}, clipPlayCounts: {} });
   });
 
   it("traces live-set routes and reports loops, endings, and unreachable scenes", () => {

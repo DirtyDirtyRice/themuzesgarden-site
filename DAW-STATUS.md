@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Configurable Session Time Signatures
+## Latest completed DAW milestone - Portable Live Set Time Signatures
+
+- Downloaded Live Set Plans now preserve the selected beats-per-bar setting together with BPM, launch quantization, clip modes, scene order, and follow actions.
+- Importing a current plan restores its time signature immediately so the live bar/beat clock and every bar-quantized launch use the saved meter.
+- The strictly allowlisted Live Set Plan format advances to v3 and rejects malformed or out-of-range meter values.
+- Existing v1 and v2 plans remain importable and safely restore the historical 4/4 default.
+- Focused Session View tests passed (44 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Live Set Plan files contain performance settings only and create no source-audio, Named Region, arrangement, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Configurable Session Time Signatures
 
 - Session View now offers 2/4 through 12/4 time signatures instead of assuming every performance uses 4/4.
 - The selected beats-per-bar value drives the live scene bar and beat display, including odd meters such as 3/4, 5/4, and 7/4.
