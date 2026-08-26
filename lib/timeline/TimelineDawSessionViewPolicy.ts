@@ -623,6 +623,12 @@ export function createTimelineDawSessionTapTempo(timestampsMs: number[]) {
   return Math.min(300, Math.max(30, Math.round(60_000 / averageInterval)));
 }
 
+export function adjustTimelineDawSessionTempo(bpm: number, action: "decrease" | "increase" | "half" | "double") {
+  const safeBpm = Number.isFinite(bpm) && bpm >= 30 && bpm <= 300 ? bpm : 120;
+  const adjusted = action === "decrease" ? safeBpm - 1 : action === "increase" ? safeBpm + 1 : action === "half" ? safeBpm / 2 : safeBpm * 2;
+  return Math.min(300, Math.max(30, Math.round(adjusted)));
+}
+
 export function createTimelineDawSessionQueuedLaunchProgress(queuedAtMs: number, delayMs: number, nowMs: number) {
   return createTimelineDawSessionPassProgress(queuedAtMs, delayMs, nowMs);
 }

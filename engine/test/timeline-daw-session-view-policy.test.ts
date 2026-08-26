@@ -3,6 +3,7 @@ import { createTimelineDawSessionScenePassProgress } from "../../lib/timeline/Ti
 import { createTimelineDawSessionSceneRemainingLabel, createTimelineDawSessionSceneUpNextCue } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionMusicalPosition } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionTapTempo } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { adjustTimelineDawSessionTempo } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPassProgress, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipRemainingLabel, createTimelineDawSessionClipTransportState, createTimelineDawSessionClipUpNextCue, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionQueuedLaunchProgress, createTimelineDawSessionQueuedStopLabel, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
@@ -413,6 +414,16 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionTapTempo([0, 100])).toBeNull();
     expect(createTimelineDawSessionTapTempo([0, 3_000])).toBeNull();
     expect(createTimelineDawSessionTapTempo([Number.NaN, 0, 250])).toBe(240);
+  });
+
+  it("nudges, halves, and doubles Session tempo within safe limits", () => {
+    expect(adjustTimelineDawSessionTempo(120, "decrease")).toBe(119);
+    expect(adjustTimelineDawSessionTempo(120, "increase")).toBe(121);
+    expect(adjustTimelineDawSessionTempo(121, "half")).toBe(61);
+    expect(adjustTimelineDawSessionTempo(121, "double")).toBe(242);
+    expect(adjustTimelineDawSessionTempo(30, "decrease")).toBe(30);
+    expect(adjustTimelineDawSessionTempo(200, "double")).toBe(300);
+    expect(adjustTimelineDawSessionTempo(Number.NaN, "increase")).toBe(121);
   });
 
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {

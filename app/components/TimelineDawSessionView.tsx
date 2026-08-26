@@ -23,6 +23,7 @@ import {
   createTimelineDawSessionSceneUpNextCue,
   createTimelineDawSessionMusicalPosition,
   createTimelineDawSessionTapTempo,
+  adjustTimelineDawSessionTempo,
   createTimelineDawSessionClipPassProgress,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
@@ -170,6 +171,11 @@ export default function TimelineDawSessionView({
   function resetTapTempo() {
     tapTempoTimesRef.current = [];
     setTapTempoCount(0);
+  }
+
+  function adjustTempo(action: "decrease" | "increase" | "half" | "double") {
+    resetTapTempo();
+    setBpm((current) => adjustTimelineDawSessionTempo(current, action));
   }
 
   useEffect(() => {
@@ -398,8 +404,14 @@ export default function TimelineDawSessionView({
       <div className="border-t border-cyan-300/15 p-4" tabIndex={0} onKeyDown={handleLauncherKeyDown} aria-label="Session View performance controls">
         <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
           <label className="text-xs font-black text-white/70">Session BPM
-            <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white" type="number" min={30} max={300} step={1} value={bpm} onChange={(event) => setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120)))} />
+            <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white" type="number" min={30} max={300} step={1} value={bpm} onChange={(event) => { resetTapTempo(); setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120))); }} />
           </label>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Session tempo adjustments">
+            <button type="button" className={launchButton} onClick={() => adjustTempo("decrease")}>−1 BPM</button>
+            <button type="button" className={launchButton} onClick={() => adjustTempo("increase")}>+1 BPM</button>
+            <button type="button" className={launchButton} onClick={() => adjustTempo("half")}>Half Tempo</button>
+            <button type="button" className={launchButton} onClick={() => adjustTempo("double")}>Double Tempo</button>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" className={launchButton} onClick={(event) => tapTempo(event.timeStamp)}>Tap Tempo</button>
             {tapTempoCount ? <><span className="text-[11px] font-black text-cyan-100" role="status">{tapTempoCount} tap{tapTempoCount === 1 ? "" : "s"} · {bpm} BPM</span><button type="button" className={launchButton} onClick={resetTapTempo}>Reset Taps</button></> : null}

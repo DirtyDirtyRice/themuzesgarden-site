@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Keyboard Tap Tempo
+## Latest completed DAW milestone - Tempo Nudge and Half/Double Controls
+
+- Session View now provides −1 BPM and +1 BPM controls for precise rehearsal and performance corrections.
+- Half Tempo and Double Tempo controls quickly resolve common half-time/double-time detection and arrangement decisions.
+- Every adjustment is clamped to the supported 30–300 BPM transport range and normalizes fractional half-tempo results safely.
+- Direct BPM edits and tempo adjustment controls clear stale tap history so a later Tap Tempo sequence starts from a clean first tap.
+- Adjusted BPM immediately drives the live scene clock and every beat-, two-beat-, and bar-quantized launch or stop.
+- Focused Session View tests passed (47 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Tempo adjustments are transient transport state and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Keyboard Tap Tempo
 
 - Focused Session View now supports T as a no-mouse Tap Tempo performance shortcut.
 - Every accepted T press enters the same recent-tap averaging engine as the on-screen Tap Tempo control and updates BPM immediately after the second tap.
