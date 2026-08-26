@@ -4,12 +4,13 @@ import { useState } from "react";
 import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import {
   createTimelineDawSessionScenes,
+  type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
-type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization };
+type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; followAction: TimelineDawSessionFollowAction };
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -32,8 +33,9 @@ export default function TimelineDawSessionView({
 }) {
   const [bpm, setBpm] = useState(120);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
+  const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
-  const settings = { bpm, quantization };
+  const settings = { bpm, quantization, followAction };
 
   return (
     <details className="mt-4 rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.05]">
@@ -59,6 +61,13 @@ export default function TimelineDawSessionView({
               <option value="beat">Next Beat</option>
               <option value="two-beats">Next 2 Beats</option>
               <option value="bar">Next Bar</option>
+            </select>
+          </label>
+          <label className="text-xs font-black text-white/70">After scene ends
+            <select className="mt-1 block rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={followAction} onChange={(event) => setFollowAction(event.target.value as TimelineDawSessionFollowAction)}>
+              <option value="stop">Stop at End</option>
+              <option value="next">Launch Next Scene</option>
+              <option value="loop">Loop Current Scene</option>
             </select>
           </label>
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>

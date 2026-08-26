@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -39,5 +39,13 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 2, bpm: 120, quantization: "bar" })).toBe(0);
     expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 1.25, bpm: 120, quantization: "immediate" })).toBe(0);
     expect(() => createTimelineDawSessionLaunchDelay({ playheadSeconds: 1, bpm: 10, quantization: "bar" })).toThrow("between 30 and 300");
+  });
+
+  it("resolves safe stop, next-scene, and loop follow actions", () => {
+    expect(createTimelineDawSessionFollowIndex(0, 3, "stop")).toBeNull();
+    expect(createTimelineDawSessionFollowIndex(0, 3, "next")).toBe(1);
+    expect(createTimelineDawSessionFollowIndex(2, 3, "next")).toBeNull();
+    expect(createTimelineDawSessionFollowIndex(1, 3, "loop")).toBe(1);
+    expect(createTimelineDawSessionFollowIndex(-1, 3, "loop")).toBeNull();
   });
 });

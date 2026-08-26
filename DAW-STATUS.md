@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Quantized Session View Launching
+## Latest completed DAW milestone - Session View Follow Actions
+
+- Session View scenes now offer three professional follow behaviors: Stop at End, Launch Next Scene, and Loop Current Scene.
+- Follow timing uses the longest active clip in the scene, so shorter clips finish naturally while the scene boundary remains deterministic.
+- Launch Next Scene follows the visible scene order and stops safely after the final scene instead of wrapping unexpectedly.
+- Loop Current Scene restarts the same protected multi-track scene until the musician presses Stop.
+- Each automatic transition updates the live musician-facing notice with the scene that is looping or following next.
+- Stop, another launch, and the existing audition generation guard cancel active follow timers so a stale scene cannot restart later.
+- Focused Session View grouping, launch-safety, quantization, and follow-action tests passed (4 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; follow choices are temporary performance controls and change no source, arrangement, mix, automation, or history.
+
+## Previously completed DAW milestone - Quantized Session View Launching
 
 - Session View clips and scenes can now launch Immediately, on the Next Beat, on the Next 2 Beats, or on the Next Bar.
 - Musicians can set the working Session BPM from 30 through 300 before launching.
