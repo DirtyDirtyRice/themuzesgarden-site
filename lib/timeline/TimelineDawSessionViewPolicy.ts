@@ -40,10 +40,11 @@ export type TimelineDawSessionTakeLaneBundle = {
   takes: TimelineDawSessionSavedTake[];
 };
 export type TimelineDawSessionLiveSetPlan = {
-  schema: "muzes-daw-session-live-set/v3";
+  schema: "muzes-daw-session-live-set/v4";
   createdAt: string;
   bpm: number;
   beatsPerBar: number;
+  beatUnit: 4 | 8 | 16;
   launchQuantization: TimelineDawSessionLaunchQuantization;
   defaultClipLaunchMode: TimelineDawSessionClipLaunchMode;
   clipLaunchChoices: Record<string, TimelineDawSessionClipLaunchChoice>;
@@ -61,10 +62,12 @@ export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawS
   const candidate = value as Record<string, unknown>;
   const legacyV1 = candidate.schema === "muzes-daw-session-live-set/v1";
   const legacyV2 = candidate.schema === "muzes-daw-session-live-set/v2";
-  const legacy = legacyV1 || legacyV2;
-  if ((!legacy && candidate.schema !== "muzes-daw-session-live-set/v3") || !Number.isFinite(Date.parse(String(candidate.createdAt ?? "")))) throw new Error("This Live Set Plan has an unsupported format.");
+  const legacyV3 = candidate.schema === "muzes-daw-session-live-set/v3";
+  const legacy = legacyV1 || legacyV2 || legacyV3;
+  if ((!legacy && candidate.schema !== "muzes-daw-session-live-set/v4") || !Number.isFinite(Date.parse(String(candidate.createdAt ?? "")))) throw new Error("This Live Set Plan has an unsupported format.");
   if (typeof candidate.bpm !== "number" || !Number.isFinite(candidate.bpm) || candidate.bpm < 30 || candidate.bpm > 300) throw new Error("A Live Set Plan BPM must be between 30 and 300.");
   if (!legacy && (typeof candidate.beatsPerBar !== "number" || !Number.isInteger(candidate.beatsPerBar) || candidate.beatsPerBar < 2 || candidate.beatsPerBar > 12)) throw new Error("A Live Set Plan time signature must contain 2 through 12 beats per bar.");
+  if (!legacy && ![4, 8, 16].includes(Number(candidate.beatUnit))) throw new Error("A Live Set Plan time signature must use a 4, 8, or 16 beat unit.");
   if (!["immediate", "beat", "two-beats", "bar"].includes(String(candidate.launchQuantization)) || !["stop", "next", "loop"].includes(String(candidate.defaultFollowAction))) throw new Error("A Live Set Plan contains invalid launch settings.");
   if (!Array.isArray(candidate.sceneOrderIds) || candidate.sceneOrderIds.length > 200 || candidate.sceneOrderIds.some((id) => typeof id !== "string" || !id || id.length > 200)) throw new Error("A Live Set Plan contains an invalid scene order.");
   if (!legacyV1 && !["one-shot", "loop"].includes(String(candidate.defaultClipLaunchMode))) throw new Error("A Live Set Plan contains an invalid default clip launch mode.");
@@ -85,10 +88,11 @@ export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawS
   const clipQuantizationChoices = readRecord(candidate.clipQuantizationChoices ?? (legacyV1 ? {} : undefined), (entry) => ["global", "immediate", "beat", "two-beats", "bar"].includes(String(entry)) ? entry as TimelineDawSessionClipQuantizationChoice : null, "clip quantization choices");
   const clipPlayCounts = readRecord(candidate.clipPlayCounts ?? {}, (entry) => typeof entry === "number" && Number.isInteger(entry) && entry >= 1 && entry <= 16 ? entry : null, "clip play counts");
   return {
-    schema: "muzes-daw-session-live-set/v3",
+    schema: "muzes-daw-session-live-set/v4",
     createdAt: String(candidate.createdAt),
     bpm: candidate.bpm,
-    beatsPerBar: legacy ? 4 : candidate.beatsPerBar as number,
+    beatsPerBar: legacyV1 || legacyV2 ? 4 : candidate.beatsPerBar as number,
+    beatUnit: legacy ? 4 : candidate.beatUnit as 4 | 8 | 16,
     launchQuantization: candidate.launchQuantization as TimelineDawSessionLaunchQuantization,
     defaultClipLaunchMode: legacyV1 ? "one-shot" : candidate.defaultClipLaunchMode as TimelineDawSessionClipLaunchMode,
     clipLaunchChoices,
@@ -103,7 +107,7 @@ export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawS
 }
 
 export function createTimelineDawSessionLiveSetPlan(input: Omit<TimelineDawSessionLiveSetPlan, "schema">) {
-  return parseTimelineDawSessionLiveSetPlan({ schema: "muzes-daw-session-live-set/v3", ...input });
+  return parseTimelineDawSessionLiveSetPlan({ schema: "muzes-daw-session-live-set/v4", ...input });
 }
 
 export function createTimelineDawSessionSavedTake(input: TimelineDawSessionSavedTake): TimelineDawSessionSavedTake {
@@ -595,11 +599,12 @@ export function createTimelineDawSessionSceneRemainingLabel(input: {
   return `Total remaining: ${(currentRemaining + Math.max(0, total - current) * duration).toFixed(1)} sec`;
 }
 
-export function createTimelineDawSessionMusicalPosition(elapsedSeconds: number, bpm: number, beatsPerBar = 4) {
+export function createTimelineDawSessionMusicalPosition(elapsedSeconds: number, bpm: number, beatsPerBar = 4, beatUnit = 4) {
   const safeElapsed = Number.isFinite(elapsedSeconds) ? Math.max(0, elapsedSeconds) : 0;
   const safeBpm = Number.isFinite(bpm) && bpm >= 30 && bpm <= 300 ? bpm : 120;
   const safeBeatsPerBar = Number.isInteger(beatsPerBar) && beatsPerBar >= 1 && beatsPerBar <= 16 ? beatsPerBar : 4;
-  const totalBeats = safeElapsed * safeBpm / 60;
+  const safeBeatUnit = [4, 8, 16].includes(beatUnit) ? beatUnit : 4;
+  const totalBeats = safeElapsed * safeBpm / 60 * (safeBeatUnit / 4);
   const beatOffset = totalBeats % safeBeatsPerBar;
   return {
     bar: Math.floor(totalBeats / safeBeatsPerBar) + 1,
@@ -672,13 +677,15 @@ export function createTimelineDawSessionLaunchDelay(input: {
   bpm: number;
   quantization: TimelineDawSessionLaunchQuantization;
   beatsPerBar?: number;
+  beatUnit?: number;
 }) {
   if (input.quantization === "immediate") return 0;
   if (!Number.isFinite(input.playheadSeconds) || input.playheadSeconds < 0) throw new Error("Session View playhead position is invalid.");
   if (!Number.isFinite(input.bpm) || input.bpm < 30 || input.bpm > 300) throw new Error("Session View BPM must be between 30 and 300.");
   const beatsPerBar = Math.min(12, Math.max(1, Math.floor(input.beatsPerBar ?? 4)));
   const quantumBeats = input.quantization === "beat" ? 1 : input.quantization === "two-beats" ? 2 : beatsPerBar;
-  const beatSeconds = 60 / input.bpm;
+  const beatUnit = [4, 8, 16].includes(input.beatUnit ?? 4) ? input.beatUnit ?? 4 : 4;
+  const beatSeconds = 60 / input.bpm * (4 / beatUnit);
   const quantumSeconds = beatSeconds * quantumBeats;
   const remainder = input.playheadSeconds % quantumSeconds;
   if (remainder < 1e-6 || quantumSeconds - remainder < 1e-6) return 0;

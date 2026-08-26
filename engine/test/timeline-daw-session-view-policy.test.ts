@@ -41,6 +41,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 1.25, bpm: 120, quantization: "bar" })).toBe(750);
     expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 1.25, bpm: 120, quantization: "bar", beatsPerBar: 3 })).toBe(250);
     expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 3.25, bpm: 120, quantization: "bar", beatsPerBar: 7 })).toBe(250);
+    expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 1.25, bpm: 120, quantization: "bar", beatsPerBar: 6, beatUnit: 8 })).toBe(250);
     expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 2, bpm: 120, quantization: "bar" })).toBe(0);
     expect(createTimelineDawSessionLaunchDelay({ playheadSeconds: 1.25, bpm: 120, quantization: "immediate" })).toBe(0);
     expect(() => createTimelineDawSessionLaunchDelay({ playheadSeconds: 1, bpm: 10, quantization: "bar" })).toThrow("between 30 and 300");
@@ -394,12 +395,13 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionMusicalPosition(1.25, 120)).toEqual({ bar: 1, beat: 3, beatProgressPercent: 50 });
     expect(createTimelineDawSessionMusicalPosition(2, 120)).toEqual({ bar: 2, beat: 1, beatProgressPercent: 0 });
     expect(createTimelineDawSessionMusicalPosition(3, 60, 3)).toEqual({ bar: 2, beat: 1, beatProgressPercent: 0 });
+    expect(createTimelineDawSessionMusicalPosition(1.5, 120, 6, 8)).toEqual({ bar: 2, beat: 1, beatProgressPercent: 0 });
     expect(createTimelineDawSessionMusicalPosition(Number.NaN, 500, 0)).toEqual({ bar: 1, beat: 1, beatProgressPercent: 0 });
   });
 
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {
     const plan = createTimelineDawSessionLiveSetPlan({
-      createdAt: "2026-08-26T18:00:00.000Z", bpm: 128, beatsPerBar: 7, launchQuantization: "bar", defaultFollowAction: "next",
+      createdAt: "2026-08-26T18:00:00.000Z", bpm: 128, beatsPerBar: 7, beatUnit: 8, launchQuantization: "bar", defaultFollowAction: "next",
       defaultClipLaunchMode: "loop", clipLaunchChoices: { "verse:drums": "one-shot" }, clipQuantizationChoices: { "verse:drums": "beat" }, clipPlayCounts: { "verse:drums": 4 },
       sceneOrderIds: ["chorus", "verse", "chorus"], sceneFollowChoices: { chorus: "loop", verse: "global" }, scenePlayCounts: { chorus: 4, verse: 2 }, sceneFollowTargetIds: { verse: "chorus" },
     });
@@ -407,15 +409,18 @@ describe("Timeline DAW Session View policy", () => {
     expect(parseTimelineDawSessionLiveSetPlan(JSON.parse(JSON.stringify(plan)) as unknown)).toEqual(plan);
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, bpm: 500 })).toThrow("between 30 and 300");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, beatsPerBar: 13 })).toThrow("2 through 12");
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, beatUnit: 3 })).toThrow("4, 8, or 16");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, scenePlayCounts: { verse: 17 } })).toThrow("invalid scene play counts");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, launchQuantization: "random" })).toThrow("invalid launch settings");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipLaunchChoices: { verse: "random" } })).toThrow("invalid clip launch choices");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipQuantizationChoices: { verse: "random" } })).toThrow("invalid clip quantization choices");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipPlayCounts: { verse: 17 } })).toThrow("invalid clip play counts");
-    const legacyV2 = Object.fromEntries(Object.entries(plan).filter(([key]) => key !== "beatsPerBar"));
-    expect(parseTimelineDawSessionLiveSetPlan({ ...legacyV2, schema: "muzes-daw-session-live-set/v2" })).toMatchObject({ schema: "muzes-daw-session-live-set/v3", beatsPerBar: 4, defaultClipLaunchMode: "loop" });
+    const legacyV3 = Object.fromEntries(Object.entries(plan).filter(([key]) => key !== "beatUnit"));
+    expect(parseTimelineDawSessionLiveSetPlan({ ...legacyV3, schema: "muzes-daw-session-live-set/v3" })).toMatchObject({ schema: "muzes-daw-session-live-set/v4", beatsPerBar: 7, beatUnit: 4, defaultClipLaunchMode: "loop" });
+    const legacyV2 = Object.fromEntries(Object.entries(plan).filter(([key]) => !["beatsPerBar", "beatUnit"].includes(key)));
+    expect(parseTimelineDawSessionLiveSetPlan({ ...legacyV2, schema: "muzes-daw-session-live-set/v2" })).toMatchObject({ schema: "muzes-daw-session-live-set/v4", beatsPerBar: 4, beatUnit: 4, defaultClipLaunchMode: "loop" });
     const legacyV1 = Object.fromEntries(Object.entries(plan).filter(([key]) => !["beatsPerBar", "defaultClipLaunchMode", "clipLaunchChoices", "clipQuantizationChoices", "clipPlayCounts"].includes(key)));
-    expect(parseTimelineDawSessionLiveSetPlan({ ...legacyV1, schema: "muzes-daw-session-live-set/v1" })).toMatchObject({ schema: "muzes-daw-session-live-set/v3", beatsPerBar: 4, defaultClipLaunchMode: "one-shot", clipLaunchChoices: {}, clipQuantizationChoices: {}, clipPlayCounts: {} });
+    expect(parseTimelineDawSessionLiveSetPlan({ ...legacyV1, schema: "muzes-daw-session-live-set/v1" })).toMatchObject({ schema: "muzes-daw-session-live-set/v4", beatsPerBar: 4, beatUnit: 4, defaultClipLaunchMode: "one-shot", clipLaunchChoices: {}, clipQuantizationChoices: {}, clipPlayCounts: {} });
   });
 
   it("traces live-set routes and reports loops, endings, and unreachable scenes", () => {

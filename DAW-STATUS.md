@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Portable Live Set Time Signatures
+## Latest completed DAW milestone - Compound and Denominator-Based Meters
+
+- Session View now supports quarter-note, eighth-note, and sixteenth-note beat units, enabling meters such as 6/8, 7/8, and 11/16.
+- The denominator changes the musical beat length used by the live bar/beat clock and by beat-, two-beat-, and bar-quantized launches and stops.
+- Queue notices show the complete numerator/denominator meter so performers can confirm the exact boundary in use.
+- Live Set Plan v4 preserves both beats per bar and beat unit; v1, v2, and v3 imports remain compatible with safe historical defaults.
+- Invalid denominators are rejected by the allowlisted portable-plan parser.
+- Focused Session View tests passed (44 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Meter settings remain performance configuration and create no source-audio, Named Region, arrangement, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Portable Live Set Time Signatures
 
 - Downloaded Live Set Plans now preserve the selected beats-per-bar setting together with BPM, launch quantization, clip modes, scene order, and follow actions.
 - Importing a current plan restores its time signature immediately so the live bar/beat clock and every bar-quantized launch use the saved meter.
