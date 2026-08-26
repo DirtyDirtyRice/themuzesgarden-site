@@ -12,6 +12,7 @@ export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-b
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
 export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "stop";
+export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
 export type TimelineDawSessionPerformanceEvent = {
   id: string;
   kind: "clip" | "scene";
@@ -64,6 +65,31 @@ export function createTimelineDawSessionArrangementPlan(events: TimelineDawSessi
     sourceEndSeconds: clip.endSeconds,
     timelineStartSeconds: event.elapsedSeconds,
   })));
+}
+
+export function quantizeTimelineDawSessionPerformanceTake(
+  events: TimelineDawSessionPerformanceEvent[],
+  quantization: TimelineDawSessionTakeQuantization,
+  beatsPerBar = 4,
+) {
+  if (quantization === "off") return events.map((event) => ({ ...event, clips: event.clips.map((clip) => ({ ...clip })) }));
+  const safeBeatsPerBar = Math.min(12, Math.max(1, Math.floor(beatsPerBar)));
+  const quantumBeats = quantization === "beat" ? 1 : quantization === "two-beats" ? 2 : safeBeatsPerBar;
+  return events.map((event) => {
+    if (!Number.isFinite(event.bpm) || event.bpm < 30 || event.bpm > 300 || !Number.isFinite(event.elapsedSeconds) || event.elapsedSeconds < 0) {
+      throw new Error("Session performance event cannot be quantized safely.");
+    }
+    const quantumSeconds = (60 / event.bpm) * quantumBeats;
+    const elapsedSeconds = Math.round(Math.round(event.elapsedSeconds / quantumSeconds) * quantumSeconds * 100) / 100;
+    const elapsedBeats = elapsedSeconds * event.bpm / 60;
+    return {
+      ...event,
+      elapsedSeconds,
+      bar: Math.floor(elapsedBeats / safeBeatsPerBar) + 1,
+      beat: Math.floor(elapsedBeats % safeBeatsPerBar) + 1,
+      clips: event.clips.map((clip) => ({ ...clip })),
+    };
+  });
 }
 
 export function resolveTimelineDawSessionKeyboardCommand(input: {

@@ -7,12 +7,14 @@ import {
   createTimelineDawSessionNavigationIndex,
   createTimelineDawSessionArrangementPlan,
   createTimelineDawSessionPerformanceEvent,
+  quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
   type TimelineDawSessionPerformanceEvent,
+  type TimelineDawSessionTakeQuantization,
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
@@ -43,6 +45,7 @@ export default function TimelineDawSessionView({
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const [performanceEvents, setPerformanceEvents] = useState<TimelineDawSessionPerformanceEvent[]>([]);
+  const [takeQuantization, setTakeQuantization] = useState<TimelineDawSessionTakeQuantization>("off");
   const performanceStartedAtRef = useRef<number | null>(null);
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const settings = { bpm, quantization, followAction };
@@ -62,11 +65,13 @@ export default function TimelineDawSessionView({
   }
 
   function downloadPerformanceTake() {
+    const cleanedEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
     const payload = {
       schema: "muzes-daw-session-performance/v1",
       createdAt: new Date().toISOString(),
-      events: performanceEvents,
-      arrangementPlan: createTimelineDawSessionArrangementPlan(performanceEvents),
+      takeQuantization,
+      events: cleanedEvents,
+      arrangementPlan: createTimelineDawSessionArrangementPlan(cleanedEvents),
     };
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
     const anchor = document.createElement("a");
@@ -74,6 +79,13 @@ export default function TimelineDawSessionView({
     anchor.download = "session-performance-take.json";
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  function undoLastPerformanceLaunch() {
+    setPerformanceEvents((current) => {
+      if (current.length <= 1) performanceStartedAtRef.current = null;
+      return current.slice(0, -1);
+    });
   }
 
   function launchSceneAndRecord(scene: TimelineDawSessionScene, launchedAtMs: number) {
@@ -141,10 +153,20 @@ export default function TimelineDawSessionView({
         <div className="mb-4 rounded-xl border border-violet-300/20 bg-violet-300/[0.05] p-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-black text-violet-100">Performance Take · {performanceEvents.length} launch{performanceEvents.length === 1 ? "" : "es"}</span>
+            <label className="text-xs font-black text-white/70">Tighten timing
+              <select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={takeQuantization} onChange={(event) => setTakeQuantization(event.target.value as TimelineDawSessionTakeQuantization)}>
+                <option value="off">Keep live timing</option>
+                <option value="beat">Nearest beat</option>
+                <option value="two-beats">Nearest 2 beats</option>
+                <option value="bar">Nearest bar</option>
+              </select>
+            </label>
             <button type="button" className={launchButton} disabled={!performanceEvents.length} onClick={downloadPerformanceTake}>Download Arrangement Plan</button>
+            <button type="button" className={launchButton} disabled={!performanceEvents.length} onClick={undoLastPerformanceLaunch}>Undo Last Launch</button>
             <button type="button" className={launchButton} disabled={!performanceEvents.length} onClick={() => { setPerformanceEvents([]); performanceStartedAtRef.current = null; }}>Clear Performance Take</button>
           </div>
-          {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{performanceEvents.map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}
+          {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization).map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.elapsedSeconds.toFixed(2)} sec · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}
+          {performanceEvents.length ? <p className="mt-2 text-xs text-white/45">Timing cleanup changes only this preview and downloaded plan. Keep live timing preserves the performance exactly.</p> : null}
         </div>
         {activeSceneIndex >= 0 ? (
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-3" role="group" aria-label="Live scene navigation">

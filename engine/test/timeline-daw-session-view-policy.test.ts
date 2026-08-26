@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -87,5 +87,17 @@ describe("Timeline DAW Session View policy", () => {
       { eventId: "launch-1", eventName: "Chorus", laneId: "drums", sourceStartSeconds: 8, sourceEndSeconds: 16, timelineStartSeconds: 2.5 },
       { eventId: "launch-1", eventName: "Chorus", laneId: "bass", sourceStartSeconds: 10, sourceEndSeconds: 18, timelineStartSeconds: 2.5 },
     ]);
+  });
+
+  it("tightens a captured take to a musical grid without mutating the live events", () => {
+    const events = [
+      createTimelineDawSessionPerformanceEvent({ id: "one", kind: "scene", name: "Verse", takeStartedAtMs: 0, launchedAtMs: 0, bpm: 120, clips: [{ laneId: "drums", startSeconds: 0, endSeconds: 8 }] }),
+      createTimelineDawSessionPerformanceEvent({ id: "two", kind: "scene", name: "Chorus", takeStartedAtMs: 0, launchedAtMs: 1_740, bpm: 120, clips: [{ laneId: "drums", startSeconds: 8, endSeconds: 16 }] }),
+    ];
+    const tightened = quantizeTimelineDawSessionPerformanceTake(events, "bar");
+    expect(tightened.map((event) => [event.elapsedSeconds, event.bar, event.beat])).toEqual([[0, 1, 1], [2, 2, 1]]);
+    expect(events[1].elapsedSeconds).toBe(1.74);
+    expect(tightened[1]).not.toBe(events[1]);
+    expect(quantizeTimelineDawSessionPerformanceTake(events, "off")).toEqual(events);
   });
 });

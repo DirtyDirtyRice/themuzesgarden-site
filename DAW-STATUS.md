@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Session Performance Take Capture
+## Latest completed DAW milestone - Session Performance Take Cleanup
+
+- A captured Session View performance can now preserve live timing or tighten every launch to the nearest beat, two beats, or bar before export.
+- The take preview immediately shows the cleaned bar, beat, and exact timeline second so musicians can inspect the result before downloading it.
+- Undo Last Launch removes only the most recent captured trigger without stopping playback or clearing the rest of the take.
+- Download Arrangement Plan exports the selected timing cleanup together with the cleaned events and their non-destructive clip placements.
+- Timing cleanup creates cloned event and clip records; it never mutates Named Regions, source audio, the linear arrangement, mix, automation, or captured live timing.
+- Focused Session View tests passed (8 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; capture cleanup remains temporary component state until the musician downloads or clears it.
+
+## Previously completed DAW milestone - Session Performance Take Capture
 
 - Explicit Session View clip, scene, button-navigation, and keyboard-navigation launches now build a temporary performance take.
 - Every captured launch records its relative time, working BPM, bar, beat, source track, and exact source-region boundaries.
