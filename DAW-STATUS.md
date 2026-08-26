@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Performance Follow Cue
+## Latest completed DAW milestone - Live Scene Repetition Countdown
+
+- Session View now reports the active finite scene pass as Play N of Total with the exact number of repetitions remaining.
+- Deliberately looping scenes use an open-ended Loop pass counter instead of falsely claiming a finite ending.
+- The counter advances from the actual playback transition path and resets when a new scene launches or playback stops.
+- The existing follow cue remains beside the counter so musicians can see both current progress and the upcoming Stop, Loop, target scene, or end-of-set action.
+- Focused Session View tests passed (23 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Progress is transient playback UI only; it writes no audio, arrangement, plan, take, database, or browser storage.
+
+## Previously completed DAW milestone - Live Performance Follow Cue
 
 - The active Session View scene now displays a compact performance cue beside its Playing indicator.
 - The cue shows the configured finite play count and the exact transition that will follow before it occurs.

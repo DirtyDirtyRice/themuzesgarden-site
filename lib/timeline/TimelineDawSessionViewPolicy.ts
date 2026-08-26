@@ -390,6 +390,13 @@ export function createTimelineDawSessionLiveCue(
   return { sceneId: scene.id, action, playCount, nextSceneId: nextIndex === null ? null : scenes[nextIndex].id };
 }
 
+export function createTimelineDawSessionLiveProgressLabel(currentIteration: number, totalIterations: number | null) {
+  const current = Number.isInteger(currentIteration) && currentIteration > 0 ? currentIteration : 1;
+  if (totalIterations === null) return `Loop pass ${current}`;
+  const total = Number.isInteger(totalIterations) && totalIterations > 0 ? Math.max(current, totalIterations) : current;
+  return `Play ${current} of ${total} · ${Math.max(0, total - current)} remaining`;
+}
+
 export function analyzeTimelineDawSessionLiveSetFlow(
   scenes: TimelineDawSessionScene[],
   sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,

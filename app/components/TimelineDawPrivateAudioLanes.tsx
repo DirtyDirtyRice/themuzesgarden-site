@@ -100,6 +100,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [riffAuditionPaused, setRiffAuditionPaused] = useState(false);
   const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean }>();
   const [activeSessionSceneId, setActiveSessionSceneId] = useState<string>();
+  const [activeSessionSceneProgress, setActiveSessionSceneProgress] = useState<{ currentIteration: number; totalIterations: number | null }>();
   const [queuedSessionLaunchName, setQueuedSessionLaunchName] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
@@ -675,6 +676,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     setRiffAuditionPaused(false);
     setRiffAuditionProgress(undefined);
     setActiveSessionSceneId(undefined);
+    setActiveSessionSceneProgress(undefined);
     setQueuedSessionLaunchName(undefined);
     if (!preserveLoopIndicator) setLoopingRegionId(undefined);
     synchronize(playheadRef.current, false);
@@ -804,11 +806,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         prepared.forEach(({ audio }) => audio.pause());
         return;
       }
+      const requiredPlayCount = resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts);
       setActiveSessionSceneId(scene.id);
+      setActiveSessionSceneProgress({ currentIteration: playIteration, totalIterations: followAction === "loop" ? null : requiredPlayCount });
       setRiffAuditionActive(true);
       setRiffAuditionProgress({ trackName: `${scene.name} scene`, trackNumber: 1, trackCount: prepared.length, passNumber: 1, passCount: 1 });
       previewTimerRef.current = setTimeout(() => {
-        const requiredPlayCount = resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts);
         if (followAction !== "loop" && playIteration < requiredPlayCount) {
           setMovementNotice(`Repeating ${scene.name} scene (${playIteration + 1} of ${requiredPlayCount}) before ${followAction}.`);
           void previewSessionScene(scene, followAction, sceneOrderIds, sceneFollowActions, defaultFollowAction, scenePlayCounts, sceneFollowTargetIds, playIteration + 1);
@@ -824,7 +827,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         const nextScene = scenes[followIndex];
         setMovementNotice(followAction === "loop" ? `Looping ${scene.name} scene.` : `Following ${scene.name} with ${nextScene.name}.`);
         const nextFollowAction = sceneFollowActions[nextScene.id] ?? defaultFollowAction;
-        void previewSessionScene(nextScene, nextFollowAction, sceneOrderIds, sceneFollowActions, defaultFollowAction, scenePlayCounts, sceneFollowTargetIds, 1);
+        void previewSessionScene(nextScene, nextFollowAction, sceneOrderIds, sceneFollowActions, defaultFollowAction, scenePlayCounts, sceneFollowTargetIds, followAction === "loop" ? playIteration + 1 : 1);
       }, Math.max(...prepared.map(({ plan }) => plan.stopAfterMilliseconds)));
     } catch (cause) {
       stopTrackPreview();
@@ -1216,6 +1219,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         lanes={lanes.map((lane) => ({ id: lane.id, name: lane.name }))}
         labels={regionLabels}
         activeSceneId={activeSessionSceneId}
+        activeSceneProgress={activeSessionSceneProgress}
         queuedLaunchName={queuedSessionLaunchName}
         onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => { setMovementNotice(`Launching ${clip.name} in Session View. The arrangement is unchanged.`); void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds); } })}
         onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene, settings.followAction, settings.sceneOrderIds, settings.sceneFollowActions, settings.defaultFollowAction, settings.scenePlayCounts, settings.sceneFollowTargetIds); } })}
