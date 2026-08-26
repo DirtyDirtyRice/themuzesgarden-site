@@ -13,6 +13,8 @@ import {
   createTimelineDawSessionCompTake,
   createTimelineDawSessionTakeLaneBundle,
   parseTimelineDawSessionTakeLaneBundle,
+  createTimelineDawSessionLiveSetPlan,
+  parseTimelineDawSessionLiveSetPlan,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
   resolveTimelineDawSessionSceneFollowAction,
@@ -64,6 +66,7 @@ export default function TimelineDawSessionView({
   const [compName, setCompName] = useState("Comp 1");
   const [compSelections, setCompSelections] = useState<string[]>([]);
   const [bundleNotice, setBundleNotice] = useState("");
+  const [liveSetNotice, setLiveSetNotice] = useState("");
   const [sceneOrderIds, setSceneOrderIds] = useState<string[]>([]);
   const [sceneFollowChoices, setSceneFollowChoices] = useState<Record<string, TimelineDawSessionSceneFollowChoice>>({});
   const [scenePlayCounts, setScenePlayCounts] = useState<Record<string, number>>({});
@@ -159,6 +162,37 @@ export default function TimelineDawSessionView({
     }
   }
 
+  function downloadLiveSetPlan() {
+    const plan = createTimelineDawSessionLiveSetPlan({ createdAt: new Date().toISOString(), bpm, launchQuantization: quantization, defaultFollowAction: followAction, sceneOrderIds: scenes.map((scene) => scene.id), sceneFollowChoices, scenePlayCounts: resolvedScenePlayCounts, sceneFollowTargetIds });
+    const url = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "session-live-set-plan.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setLiveSetNotice(`Downloaded a ${plan.sceneOrderIds.length}-scene Live Set Plan.`);
+  }
+
+  async function importLiveSetPlan(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      if (file.size > 1_000_000) throw new Error("Live Set Plans must be 1 MB or smaller.");
+      const plan = parseTimelineDawSessionLiveSetPlan(JSON.parse(await file.text()) as unknown);
+      setBpm(plan.bpm);
+      setQuantization(plan.launchQuantization);
+      setFollowAction(plan.defaultFollowAction);
+      setSceneOrderIds(plan.sceneOrderIds);
+      setSceneFollowChoices(plan.sceneFollowChoices);
+      setScenePlayCounts(plan.scenePlayCounts);
+      setSceneFollowTargetIds(plan.sceneFollowTargetIds);
+      setLiveSetNotice(`Restored a validated ${plan.sceneOrderIds.length}-scene Live Set Plan.`);
+    } catch (error) {
+      setLiveSetNotice(error instanceof Error ? error.message : "The Live Set Plan could not be imported.");
+    }
+  }
+
   function downloadPerformanceTake() {
     const payload = {
       schema: "muzes-daw-session-performance/v1",
@@ -243,6 +277,9 @@ export default function TimelineDawSessionView({
           </label>
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>
           {queuedLaunchName ? <button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued {queuedLaunchName}</button> : null}
+          <button type="button" className={launchButton} onClick={downloadLiveSetPlan}>Download Live Set Plan</button>
+          <label className={`${launchButton} cursor-pointer`}>Import Live Set Plan<input className="sr-only" type="file" accept="application/json,.json" onChange={importLiveSetPlan} /></label>
+          {liveSetNotice ? <p className="w-full text-xs text-white/55" role="status">{liveSetNotice}</p> : null}
         </div>
         <div className="mb-4 rounded-xl border border-violet-300/20 bg-violet-300/[0.05] p-3">
           <div className="flex flex-wrap items-center gap-2">

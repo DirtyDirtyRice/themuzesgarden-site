@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Specific Per-Scene Follow Targets
+## Latest completed DAW milestone - Portable Session View Live Set Plans
+
+- Musicians can now download the complete Session View performance setup as one local Live Set Plan.
+- Plans include working BPM, launch quantization, global follow behavior, edited scene order, per-scene actions, finite play counts, and specific follow targets.
+- Import restores every allowlisted control together, making a rehearsed non-linear show structure reusable after the page closes.
+- Live Set Plans use a dedicated versioned schema with strict creation-time, BPM, enum, identity, record-count, play-count, and 1 MB file-size validation.
+- Duplicate scene identities collapse safely; stale scenes and targets continue through the existing append-and-fallback protections.
+- Plans contain performance configuration only—never audio, arrangement clips, Take Lanes, credentials, storage paths, automatic cloud writes, or localStorage data.
+- Focused Session View tests passed (19 tests), TypeScript passed, targeted new-file lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; export and import remain explicit local-file actions controlled by the musician.
+
+## Previously completed DAW milestone - Specific Per-Scene Follow Targets
 
 - Every Session View scene now has a Launch Next Target menu with Next Visible Scene plus every other scene in the edited live set.
 - Musicians can build non-linear show structures such as Chorus returning to Verse or a breakdown jumping directly to Outro.

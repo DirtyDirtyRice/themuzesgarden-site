@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -215,5 +215,17 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionFollowTargetIndex(1, scenes, "missing")).toBe(2);
     expect(resolveTimelineDawSessionFollowTargetIndex(2, scenes, "missing")).toBeNull();
     expect(resolveTimelineDawSessionFollowTargetIndex(-1, scenes, "verse")).toBeNull();
+  });
+
+  it("round-trips a strictly allowlisted portable Live Set Plan", () => {
+    const plan = createTimelineDawSessionLiveSetPlan({
+      createdAt: "2026-08-26T18:00:00.000Z", bpm: 128, launchQuantization: "bar", defaultFollowAction: "next",
+      sceneOrderIds: ["chorus", "verse", "chorus"], sceneFollowChoices: { chorus: "loop", verse: "global" }, scenePlayCounts: { chorus: 4, verse: 2 }, sceneFollowTargetIds: { verse: "chorus" },
+    });
+    expect(plan.sceneOrderIds).toEqual(["chorus", "verse"]);
+    expect(parseTimelineDawSessionLiveSetPlan(JSON.parse(JSON.stringify(plan)) as unknown)).toEqual(plan);
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, bpm: 500 })).toThrow("between 30 and 300");
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, scenePlayCounts: { verse: 17 } })).toThrow("invalid scene play counts");
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, launchQuantization: "random" })).toThrow("invalid launch settings");
   });
 });
