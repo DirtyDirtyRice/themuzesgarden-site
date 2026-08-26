@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Individual Clip Up Next Cue
+## Latest completed DAW milestone - Individual Clip Total Playback ETA
+
+- Active finite Session View clips now show a live total remaining-time estimate across the current pass and every scheduled future repeat.
+- The estimate combines the current pass's exact remaining time with the transformed duration of each future pass and updates alongside the live progress meter.
+- Pausing freezes the total ETA, while resume, replay, previous/next pass, and automatic repeat transitions recalculate it from the guarded playback state.
+- Continuous clips explicitly show an open-ended loop instead of a misleading finite completion time.
+- Invalid timing and pass values are clamped before display, and the ETA has its own accessible label in the active clip controls.
+- Focused Session View tests passed (37 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- ETA feedback is transient playback UI and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Individual Clip Up Next Cue
 
 - Active individual Session View clips now show an explicit Up Next cue before the current pass ends.
 - Finite repeats identify the exact upcoming pass number, while the final pass clearly announces that the clip will stop.

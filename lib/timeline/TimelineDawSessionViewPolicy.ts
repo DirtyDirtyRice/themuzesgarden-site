@@ -414,6 +414,22 @@ export function createTimelineDawSessionClipUpNextCue(input: {
   return currentPass < totalPasses ? `Pass ${currentPass + 1} of ${totalPasses}` : "Clip stops at pass end";
 }
 
+export function createTimelineDawSessionClipRemainingLabel(input: {
+  mode: TimelineDawSessionClipLaunchMode;
+  currentPass?: number;
+  totalPasses?: number;
+  passDurationSeconds?: number;
+  currentPassRemainingSeconds?: number;
+}) {
+  if (input.mode === "loop") return "Total remaining: open-ended loop";
+  const currentPass = Number.isInteger(input.currentPass) && (input.currentPass ?? 0) > 0 ? input.currentPass as number : 1;
+  const totalPasses = Number.isInteger(input.totalPasses) && (input.totalPasses ?? 0) >= currentPass ? input.totalPasses as number : currentPass;
+  const passDurationSeconds = Number.isFinite(input.passDurationSeconds) && (input.passDurationSeconds ?? 0) > 0 ? input.passDurationSeconds as number : 0;
+  const currentPassRemainingSeconds = Number.isFinite(input.currentPassRemainingSeconds) ? Math.min(passDurationSeconds, Math.max(0, input.currentPassRemainingSeconds as number)) : 0;
+  const totalRemainingSeconds = currentPassRemainingSeconds + ((totalPasses - currentPass) * passDurationSeconds);
+  return `Total remaining: ${totalRemainingSeconds.toFixed(1)} sec`;
+}
+
 export function resolveTimelineDawSessionClipKeyboardCommand(
   command: TimelineDawSessionKeyboardCommand,
   hasActiveClip: boolean,
