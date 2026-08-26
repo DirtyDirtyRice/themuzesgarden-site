@@ -19,6 +19,7 @@ import {
   createTimelineDawSessionLiveCue,
   createTimelineDawSessionLiveProgressLabel,
   createTimelineDawSessionPassProgress,
+  createTimelineDawSessionClipPassProgress,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
   resolveTimelineDawSessionSceneFollowAction,
@@ -73,7 +74,7 @@ export default function TimelineDawSessionView({
   labels: TimelineDawTrackRegionLabels;
   activeSceneId?: string;
   activeClipId?: string;
-  activeClipPlayback?: { mode: TimelineDawSessionClipLaunchMode; currentPass: number; totalPasses: number; paused: boolean };
+  activeClipPlayback?: { mode: TimelineDawSessionClipLaunchMode; currentPass: number; totalPasses: number; paused: boolean; passStartedAtMs?: number; passDurationMs?: number; pausedAtMs?: number };
   activeSceneProgress?: { currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number };
   queuedLaunchName?: string;
   onLaunchClip: (clip: { id: string; laneId: string; startSeconds: number; endSeconds: number; name: string }, settings: LaunchSettings) => void;
@@ -120,16 +121,17 @@ export default function TimelineDawSessionView({
   const activeClip = findTimelineDawSessionClipSlot(scenes, activeClipId);
   const liveCue = createTimelineDawSessionLiveCue(activeSceneIndex, scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const livePassProgress = activeSceneProgress ? createTimelineDawSessionPassProgress(activeSceneProgress.passStartedAtMs, activeSceneProgress.passDurationMs, liveProgressNowMs) : null;
+  const activeClipPassProgress = activeClipPlayback?.passStartedAtMs !== undefined && activeClipPlayback.passDurationMs !== undefined ? createTimelineDawSessionClipPassProgress({ passStartedAtMs: activeClipPlayback.passStartedAtMs, passDurationMs: activeClipPlayback.passDurationMs, pausedAtMs: activeClipPlayback.pausedAtMs, nowMs: liveProgressNowMs }) : null;
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
   const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
 
   useEffect(() => {
-    if (!activeSceneProgress) return;
+    if (!activeSceneProgress && (!activeClipPassProgress || activeClipPlayback?.paused)) return;
     const timer = window.setInterval(() => setLiveProgressNowMs(Date.now()), 250);
     return () => window.clearInterval(timer);
-  }, [activeSceneProgress]);
+  }, [activeClipPassProgress, activeClipPlayback?.paused, activeSceneProgress]);
 
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
@@ -436,7 +438,7 @@ export default function TimelineDawSessionView({
             <button type="button" className={launchButton} onClick={onStop}>Stop Scene</button>
           </div>
         ) : null}
-        {activeSceneIndex < 0 && activeClip ? <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.08] p-3" role="group" aria-label="Active individual clip controls"><span className="text-xs font-black text-cyan-50">{activeClipPlayback?.paused ? "Paused" : "Playing"} clip {activeClip.name}</span><span className="text-[11px] text-white/55">{activeClip.startSeconds.toFixed(2)}–{activeClip.endSeconds.toFixed(2)} sec</span>{activeClipPlayback ? <span className="rounded-md border border-cyan-200/20 bg-black/25 px-2 py-1 text-[11px] font-black text-cyan-50" role="status" aria-live="polite">{createTimelineDawSessionClipPlaybackStatus(activeClipPlayback)}</span> : null}{activeClipTransport ? <><button type="button" className={launchButton} disabled={!activeClipTransport.canGoPrevious} onClick={onPreviousClip}>Previous Pass</button><button type="button" className={launchButton} onClick={onReplayClip}>Replay Clip</button></> : null}{activeClipPlayback?.paused ? <button type="button" className={launchButton} onClick={onResumeClip}>Resume Clip</button> : <button type="button" className={launchButton} onClick={onPauseClip}>Pause Clip</button>}{activeClipTransport ? <button type="button" className={launchButton} onClick={onAdvanceClip}>{activeClipTransport.advanceLabel}</button> : null}<button type="button" className={launchButton} onClick={onStop}>Stop Clip</button></div> : null}
+        {activeSceneIndex < 0 && activeClip ? <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.08] p-3" role="group" aria-label="Active individual clip controls"><span className="text-xs font-black text-cyan-50">{activeClipPlayback?.paused ? "Paused" : "Playing"} clip {activeClip.name}</span><span className="text-[11px] text-white/55">{activeClip.startSeconds.toFixed(2)}–{activeClip.endSeconds.toFixed(2)} sec</span>{activeClipPlayback ? <span className="rounded-md border border-cyan-200/20 bg-black/25 px-2 py-1 text-[11px] font-black text-cyan-50" role="status" aria-live="polite">{createTimelineDawSessionClipPlaybackStatus(activeClipPlayback)}</span> : null}{activeClipPassProgress ? <div className="w-full" aria-label="Current clip pass time"><div className="mb-1 flex justify-between gap-3 text-[10px] font-black text-cyan-50/70"><span>{activeClipPassProgress.elapsedSeconds.toFixed(1)} sec elapsed</span><span>{activeClipPassProgress.remainingSeconds.toFixed(1)} sec remaining</span></div><div className="h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={activeClipPassProgress.percent}><div className="h-full rounded-full bg-cyan-300 transition-[width] duration-200" style={{ width: `${activeClipPassProgress.percent}%` }} /></div></div> : null}{activeClipTransport ? <><button type="button" className={launchButton} disabled={!activeClipTransport.canGoPrevious} onClick={onPreviousClip}>Previous Pass</button><button type="button" className={launchButton} onClick={onReplayClip}>Replay Clip</button></> : null}{activeClipPlayback?.paused ? <button type="button" className={launchButton} onClick={onResumeClip}>Resume Clip</button> : <button type="button" className={launchButton} onClick={onPauseClip}>Pause Clip</button>}{activeClipTransport ? <button type="button" className={launchButton} onClick={onAdvanceClip}>{activeClipTransport.advanceLabel}</button> : null}<button type="button" className={launchButton} onClick={onStop}>Stop Clip</button></div> : null}
         <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> 1–9 launch the matching visible scene · P previous scene/pass · R replay scene/clip · N next scene/pass or finish clip · K pause/resume active clip · Space stop. Active clip controls take priority over scene navigation. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
         {scenes.length ? <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3" aria-label="Live Set flow check">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-100">Live Set Flow Check</p>

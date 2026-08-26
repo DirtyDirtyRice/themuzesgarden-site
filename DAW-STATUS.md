@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Individual Clip Keyboard Pause and Resume
+## Latest completed DAW milestone - Live Individual Clip Pass Progress
+
+- Active individual Session View clips now show a live progress bar with elapsed and remaining seconds for the current pass.
+- Progress timing comes directly from the guarded audition plan after playback-rate and stretch transforms, so the display follows the actual scheduled pass duration.
+- Pausing freezes the meter at the exact pause time; resuming continues from the preserved remaining duration without jumping or restarting.
+- Replay, Previous Pass, Next Pass, Finish Clip, Restart Loop, keyboard transport, and automatic repeat transitions each establish a fresh bounded pass meter.
+- Progress values are validated and clamped to safe zero-to-complete bounds before reaching the accessible progress bar.
+- Focused Session View tests passed (35 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Clip timing feedback is transient playback UI and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Individual Clip Keyboard Pause and Resume
 
 - Focused Session View now supports K as a dedicated Pause/Resume toggle for the active individual clip.
 - The shortcut reuses the established guarded audition pause state, remaining-duration calculation, resume path, and stale-generation protection.

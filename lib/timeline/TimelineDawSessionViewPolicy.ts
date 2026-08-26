@@ -514,6 +514,15 @@ export function createTimelineDawSessionPassProgress(startedAtMs: number, durati
   };
 }
 
+export function createTimelineDawSessionClipPassProgress(input: {
+  passStartedAtMs: number;
+  passDurationMs: number;
+  nowMs: number;
+  pausedAtMs?: number;
+}) {
+  return createTimelineDawSessionPassProgress(input.passStartedAtMs, input.passDurationMs, input.pausedAtMs ?? input.nowMs);
+}
+
 export function analyzeTimelineDawSessionLiveSetFlow(
   scenes: TimelineDawSessionScene[],
   sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,

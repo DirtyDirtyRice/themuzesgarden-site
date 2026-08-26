@@ -98,7 +98,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [previewLaneId, setPreviewLaneId] = useState<string>();
   const [riffAuditionActive, setRiffAuditionActive] = useState(false);
   const [riffAuditionPaused, setRiffAuditionPaused] = useState(false);
-  const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean }>();
+  const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean; passStartedAtMs?: number; passDurationMs?: number; pausedAtMs?: number }>();
   const [activeSessionSceneId, setActiveSessionSceneId] = useState<string>();
   const [activeSessionClipId, setActiveSessionClipId] = useState<string>();
   const [activeSessionClipLaunch, setActiveSessionClipLaunch] = useState<{ mode: "one-shot" | "loop"; playCount: number }>();
@@ -913,7 +913,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         setPreviewLaneId(lane.id);
         setRiffAuditionActive(true);
         setRiffAuditionPaused(false);
-        setRiffAuditionProgress({ trackName: lane.name, ...createTimelineDawRiffAuditionProgress(index, regions.length, repeatCount), canGoPrevious: index > 0 });
+        setRiffAuditionProgress({ trackName: lane.name, ...createTimelineDawRiffAuditionProgress(index, regions.length, repeatCount), canGoPrevious: index > 0, passStartedAtMs: Date.now(), passDurationMs: plan.stopAfterMilliseconds });
         const moveTo = (nextIndex: number | null) => {
           if (!isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) return;
           if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
@@ -940,15 +940,18 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
           if (riffAuditionPaused || !isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) return;
           if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
           previewTimerRef.current = null;
-          remainingMilliseconds = createTimelineDawRiffAuditionRemainingMilliseconds(remainingMilliseconds, Date.now() - startedAt);
+          const pausedAtMs = Date.now();
+          remainingMilliseconds = createTimelineDawRiffAuditionRemainingMilliseconds(remainingMilliseconds, pausedAtMs - startedAt);
           audio.pause();
           setRiffAuditionPaused(true);
+          setRiffAuditionProgress((current) => current ? { ...current, pausedAtMs } : current);
         };
         riffAuditionResumeRef.current = () => {
           if (!isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) return;
           void audio.play().then(() => {
             if (!isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) { audio.pause(); return; }
             setRiffAuditionPaused(false);
+            setRiffAuditionProgress((current) => current ? { ...current, passStartedAtMs: Date.now() - ((current.passDurationMs ?? remainingMilliseconds) - remainingMilliseconds), pausedAtMs: undefined } : current);
             scheduleAdvance();
           }).catch(() => { setError("The paused riff comparison could not resume."); stopTrackPreview(); });
         };
@@ -1225,7 +1228,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         labels={regionLabels}
         activeSceneId={activeSessionSceneId}
         activeClipId={activeSessionClipId}
-        activeClipPlayback={activeSessionClipLaunch ? { mode: activeSessionClipLaunch.mode, currentPass: riffAuditionProgress?.passNumber ?? 1, totalPasses: activeSessionClipLaunch.playCount, paused: riffAuditionPaused } : undefined}
+        activeClipPlayback={activeSessionClipLaunch ? { mode: activeSessionClipLaunch.mode, currentPass: riffAuditionProgress?.passNumber ?? 1, totalPasses: activeSessionClipLaunch.playCount, paused: riffAuditionPaused, passStartedAtMs: riffAuditionProgress?.passStartedAtMs, passDurationMs: riffAuditionProgress?.passDurationMs, pausedAtMs: riffAuditionProgress?.pausedAtMs } : undefined}
         activeSceneProgress={activeSessionSceneProgress}
         queuedLaunchName={queuedSessionLaunchName}
         onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => {
