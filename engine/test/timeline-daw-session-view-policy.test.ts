@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -215,6 +215,19 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionFollowTargetIndex(1, scenes, "missing")).toBe(2);
     expect(resolveTimelineDawSessionFollowTargetIndex(2, scenes, "missing")).toBeNull();
     expect(resolveTimelineDawSessionFollowTargetIndex(-1, scenes, "verse")).toBeNull();
+  });
+
+  it("builds an exact live cue for the active scene transition", () => {
+    const scenes = [
+      { id: "verse", name: "Verse", slots: [] },
+      { id: "chorus", name: "Chorus", slots: [] },
+      { id: "bridge", name: "Bridge", slots: [] },
+    ];
+    expect(createTimelineDawSessionLiveCue(0, scenes, { verse: "next" }, { verse: "bridge" }, { verse: 4 })).toEqual({ sceneId: "verse", action: "next", playCount: 4, nextSceneId: "bridge" });
+    expect(createTimelineDawSessionLiveCue(1, scenes, { chorus: "loop" }, {}, { chorus: 2 })).toEqual({ sceneId: "chorus", action: "loop", playCount: 2, nextSceneId: "chorus" });
+    expect(createTimelineDawSessionLiveCue(2, scenes, { bridge: "stop" }, {}, {})).toEqual({ sceneId: "bridge", action: "stop", playCount: 1, nextSceneId: null });
+    expect(createTimelineDawSessionLiveCue(1, scenes, { chorus: "next" }, { chorus: "missing" }, {})).toEqual({ sceneId: "chorus", action: "next", playCount: 1, nextSceneId: "bridge" });
+    expect(createTimelineDawSessionLiveCue(-1, scenes, {}, {}, {})).toBeNull();
   });
 
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {

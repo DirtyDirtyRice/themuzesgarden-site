@@ -16,6 +16,7 @@ import {
   createTimelineDawSessionLiveSetPlan,
   parseTimelineDawSessionLiveSetPlan,
   analyzeTimelineDawSessionLiveSetFlow,
+  createTimelineDawSessionLiveCue,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
   resolveTimelineDawSessionSceneFollowAction,
@@ -81,6 +82,7 @@ export default function TimelineDawSessionView({
   const liveSetFlow = analyzeTimelineDawSessionLiveSetFlow(scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const sceneNamesById = new Map(scenes.map((scene) => [scene.id, scene.name]));
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
+  const liveCue = createTimelineDawSessionLiveCue(activeSceneIndex, scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
@@ -351,6 +353,7 @@ export default function TimelineDawSessionView({
         {activeSceneIndex >= 0 ? (
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-3" role="group" aria-label="Live scene navigation">
             <span className="text-xs font-black text-emerald-100">Playing {scenes[activeSceneIndex].name}</span>
+            {liveCue ? <span className="rounded-md border border-emerald-200/20 bg-black/25 px-2 py-1 text-[11px] font-black text-emerald-50" aria-label="Active scene follow cue">Cue: ×{liveCue.playCount} {liveCue.playCount === 1 ? "play" : "plays"}, then {liveCue.action === "stop" ? "Stop" : liveCue.action === "loop" ? "Loop Current" : liveCue.nextSceneId ? sceneNamesById.get(liveCue.nextSceneId) ?? liveCue.nextSceneId : "End Set"}</span> : null}
             {(["previous", "replay", "next"] as const).map((action) => {
               const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, action);
               const label = action === "previous" ? "Previous Scene" : action === "replay" ? "Replay Scene" : "Next Scene";

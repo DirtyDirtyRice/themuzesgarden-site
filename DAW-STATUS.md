@@ -60,7 +60,15 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Set Schedule and Duration Estimate
+## Latest completed DAW milestone - Live Performance Follow Cue
+
+- The active Session View scene now displays a compact performance cue beside its Playing indicator.
+- The cue shows the configured finite play count and the exact transition that will follow before it occurs.
+- Stop, Loop Current, specific scene targets, next-visible-scene fallback, and safe end-of-set behavior use the same policy resolution as playback.
+- The cue follows edited scene order and per-scene overrides without changing audio, timing, arrangement, plans, takes, source regions, or persistence.
+- Focused Session View tests passed (22 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+
+## Previously completed DAW milestone - Live Set Schedule and Duration Estimate
 
 - The Live Set Flow Check now builds a cumulative schedule for every reachable scene before playback.
 - Each schedule chip shows scene name, configured play count, estimated start, and estimated end in seconds.

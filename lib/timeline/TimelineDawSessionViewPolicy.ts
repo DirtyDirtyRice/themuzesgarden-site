@@ -373,6 +373,23 @@ export function resolveTimelineDawSessionFollowTargetIndex(currentIndex: number,
   return currentIndex + 1 < scenes.length ? currentIndex + 1 : null;
 }
 
+export function createTimelineDawSessionLiveCue(
+  currentIndex: number,
+  scenes: TimelineDawSessionScene[],
+  sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,
+  sceneFollowTargetIds: Record<string, string>,
+  scenePlayCounts: Record<string, number> = {},
+) {
+  if (!Number.isInteger(currentIndex) || currentIndex < 0 || currentIndex >= scenes.length) return null;
+  const scene = scenes[currentIndex];
+  const action = sceneFollowActions[scene.id] ?? "stop";
+  const playCount = resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts);
+  if (action === "stop") return { sceneId: scene.id, action, playCount, nextSceneId: null };
+  if (action === "loop") return { sceneId: scene.id, action, playCount, nextSceneId: scene.id };
+  const nextIndex = resolveTimelineDawSessionFollowTargetIndex(currentIndex, scenes, sceneFollowTargetIds[scene.id]);
+  return { sceneId: scene.id, action, playCount, nextSceneId: nextIndex === null ? null : scenes[nextIndex].id };
+}
+
 export function analyzeTimelineDawSessionLiveSetFlow(
   scenes: TimelineDawSessionScene[],
   sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,
