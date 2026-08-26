@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Take Lane Comparison and Preferred Performance
+## Latest completed DAW milestone - Session Performance Comp Take Builder
+
+- Every saved Take Lane now exposes its individual scene and clip launches as selectable comp sections.
+- Musicians can choose the strongest launches across multiple performances and build them into a new named Comp Lane.
+- Each selected launch first receives its source take's timing cleanup, then the composite is sorted into musical timeline order.
+- Comp events receive unique identities and deep-cloned clip ranges so later comp edits cannot mutate any source Take Lane.
+- The new Comp Lane enters the same comparison, preferred-take, loading, arrangement-preview, and download workflow as recorded takes.
+- Duplicate selections are ignored safely, missing source takes or launches are rejected, and an empty comp cannot be created.
+- Focused Session View tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or browser persistence was added; comp building remains private, temporary, and non-destructive.
+
+## Previously completed DAW milestone - Take Lane Comparison and Preferred Performance
 
 - Saved Session View Take Lanes now display consistent A/B comparison metrics: total duration, launches, arrangement clips, tracks used, and scene launches.
 - Metrics are calculated after each take's selected timing cleanup and same-track takeover rules, so comparisons match the downloadable arrangement plan.

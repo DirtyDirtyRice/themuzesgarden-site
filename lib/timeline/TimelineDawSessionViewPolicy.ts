@@ -57,6 +57,30 @@ export function createTimelineDawSessionTakeSummary(take: TimelineDawSessionSave
   };
 }
 
+export function createTimelineDawSessionCompTake(input: {
+  id: string;
+  name: string;
+  takes: TimelineDawSessionSavedTake[];
+  selections: Array<{ takeId: string; eventId: string }>;
+}) {
+  if (!input.selections.length) throw new Error("A Session View comp needs at least one selected launch.");
+  const takesById = new Map(input.takes.map((take) => [take.id, createTimelineDawSessionSavedTake(take)]));
+  const seen = new Set<string>();
+  const selectedEvents = input.selections.flatMap((selection, order) => {
+    const selectionKey = `${selection.takeId}:${selection.eventId}`;
+    if (seen.has(selectionKey)) return [];
+    seen.add(selectionKey);
+    const take = takesById.get(selection.takeId);
+    if (!take) throw new Error("A selected Session View comp take no longer exists.");
+    const event = quantizeTimelineDawSessionPerformanceTake(take.events, take.quantization).find((candidate) => candidate.id === selection.eventId);
+    if (!event) throw new Error("A selected Session View comp launch no longer exists.");
+    return [{ event: { ...event, id: `comp:${input.id}:${order}:${event.id}`, clips: event.clips.map((clip) => ({ ...clip })) }, order }];
+  });
+  const events = selectedEvents.sort((left, right) => left.event.elapsedSeconds - right.event.elapsedSeconds || left.order - right.order)
+    .map((selection) => selection.event);
+  return createTimelineDawSessionSavedTake({ id: input.id, name: input.name, quantization: "off", events });
+}
+
 export function createTimelineDawSessionPerformanceEvent(input: {
   id: string;
   kind: "clip" | "scene";

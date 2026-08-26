@@ -10,6 +10,7 @@ import {
   createTimelineDawSessionPerformanceEvent,
   createTimelineDawSessionSavedTake,
   createTimelineDawSessionTakeSummary,
+  createTimelineDawSessionCompTake,
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
@@ -53,6 +54,8 @@ export default function TimelineDawSessionView({
   const [takeName, setTakeName] = useState("Take 1");
   const [savedTakes, setSavedTakes] = useState<TimelineDawSessionSavedTake[]>([]);
   const [preferredTakeId, setPreferredTakeId] = useState<string | null>(null);
+  const [compName, setCompName] = useState("Comp 1");
+  const [compSelections, setCompSelections] = useState<string[]>([]);
   const performanceStartedAtRef = useRef<number | null>(null);
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const settings = { bpm, quantization, followAction };
@@ -94,6 +97,25 @@ export default function TimelineDawSessionView({
   function removePerformanceTake(takeId: string) {
     setSavedTakes((current) => current.filter((candidate) => candidate.id !== takeId));
     setPreferredTakeId((current) => current === takeId ? null : current);
+    setCompSelections((current) => current.filter((selection) => !selection.startsWith(`${takeId}:`)));
+  }
+
+  function toggleCompSelection(takeId: string, eventId: string) {
+    const selection = `${takeId}:${eventId}`;
+    setCompSelections((current) => current.includes(selection) ? current.filter((candidate) => candidate !== selection) : [...current, selection]);
+  }
+
+  function buildCompTake() {
+    const id = crypto.randomUUID();
+    const compTake = createTimelineDawSessionCompTake({
+      id,
+      name: compName,
+      takes: savedTakes,
+      selections: compSelections.map((selection) => { const separator = selection.indexOf(":"); return { takeId: selection.slice(0, separator), eventId: selection.slice(separator + 1) }; }),
+    });
+    setSavedTakes((current) => [...current, compTake]);
+    setCompSelections([]);
+    setCompName(`Comp ${savedTakes.filter((take) => take.name.startsWith("Comp ")).length + 2}`);
   }
 
   function downloadPerformanceTake() {
@@ -202,6 +224,12 @@ export default function TimelineDawSessionView({
           </div>
           {savedTakes.length ? <div className="mt-3 rounded-xl border border-violet-200/15 bg-black/20 p-2">
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-violet-100">Saved Take Lanes · {savedTakes.length}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-black/30 p-2">
+              <label className="text-[11px] font-black text-white/70">Comp name <input className="ml-2 w-32 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" maxLength={80} value={compName} onChange={(event) => setCompName(event.target.value)} /></label>
+              <span className="text-[11px] text-white/50">{compSelections.length} launch{compSelections.length === 1 ? "" : "es"} selected</span>
+              <button type="button" className={launchButton} disabled={!compSelections.length || !compName.trim()} onClick={buildCompTake}>Build Comp Lane</button>
+              <button type="button" className={launchButton} disabled={!compSelections.length} onClick={() => setCompSelections([])}>Clear Comp Choices</button>
+            </div>
             <ul className="mt-2 grid gap-2 lg:grid-cols-2">{savedTakes.map((take) => { const summary = savedTakeSummaries.get(take.id); return <li key={take.id} className={`rounded-lg border p-2 text-[11px] text-white/60 ${preferredTakeId === take.id ? "border-amber-300/50 bg-amber-300/10" : "border-white/10 bg-black/30"}`}>
               <div className="flex flex-wrap items-center gap-2"><strong className="text-white/80">{preferredTakeId === take.id ? "★ " : ""}{take.name}</strong><span>{summary?.durationSeconds.toFixed(2)} sec · {summary?.launchCount} launches · {summary?.placementCount} clips · {summary?.trackCount} tracks · {summary?.sceneLaunchCount} scenes</span></div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -209,6 +237,7 @@ export default function TimelineDawSessionView({
               <button type="button" className={launchButton} disabled={preferredTakeId === take.id} onClick={() => setPreferredTakeId(take.id)}>Set Preferred</button>
               <button type="button" className={launchButton} onClick={() => removePerformanceTake(take.id)}>Remove</button>
               </div>
+              <div className="mt-2 flex flex-wrap gap-1">{take.events.map((event) => { const selection = `${take.id}:${event.id}`; const selected = compSelections.includes(selection); return <button key={event.id} type="button" aria-pressed={selected} className={`rounded-md border px-2 py-1 text-[10px] font-black ${selected ? "border-emerald-200 bg-emerald-200 text-emerald-950" : "border-white/15 bg-white/5 text-white/60"}`} onClick={() => toggleCompSelection(take.id, event.id)}>{selected ? "✓ " : "+ "}{event.name} @ {event.elapsedSeconds.toFixed(2)}</button>; })}</div>
             </li>; })}</ul>
           </div> : null}
           {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{cleanedPerformanceEvents.map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.elapsedSeconds.toFixed(2)} sec · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}

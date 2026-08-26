@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeSummary, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeSummary, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -144,5 +144,21 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionTakeSummary(take)).toEqual({
       id: "take-a", name: "Take A", launchCount: 2, sceneLaunchCount: 1, placementCount: 3, trackCount: 2, durationSeconds: 8, quantization: "bar",
     });
+  });
+
+  it("builds a sorted isolated comp from selected launches across take lanes", () => {
+    const first = createTimelineDawSessionSavedTake({ id: "first", name: "First", quantization: "bar", events: [
+      createTimelineDawSessionPerformanceEvent({ id: "chorus", kind: "scene", name: "Chorus", takeStartedAtMs: 0, launchedAtMs: 1_800, bpm: 120, clips: [{ laneId: "drums", startSeconds: 8, endSeconds: 16 }] }),
+    ] });
+    const second = createTimelineDawSessionSavedTake({ id: "second", name: "Second", quantization: "off", events: [
+      createTimelineDawSessionPerformanceEvent({ id: "verse", kind: "scene", name: "Verse", takeStartedAtMs: 0, launchedAtMs: 0, bpm: 120, clips: [{ laneId: "bass", startSeconds: 0, endSeconds: 8 }] }),
+    ] });
+    const comp = createTimelineDawSessionCompTake({ id: "comp", name: "Best sections", takes: [first, second], selections: [{ takeId: "first", eventId: "chorus" }, { takeId: "second", eventId: "verse" }] });
+    expect(comp.name).toBe("Best sections");
+    expect(comp.quantization).toBe("off");
+    expect(comp.events.map((event) => [event.name, event.elapsedSeconds])).toEqual([["Verse", 0], ["Chorus", 2]]);
+    comp.events[0].clips[0].endSeconds = 4;
+    expect(second.events[0].clips[0].endSeconds).toBe(8);
+    expect(() => createTimelineDawSessionCompTake({ id: "empty", name: "Empty", takes: [first], selections: [] })).toThrow("at least one selected launch");
   });
 });
