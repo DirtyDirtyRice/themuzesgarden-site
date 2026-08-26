@@ -231,13 +231,23 @@ describe("Timeline DAW Session View policy", () => {
 
   it("traces live-set routes and reports loops, endings, and unreachable scenes", () => {
     const scenes = [
-      { id: "verse", name: "Verse", slots: [] },
-      { id: "chorus", name: "Chorus", slots: [] },
-      { id: "bridge", name: "Bridge", slots: [] },
-      { id: "outro", name: "Outro", slots: [] },
+      { id: "verse", name: "Verse", slots: [{ id: "v", laneId: "drums", name: "Verse", startSeconds: 0, endSeconds: 8, color: "cyan" as const }] },
+      { id: "chorus", name: "Chorus", slots: [{ id: "c", laneId: "drums", name: "Chorus", startSeconds: 8, endSeconds: 12, color: "cyan" as const }] },
+      { id: "bridge", name: "Bridge", slots: [{ id: "b", laneId: "drums", name: "Bridge", startSeconds: 12, endSeconds: 14, color: "cyan" as const }] },
+      { id: "outro", name: "Outro", slots: [{ id: "o", laneId: "drums", name: "Outro", startSeconds: 14, endSeconds: 17, color: "cyan" as const }] },
     ];
-    expect(analyzeTimelineDawSessionLiveSetFlow(scenes, { verse: "next", chorus: "next", bridge: "stop", outro: "stop" }, { verse: "chorus", chorus: "verse" })).toEqual({ status: "loops", pathIds: ["verse", "chorus"], cycleAtSceneId: "verse", unreachableSceneIds: ["bridge", "outro"] });
-    expect(analyzeTimelineDawSessionLiveSetFlow(scenes, { verse: "next", chorus: "next", bridge: "next", outro: "stop" }, {})).toEqual({ status: "stops", pathIds: ["verse", "chorus", "bridge", "outro"], cycleAtSceneId: null, unreachableSceneIds: [] });
+    expect(analyzeTimelineDawSessionLiveSetFlow(scenes, { verse: "next", chorus: "next", bridge: "stop", outro: "stop" }, { verse: "chorus", chorus: "verse" }, { verse: 2 })).toEqual({ status: "loops", pathIds: ["verse", "chorus"], cycleAtSceneId: "verse", unreachableSceneIds: ["bridge", "outro"], schedule: [{ sceneId: "verse", playCount: 2, startSeconds: 0, endSeconds: 16 }, { sceneId: "chorus", playCount: 1, startSeconds: 16, endSeconds: 20 }], estimatedSourceDurationSeconds: null });
+    expect(analyzeTimelineDawSessionLiveSetFlow(scenes, { verse: "next", chorus: "next", bridge: "next", outro: "stop" }, {})).toEqual({ status: "stops", pathIds: ["verse", "chorus", "bridge", "outro"], cycleAtSceneId: null, unreachableSceneIds: [], schedule: [{ sceneId: "verse", playCount: 1, startSeconds: 0, endSeconds: 8 }, { sceneId: "chorus", playCount: 1, startSeconds: 8, endSeconds: 12 }, { sceneId: "bridge", playCount: 1, startSeconds: 12, endSeconds: 14 }, { sceneId: "outro", playCount: 1, startSeconds: 14, endSeconds: 17 }], estimatedSourceDurationSeconds: 17 });
     expect(analyzeTimelineDawSessionLiveSetFlow([], {}, {}).status).toBe("empty");
+  });
+
+  it("uses the longest scene region and play count for source-time scheduling", () => {
+    const scenes = [{ id: "layered", name: "Layered", slots: [
+      { id: "short", laneId: "bass", name: "Layered", startSeconds: 0, endSeconds: 3, color: "cyan" as const },
+      { id: "long", laneId: "drums", name: "Layered", startSeconds: 5, endSeconds: 11, color: "violet" as const },
+    ] }];
+    const flow = analyzeTimelineDawSessionLiveSetFlow(scenes, { layered: "stop" }, {}, { layered: 4 });
+    expect(flow.schedule).toEqual([{ sceneId: "layered", playCount: 4, startSeconds: 0, endSeconds: 24 }]);
+    expect(flow.estimatedSourceDurationSeconds).toBe(24);
   });
 });

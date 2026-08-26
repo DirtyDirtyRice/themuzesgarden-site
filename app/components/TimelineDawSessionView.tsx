@@ -78,7 +78,7 @@ export default function TimelineDawSessionView({
   const sceneFollowActions = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionSceneFollowAction(scene.id, sceneFollowChoices, followAction)]));
   const resolvedScenePlayCounts = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts)]));
   const settings = { bpm, quantization, followAction, defaultFollowAction: followAction, sceneFollowActions, sceneFollowTargetIds, scenePlayCounts: resolvedScenePlayCounts, sceneOrderIds: scenes.map((scene) => scene.id) };
-  const liveSetFlow = analyzeTimelineDawSessionLiveSetFlow(scenes, sceneFollowActions, sceneFollowTargetIds);
+  const liveSetFlow = analyzeTimelineDawSessionLiveSetFlow(scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const sceneNamesById = new Map(scenes.map((scene) => [scene.id, scene.name]));
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
@@ -364,6 +364,9 @@ export default function TimelineDawSessionView({
           <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-100">Live Set Flow Check</p>
           <p className="mt-1 text-xs text-white/65">{liveSetFlow.pathIds.map((id) => sceneNamesById.get(id) ?? id).join(" → ")} · {liveSetFlow.status === "loops" ? `loops at ${sceneNamesById.get(liveSetFlow.cycleAtSceneId ?? "") ?? "scene"}` : liveSetFlow.status === "stops" ? "stops by scene action" : "ends after the final safe target"}</p>
           <p className="mt-1 text-[11px] text-white/45">{liveSetFlow.unreachableSceneIds.length ? `Not reached from the first scene: ${liveSetFlow.unreachableSceneIds.map((id) => sceneNamesById.get(id) ?? id).join(", ")}.` : "Every scene is reachable from the first scene."} Play counts affect duration, not this route.</p>
+          <ol className="mt-2 flex flex-wrap gap-2">{liveSetFlow.schedule.map((entry) => <li key={entry.sceneId} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[10px] text-white/55">{sceneNamesById.get(entry.sceneId) ?? entry.sceneId} ×{entry.playCount} · {entry.startSeconds.toFixed(2)}–{entry.endSeconds.toFixed(2)} sec</li>)}</ol>
+          <p className="mt-2 text-[11px] font-black text-amber-100">{liveSetFlow.estimatedSourceDurationSeconds === null ? `Open-ended after ${liveSetFlow.schedule.at(-1)?.endSeconds.toFixed(2) ?? "0.00"} sec because the route loops.` : `Estimated source time: ${liveSetFlow.estimatedSourceDurationSeconds.toFixed(2)} sec.`}</p>
+          <p className="mt-1 text-[10px] text-white/35">Source-time estimate uses the longest region in each scene before track stretch or other playback transforms.</p>
         </div> : null}
         {scenes.length ? (
           <div className="overflow-x-auto">

@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Set Flow Check
+## Latest completed DAW milestone - Live Set Schedule and Duration Estimate
+
+- The Live Set Flow Check now builds a cumulative schedule for every reachable scene before playback.
+- Each schedule chip shows scene name, configured play count, estimated start, and estimated end in seconds.
+- Finite Stop and Next routes display a total source-time estimate for rehearsal and show planning.
+- Deliberate Loop routes are marked open-ended while still showing the elapsed source time at which the loop begins.
+- Scene duration uses the longest active source region in that scene, matching the existing scene-end follow timer model.
+- The UI clearly distinguishes source-time estimates from transformed playback time when track stretching or other playback transforms are active.
+- Focused Session View tests passed (21 tests), TypeScript passed, targeted new-file lint passed, and the production build passed with 76 generated pages.
+- Scheduling remains read-only and changes no playback, arrangement, source audio, regions, plans, takes, database, or browser storage.
+
+## Previously completed DAW milestone - Live Set Flow Check
 
 - Session View now displays a read-only route trace from the first visible scene through the configured per-scene actions and targets.
 - The check identifies whether the set stops by scene action, ends after its final safe target, or enters a deliberate loop.

@@ -377,10 +377,13 @@ export function analyzeTimelineDawSessionLiveSetFlow(
   scenes: TimelineDawSessionScene[],
   sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,
   sceneFollowTargetIds: Record<string, string>,
+  scenePlayCounts: Record<string, number> = {},
 ) {
-  if (!scenes.length) return { status: "empty" as const, pathIds: [] as string[], cycleAtSceneId: null as string | null, unreachableSceneIds: [] as string[] };
+  if (!scenes.length) return { status: "empty" as const, pathIds: [] as string[], cycleAtSceneId: null as string | null, unreachableSceneIds: [] as string[], schedule: [] as Array<{ sceneId: string; playCount: number; startSeconds: number; endSeconds: number }>, estimatedSourceDurationSeconds: 0 as number | null };
   const visited = new Set<string>();
   const pathIds: string[] = [];
+  const schedule: Array<{ sceneId: string; playCount: number; startSeconds: number; endSeconds: number }> = [];
+  let elapsedSeconds = 0;
   let currentIndex = 0;
   let status: "stops" | "ends" | "loops" = "ends";
   let cycleAtSceneId: string | null = null;
@@ -393,6 +396,11 @@ export function analyzeTimelineDawSessionLiveSetFlow(
     }
     visited.add(scene.id);
     pathIds.push(scene.id);
+    const playCount = resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts);
+    const sceneDuration = Math.max(0, ...scene.slots.map((slot) => slot.endSeconds - slot.startSeconds));
+    const endSeconds = Math.round((elapsedSeconds + sceneDuration * playCount) * 100) / 100;
+    schedule.push({ sceneId: scene.id, playCount, startSeconds: elapsedSeconds, endSeconds });
+    elapsedSeconds = endSeconds;
     const action = sceneFollowActions[scene.id] ?? "stop";
     if (action === "stop") {
       status = "stops";
@@ -410,7 +418,7 @@ export function analyzeTimelineDawSessionLiveSetFlow(
     }
     currentIndex = nextIndex;
   }
-  return { status, pathIds, cycleAtSceneId, unreachableSceneIds: scenes.filter((scene) => !visited.has(scene.id)).map((scene) => scene.id) };
+  return { status, pathIds, cycleAtSceneId, unreachableSceneIds: scenes.filter((scene) => !visited.has(scene.id)).map((scene) => scene.id), schedule, estimatedSourceDurationSeconds: status === "loops" ? null : elapsedSeconds };
 }
 
 export function createTimelineDawSessionLaunchDelay(input: {
