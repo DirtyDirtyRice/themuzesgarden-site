@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Per-Clip Launch Quantization
+## Latest completed DAW milestone - Portable Per-Clip Live Set Plans
+
+- Live Set Plan downloads now include the default individual clip behavior plus every explicit per-clip behavior and quantization override.
+- Import restores the complete rehearsed clip setup together with BPM, global quantization, scene order, follow actions, play counts, and targets.
+- The versioned v2 schema strictly validates clip identities, record counts, One-Shot/Loop choices, and allowed musical launch boundaries.
+- Existing v1 Live Set Plans remain importable and safely receive One-Shot defaults with empty per-clip override maps.
+- Focused Session View tests passed (28 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Plans remain explicit local JSON files containing configuration only—never audio, credentials, private notes, storage paths, database writes, or browser storage.
+
+## Previously completed DAW milestone - Per-Clip Launch Quantization
 
 - Every occupied Session View clip can now inherit the session launch boundary or independently choose Immediate, Next Beat, Next Two Beats, or Next Bar.
 - Each clip slot displays its resolved quantization alongside its One-Shot or Loop behavior before launch.

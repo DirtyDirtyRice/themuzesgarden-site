@@ -279,6 +279,7 @@ describe("Timeline DAW Session View policy", () => {
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {
     const plan = createTimelineDawSessionLiveSetPlan({
       createdAt: "2026-08-26T18:00:00.000Z", bpm: 128, launchQuantization: "bar", defaultFollowAction: "next",
+      defaultClipLaunchMode: "loop", clipLaunchChoices: { "verse:drums": "one-shot" }, clipQuantizationChoices: { "verse:drums": "beat" },
       sceneOrderIds: ["chorus", "verse", "chorus"], sceneFollowChoices: { chorus: "loop", verse: "global" }, scenePlayCounts: { chorus: 4, verse: 2 }, sceneFollowTargetIds: { verse: "chorus" },
     });
     expect(plan.sceneOrderIds).toEqual(["chorus", "verse"]);
@@ -286,6 +287,10 @@ describe("Timeline DAW Session View policy", () => {
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, bpm: 500 })).toThrow("between 30 and 300");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, scenePlayCounts: { verse: 17 } })).toThrow("invalid scene play counts");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, launchQuantization: "random" })).toThrow("invalid launch settings");
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipLaunchChoices: { verse: "random" } })).toThrow("invalid clip launch choices");
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipQuantizationChoices: { verse: "random" } })).toThrow("invalid clip quantization choices");
+    const legacy = Object.fromEntries(Object.entries(plan).filter(([key]) => !["defaultClipLaunchMode", "clipLaunchChoices", "clipQuantizationChoices"].includes(key)));
+    expect(parseTimelineDawSessionLiveSetPlan({ ...legacy, schema: "muzes-daw-session-live-set/v1" })).toMatchObject({ schema: "muzes-daw-session-live-set/v2", defaultClipLaunchMode: "one-shot", clipLaunchChoices: {}, clipQuantizationChoices: {} });
   });
 
   it("traces live-set routes and reports loops, endings, and unreachable scenes", () => {

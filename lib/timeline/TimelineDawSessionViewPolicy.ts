@@ -40,10 +40,13 @@ export type TimelineDawSessionTakeLaneBundle = {
   takes: TimelineDawSessionSavedTake[];
 };
 export type TimelineDawSessionLiveSetPlan = {
-  schema: "muzes-daw-session-live-set/v1";
+  schema: "muzes-daw-session-live-set/v2";
   createdAt: string;
   bpm: number;
   launchQuantization: TimelineDawSessionLaunchQuantization;
+  defaultClipLaunchMode: TimelineDawSessionClipLaunchMode;
+  clipLaunchChoices: Record<string, TimelineDawSessionClipLaunchChoice>;
+  clipQuantizationChoices: Record<string, TimelineDawSessionClipQuantizationChoice>;
   defaultFollowAction: TimelineDawSessionFollowAction;
   sceneOrderIds: string[];
   sceneFollowChoices: Record<string, TimelineDawSessionSceneFollowChoice>;
@@ -54,10 +57,12 @@ export type TimelineDawSessionLiveSetPlan = {
 export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawSessionLiveSetPlan {
   if (!value || typeof value !== "object") throw new Error("This is not a Session View Live Set Plan.");
   const candidate = value as Record<string, unknown>;
-  if (candidate.schema !== "muzes-daw-session-live-set/v1" || !Number.isFinite(Date.parse(String(candidate.createdAt ?? "")))) throw new Error("This Live Set Plan has an unsupported format.");
+  const legacy = candidate.schema === "muzes-daw-session-live-set/v1";
+  if ((!legacy && candidate.schema !== "muzes-daw-session-live-set/v2") || !Number.isFinite(Date.parse(String(candidate.createdAt ?? "")))) throw new Error("This Live Set Plan has an unsupported format.");
   if (typeof candidate.bpm !== "number" || !Number.isFinite(candidate.bpm) || candidate.bpm < 30 || candidate.bpm > 300) throw new Error("A Live Set Plan BPM must be between 30 and 300.");
   if (!["immediate", "beat", "two-beats", "bar"].includes(String(candidate.launchQuantization)) || !["stop", "next", "loop"].includes(String(candidate.defaultFollowAction))) throw new Error("A Live Set Plan contains invalid launch settings.");
   if (!Array.isArray(candidate.sceneOrderIds) || candidate.sceneOrderIds.length > 200 || candidate.sceneOrderIds.some((id) => typeof id !== "string" || !id || id.length > 200)) throw new Error("A Live Set Plan contains an invalid scene order.");
+  if (!legacy && !["one-shot", "loop"].includes(String(candidate.defaultClipLaunchMode))) throw new Error("A Live Set Plan contains an invalid default clip launch mode.");
   const readRecord = <T>(recordValue: unknown, readValue: (entryValue: unknown) => T | null, label: string) => {
     if (!recordValue || typeof recordValue !== "object" || Array.isArray(recordValue)) throw new Error(`A Live Set Plan contains invalid ${label}.`);
     const entries = Object.entries(recordValue as Record<string, unknown>);
@@ -71,11 +76,16 @@ export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawS
   const sceneFollowChoices = readRecord(candidate.sceneFollowChoices, (entry) => ["global", "stop", "next", "loop"].includes(String(entry)) ? entry as TimelineDawSessionSceneFollowChoice : null, "scene follow choices");
   const scenePlayCounts = readRecord(candidate.scenePlayCounts, (entry) => typeof entry === "number" && Number.isInteger(entry) && entry >= 1 && entry <= 16 ? entry : null, "scene play counts");
   const sceneFollowTargetIds = readRecord(candidate.sceneFollowTargetIds, (entry) => typeof entry === "string" && entry.length <= 200 ? entry : null, "scene follow targets");
+  const clipLaunchChoices = readRecord(candidate.clipLaunchChoices ?? (legacy ? {} : undefined), (entry) => ["global", "one-shot", "loop"].includes(String(entry)) ? entry as TimelineDawSessionClipLaunchChoice : null, "clip launch choices");
+  const clipQuantizationChoices = readRecord(candidate.clipQuantizationChoices ?? (legacy ? {} : undefined), (entry) => ["global", "immediate", "beat", "two-beats", "bar"].includes(String(entry)) ? entry as TimelineDawSessionClipQuantizationChoice : null, "clip quantization choices");
   return {
-    schema: "muzes-daw-session-live-set/v1",
+    schema: "muzes-daw-session-live-set/v2",
     createdAt: String(candidate.createdAt),
     bpm: candidate.bpm,
     launchQuantization: candidate.launchQuantization as TimelineDawSessionLaunchQuantization,
+    defaultClipLaunchMode: legacy ? "one-shot" : candidate.defaultClipLaunchMode as TimelineDawSessionClipLaunchMode,
+    clipLaunchChoices,
+    clipQuantizationChoices,
     defaultFollowAction: candidate.defaultFollowAction as TimelineDawSessionFollowAction,
     sceneOrderIds: [...new Set(candidate.sceneOrderIds as string[])],
     sceneFollowChoices,
@@ -85,7 +95,7 @@ export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawS
 }
 
 export function createTimelineDawSessionLiveSetPlan(input: Omit<TimelineDawSessionLiveSetPlan, "schema">) {
-  return parseTimelineDawSessionLiveSetPlan({ schema: "muzes-daw-session-live-set/v1", ...input });
+  return parseTimelineDawSessionLiveSetPlan({ schema: "muzes-daw-session-live-set/v2", ...input });
 }
 
 export function createTimelineDawSessionSavedTake(input: TimelineDawSessionSavedTake): TimelineDawSessionSavedTake {

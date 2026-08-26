@@ -189,7 +189,7 @@ export default function TimelineDawSessionView({
   }
 
   function downloadLiveSetPlan() {
-    const plan = createTimelineDawSessionLiveSetPlan({ createdAt: new Date().toISOString(), bpm, launchQuantization: quantization, defaultFollowAction: followAction, sceneOrderIds: scenes.map((scene) => scene.id), sceneFollowChoices, scenePlayCounts: resolvedScenePlayCounts, sceneFollowTargetIds });
+    const plan = createTimelineDawSessionLiveSetPlan({ createdAt: new Date().toISOString(), bpm, launchQuantization: quantization, defaultClipLaunchMode: clipLaunchMode, clipLaunchChoices, clipQuantizationChoices, defaultFollowAction: followAction, sceneOrderIds: scenes.map((scene) => scene.id), sceneFollowChoices, scenePlayCounts: resolvedScenePlayCounts, sceneFollowTargetIds });
     const url = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -208,6 +208,9 @@ export default function TimelineDawSessionView({
       const plan = parseTimelineDawSessionLiveSetPlan(JSON.parse(await file.text()) as unknown);
       setBpm(plan.bpm);
       setQuantization(plan.launchQuantization);
+      setClipLaunchMode(plan.defaultClipLaunchMode);
+      setClipLaunchChoices(plan.clipLaunchChoices);
+      setClipQuantizationChoices(plan.clipQuantizationChoices);
       setFollowAction(plan.defaultFollowAction);
       setSceneOrderIds(plan.sceneOrderIds);
       setSceneFollowChoices(plan.sceneFollowChoices);
