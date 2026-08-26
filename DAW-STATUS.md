@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Keyboard Tempo Nudging
+## Latest completed DAW milestone - Keyboard Half and Double Tempo
+
+- Focused Session View now supports `{` to halve tempo and `}` to double tempo without using the mouse.
+- Both commands share the on-screen controls' safe rounding, 30–300 BPM limits, and tap-history reset behavior.
+- Half/double shortcuts update the live scene clock and every quantized launch or stop immediately.
+- The shortcuts are blocked while typing, using menus, outside the focused launcher, or on key repeat.
+- Tempo commands remain isolated from active clip pass navigation and all scene and queue transport commands.
+- Focused Session View tests passed (49 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Keyboard tempo transforms are transient transport state and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Keyboard Tempo Nudging
 
 - Focused Session View now supports `[` to lower tempo by 1 BPM and `]` to raise tempo by 1 BPM.
 - Both shortcuts use the same 30–300 BPM clamping and tap-history reset policy as the on-screen nudge controls.

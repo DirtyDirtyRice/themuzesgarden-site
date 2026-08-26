@@ -86,6 +86,8 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "T" })).toBe("tap-tempo");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "[" })).toBe("tempo-down");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "]" })).toBe("tempo-up");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "{" })).toBe("tempo-half");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "}" })).toBe("tempo-double");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Q" })).toBe("queue-stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
@@ -195,6 +197,13 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionClipKeyboardCommand("tempo-up", true, true)).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ key: "[", launcherFocused: true, editableTarget: true })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ key: "]", launcherFocused: true, editableTarget: false, repeat: true })).toBeNull();
+  });
+
+  it("keeps keyboard half and double tempo out of clip pass navigation", () => {
+    expect(resolveTimelineDawSessionClipKeyboardCommand("tempo-half", true, true)).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("tempo-double", true, true)).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ key: "{", launcherFocused: true, editableTarget: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ key: "}", launcherFocused: true, editableTarget: false, repeat: true })).toBeNull();
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
