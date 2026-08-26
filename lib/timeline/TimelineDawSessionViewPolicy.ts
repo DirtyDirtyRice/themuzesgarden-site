@@ -316,6 +316,15 @@ export function resolveTimelineDawSessionScenePlayCount(sceneId: string, counts:
   return Number.isInteger(count) && count >= 1 && count <= 16 ? count : 1;
 }
 
+export function resolveTimelineDawSessionFollowTargetIndex(currentIndex: number, scenes: TimelineDawSessionScene[], targetSceneId?: string) {
+  if (!Number.isInteger(currentIndex) || currentIndex < 0 || currentIndex >= scenes.length) return null;
+  if (targetSceneId) {
+    const targetIndex = scenes.findIndex((scene) => scene.id === targetSceneId);
+    if (targetIndex >= 0 && targetIndex !== currentIndex) return targetIndex;
+  }
+  return currentIndex + 1 < scenes.length ? currentIndex + 1 : null;
+}
+
 export function createTimelineDawSessionLaunchDelay(input: {
   playheadSeconds: number;
   bpm: number;

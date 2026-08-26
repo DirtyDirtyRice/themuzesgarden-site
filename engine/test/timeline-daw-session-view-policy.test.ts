@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -201,5 +201,19 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionScenePlayCount("verse", { verse: 17 })).toBe(1);
     expect(resolveTimelineDawSessionScenePlayCount("verse", { verse: 2.5 })).toBe(1);
     expect(resolveTimelineDawSessionScenePlayCount("missing", { verse: 4 })).toBe(1);
+  });
+
+  it("resolves explicit follow targets with safe visible-order fallback", () => {
+    const scenes = [
+      { id: "verse", name: "Verse", slots: [] },
+      { id: "chorus", name: "Chorus", slots: [] },
+      { id: "bridge", name: "Bridge", slots: [] },
+    ];
+    expect(resolveTimelineDawSessionFollowTargetIndex(0, scenes, "bridge")).toBe(2);
+    expect(resolveTimelineDawSessionFollowTargetIndex(1, scenes, "verse")).toBe(0);
+    expect(resolveTimelineDawSessionFollowTargetIndex(0, scenes, "verse")).toBe(1);
+    expect(resolveTimelineDawSessionFollowTargetIndex(1, scenes, "missing")).toBe(2);
+    expect(resolveTimelineDawSessionFollowTargetIndex(2, scenes, "missing")).toBeNull();
+    expect(resolveTimelineDawSessionFollowTargetIndex(-1, scenes, "verse")).toBeNull();
   });
 });

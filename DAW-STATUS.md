@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Per-Scene Play Counts Before Follow
+## Latest completed DAW milestone - Specific Per-Scene Follow Targets
+
+- Every Session View scene now has a Launch Next Target menu with Next Visible Scene plus every other scene in the edited live set.
+- Musicians can build non-linear show structures such as Chorus returning to Verse or a breakdown jumping directly to Outro.
+- Specific targets work after the scene's finite play count and continue using the target scene's own follow action and play count.
+- The complete target map travels through the parent playback timer alongside scene order, action overrides, and repeat counts.
+- Self-targets are excluded from the UI and rejected by policy to prevent accidental infinite Next cycles.
+- Missing or stale targets safely fall back to the next visible scene; the final scene stops when no safe fallback exists.
+- Focused Session View tests passed (18 tests), TypeScript passed, targeted new-file lint passed, and the production build passed with 76 generated pages.
+- Targets remain temporary live-performance state and do not alter the arrangement, Named Regions, source audio, bundles, database, or browser storage.
+
+## Previously completed DAW milestone - Per-Scene Play Counts Before Follow
 
 - Every Session View scene can now play from one through sixteen times before its Stop or Launch Next action executes.
 - This supports live structures such as “Chorus four times, then Bridge” without duplicating Named Regions or repeatedly pressing Replay.
