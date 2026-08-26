@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -82,7 +82,16 @@ describe("Timeline DAW Session View policy", () => {
 
   it("builds one-shot and continuous individual clip launch plans", () => {
     expect(createTimelineDawSessionClipLaunchPlan("one-shot")).toEqual({ repeatCount: 1, loopForever: false });
+    expect(createTimelineDawSessionClipLaunchPlan("one-shot", 4)).toEqual({ repeatCount: 4, loopForever: false });
     expect(createTimelineDawSessionClipLaunchPlan("loop")).toEqual({ repeatCount: 1, loopForever: true });
+    expect(createTimelineDawSessionClipLaunchPlan("one-shot", 20)).toEqual({ repeatCount: 1, loopForever: false });
+  });
+
+  it("resolves bounded per-clip play counts", () => {
+    expect(resolveTimelineDawSessionClipPlayCount("verse", { verse: 4 })).toBe(4);
+    expect(resolveTimelineDawSessionClipPlayCount("verse", { verse: 0 })).toBe(1);
+    expect(resolveTimelineDawSessionClipPlayCount("verse", { verse: 17 })).toBe(1);
+    expect(resolveTimelineDawSessionClipPlayCount("missing", { verse: 4 })).toBe(1);
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
@@ -279,7 +288,7 @@ describe("Timeline DAW Session View policy", () => {
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {
     const plan = createTimelineDawSessionLiveSetPlan({
       createdAt: "2026-08-26T18:00:00.000Z", bpm: 128, launchQuantization: "bar", defaultFollowAction: "next",
-      defaultClipLaunchMode: "loop", clipLaunchChoices: { "verse:drums": "one-shot" }, clipQuantizationChoices: { "verse:drums": "beat" },
+      defaultClipLaunchMode: "loop", clipLaunchChoices: { "verse:drums": "one-shot" }, clipQuantizationChoices: { "verse:drums": "beat" }, clipPlayCounts: { "verse:drums": 4 },
       sceneOrderIds: ["chorus", "verse", "chorus"], sceneFollowChoices: { chorus: "loop", verse: "global" }, scenePlayCounts: { chorus: 4, verse: 2 }, sceneFollowTargetIds: { verse: "chorus" },
     });
     expect(plan.sceneOrderIds).toEqual(["chorus", "verse"]);
@@ -289,8 +298,9 @@ describe("Timeline DAW Session View policy", () => {
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, launchQuantization: "random" })).toThrow("invalid launch settings");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipLaunchChoices: { verse: "random" } })).toThrow("invalid clip launch choices");
     expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipQuantizationChoices: { verse: "random" } })).toThrow("invalid clip quantization choices");
-    const legacy = Object.fromEntries(Object.entries(plan).filter(([key]) => !["defaultClipLaunchMode", "clipLaunchChoices", "clipQuantizationChoices"].includes(key)));
-    expect(parseTimelineDawSessionLiveSetPlan({ ...legacy, schema: "muzes-daw-session-live-set/v1" })).toMatchObject({ schema: "muzes-daw-session-live-set/v2", defaultClipLaunchMode: "one-shot", clipLaunchChoices: {}, clipQuantizationChoices: {} });
+    expect(() => parseTimelineDawSessionLiveSetPlan({ ...plan, clipPlayCounts: { verse: 17 } })).toThrow("invalid clip play counts");
+    const legacy = Object.fromEntries(Object.entries(plan).filter(([key]) => !["defaultClipLaunchMode", "clipLaunchChoices", "clipQuantizationChoices", "clipPlayCounts"].includes(key)));
+    expect(parseTimelineDawSessionLiveSetPlan({ ...legacy, schema: "muzes-daw-session-live-set/v1" })).toMatchObject({ schema: "muzes-daw-session-live-set/v2", defaultClipLaunchMode: "one-shot", clipLaunchChoices: {}, clipQuantizationChoices: {}, clipPlayCounts: {} });
   });
 
   it("traces live-set routes and reports loops, endings, and unreachable scenes", () => {

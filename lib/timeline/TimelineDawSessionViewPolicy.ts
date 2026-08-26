@@ -47,6 +47,7 @@ export type TimelineDawSessionLiveSetPlan = {
   defaultClipLaunchMode: TimelineDawSessionClipLaunchMode;
   clipLaunchChoices: Record<string, TimelineDawSessionClipLaunchChoice>;
   clipQuantizationChoices: Record<string, TimelineDawSessionClipQuantizationChoice>;
+  clipPlayCounts: Record<string, number>;
   defaultFollowAction: TimelineDawSessionFollowAction;
   sceneOrderIds: string[];
   sceneFollowChoices: Record<string, TimelineDawSessionSceneFollowChoice>;
@@ -78,6 +79,7 @@ export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawS
   const sceneFollowTargetIds = readRecord(candidate.sceneFollowTargetIds, (entry) => typeof entry === "string" && entry.length <= 200 ? entry : null, "scene follow targets");
   const clipLaunchChoices = readRecord(candidate.clipLaunchChoices ?? (legacy ? {} : undefined), (entry) => ["global", "one-shot", "loop"].includes(String(entry)) ? entry as TimelineDawSessionClipLaunchChoice : null, "clip launch choices");
   const clipQuantizationChoices = readRecord(candidate.clipQuantizationChoices ?? (legacy ? {} : undefined), (entry) => ["global", "immediate", "beat", "two-beats", "bar"].includes(String(entry)) ? entry as TimelineDawSessionClipQuantizationChoice : null, "clip quantization choices");
+  const clipPlayCounts = readRecord(candidate.clipPlayCounts ?? {}, (entry) => typeof entry === "number" && Number.isInteger(entry) && entry >= 1 && entry <= 16 ? entry : null, "clip play counts");
   return {
     schema: "muzes-daw-session-live-set/v2",
     createdAt: String(candidate.createdAt),
@@ -86,6 +88,7 @@ export function parseTimelineDawSessionLiveSetPlan(value: unknown): TimelineDawS
     defaultClipLaunchMode: legacy ? "one-shot" : candidate.defaultClipLaunchMode as TimelineDawSessionClipLaunchMode,
     clipLaunchChoices,
     clipQuantizationChoices,
+    clipPlayCounts,
     defaultFollowAction: candidate.defaultFollowAction as TimelineDawSessionFollowAction,
     sceneOrderIds: [...new Set(candidate.sceneOrderIds as string[])],
     sceneFollowChoices,
@@ -335,8 +338,9 @@ export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
   return index < input.sceneCount ? index : null;
 }
 
-export function createTimelineDawSessionClipLaunchPlan(mode: TimelineDawSessionClipLaunchMode) {
-  return { repeatCount: 1, loopForever: mode === "loop" };
+export function createTimelineDawSessionClipLaunchPlan(mode: TimelineDawSessionClipLaunchMode, playCount = 1) {
+  const repeatCount = Number.isInteger(playCount) && playCount >= 1 && playCount <= 16 ? playCount : 1;
+  return { repeatCount, loopForever: mode === "loop" };
 }
 
 export function resolveTimelineDawSessionClipLaunchMode(
@@ -355,6 +359,11 @@ export function resolveTimelineDawSessionClipQuantization(
 ) {
   const choice = choices[clipId];
   return choice && choice !== "global" ? choice : fallback;
+}
+
+export function resolveTimelineDawSessionClipPlayCount(clipId: string, counts: Record<string, number>) {
+  const count = counts[clipId];
+  return Number.isInteger(count) && count >= 1 && count <= 16 ? count : 1;
 }
 
 export function createTimelineDawSessionNavigationIndex(

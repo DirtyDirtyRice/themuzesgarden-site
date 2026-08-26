@@ -1223,11 +1223,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         activeSceneProgress={activeSessionSceneProgress}
         queuedLaunchName={queuedSessionLaunchName}
         onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => {
-          const plan = createTimelineDawSessionClipLaunchPlan(settings.clipLaunchMode);
-          setMovementNotice(`${plan.loopForever ? "Looping" : "Launching"} ${clip.name} in Session View. The arrangement is unchanged.`);
-          if (plan.loopForever) {
-            setLoopingRegionId(clip.id);
-            previewRiffFamily([{ laneId: clip.laneId, startSeconds: clip.startSeconds, endSeconds: clip.endSeconds }], plan.repeatCount, true);
+          const plan = createTimelineDawSessionClipLaunchPlan(settings.clipLaunchMode, settings.clipPlayCount);
+          const launchDescription = plan.loopForever ? `Looping ${clip.name}` : plan.repeatCount > 1 ? `Playing ${clip.name} ${plan.repeatCount} times` : `Launching ${clip.name}`;
+          setMovementNotice(`${launchDescription} in Session View. The arrangement is unchanged.`);
+          if (plan.loopForever || plan.repeatCount > 1) {
+            if (plan.loopForever) setLoopingRegionId(clip.id);
+            previewRiffFamily([{ laneId: clip.laneId, startSeconds: clip.startSeconds, endSeconds: clip.endSeconds }], plan.repeatCount, plan.loopForever);
           } else void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds);
         } })}
         onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene, settings.followAction, settings.sceneOrderIds, settings.sceneFollowActions, settings.defaultFollowAction, settings.scenePlayCounts, settings.sceneFollowTargetIds); } })}

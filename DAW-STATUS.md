@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Portable Per-Clip Live Set Plans
+## Latest completed DAW milestone - Finite Per-Clip Repeat Counts
+
+- Every occupied Session View clip can now play a musician-selected 1–16 times before stopping.
+- Continuous Loop remains explicitly open-ended and disables the finite-count field so the two behaviors cannot be confused.
+- Finite repeats reuse the established exact-region audition sequence, including transformed timing, pause/resume controls, safe stop, and generation guards.
+- Clip slots show Play ×N or Loop before launch, and Live Set Plan v2 export/import now preserves validated per-clip counts.
+- Older v1 and earlier v2 plans safely restore with a one-play default when no clip counts exist.
+- Focused Session View tests passed (29 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Repeat counts are configuration only and create no audio-source, Named Region, arrangement, database, credential, private-note, or browser-storage writes.
+
+## Previously completed DAW milestone - Portable Per-Clip Live Set Plans
 
 - Live Set Plan downloads now include the default individual clip behavior plus every explicit per-clip behavior and quantization override.
 - Import restores the complete rehearsed clip setup together with BPM, global quantization, scene order, follow actions, play counts, and targets.
