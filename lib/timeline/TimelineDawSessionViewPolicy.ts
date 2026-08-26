@@ -67,6 +67,37 @@ export function createTimelineDawSessionArrangementPlan(events: TimelineDawSessi
   })));
 }
 
+export function createTimelineDawSessionConsolidatedArrangementPlan(events: TimelineDawSessionPerformanceEvent[]) {
+  const placements = createTimelineDawSessionArrangementPlan(events).map((placement, order) => ({
+    ...placement,
+    order,
+    timelineEndSeconds: placement.timelineStartSeconds + (placement.sourceEndSeconds - placement.sourceStartSeconds),
+  }));
+  const placementsByLane = new Map<string, typeof placements>();
+  for (const placement of placements) placementsByLane.set(placement.laneId, [...(placementsByLane.get(placement.laneId) ?? []), placement]);
+
+  const consolidated = [...placementsByLane.values()].flatMap((lanePlacements) => {
+    const ordered = [...lanePlacements].sort((left, right) => left.timelineStartSeconds - right.timelineStartSeconds || left.order - right.order);
+    return ordered.flatMap((placement, index) => {
+      const next = ordered[index + 1];
+      if (next?.timelineStartSeconds === placement.timelineStartSeconds) return [];
+      const timelineEndSeconds = Math.min(placement.timelineEndSeconds, next?.timelineStartSeconds ?? Number.POSITIVE_INFINITY);
+      const retainedDuration = Math.max(0, timelineEndSeconds - placement.timelineStartSeconds);
+      if (retainedDuration === 0) return [];
+      return [{
+        eventId: placement.eventId,
+        eventName: placement.eventName,
+        laneId: placement.laneId,
+        sourceStartSeconds: placement.sourceStartSeconds,
+        sourceEndSeconds: Math.round((placement.sourceStartSeconds + retainedDuration) * 100) / 100,
+        timelineStartSeconds: placement.timelineStartSeconds,
+        timelineEndSeconds: Math.round(timelineEndSeconds * 100) / 100,
+      }];
+    });
+  });
+  return consolidated.sort((left, right) => left.timelineStartSeconds - right.timelineStartSeconds || left.laneId.localeCompare(right.laneId));
+}
+
 export function quantizeTimelineDawSessionPerformanceTake(
   events: TimelineDawSessionPerformanceEvent[],
   quantization: TimelineDawSessionTakeQuantization,

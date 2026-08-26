@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Session Performance Take Cleanup
+## Latest completed DAW milestone - Arrangement-Ready Session Performance Plans
+
+- Downloaded Session View performance plans now reproduce track takeover behavior instead of stacking clips that were never heard together.
+- When a later clip launches on the same track, the earlier arrangement placement ends exactly at the new launch point.
+- Simultaneous replacement launches resolve deterministically to the last captured trigger on that track.
+- The live take panel previews the exact number of arrangement clip placements before download.
+- Consolidation clones and trims plan records only; Named Regions, source audio, the live capture, the linear arrangement, mix, and automation remain unchanged.
+- Focused Session View tests passed (9 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the arrangement-ready plan remains a private local download and is not applied automatically.
+
+## Previously completed DAW milestone - Session Performance Take Cleanup
 
 - A captured Session View performance can now preserve live timing or tighten every launch to the nearest beat, two beats, or bar before export.
 - The take preview immediately shows the cleaned bar, beat, and exact timeline second so musicians can inspect the result before downloading it.

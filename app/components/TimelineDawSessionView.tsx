@@ -5,7 +5,7 @@ import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTra
 import {
   createTimelineDawSessionScenes,
   createTimelineDawSessionNavigationIndex,
-  createTimelineDawSessionArrangementPlan,
+  createTimelineDawSessionConsolidatedArrangementPlan,
   createTimelineDawSessionPerformanceEvent,
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
@@ -50,6 +50,8 @@ export default function TimelineDawSessionView({
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const settings = { bpm, quantization, followAction };
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
+  const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
+  const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
 
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
@@ -65,13 +67,12 @@ export default function TimelineDawSessionView({
   }
 
   function downloadPerformanceTake() {
-    const cleanedEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
     const payload = {
       schema: "muzes-daw-session-performance/v1",
       createdAt: new Date().toISOString(),
       takeQuantization,
-      events: cleanedEvents,
-      arrangementPlan: createTimelineDawSessionArrangementPlan(cleanedEvents),
+      events: cleanedPerformanceEvents,
+      arrangementPlan: arrangementPreview,
     };
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
     const anchor = document.createElement("a");
@@ -165,8 +166,8 @@ export default function TimelineDawSessionView({
             <button type="button" className={launchButton} disabled={!performanceEvents.length} onClick={undoLastPerformanceLaunch}>Undo Last Launch</button>
             <button type="button" className={launchButton} disabled={!performanceEvents.length} onClick={() => { setPerformanceEvents([]); performanceStartedAtRef.current = null; }}>Clear Performance Take</button>
           </div>
-          {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization).map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.elapsedSeconds.toFixed(2)} sec · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}
-          {performanceEvents.length ? <p className="mt-2 text-xs text-white/45">Timing cleanup changes only this preview and downloaded plan. Keep live timing preserves the performance exactly.</p> : null}
+          {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{cleanedPerformanceEvents.map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.elapsedSeconds.toFixed(2)} sec · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}
+          {performanceEvents.length ? <p className="mt-2 text-xs text-white/45">Arrangement preview: {arrangementPreview.length} clip placement{arrangementPreview.length === 1 ? "" : "s"}. A new launch on the same track ends the earlier placement at that exact point, matching Session View playback. Timing cleanup changes only this preview and downloaded plan.</p> : null}
         </div>
         {activeSceneIndex >= 0 ? (
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-3" role="group" aria-label="Live scene navigation">

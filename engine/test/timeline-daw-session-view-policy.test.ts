@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -99,5 +99,18 @@ describe("Timeline DAW Session View policy", () => {
     expect(events[1].elapsedSeconds).toBe(1.74);
     expect(tightened[1]).not.toBe(events[1]);
     expect(quantizeTimelineDawSessionPerformanceTake(events, "off")).toEqual(events);
+  });
+
+  it("ends earlier same-track placements when a later Session View clip takes over", () => {
+    const events = [
+      createTimelineDawSessionPerformanceEvent({ id: "verse", kind: "scene", name: "Verse", takeStartedAtMs: 0, launchedAtMs: 0, bpm: 120, clips: [{ laneId: "drums", startSeconds: 0, endSeconds: 8 }, { laneId: "bass", startSeconds: 4, endSeconds: 8 }] }),
+      createTimelineDawSessionPerformanceEvent({ id: "chorus", kind: "scene", name: "Chorus", takeStartedAtMs: 0, launchedAtMs: 2_000, bpm: 120, clips: [{ laneId: "drums", startSeconds: 8, endSeconds: 16 }] }),
+    ];
+    expect(createTimelineDawSessionConsolidatedArrangementPlan(events)).toEqual([
+      { eventId: "verse", eventName: "Verse", laneId: "bass", sourceStartSeconds: 4, sourceEndSeconds: 8, timelineStartSeconds: 0, timelineEndSeconds: 4 },
+      { eventId: "verse", eventName: "Verse", laneId: "drums", sourceStartSeconds: 0, sourceEndSeconds: 2, timelineStartSeconds: 0, timelineEndSeconds: 2 },
+      { eventId: "chorus", eventName: "Chorus", laneId: "drums", sourceStartSeconds: 8, sourceEndSeconds: 16, timelineStartSeconds: 2, timelineEndSeconds: 10 },
+    ]);
+    expect(events[0].clips[0].endSeconds).toBe(8);
   });
 });
