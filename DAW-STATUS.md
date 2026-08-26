@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Session Performance Comp Take Builder
+## Latest completed DAW milestone - Portable Session Take Lane Bundles
+
+- Musicians can download every saved Take Lane, Comp Lane, timing mode, and explicit Preferred choice as one private local JSON bundle.
+- A bundle can be imported later to restore validated lanes and merge them by stable take identity without duplicating the same take.
+- Restored data passes a strict schema, field, range, BPM, count, and file-size allowlist before it reaches DAW component state.
+- Unsupported schemas, oversized files, invalid timing, invalid clip ranges, missing identities, and excessive take/event/clip counts are rejected with a musician-facing status.
+- An imported Preferred identity is restored only when that take actually exists; otherwise no artistic choice is invented.
+- Bundles contain launch metadata and source ranges only—never audio blobs, storage paths, credentials, automatic cloud writes, or localStorage persistence.
+- Focused Session View tests passed (14 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; export and import are explicit local-file actions controlled by the musician.
+
+## Previously completed DAW milestone - Session Performance Comp Take Builder
 
 - Every saved Take Lane now exposes its individual scene and clip launches as selectable comp sections.
 - Musicians can choose the strongest launches across multiple performances and build them into a new named Comp Lane.

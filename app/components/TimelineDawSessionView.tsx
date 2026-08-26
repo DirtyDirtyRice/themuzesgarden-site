@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import {
   createTimelineDawSessionScenes,
@@ -11,6 +11,8 @@ import {
   createTimelineDawSessionSavedTake,
   createTimelineDawSessionTakeSummary,
   createTimelineDawSessionCompTake,
+  createTimelineDawSessionTakeLaneBundle,
+  parseTimelineDawSessionTakeLaneBundle,
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
@@ -56,6 +58,7 @@ export default function TimelineDawSessionView({
   const [preferredTakeId, setPreferredTakeId] = useState<string | null>(null);
   const [compName, setCompName] = useState("Comp 1");
   const [compSelections, setCompSelections] = useState<string[]>([]);
+  const [bundleNotice, setBundleNotice] = useState("");
   const performanceStartedAtRef = useRef<number | null>(null);
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const settings = { bpm, quantization, followAction };
@@ -116,6 +119,32 @@ export default function TimelineDawSessionView({
     setSavedTakes((current) => [...current, compTake]);
     setCompSelections([]);
     setCompName(`Comp ${savedTakes.filter((take) => take.name.startsWith("Comp ")).length + 2}`);
+  }
+
+  function downloadTakeLaneBundle() {
+    const bundle = createTimelineDawSessionTakeLaneBundle({ createdAt: new Date().toISOString(), preferredTakeId, takes: savedTakes });
+    const url = URL.createObjectURL(new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "session-take-lanes.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setBundleNotice(`Downloaded ${bundle.takes.length} Take Lane${bundle.takes.length === 1 ? "" : "s"}.`);
+  }
+
+  async function importTakeLaneBundle(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      if (file.size > 5_000_000) throw new Error("Take Lane bundles must be 5 MB or smaller.");
+      const bundle = parseTimelineDawSessionTakeLaneBundle(JSON.parse(await file.text()) as unknown);
+      setSavedTakes((current) => [...new Map([...current, ...bundle.takes].map((take) => [take.id, take])).values()]);
+      if (bundle.preferredTakeId) setPreferredTakeId(bundle.preferredTakeId);
+      setBundleNotice(`Imported ${bundle.takes.length} validated Take Lane${bundle.takes.length === 1 ? "" : "s"}.`);
+    } catch (error) {
+      setBundleNotice(error instanceof Error ? error.message : "The Take Lane bundle could not be imported.");
+    }
   }
 
   function downloadPerformanceTake() {
@@ -229,7 +258,10 @@ export default function TimelineDawSessionView({
               <span className="text-[11px] text-white/50">{compSelections.length} launch{compSelections.length === 1 ? "" : "es"} selected</span>
               <button type="button" className={launchButton} disabled={!compSelections.length || !compName.trim()} onClick={buildCompTake}>Build Comp Lane</button>
               <button type="button" className={launchButton} disabled={!compSelections.length} onClick={() => setCompSelections([])}>Clear Comp Choices</button>
+              <button type="button" className={launchButton} onClick={downloadTakeLaneBundle}>Download Take Lane Bundle</button>
+              <label className={`${launchButton} cursor-pointer`}>Import Take Lane Bundle<input className="sr-only" type="file" accept="application/json,.json" onChange={importTakeLaneBundle} /></label>
             </div>
+            {bundleNotice ? <p className="mt-2 text-[11px] text-white/55" role="status">{bundleNotice}</p> : null}
             <ul className="mt-2 grid gap-2 lg:grid-cols-2">{savedTakes.map((take) => { const summary = savedTakeSummaries.get(take.id); return <li key={take.id} className={`rounded-lg border p-2 text-[11px] text-white/60 ${preferredTakeId === take.id ? "border-amber-300/50 bg-amber-300/10" : "border-white/10 bg-black/30"}`}>
               <div className="flex flex-wrap items-center gap-2"><strong className="text-white/80">{preferredTakeId === take.id ? "★ " : ""}{take.name}</strong><span>{summary?.durationSeconds.toFixed(2)} sec · {summary?.launchCount} launches · {summary?.placementCount} clips · {summary?.trackCount} tracks · {summary?.sceneLaunchCount} scenes</span></div>
               <div className="mt-2 flex flex-wrap gap-2">

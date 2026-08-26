@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeSummary, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -160,5 +160,18 @@ describe("Timeline DAW Session View policy", () => {
     comp.events[0].clips[0].endSeconds = 4;
     expect(second.events[0].clips[0].endSeconds).toBe(8);
     expect(() => createTimelineDawSessionCompTake({ id: "empty", name: "Empty", takes: [first], selections: [] })).toThrow("at least one selected launch");
+  });
+
+  it("round-trips a strictly validated portable Take Lane bundle", () => {
+    const take = createTimelineDawSessionSavedTake({ id: "take", name: "Portable", quantization: "beat", events: [
+      createTimelineDawSessionPerformanceEvent({ id: "verse", kind: "scene", name: "Verse", takeStartedAtMs: 0, launchedAtMs: 500, bpm: 120, clips: [{ laneId: "drums", startSeconds: 0, endSeconds: 8 }] }),
+    ] });
+    const bundle = createTimelineDawSessionTakeLaneBundle({ createdAt: "2026-08-26T17:00:00.000Z", preferredTakeId: "take", takes: [take] });
+    const restored = parseTimelineDawSessionTakeLaneBundle(JSON.parse(JSON.stringify(bundle)) as unknown);
+    expect(restored).toEqual(bundle);
+    expect(restored.takes[0]).not.toBe(take);
+    expect(parseTimelineDawSessionTakeLaneBundle({ ...bundle, preferredTakeId: "missing" }).preferredTakeId).toBeNull();
+    expect(() => parseTimelineDawSessionTakeLaneBundle({ ...bundle, schema: "unknown" })).toThrow("unsupported format");
+    expect(() => parseTimelineDawSessionTakeLaneBundle({ ...bundle, takes: [{ ...take, events: [{ ...take.events[0], bpm: 500 }] }] })).toThrow("invalid launch fields");
   });
 });

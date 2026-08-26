@@ -29,6 +29,12 @@ export type TimelineDawSessionSavedTake = {
   quantization: TimelineDawSessionTakeQuantization;
   events: TimelineDawSessionPerformanceEvent[];
 };
+export type TimelineDawSessionTakeLaneBundle = {
+  schema: "muzes-daw-session-take-lanes/v1";
+  createdAt: string;
+  preferredTakeId: string | null;
+  takes: TimelineDawSessionSavedTake[];
+};
 
 export function createTimelineDawSessionSavedTake(input: TimelineDawSessionSavedTake): TimelineDawSessionSavedTake {
   const name = input.name.trim();
@@ -39,6 +45,39 @@ export function createTimelineDawSessionSavedTake(input: TimelineDawSessionSaved
     quantization: input.quantization,
     events: input.events.map((event) => ({ ...event, clips: event.clips.map((clip) => ({ ...clip })) })),
   };
+}
+
+export function createTimelineDawSessionTakeLaneBundle(input: { createdAt: string; preferredTakeId: string | null; takes: TimelineDawSessionSavedTake[] }): TimelineDawSessionTakeLaneBundle {
+  if (!Number.isFinite(Date.parse(input.createdAt))) throw new Error("A Take Lane bundle needs a valid creation time.");
+  if (input.takes.length > 50) throw new Error("A Take Lane bundle can contain at most 50 takes.");
+  const takes = input.takes.map(createTimelineDawSessionSavedTake);
+  const preferredTakeId = input.preferredTakeId && takes.some((take) => take.id === input.preferredTakeId) ? input.preferredTakeId : null;
+  return { schema: "muzes-daw-session-take-lanes/v1", createdAt: input.createdAt, preferredTakeId, takes };
+}
+
+export function parseTimelineDawSessionTakeLaneBundle(value: unknown): TimelineDawSessionTakeLaneBundle {
+  if (!value || typeof value !== "object") throw new Error("This is not a Take Lane bundle.");
+  const candidate = value as Record<string, unknown>;
+  if (candidate.schema !== "muzes-daw-session-take-lanes/v1" || !Array.isArray(candidate.takes) || candidate.takes.length > 50) throw new Error("This Take Lane bundle has an unsupported format or size.");
+  const takes = candidate.takes.map((takeValue) => {
+    if (!takeValue || typeof takeValue !== "object") throw new Error("A Take Lane bundle contains an invalid take.");
+    const take = takeValue as Record<string, unknown>;
+    if (typeof take.id !== "string" || typeof take.name !== "string" || !["off", "beat", "two-beats", "bar"].includes(String(take.quantization)) || !Array.isArray(take.events) || take.events.length > 500) throw new Error("A Take Lane bundle contains invalid take fields.");
+    const events = take.events.map((eventValue) => {
+      if (!eventValue || typeof eventValue !== "object") throw new Error("A Take Lane bundle contains an invalid launch.");
+      const event = eventValue as Record<string, unknown>;
+      if (typeof event.id !== "string" || typeof event.name !== "string" || !["clip", "scene"].includes(String(event.kind)) || typeof event.elapsedSeconds !== "number" || !Number.isFinite(event.elapsedSeconds) || event.elapsedSeconds < 0 || typeof event.bar !== "number" || !Number.isInteger(event.bar) || event.bar < 1 || typeof event.beat !== "number" || !Number.isInteger(event.beat) || event.beat < 1 || typeof event.bpm !== "number" || !Number.isFinite(event.bpm) || event.bpm < 30 || event.bpm > 300 || !Array.isArray(event.clips) || !event.clips.length || event.clips.length > 64) throw new Error("A Take Lane bundle contains invalid launch fields.");
+      const clips = event.clips.map((clipValue) => {
+        if (!clipValue || typeof clipValue !== "object") throw new Error("A Take Lane bundle contains an invalid clip range.");
+        const clip = clipValue as Record<string, unknown>;
+        if (typeof clip.laneId !== "string" || !clip.laneId || typeof clip.startSeconds !== "number" || typeof clip.endSeconds !== "number" || !Number.isFinite(clip.startSeconds) || !Number.isFinite(clip.endSeconds) || clip.startSeconds < 0 || clip.endSeconds <= clip.startSeconds) throw new Error("A Take Lane bundle contains an invalid clip range.");
+        return { laneId: clip.laneId, startSeconds: Number(clip.startSeconds), endSeconds: Number(clip.endSeconds) };
+      });
+      return { id: event.id, kind: event.kind as "clip" | "scene", name: event.name, elapsedSeconds: Number(event.elapsedSeconds), bar: Number(event.bar), beat: Number(event.beat), bpm: Number(event.bpm), clips };
+    });
+    return createTimelineDawSessionSavedTake({ id: take.id, name: take.name, quantization: take.quantization as TimelineDawSessionTakeQuantization, events });
+  });
+  return createTimelineDawSessionTakeLaneBundle({ createdAt: String(candidate.createdAt ?? ""), preferredTakeId: typeof candidate.preferredTakeId === "string" ? candidate.preferredTakeId : null, takes });
 }
 
 export function createTimelineDawSessionTakeSummary(take: TimelineDawSessionSavedTake) {
