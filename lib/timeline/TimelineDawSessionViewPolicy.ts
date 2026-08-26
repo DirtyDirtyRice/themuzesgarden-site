@@ -311,6 +311,11 @@ export function resolveTimelineDawSessionSceneFollowAction(
   return choice && choice !== "global" ? choice : fallback;
 }
 
+export function resolveTimelineDawSessionScenePlayCount(sceneId: string, counts: Record<string, number>) {
+  const count = counts[sceneId];
+  return Number.isInteger(count) && count >= 1 && count <= 16 ? count : 1;
+}
+
 export function createTimelineDawSessionLaunchDelay(input: {
   playheadSeconds: number;
   bpm: number;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -192,5 +192,14 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionSceneFollowAction("chorus", choices, "stop")).toBe("loop");
     expect(resolveTimelineDawSessionSceneFollowAction("bridge", choices, "stop")).toBe("stop");
     expect(resolveTimelineDawSessionSceneFollowAction("outro", choices, "next")).toBe("next");
+  });
+
+  it("resolves bounded per-scene play counts before follow actions", () => {
+    expect(resolveTimelineDawSessionScenePlayCount("verse", { verse: 4 })).toBe(4);
+    expect(resolveTimelineDawSessionScenePlayCount("verse", { verse: 16 })).toBe(16);
+    expect(resolveTimelineDawSessionScenePlayCount("verse", { verse: 0 })).toBe(1);
+    expect(resolveTimelineDawSessionScenePlayCount("verse", { verse: 17 })).toBe(1);
+    expect(resolveTimelineDawSessionScenePlayCount("verse", { verse: 2.5 })).toBe(1);
+    expect(resolveTimelineDawSessionScenePlayCount("missing", { verse: 4 })).toBe(1);
   });
 });

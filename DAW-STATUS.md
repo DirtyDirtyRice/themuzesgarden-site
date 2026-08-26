@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Per-Scene Follow Actions
+## Latest completed DAW milestone - Per-Scene Play Counts Before Follow
+
+- Every Session View scene can now play from one through sixteen times before its Stop or Launch Next action executes.
+- This supports live structures such as “Chorus four times, then Bridge” without duplicating Named Regions or repeatedly pressing Replay.
+- The playback timer announces each protected repetition and carries the scene's count through the parent audio engine.
+- When the requested count finishes, the existing per-scene action map and edited live order determine the next result.
+- Loop remains intentionally continuous until the musician presses Stop; finite play counts apply only to Stop and Next behaviors.
+- Invalid, fractional, missing, zero, and out-of-range counts safely resolve to one play.
+- Focused Session View tests passed (17 tests), TypeScript passed, targeted new-file lint passed, and the production build passed with 76 generated pages.
+- Counts remain temporary performance state and do not change arrangement clips, Named Regions, source audio, Take Lane bundles, database records, or browser storage.
+
+## Previously completed DAW milestone - Per-Scene Follow Actions
 
 - Every Session View scene now has its own After This Scene choice: Use Global, Stop, Launch Next, or Loop.
 - Musicians can build live flows such as Verse advances, Chorus loops, and Outro stops without changing the global default between launches.
