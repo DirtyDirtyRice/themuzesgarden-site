@@ -27,6 +27,7 @@ import {
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
   resolveTimelineDawSessionSceneHotkeyIndex,
+  resolveTimelineDawSessionClipLaunchMode,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
@@ -35,6 +36,7 @@ import {
   type TimelineDawSessionSavedTake,
   type TimelineDawSessionSceneFollowChoice,
   type TimelineDawSessionClipLaunchMode,
+  type TimelineDawSessionClipLaunchChoice,
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
@@ -67,6 +69,7 @@ export default function TimelineDawSessionView({
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const [clipLaunchMode, setClipLaunchMode] = useState<TimelineDawSessionClipLaunchMode>("one-shot");
+  const [clipLaunchChoices, setClipLaunchChoices] = useState<Record<string, TimelineDawSessionClipLaunchChoice>>({});
   const [performanceEvents, setPerformanceEvents] = useState<TimelineDawSessionPerformanceEvent[]>([]);
   const [takeQuantization, setTakeQuantization] = useState<TimelineDawSessionTakeQuantization>("off");
   const [takeName, setTakeName] = useState("Take 1");
@@ -442,12 +445,21 @@ export default function TimelineDawSessionView({
                     </div>,
                     ...lanes.map((lane) => {
                       const slot = slotsByLane.get(lane.id);
-                      return slot ? (
-                        <button key={`${scene.id}:${lane.id}`} type="button" className="rounded-xl border border-white/15 bg-white/[0.06] p-3 text-left transition hover:border-cyan-200/50" onClick={(event) => { recordPerformanceEvent({ kind: "clip", name: slot.name, clips: [{ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds }], launchedAtMs: event.timeStamp }); onLaunchClip({ id: slot.id, laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, settings); }}>
+                      if (!slot) return <div key={`${scene.id}:${lane.id}`} className="rounded-xl border border-dashed border-white/10 p-3 text-xs text-white/25">Empty slot</div>;
+                      const resolvedClipLaunchMode = resolveTimelineDawSessionClipLaunchMode(slot.id, clipLaunchChoices, clipLaunchMode);
+                      return <div key={`${scene.id}:${lane.id}`} className="rounded-xl border border-white/15 bg-white/[0.06] p-2">
+                        <button type="button" className="w-full rounded-lg p-1 text-left transition hover:bg-cyan-200/10" onClick={(event) => { recordPerformanceEvent({ kind: "clip", name: slot.name, clips: [{ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds }], launchedAtMs: event.timeStamp }); onLaunchClip({ id: slot.id, laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, { ...settings, clipLaunchMode: resolvedClipLaunchMode }); }}>
                           <span className="block text-xs font-black text-white">{slot.name}</span>
-                          <span className="mt-1 block text-[11px] text-white/45">{slot.startSeconds.toFixed(2)}–{slot.endSeconds.toFixed(2)} sec · {clipLaunchMode === "loop" ? "Loop" : "One-Shot"}</span>
+                          <span className="mt-1 block text-[11px] text-white/45">{slot.startSeconds.toFixed(2)}–{slot.endSeconds.toFixed(2)} sec · {resolvedClipLaunchMode === "loop" ? "Loop" : "One-Shot"}</span>
                         </button>
-                      ) : <div key={`${scene.id}:${lane.id}`} className="rounded-xl border border-dashed border-white/10 p-3 text-xs text-white/25">Empty slot</div>;
+                        <label className="mt-2 block text-[10px] font-black text-white/50">Clip behavior
+                          <select className="mt-1 block w-full rounded-md border border-white/15 bg-black px-2 py-1 text-white" value={clipLaunchChoices[slot.id] ?? "global"} onChange={(event) => setClipLaunchChoices((current) => ({ ...current, [slot.id]: event.target.value as TimelineDawSessionClipLaunchChoice }))}>
+                            <option value="global">Use default ({clipLaunchMode === "loop" ? "Loop" : "One-Shot"})</option>
+                            <option value="one-shot">One-Shot</option>
+                            <option value="loop">Loop Until Stopped</option>
+                          </select>
+                        </label>
+                      </div>;
                     }),
                   ];
                 })}

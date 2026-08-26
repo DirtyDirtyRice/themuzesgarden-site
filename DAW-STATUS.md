@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Individual Clip One-Shot and Loop Launch
+## Latest completed DAW milestone - Per-Clip Launch Behavior Overrides
+
+- Every occupied Session View clip slot now has its own launch-behavior menu.
+- A clip can inherit the current default, force One-Shot, or force Loop Until Stopped independently of every other clip.
+- Each slot displays its resolved behavior before launch, including immediate updates when the global default changes.
+- Launch still follows the established quantization, exact-region playback, loop engine, stop controls, and non-destructive performance-capture path.
+- Focused Session View tests passed (27 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Per-clip choices are transient Session View configuration and create no database, browser-storage, audio-source, region, arrangement, plan, or take writes.
+
+## Previously completed DAW milestone - Individual Clip One-Shot and Loop Launch
 
 - Session View now gives musicians an explicit One-Shot or Loop Until Stopped launch mode for individual clips.
 - One-Shot clips use the established exact-region audition path and stop cleanly at the transformed region end.

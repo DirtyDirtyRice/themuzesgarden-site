@@ -14,6 +14,7 @@ export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
 export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "stop";
 export type TimelineDawSessionClipLaunchMode = "one-shot" | "loop";
+export type TimelineDawSessionClipLaunchChoice = "global" | TimelineDawSessionClipLaunchMode;
 export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
 export type TimelineDawSessionPerformanceEvent = {
   id: string;
@@ -325,6 +326,15 @@ export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
 
 export function createTimelineDawSessionClipLaunchPlan(mode: TimelineDawSessionClipLaunchMode) {
   return { repeatCount: 1, loopForever: mode === "loop" };
+}
+
+export function resolveTimelineDawSessionClipLaunchMode(
+  clipId: string,
+  choices: Record<string, TimelineDawSessionClipLaunchChoice>,
+  fallback: TimelineDawSessionClipLaunchMode,
+) {
+  const choice = choices[clipId];
+  return choice && choice !== "global" ? choice : fallback;
 }
 
 export function createTimelineDawSessionNavigationIndex(
