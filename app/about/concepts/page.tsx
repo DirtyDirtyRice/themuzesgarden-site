@@ -270,7 +270,7 @@ export default function ConceptsPage() {
       title="Concept Pages"
       description="Concept pages are the second layer of the manual. They explain important words, systems, and future features that appear across many parts of The Muzes Garden."
     >
-      <ManualInfoSection title="How this concept index works">
+      <ManualInfoSection title="How this concept index works" defaultOpen>
         <p>
           This page is organized by concept families instead of one long flat
           list. That makes the manual easier to browse as the encyclopedia

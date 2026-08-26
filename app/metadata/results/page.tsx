@@ -236,9 +236,25 @@ export default async function MetadataResultsPage({
         </section>
 
         {/* RESULTS */}
-        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6">
-          <MetadataQueryResults result={result} />
-        </section>
+        <details className="group rounded-2xl border border-white/15 bg-white/[0.04]">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
+                Query output
+              </p>
+              <h2 className="mt-1 text-2xl font-semibold text-white">
+                Results ({result.total})
+              </h2>
+            </div>
+            <span className="rounded-full border border-white/20 bg-black/30 px-3 py-2 text-xs font-semibold text-white/70">
+              <span className="group-open:hidden">Show results</span>
+              <span className="hidden group-open:inline">Hide results</span>
+            </span>
+          </summary>
+          <div className="border-t border-white/10 p-6">
+            <MetadataQueryResults result={result} />
+          </div>
+        </details>
       </div>
     </main>
   );

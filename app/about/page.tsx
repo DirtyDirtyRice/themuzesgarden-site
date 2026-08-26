@@ -76,7 +76,7 @@ export default function AboutHomePage() {
       title="The Muzes Garden Manual"
       description="This manual is the beginning of the built-in encyclopedia and help layer for The Muzes Garden. The long-term goal is a connected knowledge system where pages, concepts, routes, music ideas, and future tools explain each other through linked information."
     >
-      <ManualInfoSection title="What this manual is becoming">
+      <ManualInfoSection title="What this manual is becoming" defaultOpen>
         <p>
           Right now, the manual explains the major systems of the app. Over
           time, important concepts inside the text should also become linkable.

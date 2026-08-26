@@ -9,7 +9,10 @@ type HomeInfoCard = {
   summary: string;
   status: "Working now" | "Building now" | "Planned";
   whyItMatters: string;
+  lastUpdated: string;
 };
+
+const HOME_CARD_LAST_UPDATED = "8/25/26";
 
 const CURRENT_SYSTEMS: HomeInfoCard[] = [
   {
@@ -21,6 +24,7 @@ const CURRENT_SYSTEMS: HomeInfoCard[] = [
     status: "Working now",
     whyItMatters:
       "Projects are the containers that will connect songs, notes, versions, metadata, playback, and future AI generation history.",
+    lastUpdated: HOME_CARD_LAST_UPDATED,
   },
   {
     title: "Metadata System",
@@ -28,19 +32,21 @@ const CURRENT_SYSTEMS: HomeInfoCard[] = [
     infoHref: "/about/metadata",
     summary:
       "Build a structured music knowledge library with shelves, sections, records, and relationships.",
-    status: "Building now",
+    status: "Working now",
     whyItMatters:
       "Metadata gives the app memory and meaning so sounds, songs, prompts, and project notes can be searched and connected.",
+    lastUpdated: HOME_CARD_LAST_UPDATED,
   },
   {
     title: "Find It System",
-    appHref: null,
+    appHref: "/components/find-it",
     infoHref: "/about/find-it",
     summary:
       "Search for where things live in the app, see target paths, and avoid getting lost.",
-    status: "Building now",
+    status: "Working now",
     whyItMatters:
       "Find It is the navigation safety layer for a deep app with pages, records, relationship paths, and manual explanations.",
+    lastUpdated: HOME_CARD_LAST_UPDATED,
   },
   {
     title: "Global Player",
@@ -51,6 +57,7 @@ const CURRENT_SYSTEMS: HomeInfoCard[] = [
     status: "Working now",
     whyItMatters:
       "The player keeps sound connected to the rest of the system instead of trapping listening inside one page.",
+    lastUpdated: HOME_CARD_LAST_UPDATED,
   },
 ];
 
@@ -64,16 +71,18 @@ const PLANNED_SYSTEMS: HomeInfoCard[] = [
     status: "Planned",
     whyItMatters:
       "The future generator should become a controlled creation workstation, not a random prompt toy.",
+    lastUpdated: HOME_CARD_LAST_UPDATED,
   },
   {
     title: "Site Tree / Roadmap",
-    appHref: null,
+    appHref: "/about/site-tree",
     infoHref: "/about/site-tree",
     summary:
       "A built-in manual showing what is done, what is being built, and what still needs to exist.",
-    status: "Building now",
+    status: "Working now",
     whyItMatters:
       "The roadmap keeps the app understandable as the system grows into pages within pages.",
+    lastUpdated: HOME_CARD_LAST_UPDATED,
   },
 ];
 
@@ -154,6 +163,10 @@ function HomeInfoCardView({ card }: { card: HomeInfoCard }) {
           More Info
         </Link>
       </div>
+
+      <p className="mt-4 text-right text-[10px] font-medium uppercase tracking-[0.12em] text-white/35">
+        Last updated {card.lastUpdated}
+      </p>
     </article>
   );
 }

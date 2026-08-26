@@ -155,7 +155,25 @@ export default async function MetadataSystemPage() {
           </div>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_340px]">
+        <details className="group rounded-2xl border border-white/10 bg-white/[0.03]">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
+                Main workspace
+              </p>
+              <h2 className="mt-1 text-2xl font-semibold text-white">
+                Metadata Query
+              </h2>
+              <p className="mt-2 text-sm text-white/60">
+                Open the query controls, results, and quick notes when you are ready to search.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white/70">
+              <span className="group-open:hidden">Open query</span>
+              <span className="hidden group-open:inline">Close query</span>
+            </span>
+          </summary>
+        <section className="grid gap-5 border-t border-white/10 p-5 xl:grid-cols-[minmax(0,1.35fr)_340px]">
           <div className="min-w-0">
             <MetadataQueryPanel entries={entries} links={links} />
           </div>
@@ -217,12 +235,13 @@ export default async function MetadataSystemPage() {
             </div>
           </aside>
         </section>
+        </details>
 
         <div className="grid gap-4">
           <DetailCard
             eyebrow="Core Principle"
             title="Deep Underneath, Clean on the Surface"
-            defaultOpen={true}
+            defaultOpen={false}
           >
             <div className="space-y-4 text-sm leading-7 text-white/75 md:text-base">
               <p>

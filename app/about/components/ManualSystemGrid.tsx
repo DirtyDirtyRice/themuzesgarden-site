@@ -30,7 +30,8 @@ export default function ManualSystemGrid({
   systems: ManualSystemCard[];
 }) {
   return (
-    <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+    <details className="group mt-8 rounded-2xl border border-white/10 bg-white/[0.03]">
+      <summary className="cursor-pointer list-none p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-white">{title}</h2>
@@ -40,12 +41,19 @@ export default function ManualSystemGrid({
           </p>
         </div>
 
-        <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
-          {systems.length} pages
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
+            {systems.length} pages
+          </span>
+          <span className="rounded-full border border-white/15 bg-black/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">
+            <span className="group-open:hidden">Open</span>
+            <span className="hidden group-open:inline">Close</span>
+          </span>
+        </div>
       </div>
+      </summary>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 border-t border-white/10 px-5 pb-5 pt-5 md:grid-cols-2">
         {systems.map((system) => (
           <article
             key={system.href}
@@ -85,6 +93,6 @@ export default function ManualSystemGrid({
           </article>
         ))}
       </div>
-    </section>
+    </details>
   );
 }

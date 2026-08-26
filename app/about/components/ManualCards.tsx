@@ -29,18 +29,29 @@ export function ManualStatusBanner({
 export function ManualInfoSection({
   title,
   children,
+  defaultOpen = false,
 }: {
   title: string;
   children: ReactNode;
+  defaultOpen?: boolean;
 }) {
   return (
-    <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <h2 className="text-2xl font-semibold text-white">{title}</h2>
+    <details
+      open={defaultOpen}
+      className="group mt-8 rounded-2xl border border-white/10 bg-white/[0.03]"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
+        <h2 className="text-2xl font-semibold text-white">{title}</h2>
+        <span className="shrink-0 rounded-full border border-white/15 bg-black/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">
+          <span className="group-open:hidden">Open</span>
+          <span className="hidden group-open:inline">Close</span>
+        </span>
+      </summary>
 
-      <div className="mt-4 space-y-4 text-sm leading-7 text-white/65">
+      <div className="space-y-4 border-t border-white/10 px-5 pb-5 pt-4 text-sm leading-7 text-white/65">
         {children}
       </div>
-    </section>
+    </details>
   );
 }
 
