@@ -590,6 +590,19 @@ export function createTimelineDawSessionSceneRemainingLabel(input: {
   return `Total remaining: ${(currentRemaining + Math.max(0, total - current) * duration).toFixed(1)} sec`;
 }
 
+export function createTimelineDawSessionMusicalPosition(elapsedSeconds: number, bpm: number, beatsPerBar = 4) {
+  const safeElapsed = Number.isFinite(elapsedSeconds) ? Math.max(0, elapsedSeconds) : 0;
+  const safeBpm = Number.isFinite(bpm) && bpm >= 30 && bpm <= 300 ? bpm : 120;
+  const safeBeatsPerBar = Number.isInteger(beatsPerBar) && beatsPerBar >= 1 && beatsPerBar <= 16 ? beatsPerBar : 4;
+  const totalBeats = safeElapsed * safeBpm / 60;
+  const beatOffset = totalBeats % safeBeatsPerBar;
+  return {
+    bar: Math.floor(totalBeats / safeBeatsPerBar) + 1,
+    beat: Math.floor(beatOffset) + 1,
+    beatProgressPercent: Math.round((beatOffset % 1) * 100),
+  };
+}
+
 export function createTimelineDawSessionQueuedLaunchProgress(queuedAtMs: number, delayMs: number, nowMs: number) {
   return createTimelineDawSessionPassProgress(queuedAtMs, delayMs, nowMs);
 }

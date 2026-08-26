@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Full Scene Up Next and ETA
+## Latest completed DAW milestone - Live Scene Bar and Beat Position
+
+- The active Session View scene now reports its live musical location as bar, beat, and percentage through the current beat.
+- Musical position follows the selected Session BPM using a standard four-beat bar, giving performers a transport reference alongside elapsed time.
+- Repeated and followed scenes reset to Bar 1 Beat 1 when their next pass begins.
+- Pausing a scene freezes its musical location together with the pass progress and ETA; Resume continues from that exact location.
+- Focused Session View tests passed (44 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Bar and beat position is derived transiently and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Full Scene Up Next and ETA
 
 - The active Session View scene now shows the exact next transport outcome: another pass, a named following scene, a loop restart, or stop.
 - Finite scene playback shows total remaining time across the current partial pass and every scheduled repeat.

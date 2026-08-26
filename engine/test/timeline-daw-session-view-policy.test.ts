@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createTimelineDawSessionScenePassProgress } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionSceneRemainingLabel, createTimelineDawSessionSceneUpNextCue } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionMusicalPosition } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPassProgress, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipRemainingLabel, createTimelineDawSessionClipTransportState, createTimelineDawSessionClipUpNextCue, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionQueuedLaunchProgress, createTimelineDawSessionQueuedStopLabel, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
@@ -384,6 +385,14 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionSceneUpNextCue({ currentIteration: 7, totalIterations: null, followAction: "loop" })).toBe("Scene loops at pass end");
     expect(createTimelineDawSessionSceneRemainingLabel({ currentIteration: 2, totalIterations: 4, passDurationSeconds: 8, currentPassRemainingSeconds: 5.5 })).toBe("Total remaining: 21.5 sec");
     expect(createTimelineDawSessionSceneRemainingLabel({ currentIteration: 2, totalIterations: null, passDurationSeconds: 8, currentPassRemainingSeconds: 5.5 })).toBe("Total remaining: open-ended loop");
+  });
+
+  it("reports a bounded live bar and beat position for scene playback", () => {
+    expect(createTimelineDawSessionMusicalPosition(0, 120)).toEqual({ bar: 1, beat: 1, beatProgressPercent: 0 });
+    expect(createTimelineDawSessionMusicalPosition(1.25, 120)).toEqual({ bar: 1, beat: 3, beatProgressPercent: 50 });
+    expect(createTimelineDawSessionMusicalPosition(2, 120)).toEqual({ bar: 2, beat: 1, beatProgressPercent: 0 });
+    expect(createTimelineDawSessionMusicalPosition(3, 60, 3)).toEqual({ bar: 2, beat: 1, beatProgressPercent: 0 });
+    expect(createTimelineDawSessionMusicalPosition(Number.NaN, 500, 0)).toEqual({ bar: 1, beat: 1, beatProgressPercent: 0 });
   });
 
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {
