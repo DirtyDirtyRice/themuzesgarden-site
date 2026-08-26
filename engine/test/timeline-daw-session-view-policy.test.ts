@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -112,5 +112,16 @@ describe("Timeline DAW Session View policy", () => {
       { eventId: "chorus", eventName: "Chorus", laneId: "drums", sourceStartSeconds: 8, sourceEndSeconds: 16, timelineStartSeconds: 2, timelineEndSeconds: 10 },
     ]);
     expect(events[0].clips[0].endSeconds).toBe(8);
+  });
+
+  it("builds a proportional lane-ordered arrangement timeline preview", () => {
+    const preview = createTimelineDawSessionArrangementPreview([
+      { eventId: "verse", eventName: "Verse", laneId: "bass", sourceStartSeconds: 0, sourceEndSeconds: 4, timelineStartSeconds: 0, timelineEndSeconds: 4 },
+      { eventId: "chorus", eventName: "Chorus", laneId: "drums", sourceStartSeconds: 8, sourceEndSeconds: 16, timelineStartSeconds: 2, timelineEndSeconds: 10 },
+    ], ["drums", "bass", "vocals"]);
+    expect(preview.durationSeconds).toBe(10);
+    expect(preview.lanes.map((lane) => [lane.laneId, lane.clips.length])).toEqual([["drums", 1], ["bass", 1], ["vocals", 0]]);
+    expect(preview.lanes[0].clips[0]).toMatchObject({ leftPercent: 20, widthPercent: 80 });
+    expect(preview.lanes[1].clips[0]).toMatchObject({ leftPercent: 0, widthPercent: 40 });
   });
 });

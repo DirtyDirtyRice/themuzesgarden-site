@@ -6,6 +6,7 @@ import {
   createTimelineDawSessionScenes,
   createTimelineDawSessionNavigationIndex,
   createTimelineDawSessionConsolidatedArrangementPlan,
+  createTimelineDawSessionArrangementPreview,
   createTimelineDawSessionPerformanceEvent,
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
@@ -52,6 +53,7 @@ export default function TimelineDawSessionView({
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
+  const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
 
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
@@ -168,6 +170,27 @@ export default function TimelineDawSessionView({
           </div>
           {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{cleanedPerformanceEvents.map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.elapsedSeconds.toFixed(2)} sec · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}
           {performanceEvents.length ? <p className="mt-2 text-xs text-white/45">Arrangement preview: {arrangementPreview.length} clip placement{arrangementPreview.length === 1 ? "" : "s"}. A new launch on the same track ends the earlier placement at that exact point, matching Session View playback. Timing cleanup changes only this preview and downloaded plan.</p> : null}
+          {performanceEvents.length ? (
+            <div className="mt-3 overflow-x-auto rounded-xl border border-white/10 bg-black/30 p-3" aria-label="Arrangement timeline preview">
+              <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-black uppercase tracking-[0.12em] text-white/45">
+                <span>Arrangement Timeline</span>
+                <span>0.00–{arrangementTimeline.durationSeconds.toFixed(2)} sec</span>
+              </div>
+              <div className="min-w-[620px] space-y-2">
+                {arrangementTimeline.lanes.map((previewLane) => {
+                  const lane = lanes.find((candidate) => candidate.id === previewLane.laneId);
+                  return <div key={previewLane.laneId} className="grid grid-cols-[120px_1fr] items-center gap-2">
+                    <span className="truncate text-[11px] font-black text-white/55">{lane?.name ?? previewLane.laneId}</span>
+                    <div className="relative h-9 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]">
+                      {previewLane.clips.map((clip) => <div key={`${clip.eventId}:${clip.laneId}:${clip.timelineStartSeconds}`} className="absolute inset-y-1 overflow-hidden rounded-md border border-violet-200/40 bg-violet-300/25 px-2 py-1 text-[10px] font-black text-violet-50" style={{ left: `${clip.leftPercent}%`, width: `${clip.widthPercent}%` }} title={`${clip.eventName}: ${clip.timelineStartSeconds.toFixed(2)}–${clip.timelineEndSeconds.toFixed(2)} sec`}>
+                        <span className="whitespace-nowrap">{clip.eventName} · {clip.timelineStartSeconds.toFixed(2)}–{clip.timelineEndSeconds.toFixed(2)}</span>
+                      </div>)}
+                    </div>
+                  </div>;
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
         {activeSceneIndex >= 0 ? (
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-3" role="group" aria-label="Live scene navigation">

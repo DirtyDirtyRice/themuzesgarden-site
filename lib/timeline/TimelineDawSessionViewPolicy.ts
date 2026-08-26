@@ -98,6 +98,26 @@ export function createTimelineDawSessionConsolidatedArrangementPlan(events: Time
   return consolidated.sort((left, right) => left.timelineStartSeconds - right.timelineStartSeconds || left.laneId.localeCompare(right.laneId));
 }
 
+export function createTimelineDawSessionArrangementPreview(
+  placements: ReturnType<typeof createTimelineDawSessionConsolidatedArrangementPlan>,
+  laneIds: string[],
+) {
+  const durationSeconds = Math.max(1, ...placements.map((placement) => placement.timelineEndSeconds));
+  return {
+    durationSeconds,
+    lanes: laneIds.map((laneId) => ({
+      laneId,
+      clips: placements
+        .filter((placement) => placement.laneId === laneId)
+        .map((placement) => ({
+          ...placement,
+          leftPercent: Math.max(0, Math.min(100, placement.timelineStartSeconds / durationSeconds * 100)),
+          widthPercent: Math.max(1, Math.min(100, (placement.timelineEndSeconds - placement.timelineStartSeconds) / durationSeconds * 100)),
+        })),
+    })),
+  };
+}
+
 export function quantizeTimelineDawSessionPerformanceTake(
   events: TimelineDawSessionPerformanceEvent[],
   quantization: TimelineDawSessionTakeQuantization,

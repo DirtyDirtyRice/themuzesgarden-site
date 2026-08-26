@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Arrangement-Ready Session Performance Plans
+## Latest completed DAW milestone - Visual Session-to-Arrangement Preview
+
+- Captured Session View performances now display a read-only mini arrangement before download.
+- Every DAW track receives its own horizontal preview lane in the same track order musicians already know.
+- Clip blocks use proportional timeline positions and widths, with scene names and exact start/end seconds visible directly on the block and tooltip.
+- The preview shows the complete take duration and empty track lanes, making gaps, handoffs, and unused tracks easy to spot.
+- Timing cleanup and same-track takeover consolidation update the preview immediately without modifying the source regions or linear arrangement.
+- Focused Session View tests passed (10 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the preview is derived entirely from temporary private in-memory take data.
+
+## Previously completed DAW milestone - Arrangement-Ready Session Performance Plans
 
 - Downloaded Session View performance plans now reproduce track takeover behavior instead of stacking clips that were never heard together.
 - When a later clip launches on the same track, the earlier arrangement placement ends exactly at the new launch point.
