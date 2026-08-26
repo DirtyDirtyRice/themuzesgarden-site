@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Portable Session View Live Set Plans
+## Latest completed DAW milestone - Live Set Flow Check
+
+- Session View now displays a read-only route trace from the first visible scene through the configured per-scene actions and targets.
+- The check identifies whether the set stops by scene action, ends after its final safe target, or enters a deliberate loop.
+- Loop reports name the exact scene where the cycle begins, including multi-scene cycles created by specific backward targets.
+- Scenes not reachable from the first scene are listed by name so musicians can correct accidental omissions before performing.
+- The check uses the same edited scene order, action overrides, target resolution, self-target protection, and stale-target fallback as playback.
+- Play counts are correctly described as duration controls and do not falsely change route reachability.
+- Focused Session View tests passed (20 tests), TypeScript passed, targeted new-file lint passed, and the production build passed with 76 generated pages.
+- Analysis starts no audio and changes no arrangement, source, Named Region, Live Set Plan, Take Lane, database, or browser state.
+
+## Previously completed DAW milestone - Portable Session View Live Set Plans
 
 - Musicians can now download the complete Session View performance setup as one local Live Set Plan.
 - Plans include working BPM, launch quantization, global follow behavior, edited scene order, per-scene actions, finite play counts, and specific follow targets.

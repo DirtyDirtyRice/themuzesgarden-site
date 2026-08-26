@@ -15,6 +15,7 @@ import {
   parseTimelineDawSessionTakeLaneBundle,
   createTimelineDawSessionLiveSetPlan,
   parseTimelineDawSessionLiveSetPlan,
+  analyzeTimelineDawSessionLiveSetFlow,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
   resolveTimelineDawSessionSceneFollowAction,
@@ -77,6 +78,8 @@ export default function TimelineDawSessionView({
   const sceneFollowActions = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionSceneFollowAction(scene.id, sceneFollowChoices, followAction)]));
   const resolvedScenePlayCounts = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts)]));
   const settings = { bpm, quantization, followAction, defaultFollowAction: followAction, sceneFollowActions, sceneFollowTargetIds, scenePlayCounts: resolvedScenePlayCounts, sceneOrderIds: scenes.map((scene) => scene.id) };
+  const liveSetFlow = analyzeTimelineDawSessionLiveSetFlow(scenes, sceneFollowActions, sceneFollowTargetIds);
+  const sceneNamesById = new Map(scenes.map((scene) => [scene.id, scene.name]));
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
@@ -357,6 +360,11 @@ export default function TimelineDawSessionView({
           </div>
         ) : null}
         <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> P previous · R replay · N next · Space stop. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
+        {scenes.length ? <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3" aria-label="Live Set flow check">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-100">Live Set Flow Check</p>
+          <p className="mt-1 text-xs text-white/65">{liveSetFlow.pathIds.map((id) => sceneNamesById.get(id) ?? id).join(" → ")} · {liveSetFlow.status === "loops" ? `loops at ${sceneNamesById.get(liveSetFlow.cycleAtSceneId ?? "") ?? "scene"}` : liveSetFlow.status === "stops" ? "stops by scene action" : "ends after the final safe target"}</p>
+          <p className="mt-1 text-[11px] text-white/45">{liveSetFlow.unreachableSceneIds.length ? `Not reached from the first scene: ${liveSetFlow.unreachableSceneIds.map((id) => sceneNamesById.get(id) ?? id).join(", ")}.` : "Every scene is reachable from the first scene."} Play counts affect duration, not this route.</p>
+        </div> : null}
         {scenes.length ? (
           <div className="overflow-x-auto">
             <div className="min-w-[720px]">

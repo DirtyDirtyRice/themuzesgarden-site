@@ -373,6 +373,46 @@ export function resolveTimelineDawSessionFollowTargetIndex(currentIndex: number,
   return currentIndex + 1 < scenes.length ? currentIndex + 1 : null;
 }
 
+export function analyzeTimelineDawSessionLiveSetFlow(
+  scenes: TimelineDawSessionScene[],
+  sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,
+  sceneFollowTargetIds: Record<string, string>,
+) {
+  if (!scenes.length) return { status: "empty" as const, pathIds: [] as string[], cycleAtSceneId: null as string | null, unreachableSceneIds: [] as string[] };
+  const visited = new Set<string>();
+  const pathIds: string[] = [];
+  let currentIndex = 0;
+  let status: "stops" | "ends" | "loops" = "ends";
+  let cycleAtSceneId: string | null = null;
+  while (currentIndex >= 0 && currentIndex < scenes.length) {
+    const scene = scenes[currentIndex];
+    if (visited.has(scene.id)) {
+      status = "loops";
+      cycleAtSceneId = scene.id;
+      break;
+    }
+    visited.add(scene.id);
+    pathIds.push(scene.id);
+    const action = sceneFollowActions[scene.id] ?? "stop";
+    if (action === "stop") {
+      status = "stops";
+      break;
+    }
+    if (action === "loop") {
+      status = "loops";
+      cycleAtSceneId = scene.id;
+      break;
+    }
+    const nextIndex = resolveTimelineDawSessionFollowTargetIndex(currentIndex, scenes, sceneFollowTargetIds[scene.id]);
+    if (nextIndex === null) {
+      status = "ends";
+      break;
+    }
+    currentIndex = nextIndex;
+  }
+  return { status, pathIds, cycleAtSceneId, unreachableSceneIds: scenes.filter((scene) => !visited.has(scene.id)).map((scene) => scene.id) };
+}
+
 export function createTimelineDawSessionLaunchDelay(input: {
   playheadSeconds: number;
   bpm: number;
