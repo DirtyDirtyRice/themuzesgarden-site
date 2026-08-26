@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Quantized Session Stop
+## Latest completed DAW milestone - Quantized Stop Keyboard Control
+
+- Focused Session View now supports Q to schedule the current BPM/quantization stop boundary directly from the keyboard.
+- Q uses the selected beat, two-beat, bar, or immediate mode and enters the same guarded countdown queue as the on-screen quantized stop control.
+- Space remains an immediate Stop, giving performers a deliberate musical stop key and a separate emergency stop key.
+- The shortcut is blocked while typing, using menus, holding modifiers, outside the focused launcher, or on key repeat, and cannot enter individual clip pass navigation.
+- The on-screen keyboard guide now distinguishes Q quantized stop from Space immediate stop.
+- Focused Session View tests passed (41 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Keyboard stop scheduling is transient transport state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Quantized Session Stop
 
 - Session View can now schedule playback to stop on the next beat, two-beat boundary, or bar using the selected BPM and launch quantization.
 - The control's label names the exact musical stop boundary; Immediate mode resolves to Stop Now while the existing immediate Stop Session Audio control remains available.

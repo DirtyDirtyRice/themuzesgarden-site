@@ -75,6 +75,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "R" })).toBe("replay");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n" })).toBe("next");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "K" })).toBe("pause-resume");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Q" })).toBe("queue-stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: " " })).toBe("stop");
@@ -166,6 +167,11 @@ describe("Timeline DAW Session View policy", () => {
   it("keeps queued-launch overrides out of individual clip navigation", () => {
     expect(resolveTimelineDawSessionClipKeyboardCommand("launch-queued", true, true)).toBeNull();
     expect(resolveTimelineDawSessionClipKeyboardCommand("cancel-queued", true, true)).toBeNull();
+  });
+
+  it("keeps quantized stop scheduling out of individual clip navigation", () => {
+    expect(resolveTimelineDawSessionClipKeyboardCommand("queue-stop", true, true)).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ key: "q", launcherFocused: true, editableTarget: true })).toBeNull();
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
