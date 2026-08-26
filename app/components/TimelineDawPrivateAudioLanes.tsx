@@ -891,6 +891,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     name: string;
     bpm: number;
     quantization: TimelineDawSessionLaunchQuantization;
+    beatsPerBar: number;
     launch: () => void;
   }) {
     if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
@@ -903,12 +904,13 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         playheadSeconds: playheadRef.current,
         bpm: input.bpm,
         quantization: input.quantization,
+        beatsPerBar: input.beatsPerBar,
       });
       if (!delay) {
         input.launch();
         return;
       }
-      setMovementNotice(`${input.name} queued for the next ${input.quantization === "bar" ? "bar" : input.quantization === "two-beats" ? "two-beat boundary" : "beat"} at ${input.bpm} BPM.`);
+      setMovementNotice(`${input.name} queued for the next ${input.quantization === "bar" ? `${input.beatsPerBar}/4 bar` : input.quantization === "two-beats" ? "two-beat boundary" : "beat"} at ${input.bpm} BPM.`);
       setQueuedSessionLaunchName(input.name);
       setQueuedSessionLaunchProgress({ queuedAtMs: Date.now(), delayMs: delay });
       sessionQueuedLaunchRef.current = input.launch;

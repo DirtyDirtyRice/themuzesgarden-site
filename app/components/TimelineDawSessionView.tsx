@@ -55,7 +55,7 @@ import {
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
-type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; clipLaunchMode: TimelineDawSessionClipLaunchMode; clipPlayCount: number; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneFollowTargetIds: Record<string, string>; scenePlayCounts: Record<string, number>; sceneOrderIds: string[] };
+type LaunchSettings = { bpm: number; beatsPerBar: number; quantization: TimelineDawSessionLaunchQuantization; clipLaunchMode: TimelineDawSessionClipLaunchMode; clipPlayCount: number; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneFollowTargetIds: Record<string, string>; scenePlayCounts: Record<string, number>; sceneOrderIds: string[] };
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -104,9 +104,10 @@ export default function TimelineDawSessionView({
   onAdvanceClip: () => void;
   onCancelQueued: () => void;
   onLaunchQueuedNow: () => void;
-  onQueueStop: (settings: { bpm: number; quantization: TimelineDawSessionLaunchQuantization }) => void;
+  onQueueStop: (settings: { bpm: number; beatsPerBar: number; quantization: TimelineDawSessionLaunchQuantization }) => void;
 }) {
   const [bpm, setBpm] = useState(120);
+  const [beatsPerBar, setBeatsPerBar] = useState(4);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const [clipLaunchMode, setClipLaunchMode] = useState<TimelineDawSessionClipLaunchMode>("one-shot");
@@ -132,7 +133,7 @@ export default function TimelineDawSessionView({
   const scenes = orderTimelineDawSessionScenes(baseScenes, sceneOrderIds);
   const sceneFollowActions = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionSceneFollowAction(scene.id, sceneFollowChoices, followAction)]));
   const resolvedScenePlayCounts = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts)]));
-  const settings = { bpm, quantization, clipLaunchMode, clipPlayCount: 1, followAction, defaultFollowAction: followAction, sceneFollowActions, sceneFollowTargetIds, scenePlayCounts: resolvedScenePlayCounts, sceneOrderIds: scenes.map((scene) => scene.id) };
+  const settings = { bpm, beatsPerBar, quantization, clipLaunchMode, clipPlayCount: 1, followAction, defaultFollowAction: followAction, sceneFollowActions, sceneFollowTargetIds, scenePlayCounts: resolvedScenePlayCounts, sceneOrderIds: scenes.map((scene) => scene.id) };
   const liveSetFlow = analyzeTimelineDawSessionLiveSetFlow(scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const sceneNamesById = new Map(scenes.map((scene) => [scene.id, scene.name]));
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
@@ -143,7 +144,7 @@ export default function TimelineDawSessionView({
   const livePassProgress = activeSceneProgress ? createTimelineDawSessionScenePassProgress({ ...activeSceneProgress, nowMs: liveProgressNowMs }) : null;
   const activeSceneUpNextCue = activeSceneProgress && liveCue ? createTimelineDawSessionSceneUpNextCue({ currentIteration: activeSceneProgress.currentIteration, totalIterations: activeSceneProgress.totalIterations, followAction: liveCue.action, nextSceneName: liveCue.nextSceneId ? sceneNamesById.get(liveCue.nextSceneId) : undefined }) : null;
   const activeSceneRemainingLabel = activeSceneProgress && livePassProgress ? createTimelineDawSessionSceneRemainingLabel({ currentIteration: activeSceneProgress.currentIteration, totalIterations: activeSceneProgress.totalIterations, passDurationSeconds: activeSceneProgress.passDurationMs / 1000, currentPassRemainingSeconds: livePassProgress.remainingSeconds }) : null;
-  const activeSceneMusicalPosition = livePassProgress ? createTimelineDawSessionMusicalPosition(livePassProgress.elapsedSeconds, bpm) : null;
+  const activeSceneMusicalPosition = livePassProgress ? createTimelineDawSessionMusicalPosition(livePassProgress.elapsedSeconds, bpm, beatsPerBar) : null;
   const activeClipPassProgress = activeClipPlayback?.passStartedAtMs !== undefined && activeClipPlayback.passDurationMs !== undefined ? createTimelineDawSessionClipPassProgress({ passStartedAtMs: activeClipPlayback.passStartedAtMs, passDurationMs: activeClipPlayback.passDurationMs, pausedAtMs: activeClipPlayback.pausedAtMs, nowMs: liveProgressNowMs }) : null;
   const activeClipRemainingLabel = activeClipPlayback && activeClipPassProgress ? createTimelineDawSessionClipRemainingLabel({ ...activeClipPlayback, passDurationSeconds: (activeClipPlayback.passDurationMs ?? 0) / 1000, currentPassRemainingSeconds: activeClipPassProgress.remainingSeconds }) : null;
   const queuedProgress = queuedLaunchProgress ? createTimelineDawSessionQueuedLaunchProgress(queuedLaunchProgress.queuedAtMs, queuedLaunchProgress.delayMs, liveProgressNowMs) : null;
@@ -326,7 +327,7 @@ export default function TimelineDawSessionView({
       return;
     }
     if (command === "queue-stop") {
-      onQueueStop({ bpm, quantization });
+      onQueueStop({ bpm, beatsPerBar, quantization });
       return;
     }
     if (command === "launch-queued") {
@@ -375,6 +376,11 @@ export default function TimelineDawSessionView({
           <label className="text-xs font-black text-white/70">Session BPM
             <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white" type="number" min={30} max={300} step={1} value={bpm} onChange={(event) => setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120)))} />
           </label>
+          <label className="text-xs font-black text-white/70">Time signature
+            <select className="mt-1 block rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={beatsPerBar} onChange={(event) => setBeatsPerBar(Number(event.target.value))}>
+              {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((beats) => <option key={beats} value={beats}>{beats}/4</option>)}
+            </select>
+          </label>
           <label className="text-xs font-black text-white/70">Launch quantization
             <select className="mt-1 block rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={quantization} onChange={(event) => setQuantization(event.target.value as TimelineDawSessionLaunchQuantization)}>
               <option value="immediate">Immediate</option>
@@ -399,7 +405,7 @@ export default function TimelineDawSessionView({
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>
           {queuedLaunchName ? <div className="w-full rounded-lg border border-amber-300/20 bg-amber-300/[0.06] p-3" role="status" aria-live="polite"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-black text-amber-100">Queued: {queuedLaunchName}</span>{queuedProgress ? <span className="text-[11px] font-black text-amber-50">Launches in {queuedProgress.remainingSeconds.toFixed(2)} sec</span> : null}<div className="flex flex-wrap gap-2"><button type="button" className={launchButton} onClick={onLaunchQueuedNow}>Launch Now</button><button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued launch</button></div></div>{queuedProgress ? <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-label="Queued launch countdown" aria-valuemin={0} aria-valuemax={100} aria-valuenow={queuedProgress.percent}><div className="h-full rounded-full bg-amber-300 transition-[width] duration-100" style={{ width: `${queuedProgress.percent}%` }} /></div> : null}<p className="mt-2 text-[10px] text-amber-50/60">Enter launches now · Escape cancels</p></div> : null}
           <button type="button" className={launchButton} onClick={onStop}>Stop Session Audio</button>
-          <button type="button" className={launchButton} onClick={() => onQueueStop({ bpm, quantization })}>{queuedStopLabel}</button>
+          <button type="button" className={launchButton} onClick={() => onQueueStop({ bpm, beatsPerBar, quantization })}>{queuedStopLabel}</button>
           <button type="button" className={launchButton} onClick={downloadLiveSetPlan}>Download Live Set Plan</button>
           <label className={`${launchButton} cursor-pointer`}>Import Live Set Plan<input className="sr-only" type="file" accept="application/json,.json" onChange={importLiveSetPlan} /></label>
           {liveSetNotice ? <p className="w-full text-xs text-white/55" role="status">{liveSetNotice}</p> : null}

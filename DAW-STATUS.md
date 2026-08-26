@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Scene Bar and Beat Position
+## Latest completed DAW milestone - Configurable Session Time Signatures
+
+- Session View now offers 2/4 through 12/4 time signatures instead of assuming every performance uses 4/4.
+- The selected beats-per-bar value drives the live scene bar and beat display, including odd meters such as 3/4, 5/4, and 7/4.
+- Bar-quantized clip launches, scene launches, and scheduled stops now wait for the correct boundary for the selected meter.
+- Queue notices name the active meter so performers can confirm which musical bar boundary will fire.
+- Focused Session View tests passed (44 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Time-signature selection and quantization remain transient transport state and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Live Scene Bar and Beat Position
 
 - The active Session View scene now reports its live musical location as bar, beat, and percentage through the current beat.
 - Musical position follows the selected Session BPM using a standard four-beat bar, giving performers a transport reference alongside elapsed time.
