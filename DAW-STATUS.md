@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Session Performance Take Lanes
+## Latest completed DAW milestone - Take Lane Comparison and Preferred Performance
+
+- Saved Session View Take Lanes now display consistent A/B comparison metrics: total duration, launches, arrangement clips, tracks used, and scene launches.
+- Metrics are calculated after each take's selected timing cleanup and same-track takeover rules, so comparisons match the downloadable arrangement plan.
+- Musicians can explicitly mark one saved lane as Preferred; the DAW never guesses which performance is artistically best.
+- The preferred lane receives a clear gold star and highlighted card while every other take remains available for loading and comparison.
+- Removing the preferred take clears only that temporary preference and never promotes another performance without the musician's choice.
+- Focused Session View tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or browser persistence was added; take metrics and preference remain private in-memory workspace state.
+
+## Previously completed DAW milestone - Session Performance Take Lanes
 
 - Musicians can now name and save multiple Session View performances as separate Take Lanes during one private workspace session.
 - Every saved lane displays its launch count and timing-cleanup mode for quick A/B comparison.

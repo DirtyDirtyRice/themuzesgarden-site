@@ -41,6 +41,22 @@ export function createTimelineDawSessionSavedTake(input: TimelineDawSessionSaved
   };
 }
 
+export function createTimelineDawSessionTakeSummary(take: TimelineDawSessionSavedTake) {
+  const safeTake = createTimelineDawSessionSavedTake(take);
+  const cleanedEvents = quantizeTimelineDawSessionPerformanceTake(safeTake.events, safeTake.quantization);
+  const placements = createTimelineDawSessionConsolidatedArrangementPlan(cleanedEvents);
+  return {
+    id: safeTake.id,
+    name: safeTake.name,
+    launchCount: cleanedEvents.length,
+    sceneLaunchCount: cleanedEvents.filter((event) => event.kind === "scene").length,
+    placementCount: placements.length,
+    trackCount: new Set(placements.map((placement) => placement.laneId)).size,
+    durationSeconds: Math.max(0, ...placements.map((placement) => placement.timelineEndSeconds)),
+    quantization: safeTake.quantization,
+  };
+}
+
 export function createTimelineDawSessionPerformanceEvent(input: {
   id: string;
   kind: "clip" | "scene";

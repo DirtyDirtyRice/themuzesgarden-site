@@ -9,6 +9,7 @@ import {
   createTimelineDawSessionArrangementPreview,
   createTimelineDawSessionPerformanceEvent,
   createTimelineDawSessionSavedTake,
+  createTimelineDawSessionTakeSummary,
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
@@ -51,6 +52,7 @@ export default function TimelineDawSessionView({
   const [takeQuantization, setTakeQuantization] = useState<TimelineDawSessionTakeQuantization>("off");
   const [takeName, setTakeName] = useState("Take 1");
   const [savedTakes, setSavedTakes] = useState<TimelineDawSessionSavedTake[]>([]);
+  const [preferredTakeId, setPreferredTakeId] = useState<string | null>(null);
   const performanceStartedAtRef = useRef<number | null>(null);
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const settings = { bpm, quantization, followAction };
@@ -58,6 +60,7 @@ export default function TimelineDawSessionView({
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
+  const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
 
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
@@ -76,6 +79,7 @@ export default function TimelineDawSessionView({
   function savePerformanceTake() {
     const savedTake = createTimelineDawSessionSavedTake({ id: crypto.randomUUID(), name: takeName, quantization: takeQuantization, events: performanceEvents });
     setSavedTakes((current) => [...current, savedTake]);
+    setPreferredTakeId((current) => current ?? savedTake.id);
     setTakeName(`Take ${savedTakes.length + 2}`);
   }
 
@@ -85,6 +89,11 @@ export default function TimelineDawSessionView({
     setTakeQuantization(loaded.quantization);
     setTakeName(loaded.name);
     performanceStartedAtRef.current = null;
+  }
+
+  function removePerformanceTake(takeId: string) {
+    setSavedTakes((current) => current.filter((candidate) => candidate.id !== takeId));
+    setPreferredTakeId((current) => current === takeId ? null : current);
   }
 
   function downloadPerformanceTake() {
@@ -193,11 +202,14 @@ export default function TimelineDawSessionView({
           </div>
           {savedTakes.length ? <div className="mt-3 rounded-xl border border-violet-200/15 bg-black/20 p-2">
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-violet-100">Saved Take Lanes · {savedTakes.length}</p>
-            <ul className="mt-2 flex flex-wrap gap-2">{savedTakes.map((take) => <li key={take.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/30 p-2 text-[11px] text-white/60">
-              <span><strong className="text-white/80">{take.name}</strong> · {take.events.length} launches · {take.quantization === "off" ? "live timing" : take.quantization}</span>
+            <ul className="mt-2 grid gap-2 lg:grid-cols-2">{savedTakes.map((take) => { const summary = savedTakeSummaries.get(take.id); return <li key={take.id} className={`rounded-lg border p-2 text-[11px] text-white/60 ${preferredTakeId === take.id ? "border-amber-300/50 bg-amber-300/10" : "border-white/10 bg-black/30"}`}>
+              <div className="flex flex-wrap items-center gap-2"><strong className="text-white/80">{preferredTakeId === take.id ? "★ " : ""}{take.name}</strong><span>{summary?.durationSeconds.toFixed(2)} sec · {summary?.launchCount} launches · {summary?.placementCount} clips · {summary?.trackCount} tracks · {summary?.sceneLaunchCount} scenes</span></div>
+              <div className="mt-2 flex flex-wrap gap-2">
               <button type="button" className={launchButton} onClick={() => loadPerformanceTake(take)}>Load</button>
-              <button type="button" className={launchButton} onClick={() => setSavedTakes((current) => current.filter((candidate) => candidate.id !== take.id))}>Remove</button>
-            </li>)}</ul>
+              <button type="button" className={launchButton} disabled={preferredTakeId === take.id} onClick={() => setPreferredTakeId(take.id)}>Set Preferred</button>
+              <button type="button" className={launchButton} onClick={() => removePerformanceTake(take.id)}>Remove</button>
+              </div>
+            </li>; })}</ul>
           </div> : null}
           {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{cleanedPerformanceEvents.map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.elapsedSeconds.toFixed(2)} sec · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}
           {performanceEvents.length ? <p className="mt-2 text-xs text-white/45">Arrangement preview: {arrangementPreview.length} clip placement{arrangementPreview.length === 1 ? "" : "s"}. A new launch on the same track ends the earlier placement at that exact point, matching Session View playback. Timing cleanup changes only this preview and downloaded plan.</p> : null}

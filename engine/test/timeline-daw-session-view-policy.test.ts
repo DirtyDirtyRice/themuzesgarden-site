@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeSummary, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -134,5 +134,15 @@ describe("Timeline DAW Session View policy", () => {
     take.events[0].clips[0].endSeconds = 4;
     expect(event.clips[0].endSeconds).toBe(8);
     expect(() => createTimelineDawSessionSavedTake({ id: "", name: "", quantization: "off", events: [] })).toThrow("needs an id");
+  });
+
+  it("summarizes take lanes with comparable musical arrangement metrics", () => {
+    const take = createTimelineDawSessionSavedTake({ id: "take-a", name: "Take A", quantization: "bar", events: [
+      createTimelineDawSessionPerformanceEvent({ id: "verse", kind: "scene", name: "Verse", takeStartedAtMs: 0, launchedAtMs: 0, bpm: 120, clips: [{ laneId: "drums", startSeconds: 0, endSeconds: 8 }, { laneId: "bass", startSeconds: 0, endSeconds: 8 }] }),
+      createTimelineDawSessionPerformanceEvent({ id: "fill", kind: "clip", name: "Fill", takeStartedAtMs: 0, launchedAtMs: 1_800, bpm: 120, clips: [{ laneId: "drums", startSeconds: 8, endSeconds: 10 }] }),
+    ] });
+    expect(createTimelineDawSessionTakeSummary(take)).toEqual({
+      id: "take-a", name: "Take A", launchCount: 2, sceneLaunchCount: 1, placementCount: 3, trackCount: 2, durationSeconds: 8, quantization: "bar",
+    });
   });
 });
