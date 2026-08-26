@@ -68,6 +68,7 @@ import TimelineDawMusicianRiffMatch from "@/app/components/TimelineDawMusicianRi
 import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionNextIndex, createTimelineDawRiffAuditionPreviousIndex, createTimelineDawRiffAuditionProgress, createTimelineDawRiffAuditionRemainingMilliseconds, createTimelineDawRiffAuditionReplayIndex, createTimelineDawRiffAuditionSequence, isTimelineDawRiffAuditionCurrent } from "@/lib/timeline/TimelineDawMusicianRiffMatch";
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
+import TimelineDawSessionView from "@/app/components/TimelineDawSessionView";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 import { resolveTimelineDawMusicianTrackMove } from "@/lib/timeline/TimelineDawMusicianTrackMove";
 import { resolveTimelineDawMusicianGroupMove, type TimelineDawMusicianGroupMoveMode } from "@/lib/timeline/TimelineDawMusicianGroupMove";
@@ -83,6 +84,7 @@ import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrack
 import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextIndex, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel, type TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimelineDawTrackFolder, renameTimelineDawTrackFolder, resolveTimelineDawTrackFolderPlayback, toggleTimelineDawTrackFolder, updateTimelineDawTrackFolderMix, type TimelineDawTrackFolders } from "@/lib/timeline/TimelineDawTrackFolderPolicy";
 import { parseTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { createTimelineDawSessionSceneLaunch, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -97,6 +99,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [riffAuditionActive, setRiffAuditionActive] = useState(false);
   const [riffAuditionPaused, setRiffAuditionPaused] = useState(false);
   const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean }>();
+  const [activeSessionSceneId, setActiveSessionSceneId] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -667,6 +670,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     setRiffAuditionActive(false);
     setRiffAuditionPaused(false);
     setRiffAuditionProgress(undefined);
+    setActiveSessionSceneId(undefined);
     if (!preserveLoopIndicator) setLoopingRegionId(undefined);
     synchronize(playheadRef.current, false);
   }
@@ -759,6 +763,49 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     } catch (cause) {
       stopTrackPreview(lane);
       setError(cause instanceof Error ? cause.message : `${lane.name} riff could not be previewed.`);
+    }
+  }
+
+  async function previewSessionScene(scene: TimelineDawSessionScene) {
+    setError(undefined);
+    stopTrackPreview();
+    const generation = riffAuditionGenerationRef.current;
+    try {
+      const launches = createTimelineDawSessionSceneLaunch(scene);
+      const prepared = launches.map((launch) => {
+        const lane = lanes.find((candidate) => candidate.id === launch.laneId);
+        const audio = audioRefs.current.get(launch.laneId);
+        const graph = graphRefs.current.get(launch.laneId);
+        if (!lane || !audio || !graph) throw new Error("One Session View clip is not ready to play yet.");
+        const plan = createTimelineDawRiffAudition({
+          sourceInSeconds: lane.sourceInSeconds,
+          regionStartSeconds: launch.startSeconds,
+          regionEndSeconds: launch.endSeconds,
+          stretchRatio: lane.transform.stretchRatio,
+          transformBypassed: lane.transform.bypassed,
+          playbackRate: timelineDawPrivateLanePlaybackRate(lane.transform),
+        });
+        return { lane, audio, graph, plan };
+      });
+      for (const { lane, audio, graph, plan } of prepared) {
+        audio.preservesPitch = lane.transform.algorithm === "preserve-pitch";
+        audio.playbackRate = plan.playbackRate;
+        audio.currentTime = plan.sourceStartSeconds;
+        graph.applyEnvelope({ ...lane.mix, muted: false, soloed: false, gain: lane.mix.gain * (master.muted ? 0 : master.gain) }, true, 0, plan.durationSeconds, 0, 0);
+      }
+      await Promise.all(prepared.map(({ graph }) => graph.resume()));
+      await Promise.all(prepared.map(({ audio }) => audio.play()));
+      if (!isTimelineDawRiffAuditionCurrent(generation, riffAuditionGenerationRef.current)) {
+        prepared.forEach(({ audio }) => audio.pause());
+        return;
+      }
+      setActiveSessionSceneId(scene.id);
+      setRiffAuditionActive(true);
+      setRiffAuditionProgress({ trackName: `${scene.name} scene`, trackNumber: 1, trackCount: prepared.length, passNumber: 1, passCount: 1 });
+      previewTimerRef.current = setTimeout(() => stopTrackPreview(), Math.max(...prepared.map(({ plan }) => plan.stopAfterMilliseconds)));
+    } catch (cause) {
+      stopTrackPreview();
+      setError(cause instanceof Error ? cause.message : `${scene.name} scene could not be launched.`);
     }
   }
 
@@ -1104,6 +1151,14 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       </div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} projectId={projectId} />
+      <TimelineDawSessionView
+        lanes={lanes.map((lane) => ({ id: lane.id, name: lane.name }))}
+        labels={regionLabels}
+        activeSceneId={activeSessionSceneId}
+        onLaunchClip={(clip) => { setMovementNotice(`Launching ${clip.name} in Session View. The arrangement is unchanged.`); void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds); }}
+        onLaunchScene={(scene) => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene); }}
+        onStop={() => stopTrackPreview()}
+      />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <details className="mt-3 rounded-xl border border-white/10 p-3">

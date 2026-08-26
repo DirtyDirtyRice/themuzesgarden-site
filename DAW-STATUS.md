@@ -1,6 +1,6 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 22, 2026
+Last updated: August 26, 2026
 
 ## Current objective
 
@@ -34,6 +34,9 @@ THE MUZES GARDEN DAW
 ├── Hybrid edit track
 │   ├── copy/cut/duplicate/reorder matched riffs ............... DONE
 │   └── audition assembled hybrid edit without source changes .. DONE
+├── Session View
+│   ├── named regions become per-track clip slots ............... DONE
+│   └── matching region names launch as simultaneous scenes ..... DONE
 ├── Mixing and effects
 │   ├── gain, pan, mute, solo, buses, sends and master bus ...... DONE
 │   ├── inserts, automation, freeze and delay compensation ...... DONE
@@ -57,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Real-Musician Acceptance Gate
+## Latest completed DAW milestone - Session View Clip and Scene Launcher
+
+- The private DAW now includes an Ableton-style Session View alongside the existing linear arrangement workflow.
+- Every saved Named Region becomes a launchable clip slot without duplicating or rewriting its source audio.
+- Matching region names across tracks—such as Verse, Chorus, Bridge, or Solo—automatically form scenes.
+- Launching a scene starts every matching track region together through the existing private monitor graphs, saved track gain, master gain, speed, pitch, and protected audio routing.
+- One clip can still be auditioned alone, and an active scene has an explicit Stop control.
+- Session View is derived from validated session-scoped region labels; it adds no new private storage class and changes no arrangement, automation, mix, history, or Library record.
+- Focused Session View grouping and launch-safety tests passed (2 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; source recordings remain protected and the existing private audition cancellation safeguards are reused.
+
+## Previously completed DAW milestone - Real-Musician Acceptance Gate
 
 - The private owner-musician report now gives one explicit ACCEPTANCE PASSED or ACCEPTANCE HELD decision across the complete protected-source, import, audition, edit, mix, recovery, and export journey.
 - A pass requires all seven latest musician observations to pass alongside their durable technical evidence; the human audition no longer remains incorrectly unresolved after a real listening pass.
