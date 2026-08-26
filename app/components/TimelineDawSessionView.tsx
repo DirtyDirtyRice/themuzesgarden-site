@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import {
   createTimelineDawSessionScenes,
   createTimelineDawSessionNavigationIndex,
+  createTimelineDawSessionArrangementPlan,
+  createTimelineDawSessionPerformanceEvent,
+  createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
+  type TimelineDawSessionPerformanceEvent,
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
@@ -38,9 +42,44 @@ export default function TimelineDawSessionView({
   const [bpm, setBpm] = useState(120);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
+  const [performanceEvents, setPerformanceEvents] = useState<TimelineDawSessionPerformanceEvent[]>([]);
+  const performanceStartedAtRef = useRef<number | null>(null);
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const settings = { bpm, quantization, followAction };
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
+
+  function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
+    const { launchedAtMs, ...eventInput } = input;
+    performanceStartedAtRef.current ??= launchedAtMs;
+    const event = createTimelineDawSessionPerformanceEvent({
+      id: crypto.randomUUID(),
+      ...eventInput,
+      launchedAtMs,
+      takeStartedAtMs: performanceStartedAtRef.current,
+      bpm,
+    });
+    setPerformanceEvents((current) => [...current, event]);
+  }
+
+  function downloadPerformanceTake() {
+    const payload = {
+      schema: "muzes-daw-session-performance/v1",
+      createdAt: new Date().toISOString(),
+      events: performanceEvents,
+      arrangementPlan: createTimelineDawSessionArrangementPlan(performanceEvents),
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "session-performance-take.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function launchSceneAndRecord(scene: TimelineDawSessionScene, launchedAtMs: number) {
+    recordPerformanceEvent({ kind: "scene", name: scene.name, clips: createTimelineDawSessionSceneLaunch(scene), launchedAtMs });
+    onLaunchScene(scene, settings);
+  }
 
   function handleLauncherKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
@@ -60,7 +99,7 @@ export default function TimelineDawSessionView({
       return;
     }
     const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, command);
-    if (targetIndex !== null) onLaunchScene(scenes[targetIndex], settings);
+    if (targetIndex !== null) launchSceneAndRecord(scenes[targetIndex], event.timeStamp);
   }
 
   return (
@@ -99,13 +138,21 @@ export default function TimelineDawSessionView({
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>
           {queuedLaunchName ? <button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued {queuedLaunchName}</button> : null}
         </div>
+        <div className="mb-4 rounded-xl border border-violet-300/20 bg-violet-300/[0.05] p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-black text-violet-100">Performance Take · {performanceEvents.length} launch{performanceEvents.length === 1 ? "" : "es"}</span>
+            <button type="button" className={launchButton} disabled={!performanceEvents.length} onClick={downloadPerformanceTake}>Download Arrangement Plan</button>
+            <button type="button" className={launchButton} disabled={!performanceEvents.length} onClick={() => { setPerformanceEvents([]); performanceStartedAtRef.current = null; }}>Clear Performance Take</button>
+          </div>
+          {performanceEvents.length ? <ol className="mt-2 flex flex-wrap gap-2">{performanceEvents.map((event) => <li key={event.id} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-white/60">Bar {event.bar} · Beat {event.beat} · {event.name}</li>)}</ol> : <p className="mt-2 text-xs text-white/45">Launching a clip or scene begins a temporary performance take. Download creates a private local JSON arrangement plan; it does not alter the song.</p>}
+        </div>
         {activeSceneIndex >= 0 ? (
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-3" role="group" aria-label="Live scene navigation">
             <span className="text-xs font-black text-emerald-100">Playing {scenes[activeSceneIndex].name}</span>
             {(["previous", "replay", "next"] as const).map((action) => {
               const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, action);
               const label = action === "previous" ? "Previous Scene" : action === "replay" ? "Replay Scene" : "Next Scene";
-              return <button key={action} type="button" className={launchButton} disabled={targetIndex === null} onClick={() => targetIndex === null ? undefined : onLaunchScene(scenes[targetIndex], settings)}>{label}</button>;
+              return <button key={action} type="button" className={launchButton} disabled={targetIndex === null} onClick={(event) => targetIndex === null ? undefined : launchSceneAndRecord(scenes[targetIndex], event.timeStamp)}>{label}</button>;
             })}
             <button type="button" className={launchButton} onClick={onStop}>Stop Scene</button>
           </div>
@@ -121,7 +168,7 @@ export default function TimelineDawSessionView({
                   const slotsByLane = new Map(scene.slots.map((slot) => [slot.laneId, slot]));
                   return [
                     <div key={`${scene.id}:launch`} className="rounded-xl border border-cyan-300/20 bg-black/40 p-2">
-                      <button type="button" className={launchButton} aria-pressed={activeSceneId === scene.id} onClick={() => activeSceneId === scene.id ? onStop() : onLaunchScene(scene, settings)}>
+                      <button type="button" className={launchButton} aria-pressed={activeSceneId === scene.id} onClick={(event) => { if (activeSceneId === scene.id) onStop(); else launchSceneAndRecord(scene, event.timeStamp); }}>
                         {activeSceneId === scene.id ? `Stop ${scene.name}` : `Launch ${scene.name}`}
                       </button>
                       <p className="mt-2 text-[11px] text-white/45">{scene.slots.length} active clip{scene.slots.length === 1 ? "" : "s"}</p>
@@ -129,7 +176,7 @@ export default function TimelineDawSessionView({
                     ...lanes.map((lane) => {
                       const slot = slotsByLane.get(lane.id);
                       return slot ? (
-                        <button key={`${scene.id}:${lane.id}`} type="button" className="rounded-xl border border-white/15 bg-white/[0.06] p-3 text-left transition hover:border-cyan-200/50" onClick={() => onLaunchClip({ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, settings)}>
+                        <button key={`${scene.id}:${lane.id}`} type="button" className="rounded-xl border border-white/15 bg-white/[0.06] p-3 text-left transition hover:border-cyan-200/50" onClick={(event) => { recordPerformanceEvent({ kind: "clip", name: slot.name, clips: [{ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds }], launchedAtMs: event.timeStamp }); onLaunchClip({ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, settings); }}>
                           <span className="block text-xs font-black text-white">{slot.name}</span>
                           <span className="mt-1 block text-[11px] text-white/45">{slot.startSeconds.toFixed(2)}–{slot.endSeconds.toFixed(2)} sec</span>
                         </button>

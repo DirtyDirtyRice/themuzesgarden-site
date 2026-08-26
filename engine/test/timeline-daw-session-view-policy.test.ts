@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -67,5 +67,25 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", launcherFocused: false })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", ctrlKey: true })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", repeat: true })).toBeNull();
+  });
+
+  it("captures musical performance timestamps and builds a non-destructive arrangement plan", () => {
+    const event = createTimelineDawSessionPerformanceEvent({
+      id: "launch-1",
+      kind: "scene",
+      name: "Chorus",
+      takeStartedAtMs: 1_000,
+      launchedAtMs: 3_500,
+      bpm: 120,
+      clips: [
+        { laneId: "drums", startSeconds: 8, endSeconds: 16 },
+        { laneId: "bass", startSeconds: 10, endSeconds: 18 },
+      ],
+    });
+    expect(event).toMatchObject({ elapsedSeconds: 2.5, bar: 2, beat: 2 });
+    expect(createTimelineDawSessionArrangementPlan([event])).toEqual([
+      { eventId: "launch-1", eventName: "Chorus", laneId: "drums", sourceStartSeconds: 8, sourceEndSeconds: 16, timelineStartSeconds: 2.5 },
+      { eventId: "launch-1", eventName: "Chorus", laneId: "bass", sourceStartSeconds: 10, sourceEndSeconds: 18, timelineStartSeconds: 2.5 },
+    ]);
   });
 });

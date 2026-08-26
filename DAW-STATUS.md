@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Session View Keyboard Performance Controls
+## Latest completed DAW milestone - Session Performance Take Capture
+
+- Explicit Session View clip, scene, button-navigation, and keyboard-navigation launches now build a temporary performance take.
+- Every captured launch records its relative time, working BPM, bar, beat, source track, and exact source-region boundaries.
+- The live launcher displays the take as a compact bar-and-beat event list while the musician performs.
+- Download Arrangement Plan creates a private local JSON file with the captured events and exact non-destructive timeline placements for every launched clip.
+- Clear Performance Take removes only the temporary capture and begins the next take from a fresh musical zero point.
+- Capturing or downloading a take does not apply the plan automatically, duplicate audio, move arrangement clips, or modify source recordings.
+- Focused Session View grouping, launch-safety, quantization, follow-action, navigation, keyboard, capture, and arrangement-plan tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the performance take remains in component memory until the musician downloads or clears it.
+
+## Previously completed DAW milestone - Session View Keyboard Performance Controls
 
 - A focused Session View launcher now supports P for Previous Scene, R for Replay Scene, N for Next Scene, and Space for Stop.
 - Keyboard scene changes reuse the selected launch quantization, BPM, and follow action instead of bypassing the musician’s performance settings.

@@ -12,6 +12,59 @@ export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-b
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
 export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "stop";
+export type TimelineDawSessionPerformanceEvent = {
+  id: string;
+  kind: "clip" | "scene";
+  name: string;
+  elapsedSeconds: number;
+  bar: number;
+  beat: number;
+  bpm: number;
+  clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>;
+};
+
+export function createTimelineDawSessionPerformanceEvent(input: {
+  id: string;
+  kind: "clip" | "scene";
+  name: string;
+  launchedAtMs: number;
+  takeStartedAtMs: number;
+  bpm: number;
+  clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>;
+  beatsPerBar?: number;
+}): TimelineDawSessionPerformanceEvent {
+  if (!input.id || !input.name.trim() || !Number.isFinite(input.launchedAtMs) || !Number.isFinite(input.takeStartedAtMs) || input.launchedAtMs < input.takeStartedAtMs) throw new Error("Session performance event timing is invalid.");
+  if (!Number.isFinite(input.bpm) || input.bpm < 30 || input.bpm > 300) throw new Error("Session performance BPM must be between 30 and 300.");
+  const clips = input.clips.map((clip) => {
+    if (!clip.laneId || !Number.isFinite(clip.startSeconds) || !Number.isFinite(clip.endSeconds) || clip.startSeconds < 0 || clip.endSeconds <= clip.startSeconds) throw new Error("Session performance clip range is invalid.");
+    return { ...clip };
+  });
+  if (!clips.length) throw new Error("Session performance event needs at least one clip.");
+  const beatsPerBar = Math.min(12, Math.max(1, Math.floor(input.beatsPerBar ?? 4)));
+  const elapsedSeconds = Math.round(Math.max(0, input.launchedAtMs - input.takeStartedAtMs) / 10) / 100;
+  const elapsedBeats = elapsedSeconds * input.bpm / 60;
+  return {
+    id: input.id,
+    kind: input.kind,
+    name: input.name.trim(),
+    elapsedSeconds,
+    bar: Math.floor(elapsedBeats / beatsPerBar) + 1,
+    beat: Math.floor(elapsedBeats % beatsPerBar) + 1,
+    bpm: input.bpm,
+    clips,
+  };
+}
+
+export function createTimelineDawSessionArrangementPlan(events: TimelineDawSessionPerformanceEvent[]) {
+  return events.flatMap((event) => event.clips.map((clip) => ({
+    eventId: event.id,
+    eventName: event.name,
+    laneId: clip.laneId,
+    sourceStartSeconds: clip.startSeconds,
+    sourceEndSeconds: clip.endSeconds,
+    timelineStartSeconds: event.elapsedSeconds,
+  })));
+}
 
 export function resolveTimelineDawSessionKeyboardCommand(input: {
   key: string;
