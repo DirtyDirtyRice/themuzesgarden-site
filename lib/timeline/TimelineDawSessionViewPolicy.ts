@@ -306,6 +306,22 @@ export function resolveTimelineDawSessionKeyboardCommand(input: {
   return null;
 }
 
+export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
+  key: string;
+  sceneCount: number;
+  launcherFocused: boolean;
+  editableTarget: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  altKey?: boolean;
+  repeat?: boolean;
+}) {
+  if (!input.launcherFocused || input.editableTarget || input.ctrlKey || input.metaKey || input.altKey || input.repeat) return null;
+  if (!/^[1-9]$/.test(input.key) || !Number.isInteger(input.sceneCount) || input.sceneCount < 1) return null;
+  const index = Number(input.key) - 1;
+  return index < input.sceneCount ? index : null;
+}
+
 export function createTimelineDawSessionNavigationIndex(
   currentIndex: number,
   sceneCount: number,

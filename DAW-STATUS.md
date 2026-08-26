@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Scene Pass Timer
+## Latest completed DAW milestone - Direct Scene Launch Hotkeys
+
+- Musicians can now launch visible Session View scenes directly with number keys 1 through 9.
+- Number badges on the first nine scene launchers make the live-performance mapping visible without memorization.
+- Direct launch works whether playback is stopped or another scene is active and still uses the established quantization, capture, follow-action, and playback path.
+- Shortcuts remain scoped to the focused Session View launcher and are disabled in inputs, menus, editable fields, modified key combinations, and held-key repeats.
+- Existing P previous, R replay, N next, and Space stop commands remain unchanged.
+- Focused Session View tests passed (25 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Hotkeys create no new persistence and do not mutate source audio, Named Regions, arrangements, plans, takes, database records, or browser storage.
+
+## Previously completed DAW milestone - Live Scene Pass Timer
 
 - The active Session View scene now includes a live elapsed-time and remaining-time display for the current pass.
 - A compact progress bar advances from 0 to 100 percent using the exact transformed duration that drives the playback transition timer.

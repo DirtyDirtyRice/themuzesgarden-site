@@ -26,6 +26,7 @@ import {
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
+  resolveTimelineDawSessionSceneHotkeyIndex,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
@@ -240,7 +241,7 @@ export default function TimelineDawSessionView({
 
   function handleLauncherKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
-    const command = resolveTimelineDawSessionKeyboardCommand({
+    const shortcutContext = {
       key: event.key,
       launcherFocused: event.currentTarget.contains(target),
       editableTarget: Boolean(target.closest("input, textarea, select, [contenteditable='true']")),
@@ -248,7 +249,14 @@ export default function TimelineDawSessionView({
       metaKey: event.metaKey,
       altKey: event.altKey,
       repeat: event.repeat,
-    });
+    };
+    const sceneHotkeyIndex = resolveTimelineDawSessionSceneHotkeyIndex({ ...shortcutContext, sceneCount: scenes.length });
+    if (sceneHotkeyIndex !== null) {
+      event.preventDefault();
+      launchSceneAndRecord(scenes[sceneHotkeyIndex], event.timeStamp);
+      return;
+    }
+    const command = resolveTimelineDawSessionKeyboardCommand(shortcutContext);
     if (!command || activeSceneIndex < 0) return;
     event.preventDefault();
     if (command === "stop") {
@@ -376,7 +384,7 @@ export default function TimelineDawSessionView({
             <button type="button" className={launchButton} onClick={onStop}>Stop Scene</button>
           </div>
         ) : null}
-        <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> P previous · R replay · N next · Space stop. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
+        <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> 1–9 launch the matching visible scene · P previous · R replay · N next · Space stop. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
         {scenes.length ? <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3" aria-label="Live Set flow check">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-100">Live Set Flow Check</p>
           <p className="mt-1 text-xs text-white/65">{liveSetFlow.pathIds.map((id) => sceneNamesById.get(id) ?? id).join(" → ")} · {liveSetFlow.status === "loops" ? `loops at ${sceneNamesById.get(liveSetFlow.cycleAtSceneId ?? "") ?? "scene"}` : liveSetFlow.status === "stops" ? "stops by scene action" : "ends after the final safe target"}</p>
@@ -391,10 +399,11 @@ export default function TimelineDawSessionView({
               <div className="grid gap-2" style={{ gridTemplateColumns: `minmax(150px, .7fr) repeat(${Math.max(1, lanes.length)}, minmax(150px, 1fr))` }}>
                 <div className="p-2 text-xs font-black uppercase tracking-[0.14em] text-white/45">Scene</div>
                 {lanes.map((lane) => <div key={lane.id} className="p-2 text-xs font-black text-white/65">{lane.name}</div>)}
-                {scenes.map((scene) => {
+                {scenes.map((scene, sceneIndex) => {
                   const slotsByLane = new Map(scene.slots.map((slot) => [slot.laneId, slot]));
                   return [
                     <div key={`${scene.id}:launch`} className="rounded-xl border border-cyan-300/20 bg-black/40 p-2">
+                      {sceneIndex < 9 ? <span className="mb-2 inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-cyan-200/25 bg-cyan-200/10 px-1 text-[10px] font-black text-cyan-50" aria-label={`Keyboard shortcut ${sceneIndex + 1}`}>{sceneIndex + 1}</span> : null}
                       <button type="button" className={launchButton} aria-pressed={activeSceneId === scene.id} onClick={(event) => { if (activeSceneId === scene.id) onStop(); else launchSceneAndRecord(scene, event.timeStamp); }}>
                         {activeSceneId === scene.id ? `Stop ${scene.name}` : `Launch ${scene.name}`}
                       </button>
