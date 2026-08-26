@@ -37,6 +37,7 @@ import {
   createTimelineDawSessionClipUpNextCue,
   createTimelineDawSessionClipRemainingLabel,
   createTimelineDawSessionQueuedLaunchProgress,
+  createTimelineDawSessionQueuedStopLabel,
   resolveTimelineDawSessionClipKeyboardCommand,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
@@ -74,6 +75,7 @@ export default function TimelineDawSessionView({
   onAdvanceClip,
   onCancelQueued,
   onLaunchQueuedNow,
+  onQueueStop,
 }: {
   lanes: SessionLane[];
   labels: TimelineDawTrackRegionLabels;
@@ -93,6 +95,7 @@ export default function TimelineDawSessionView({
   onAdvanceClip: () => void;
   onCancelQueued: () => void;
   onLaunchQueuedNow: () => void;
+  onQueueStop: (settings: { bpm: number; quantization: TimelineDawSessionLaunchQuantization }) => void;
 }) {
   const [bpm, setBpm] = useState(120);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
@@ -132,6 +135,7 @@ export default function TimelineDawSessionView({
   const activeClipPassProgress = activeClipPlayback?.passStartedAtMs !== undefined && activeClipPlayback.passDurationMs !== undefined ? createTimelineDawSessionClipPassProgress({ passStartedAtMs: activeClipPlayback.passStartedAtMs, passDurationMs: activeClipPlayback.passDurationMs, pausedAtMs: activeClipPlayback.pausedAtMs, nowMs: liveProgressNowMs }) : null;
   const activeClipRemainingLabel = activeClipPlayback && activeClipPassProgress ? createTimelineDawSessionClipRemainingLabel({ ...activeClipPlayback, passDurationSeconds: (activeClipPlayback.passDurationMs ?? 0) / 1000, currentPassRemainingSeconds: activeClipPassProgress.remainingSeconds }) : null;
   const queuedProgress = queuedLaunchProgress ? createTimelineDawSessionQueuedLaunchProgress(queuedLaunchProgress.queuedAtMs, queuedLaunchProgress.delayMs, liveProgressNowMs) : null;
+  const queuedStopLabel = createTimelineDawSessionQueuedStopLabel(quantization);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
@@ -374,6 +378,7 @@ export default function TimelineDawSessionView({
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>
           {queuedLaunchName ? <div className="w-full rounded-lg border border-amber-300/20 bg-amber-300/[0.06] p-3" role="status" aria-live="polite"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-black text-amber-100">Queued: {queuedLaunchName}</span>{queuedProgress ? <span className="text-[11px] font-black text-amber-50">Launches in {queuedProgress.remainingSeconds.toFixed(2)} sec</span> : null}<div className="flex flex-wrap gap-2"><button type="button" className={launchButton} onClick={onLaunchQueuedNow}>Launch Now</button><button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued launch</button></div></div>{queuedProgress ? <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-label="Queued launch countdown" aria-valuemin={0} aria-valuemax={100} aria-valuenow={queuedProgress.percent}><div className="h-full rounded-full bg-amber-300 transition-[width] duration-100" style={{ width: `${queuedProgress.percent}%` }} /></div> : null}<p className="mt-2 text-[10px] text-amber-50/60">Enter launches now · Escape cancels</p></div> : null}
           <button type="button" className={launchButton} onClick={onStop}>Stop Session Audio</button>
+          <button type="button" className={launchButton} onClick={() => onQueueStop({ bpm, quantization })}>{queuedStopLabel}</button>
           <button type="button" className={launchButton} onClick={downloadLiveSetPlan}>Download Live Set Plan</button>
           <label className={`${launchButton} cursor-pointer`}>Import Live Set Plan<input className="sr-only" type="file" accept="application/json,.json" onChange={importLiveSetPlan} /></label>
           {liveSetNotice ? <p className="w-full text-xs text-white/55" role="status">{liveSetNotice}</p> : null}

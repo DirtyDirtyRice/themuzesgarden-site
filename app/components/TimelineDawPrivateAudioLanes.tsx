@@ -1275,6 +1275,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         onAdvanceClip={() => riffAuditionSkipRef.current?.()}
         onCancelQueued={cancelQueuedSessionLaunch}
         onLaunchQueuedNow={launchQueuedSessionNow}
+        onQueueStop={(settings) => queueSessionLaunch({ name: "Stop Session Audio", ...settings, launch: () => stopTrackPreview() })}
       />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />

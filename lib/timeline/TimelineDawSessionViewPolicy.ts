@@ -556,6 +556,13 @@ export function createTimelineDawSessionQueuedLaunchProgress(queuedAtMs: number,
   return createTimelineDawSessionPassProgress(queuedAtMs, delayMs, nowMs);
 }
 
+export function createTimelineDawSessionQueuedStopLabel(quantization: TimelineDawSessionLaunchQuantization) {
+  if (quantization === "bar") return "Stop on Next Bar";
+  if (quantization === "two-beats") return "Stop on Next Two-Beat Boundary";
+  if (quantization === "beat") return "Stop on Next Beat";
+  return "Stop Now";
+}
+
 export function analyzeTimelineDawSessionLiveSetFlow(
   scenes: TimelineDawSessionScene[],
   sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,

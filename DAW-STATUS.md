@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Queued Launch Override Controls
+## Latest completed DAW milestone - Quantized Session Stop
+
+- Session View can now schedule playback to stop on the next beat, two-beat boundary, or bar using the selected BPM and launch quantization.
+- The control's label names the exact musical stop boundary; Immediate mode resolves to Stop Now while the existing immediate Stop Session Audio control remains available.
+- A scheduled stop enters the same guarded queue as clip and scene launches, including its live countdown, accessible progress bar, Launch Now, Cancel, Enter, and Escape overrides.
+- Replacement queues, ordinary Stop, playback completion, manual override, cancellation, and timer completion clear the pending stop callback before it can become stale.
+- Quantized Stop changes transient transport state only and leaves the linear arrangement untouched.
+- Focused Session View tests passed (40 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Scheduled stop state creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Queued Launch Override Controls
 
 - Every quantized Session View queue now offers Launch Now beside Cancel, allowing a musician to override the remaining beat/bar wait intentionally.
 - Enter fires the pending clip or scene immediately, while Escape cancels it; both shortcuts retain the established focus, typing, modifier, and key-repeat safeguards.
