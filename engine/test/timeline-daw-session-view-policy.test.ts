@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -235,6 +235,13 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionLiveProgressLabel(5, 4)).toBe("Play 5 of 5 · 0 remaining");
     expect(createTimelineDawSessionLiveProgressLabel(3, null)).toBe("Loop pass 3");
     expect(createTimelineDawSessionLiveProgressLabel(0, 0)).toBe("Play 1 of 1 · 0 remaining");
+  });
+
+  it("calculates bounded live pass timing and visual progress", () => {
+    expect(createTimelineDawSessionPassProgress(1_000, 8_000, 3_500)).toEqual({ elapsedSeconds: 2.5, remainingSeconds: 5.5, percent: 31 });
+    expect(createTimelineDawSessionPassProgress(1_000, 8_000, 20_000)).toEqual({ elapsedSeconds: 8, remainingSeconds: 0, percent: 100 });
+    expect(createTimelineDawSessionPassProgress(1_000, 8_000, 500)).toEqual({ elapsedSeconds: 0, remainingSeconds: 8, percent: 0 });
+    expect(createTimelineDawSessionPassProgress(Number.NaN, 0, Number.NaN)).toEqual({ elapsedSeconds: 0, remainingSeconds: 0, percent: 0 });
   });
 
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {

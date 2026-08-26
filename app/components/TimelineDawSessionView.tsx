@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import {
   createTimelineDawSessionScenes,
@@ -18,6 +18,7 @@ import {
   analyzeTimelineDawSessionLiveSetFlow,
   createTimelineDawSessionLiveCue,
   createTimelineDawSessionLiveProgressLabel,
+  createTimelineDawSessionPassProgress,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
   resolveTimelineDawSessionSceneFollowAction,
@@ -53,7 +54,7 @@ export default function TimelineDawSessionView({
   lanes: SessionLane[];
   labels: TimelineDawTrackRegionLabels;
   activeSceneId?: string;
-  activeSceneProgress?: { currentIteration: number; totalIterations: number | null };
+  activeSceneProgress?: { currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number };
   queuedLaunchName?: string;
   onLaunchClip: (clip: { laneId: string; startSeconds: number; endSeconds: number; name: string }, settings: LaunchSettings) => void;
   onLaunchScene: (scene: TimelineDawSessionScene, settings: LaunchSettings) => void;
@@ -76,6 +77,7 @@ export default function TimelineDawSessionView({
   const [sceneFollowChoices, setSceneFollowChoices] = useState<Record<string, TimelineDawSessionSceneFollowChoice>>({});
   const [scenePlayCounts, setScenePlayCounts] = useState<Record<string, number>>({});
   const [sceneFollowTargetIds, setSceneFollowTargetIds] = useState<Record<string, string>>({});
+  const [liveProgressNowMs, setLiveProgressNowMs] = useState(() => Date.now());
   const performanceStartedAtRef = useRef<number | null>(null);
   const baseScenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const scenes = orderTimelineDawSessionScenes(baseScenes, sceneOrderIds);
@@ -86,10 +88,17 @@ export default function TimelineDawSessionView({
   const sceneNamesById = new Map(scenes.map((scene) => [scene.id, scene.name]));
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
   const liveCue = createTimelineDawSessionLiveCue(activeSceneIndex, scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
+  const livePassProgress = activeSceneProgress ? createTimelineDawSessionPassProgress(activeSceneProgress.passStartedAtMs, activeSceneProgress.passDurationMs, liveProgressNowMs) : null;
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
   const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
+
+  useEffect(() => {
+    if (!activeSceneProgress) return;
+    const timer = window.setInterval(() => setLiveProgressNowMs(Date.now()), 250);
+    return () => window.clearInterval(timer);
+  }, [activeSceneProgress]);
 
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
@@ -358,6 +367,7 @@ export default function TimelineDawSessionView({
             <span className="text-xs font-black text-emerald-100">Playing {scenes[activeSceneIndex].name}</span>
             {activeSceneProgress ? <span className="rounded-md border border-cyan-200/20 bg-cyan-200/10 px-2 py-1 text-[11px] font-black text-cyan-50" role="status" aria-live="polite">{createTimelineDawSessionLiveProgressLabel(activeSceneProgress.currentIteration, activeSceneProgress.totalIterations)}</span> : null}
             {liveCue ? <span className="rounded-md border border-emerald-200/20 bg-black/25 px-2 py-1 text-[11px] font-black text-emerald-50" aria-label="Active scene follow cue">Cue: ×{liveCue.playCount} {liveCue.playCount === 1 ? "play" : "plays"}, then {liveCue.action === "stop" ? "Stop" : liveCue.action === "loop" ? "Loop Current" : liveCue.nextSceneId ? sceneNamesById.get(liveCue.nextSceneId) ?? liveCue.nextSceneId : "End Set"}</span> : null}
+            {livePassProgress ? <div className="w-full" aria-label="Current scene pass time"><div className="mb-1 flex justify-between gap-3 text-[10px] font-black text-emerald-50/70"><span>{livePassProgress.elapsedSeconds.toFixed(1)} sec elapsed</span><span>{livePassProgress.remainingSeconds.toFixed(1)} sec remaining</span></div><div className="h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={livePassProgress.percent}><div className="h-full rounded-full bg-emerald-300 transition-[width] duration-200" style={{ width: `${livePassProgress.percent}%` }} /></div></div> : null}
             {(["previous", "replay", "next"] as const).map((action) => {
               const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, action);
               const label = action === "previous" ? "Previous Scene" : action === "replay" ? "Replay Scene" : "Next Scene";

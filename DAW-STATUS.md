@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Scene Repetition Countdown
+## Latest completed DAW milestone - Live Scene Pass Timer
+
+- The active Session View scene now includes a live elapsed-time and remaining-time display for the current pass.
+- A compact progress bar advances from 0 to 100 percent using the exact transformed duration that drives the playback transition timer.
+- Timing refreshes four times per second, clamps safely at both ends, and restarts for every finite repetition, loop pass, or newly followed scene.
+- The timer sits alongside the repetition counter and follow cue, giving performers current pass time, set repetition progress, and the upcoming transition in one place.
+- Focused Session View tests passed (24 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Pass timing is transient playback UI only and creates no database, browser-storage, source-audio, region, arrangement, plan, or take writes.
+
+## Previously completed DAW milestone - Live Scene Repetition Countdown
 
 - Session View now reports the active finite scene pass as Play N of Total with the exact number of repetitions remaining.
 - Deliberately looping scenes use an open-ended Loop pass counter instead of falsely claiming a finite ending.

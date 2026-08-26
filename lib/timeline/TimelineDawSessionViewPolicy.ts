@@ -397,6 +397,16 @@ export function createTimelineDawSessionLiveProgressLabel(currentIteration: numb
   return `Play ${current} of ${total} · ${Math.max(0, total - current)} remaining`;
 }
 
+export function createTimelineDawSessionPassProgress(startedAtMs: number, durationMs: number, nowMs: number) {
+  const safeDurationMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 1;
+  const elapsedMs = Number.isFinite(startedAtMs) && Number.isFinite(nowMs) ? Math.min(safeDurationMs, Math.max(0, nowMs - startedAtMs)) : 0;
+  return {
+    elapsedSeconds: Math.round(elapsedMs / 100) / 10,
+    remainingSeconds: Math.round((safeDurationMs - elapsedMs) / 100) / 10,
+    percent: Math.round((elapsedMs / safeDurationMs) * 100),
+  };
+}
+
 export function analyzeTimelineDawSessionLiveSetFlow(
   scenes: TimelineDawSessionScene[],
   sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,

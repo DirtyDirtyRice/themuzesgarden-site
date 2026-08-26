@@ -100,7 +100,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [riffAuditionPaused, setRiffAuditionPaused] = useState(false);
   const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean }>();
   const [activeSessionSceneId, setActiveSessionSceneId] = useState<string>();
-  const [activeSessionSceneProgress, setActiveSessionSceneProgress] = useState<{ currentIteration: number; totalIterations: number | null }>();
+  const [activeSessionSceneProgress, setActiveSessionSceneProgress] = useState<{ currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number }>();
   const [queuedSessionLaunchName, setQueuedSessionLaunchName] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
@@ -807,8 +807,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         return;
       }
       const requiredPlayCount = resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts);
+      const passDurationMs = Math.max(...prepared.map(({ plan }) => plan.stopAfterMilliseconds));
       setActiveSessionSceneId(scene.id);
-      setActiveSessionSceneProgress({ currentIteration: playIteration, totalIterations: followAction === "loop" ? null : requiredPlayCount });
+      setActiveSessionSceneProgress({ currentIteration: playIteration, totalIterations: followAction === "loop" ? null : requiredPlayCount, passStartedAtMs: Date.now(), passDurationMs });
       setRiffAuditionActive(true);
       setRiffAuditionProgress({ trackName: `${scene.name} scene`, trackNumber: 1, trackCount: prepared.length, passNumber: 1, passCount: 1 });
       previewTimerRef.current = setTimeout(() => {
@@ -828,7 +829,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         setMovementNotice(followAction === "loop" ? `Looping ${scene.name} scene.` : `Following ${scene.name} with ${nextScene.name}.`);
         const nextFollowAction = sceneFollowActions[nextScene.id] ?? defaultFollowAction;
         void previewSessionScene(nextScene, nextFollowAction, sceneOrderIds, sceneFollowActions, defaultFollowAction, scenePlayCounts, sceneFollowTargetIds, followAction === "loop" ? playIteration + 1 : 1);
-      }, Math.max(...prepared.map(({ plan }) => plan.stopAfterMilliseconds)));
+      }, passDurationMs);
     } catch (cause) {
       stopTrackPreview();
       setError(cause instanceof Error ? cause.message : `${scene.name} scene could not be launched.`);
