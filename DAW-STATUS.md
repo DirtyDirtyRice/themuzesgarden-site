@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Individual Clip Keyboard Transport
+## Latest completed DAW milestone - Individual Clip Keyboard Pause and Resume
+
+- Focused Session View now supports K as a dedicated Pause/Resume toggle for the active individual clip.
+- The shortcut reuses the established guarded audition pause state, remaining-duration calculation, resume path, and stale-generation protection.
+- K is intentionally inert when no individual clip is active, so it does not interfere with scene playback or launch behavior.
+- The same typing, menu, modifier-key, focus, and key-repeat safeguards used by every Session View performance shortcut apply to K.
+- The on-screen shortcut guide now exposes the Pause/Resume key alongside pass navigation and Stop.
+- Focused Session View tests passed (34 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Keyboard pause state is transient playback control and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Individual Clip Keyboard Transport
 
 - Focused Session View shortcuts now control active individual clips as well as full scenes.
 - P selects Previous Pass, R replays the current clip pass, N advances to the next pass or finishes the clip, and Space stops playback.

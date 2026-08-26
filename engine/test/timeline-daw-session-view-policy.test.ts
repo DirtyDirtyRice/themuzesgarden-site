@@ -62,6 +62,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "p" })).toBe("previous");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "R" })).toBe("replay");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n" })).toBe("next");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "K" })).toBe("pause-resume");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: " " })).toBe("stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", editableTarget: true })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", launcherFocused: false })).toBeNull();
@@ -127,6 +128,11 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionClipKeyboardCommand("next", true, false)).toBe("next");
     expect(resolveTimelineDawSessionClipKeyboardCommand("stop", true, true)).toBeNull();
     expect(resolveTimelineDawSessionClipKeyboardCommand("replay", false, true)).toBeNull();
+  });
+
+  it("routes pause and resume only when an individual clip is active", () => {
+    expect(resolveTimelineDawSessionClipKeyboardCommand("pause-resume", true, false)).toBe("pause-resume");
+    expect(resolveTimelineDawSessionClipKeyboardCommand("pause-resume", false, true)).toBeNull();
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
