@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Full Scene Pause and Resume
+## Latest completed DAW milestone - Full Scene Up Next and ETA
+
+- The active Session View scene now shows the exact next transport outcome: another pass, a named following scene, a loop restart, or stop.
+- Finite scene playback shows total remaining time across the current partial pass and every scheduled repeat.
+- Open-ended scene loops are identified explicitly instead of presenting a misleading countdown-to-finish estimate.
+- Pausing a scene freezes both its pass progress and total ETA until Resume continues from the preserved position.
+- Focused Session View tests passed (43 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Scene cues and ETA are derived transiently and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Full Scene Pause and Resume
 
 - A playing Session View scene can now pause and resume every participating track together without losing its synchronized position.
 - Pause freezes the scene pass countdown and cancels its follow-action timer; Resume continues from the exact remaining pass time before repeating, following, or stopping.

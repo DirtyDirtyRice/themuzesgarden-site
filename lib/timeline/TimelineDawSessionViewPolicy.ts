@@ -562,6 +562,34 @@ export function createTimelineDawSessionScenePassProgress(input: {
   return createTimelineDawSessionPassProgress(input.passStartedAtMs, input.passDurationMs, input.pausedAtMs ?? input.nowMs);
 }
 
+export function createTimelineDawSessionSceneUpNextCue(input: {
+  currentIteration: number;
+  totalIterations: number | null;
+  followAction: TimelineDawSessionFollowAction;
+  nextSceneName?: string;
+}) {
+  const current = Number.isInteger(input.currentIteration) && input.currentIteration > 0 ? input.currentIteration : 1;
+  if (input.totalIterations === null || input.followAction === "loop") return "Scene loops at pass end";
+  const total = Number.isInteger(input.totalIterations) && input.totalIterations > 0 ? Math.max(current, input.totalIterations) : current;
+  if (current < total) return `Pass ${current + 1} of ${total}`;
+  if (input.followAction === "next") return input.nextSceneName ? `Launch ${input.nextSceneName}` : "End set";
+  return "Scene stops at pass end";
+}
+
+export function createTimelineDawSessionSceneRemainingLabel(input: {
+  currentIteration: number;
+  totalIterations: number | null;
+  passDurationSeconds: number;
+  currentPassRemainingSeconds: number;
+}) {
+  if (input.totalIterations === null) return "Total remaining: open-ended loop";
+  const current = Number.isInteger(input.currentIteration) && input.currentIteration > 0 ? input.currentIteration : 1;
+  const total = Number.isInteger(input.totalIterations) && input.totalIterations > 0 ? Math.max(current, input.totalIterations) : current;
+  const duration = Number.isFinite(input.passDurationSeconds) ? Math.max(0, input.passDurationSeconds) : 0;
+  const currentRemaining = Number.isFinite(input.currentPassRemainingSeconds) ? Math.max(0, Math.min(duration, input.currentPassRemainingSeconds)) : 0;
+  return `Total remaining: ${(currentRemaining + Math.max(0, total - current) * duration).toFixed(1)} sec`;
+}
+
 export function createTimelineDawSessionQueuedLaunchProgress(queuedAtMs: number, delayMs: number, nowMs: number) {
   return createTimelineDawSessionPassProgress(queuedAtMs, delayMs, nowMs);
 }

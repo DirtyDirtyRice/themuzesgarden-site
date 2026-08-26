@@ -19,6 +19,8 @@ import {
   createTimelineDawSessionLiveCue,
   createTimelineDawSessionLiveProgressLabel,
   createTimelineDawSessionScenePassProgress,
+  createTimelineDawSessionSceneRemainingLabel,
+  createTimelineDawSessionSceneUpNextCue,
   createTimelineDawSessionClipPassProgress,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
@@ -138,6 +140,8 @@ export default function TimelineDawSessionView({
   const activeClip = findTimelineDawSessionClipSlot(scenes, activeClipId);
   const liveCue = createTimelineDawSessionLiveCue(activeSceneIndex, scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const livePassProgress = activeSceneProgress ? createTimelineDawSessionScenePassProgress({ ...activeSceneProgress, nowMs: liveProgressNowMs }) : null;
+  const activeSceneUpNextCue = activeSceneProgress && liveCue ? createTimelineDawSessionSceneUpNextCue({ currentIteration: activeSceneProgress.currentIteration, totalIterations: activeSceneProgress.totalIterations, followAction: liveCue.action, nextSceneName: liveCue.nextSceneId ? sceneNamesById.get(liveCue.nextSceneId) : undefined }) : null;
+  const activeSceneRemainingLabel = activeSceneProgress && livePassProgress ? createTimelineDawSessionSceneRemainingLabel({ currentIteration: activeSceneProgress.currentIteration, totalIterations: activeSceneProgress.totalIterations, passDurationSeconds: activeSceneProgress.passDurationMs / 1000, currentPassRemainingSeconds: livePassProgress.remainingSeconds }) : null;
   const activeClipPassProgress = activeClipPlayback?.passStartedAtMs !== undefined && activeClipPlayback.passDurationMs !== undefined ? createTimelineDawSessionClipPassProgress({ passStartedAtMs: activeClipPlayback.passStartedAtMs, passDurationMs: activeClipPlayback.passDurationMs, pausedAtMs: activeClipPlayback.pausedAtMs, nowMs: liveProgressNowMs }) : null;
   const activeClipRemainingLabel = activeClipPlayback && activeClipPassProgress ? createTimelineDawSessionClipRemainingLabel({ ...activeClipPlayback, passDurationSeconds: (activeClipPlayback.passDurationMs ?? 0) / 1000, currentPassRemainingSeconds: activeClipPassProgress.remainingSeconds }) : null;
   const queuedProgress = queuedLaunchProgress ? createTimelineDawSessionQueuedLaunchProgress(queuedLaunchProgress.queuedAtMs, queuedLaunchProgress.delayMs, liveProgressNowMs) : null;
@@ -467,6 +471,8 @@ export default function TimelineDawSessionView({
             <span className="text-xs font-black text-emerald-100">{activeScenePaused ? "Paused" : "Playing"} {scenes[activeSceneIndex].name}</span>
             {activeSceneProgress ? <span className="rounded-md border border-cyan-200/20 bg-cyan-200/10 px-2 py-1 text-[11px] font-black text-cyan-50" role="status" aria-live="polite">{createTimelineDawSessionLiveProgressLabel(activeSceneProgress.currentIteration, activeSceneProgress.totalIterations)}</span> : null}
             {liveCue ? <span className="rounded-md border border-emerald-200/20 bg-black/25 px-2 py-1 text-[11px] font-black text-emerald-50" aria-label="Active scene follow cue">Cue: ×{liveCue.playCount} {liveCue.playCount === 1 ? "play" : "plays"}, then {liveCue.action === "stop" ? "Stop" : liveCue.action === "loop" ? "Loop Current" : liveCue.nextSceneId ? sceneNamesById.get(liveCue.nextSceneId) ?? liveCue.nextSceneId : "End Set"}</span> : null}
+            {activeSceneUpNextCue ? <span className="rounded-md border border-amber-200/25 bg-amber-200/10 px-2 py-1 text-[11px] font-black text-amber-50" aria-label="Active scene up next cue">Up Next: {activeSceneUpNextCue}</span> : null}
+            {activeSceneRemainingLabel ? <span className="rounded-md border border-violet-200/25 bg-violet-200/10 px-2 py-1 text-[11px] font-black text-violet-50" aria-label="Active scene total remaining time">{activeSceneRemainingLabel}</span> : null}
             {livePassProgress ? <div className="w-full" aria-label="Current scene pass time"><div className="mb-1 flex justify-between gap-3 text-[10px] font-black text-emerald-50/70"><span>{livePassProgress.elapsedSeconds.toFixed(1)} sec elapsed</span><span>{livePassProgress.remainingSeconds.toFixed(1)} sec remaining</span></div><div className="h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={livePassProgress.percent}><div className="h-full rounded-full bg-emerald-300 transition-[width] duration-200" style={{ width: `${livePassProgress.percent}%` }} /></div></div> : null}
             {(["previous", "replay", "next"] as const).map((action) => {
               const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, action);
