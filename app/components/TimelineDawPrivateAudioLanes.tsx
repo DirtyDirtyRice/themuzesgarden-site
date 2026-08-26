@@ -101,6 +101,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean }>();
   const [activeSessionSceneId, setActiveSessionSceneId] = useState<string>();
   const [activeSessionClipId, setActiveSessionClipId] = useState<string>();
+  const [activeSessionClipLaunch, setActiveSessionClipLaunch] = useState<{ mode: "one-shot" | "loop"; playCount: number }>();
   const [activeSessionSceneProgress, setActiveSessionSceneProgress] = useState<{ currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number }>();
   const [queuedSessionLaunchName, setQueuedSessionLaunchName] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
@@ -678,6 +679,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     setRiffAuditionProgress(undefined);
     setActiveSessionSceneId(undefined);
     setActiveSessionClipId(undefined);
+    setActiveSessionClipLaunch(undefined);
     setActiveSessionSceneProgress(undefined);
     setQueuedSessionLaunchName(undefined);
     if (!preserveLoopIndicator) setLoopingRegionId(undefined);
@@ -1223,20 +1225,22 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         labels={regionLabels}
         activeSceneId={activeSessionSceneId}
         activeClipId={activeSessionClipId}
+        activeClipPlayback={activeSessionClipLaunch ? { mode: activeSessionClipLaunch.mode, currentPass: riffAuditionProgress?.passNumber ?? 1, totalPasses: activeSessionClipLaunch.playCount, paused: riffAuditionPaused } : undefined}
         activeSceneProgress={activeSessionSceneProgress}
         queuedLaunchName={queuedSessionLaunchName}
         onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => {
           const plan = createTimelineDawSessionClipLaunchPlan(settings.clipLaunchMode, settings.clipPlayCount);
           const launchDescription = plan.loopForever ? `Looping ${clip.name}` : plan.repeatCount > 1 ? `Playing ${clip.name} ${plan.repeatCount} times` : `Launching ${clip.name}`;
           setMovementNotice(`${launchDescription} in Session View. The arrangement is unchanged.`);
-          if (plan.loopForever || plan.repeatCount > 1) {
-            if (plan.loopForever) setLoopingRegionId(clip.id);
-            previewRiffFamily([{ laneId: clip.laneId, startSeconds: clip.startSeconds, endSeconds: clip.endSeconds }], plan.repeatCount, plan.loopForever);
-          } else void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds);
+          if (plan.loopForever) setLoopingRegionId(clip.id);
+          previewRiffFamily([{ laneId: clip.laneId, startSeconds: clip.startSeconds, endSeconds: clip.endSeconds }], plan.repeatCount, plan.loopForever);
           setActiveSessionClipId(clip.id);
+          setActiveSessionClipLaunch({ mode: settings.clipLaunchMode, playCount: plan.repeatCount });
         } })}
         onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene, settings.followAction, settings.sceneOrderIds, settings.sceneFollowActions, settings.defaultFollowAction, settings.scenePlayCounts, settings.sceneFollowTargetIds); } })}
         onStop={() => stopTrackPreview()}
+        onPauseClip={() => riffAuditionPauseRef.current?.()}
+        onResumeClip={() => riffAuditionResumeRef.current?.()}
         onCancelQueued={cancelQueuedSessionLaunch}
       />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />

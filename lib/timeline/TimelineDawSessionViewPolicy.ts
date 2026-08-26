@@ -375,6 +375,19 @@ export function findTimelineDawSessionClipSlot(scenes: TimelineDawSessionScene[]
   return null;
 }
 
+export function createTimelineDawSessionClipPlaybackStatus(input: {
+  mode: TimelineDawSessionClipLaunchMode;
+  currentPass?: number;
+  totalPasses?: number;
+  paused?: boolean;
+}) {
+  const prefix = input.paused ? "Paused" : "Playing";
+  if (input.mode === "loop") return `${prefix} · continuous loop`;
+  const currentPass = Number.isInteger(input.currentPass) && (input.currentPass ?? 0) > 0 ? input.currentPass as number : 1;
+  const totalPasses = Number.isInteger(input.totalPasses) && (input.totalPasses ?? 0) >= currentPass ? input.totalPasses as number : currentPass;
+  return `${prefix} · pass ${currentPass} of ${totalPasses}`;
+}
+
 export function createTimelineDawSessionNavigationIndex(
   currentIndex: number,
   sceneCount: number,

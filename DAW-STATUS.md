@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Active Individual Clip Feedback
+## Latest completed DAW milestone - Individual Clip Pause and Resume
+
+- Active individual Session View clips now have dedicated Pause Clip and Resume Clip controls beside Stop Clip.
+- One-shot, finite-repeat, and continuous-loop clips all run through the established guarded audition sequencer, so every mode shares pause timing, remaining-duration calculation, resume, stop, and stale-generation protection.
+- The live clip status distinguishes Playing from Paused, shows finite pass N of Total, and labels continuous loops without a false ending.
+- Finite playback resumes with the correct remaining milliseconds rather than restarting the region or skipping the pending transition.
+- Focused Session View tests passed (31 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Pause state is transient playback UI and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Active Individual Clip Feedback
 
 - Session View now tracks the exact individual clip currently playing independently from full-scene playback.
 - The active clip slot receives a clear cyan highlight and pressed-state semantics while its audio is live.
