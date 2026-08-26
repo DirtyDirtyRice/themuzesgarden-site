@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Session View Clip and Scene Launcher
+## Latest completed DAW milestone - Quantized Session View Launching
+
+- Session View clips and scenes can now launch Immediately, on the Next Beat, on the Next 2 Beats, or on the Next Bar.
+- Musicians can set the working Session BPM from 30 through 300 before launching.
+- Quantization calculates the exact wait from the current DAW play position instead of firing clips slightly ahead of or behind the musical grid.
+- A queued launch is named onscreen and can be cancelled before any audio starts.
+- Starting another preview, stopping playback, or launching a different item clears the old timer so stale clips cannot start later.
+- Quantization is temporary performance state; it changes no arrangement, automation, mix, history, Named Region, or source recording.
+- Focused Session View grouping, launch-safety, and musical-boundary tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing private audition generation and timer protections are reused.
+
+## Previously completed DAW milestone - Session View Clip and Scene Launcher
 
 - The private DAW now includes an Ableton-style Session View alongside the existing linear arrangement workflow.
 - Every saved Named Region becomes a launchable clip slot without duplicating or rewriting its source audio.

@@ -84,7 +84,7 @@ import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrack
 import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextIndex, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel, type TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimelineDawTrackFolder, renameTimelineDawTrackFolder, resolveTimelineDawTrackFolderPlayback, toggleTimelineDawTrackFolder, updateTimelineDawTrackFolderMix, type TimelineDawTrackFolders } from "@/lib/timeline/TimelineDawTrackFolderPolicy";
 import { parseTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
-import { createTimelineDawSessionSceneLaunch, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, type TimelineDawSessionLaunchQuantization, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -100,6 +100,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [riffAuditionPaused, setRiffAuditionPaused] = useState(false);
   const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean }>();
   const [activeSessionSceneId, setActiveSessionSceneId] = useState<string>();
+  const [queuedSessionLaunchName, setQueuedSessionLaunchName] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -136,6 +137,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const busGraphRefs = useRef(new Map<string, TimelineDawPrivateBusGraph>());
   const saveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionLaunchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const riffAuditionGenerationRef = useRef(0);
   const riffAuditionSkipRef = useRef<(() => void) | null>(null);
   const riffAuditionPreviousRef = useRef<(() => void) | null>(null);
@@ -656,6 +658,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     riffAuditionGenerationRef.current += 1;
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     previewTimerRef.current = null;
+    if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
+    sessionLaunchTimerRef.current = null;
     riffAuditionSkipRef.current = null;
     riffAuditionPreviousRef.current = null;
     riffAuditionReplayRef.current = null;
@@ -671,6 +675,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     setRiffAuditionPaused(false);
     setRiffAuditionProgress(undefined);
     setActiveSessionSceneId(undefined);
+    setQueuedSessionLaunchName(undefined);
     if (!preserveLoopIndicator) setLoopingRegionId(undefined);
     synchronize(playheadRef.current, false);
   }
@@ -806,6 +811,35 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     } catch (cause) {
       stopTrackPreview();
       setError(cause instanceof Error ? cause.message : `${scene.name} scene could not be launched.`);
+    }
+  }
+
+  function queueSessionLaunch(input: {
+    name: string;
+    bpm: number;
+    quantization: TimelineDawSessionLaunchQuantization;
+    launch: () => void;
+  }) {
+    stopTrackPreview();
+    try {
+      const delay = createTimelineDawSessionLaunchDelay({
+        playheadSeconds: playheadRef.current,
+        bpm: input.bpm,
+        quantization: input.quantization,
+      });
+      if (!delay) {
+        input.launch();
+        return;
+      }
+      setMovementNotice(`${input.name} queued for the next ${input.quantization === "bar" ? "bar" : input.quantization === "two-beats" ? "two-beat boundary" : "beat"} at ${input.bpm} BPM.`);
+      setQueuedSessionLaunchName(input.name);
+      sessionLaunchTimerRef.current = setTimeout(() => {
+        sessionLaunchTimerRef.current = null;
+        setQueuedSessionLaunchName(undefined);
+        input.launch();
+      }, delay);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : `${input.name} could not be queued.`);
     }
   }
 
@@ -1155,8 +1189,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         lanes={lanes.map((lane) => ({ id: lane.id, name: lane.name }))}
         labels={regionLabels}
         activeSceneId={activeSessionSceneId}
-        onLaunchClip={(clip) => { setMovementNotice(`Launching ${clip.name} in Session View. The arrangement is unchanged.`); void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds); }}
-        onLaunchScene={(scene) => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene); }}
+        queuedLaunchName={queuedSessionLaunchName}
+        onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => { setMovementNotice(`Launching ${clip.name} in Session View. The arrangement is unchanged.`); void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds); } })}
+        onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene); } })}
         onStop={() => stopTrackPreview()}
       />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />

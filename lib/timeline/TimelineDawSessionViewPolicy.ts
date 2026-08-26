@@ -8,6 +8,26 @@ export type TimelineDawSessionScene = {
   slots: TimelineDawSessionClipSlot[];
 };
 
+export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-beats" | "bar";
+
+export function createTimelineDawSessionLaunchDelay(input: {
+  playheadSeconds: number;
+  bpm: number;
+  quantization: TimelineDawSessionLaunchQuantization;
+  beatsPerBar?: number;
+}) {
+  if (input.quantization === "immediate") return 0;
+  if (!Number.isFinite(input.playheadSeconds) || input.playheadSeconds < 0) throw new Error("Session View playhead position is invalid.");
+  if (!Number.isFinite(input.bpm) || input.bpm < 30 || input.bpm > 300) throw new Error("Session View BPM must be between 30 and 300.");
+  const beatsPerBar = Math.min(12, Math.max(1, Math.floor(input.beatsPerBar ?? 4)));
+  const quantumBeats = input.quantization === "beat" ? 1 : input.quantization === "two-beats" ? 2 : beatsPerBar;
+  const beatSeconds = 60 / input.bpm;
+  const quantumSeconds = beatSeconds * quantumBeats;
+  const remainder = input.playheadSeconds % quantumSeconds;
+  if (remainder < 1e-6 || quantumSeconds - remainder < 1e-6) return 0;
+  return Math.ceil((quantumSeconds - remainder) * 1000);
+}
+
 function sceneKey(name: string) {
   return name.trim().toLocaleLowerCase();
 }
