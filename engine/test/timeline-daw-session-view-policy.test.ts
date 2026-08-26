@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -55,5 +55,17 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionNavigationIndex(1, 3, "next")).toBe(2);
     expect(createTimelineDawSessionNavigationIndex(0, 3, "previous")).toBeNull();
     expect(createTimelineDawSessionNavigationIndex(2, 3, "next")).toBeNull();
+  });
+
+  it("scopes performance shortcuts to the focused non-editable launcher", () => {
+    const base = { launcherFocused: true, editableTarget: false };
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "p" })).toBe("previous");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "R" })).toBe("replay");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n" })).toBe("next");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: " " })).toBe("stop");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", editableTarget: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", launcherFocused: false })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", ctrlKey: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", repeat: true })).toBeNull();
   });
 });

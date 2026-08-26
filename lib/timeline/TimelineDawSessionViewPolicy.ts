@@ -11,6 +11,25 @@ export type TimelineDawSessionScene = {
 export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-beats" | "bar";
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
+export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "stop";
+
+export function resolveTimelineDawSessionKeyboardCommand(input: {
+  key: string;
+  launcherFocused: boolean;
+  editableTarget: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  altKey?: boolean;
+  repeat?: boolean;
+}): TimelineDawSessionKeyboardCommand | null {
+  if (!input.launcherFocused || input.editableTarget || input.ctrlKey || input.metaKey || input.altKey || input.repeat) return null;
+  const key = input.key.toLocaleLowerCase();
+  if (key === "p") return "previous";
+  if (key === "r") return "replay";
+  if (key === "n") return "next";
+  if (key === " " || key === "spacebar") return "stop";
+  return null;
+}
 
 export function createTimelineDawSessionNavigationIndex(
   currentIndex: number,

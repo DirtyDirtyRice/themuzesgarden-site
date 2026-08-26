@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import {
   createTimelineDawSessionScenes,
   createTimelineDawSessionNavigationIndex,
+  resolveTimelineDawSessionKeyboardCommand,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
@@ -41,6 +42,27 @@ export default function TimelineDawSessionView({
   const settings = { bpm, quantization, followAction };
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
 
+  function handleLauncherKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    const command = resolveTimelineDawSessionKeyboardCommand({
+      key: event.key,
+      launcherFocused: event.currentTarget.contains(target),
+      editableTarget: Boolean(target.closest("input, textarea, select, [contenteditable='true']")),
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      altKey: event.altKey,
+      repeat: event.repeat,
+    });
+    if (!command || activeSceneIndex < 0) return;
+    event.preventDefault();
+    if (command === "stop") {
+      onStop();
+      return;
+    }
+    const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, command);
+    if (targetIndex !== null) onLaunchScene(scenes[targetIndex], settings);
+  }
+
   return (
     <details className="mt-4 rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.05]">
       <summary className="cursor-pointer list-none p-4">
@@ -54,7 +76,7 @@ export default function TimelineDawSessionView({
         </div>
       </summary>
 
-      <div className="border-t border-cyan-300/15 p-4">
+      <div className="border-t border-cyan-300/15 p-4" tabIndex={0} onKeyDown={handleLauncherKeyDown} aria-label="Session View performance controls">
         <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
           <label className="text-xs font-black text-white/70">Session BPM
             <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white" type="number" min={30} max={300} step={1} value={bpm} onChange={(event) => setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120)))} />
@@ -88,6 +110,7 @@ export default function TimelineDawSessionView({
             <button type="button" className={launchButton} onClick={onStop}>Stop Scene</button>
           </div>
         ) : null}
+        <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> P previous · R replay · N next · Space stop. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
         {scenes.length ? (
           <div className="overflow-x-auto">
             <div className="min-w-[720px]">

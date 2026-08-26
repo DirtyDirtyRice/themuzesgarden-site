@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Scene Performance Navigation
+## Latest completed DAW milestone - Session View Keyboard Performance Controls
+
+- A focused Session View launcher now supports P for Previous Scene, R for Replay Scene, N for Next Scene, and Space for Stop.
+- Keyboard scene changes reuse the selected launch quantization, BPM, and follow action instead of bypassing the musician’s performance settings.
+- Shortcuts work only after focus enters the Session View performance area, preventing conflicts with arrangement and global DAW commands.
+- Inputs, selects, textareas, editable content, modifier combinations, and held-key repeats are ignored so typing and menu use remain safe.
+- Previous and Next continue to respect first/last scene boundaries; unavailable navigation produces no hidden wraparound.
+- An onscreen keyboard guide explains the controls and focus requirement without requiring the musician to memorize them.
+- Focused Session View grouping, launch-safety, quantization, follow-action, navigation, and keyboard tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; keyboard commands are temporary performance input and change no source, arrangement, mix, automation, or history.
+
+## Previously completed DAW milestone - Live Scene Performance Navigation
 
 - While a Session View scene is playing, musicians now receive Previous Scene, Replay Scene, Next Scene, and Stop Scene controls.
 - Previous and Next follow the visible scene order and disable safely at the first and last scene instead of wrapping unexpectedly.
