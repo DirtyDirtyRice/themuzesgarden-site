@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createTimelineDawSessionScenePassProgress } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPassProgress, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipRemainingLabel, createTimelineDawSessionClipTransportState, createTimelineDawSessionClipUpNextCue, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionQueuedLaunchProgress, createTimelineDawSessionQueuedStopLabel, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
@@ -368,6 +369,11 @@ describe("Timeline DAW Session View policy", () => {
   it("freezes individual clip pass progress at the pause time", () => {
     expect(createTimelineDawSessionClipPassProgress({ passStartedAtMs: 1_000, passDurationMs: 8_000, nowMs: 7_000, pausedAtMs: 3_500 })).toEqual({ elapsedSeconds: 2.5, remainingSeconds: 5.5, percent: 31 });
     expect(createTimelineDawSessionClipPassProgress({ passStartedAtMs: 1_000, passDurationMs: 8_000, nowMs: 3_500 })).toEqual({ elapsedSeconds: 2.5, remainingSeconds: 5.5, percent: 31 });
+  });
+
+  it("freezes a full scene pass at the pause time until playback resumes", () => {
+    expect(createTimelineDawSessionScenePassProgress({ passStartedAtMs: 1_000, passDurationMs: 8_000, nowMs: 7_000, pausedAtMs: 3_500 })).toEqual({ elapsedSeconds: 2.5, remainingSeconds: 5.5, percent: 31 });
+    expect(createTimelineDawSessionScenePassProgress({ passStartedAtMs: 1_000, passDurationMs: 8_000, nowMs: 3_500 })).toEqual({ elapsedSeconds: 2.5, remainingSeconds: 5.5, percent: 31 });
   });
 
   it("round-trips a strictly allowlisted portable Live Set Plan", () => {

@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Quantized Stop Keyboard Control
+## Latest completed DAW milestone - Full Scene Pause and Resume
+
+- A playing Session View scene can now pause and resume every participating track together without losing its synchronized position.
+- Pause freezes the scene pass countdown and cancels its follow-action timer; Resume continues from the exact remaining pass time before repeating, following, or stopping.
+- The active scene panel identifies paused playback and provides dedicated Pause Scene and Resume Scene controls.
+- K now toggles pause/resume for an active full scene when no individual clip has priority.
+- Stop, scene navigation, replacement launches, playback errors, and completed passes still invalidate stale scene controls and timers safely.
+- Focused Session View tests passed (42 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Scene pause state is transient transport state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Quantized Stop Keyboard Control
 
 - Focused Session View now supports Q to schedule the current BPM/quantization stop boundary directly from the keyboard.
 - Q uses the selected beat, two-beat, bar, or immediate mode and enters the same guarded countdown queue as the on-screen quantized stop control.

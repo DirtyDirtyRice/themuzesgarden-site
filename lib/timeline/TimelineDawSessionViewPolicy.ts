@@ -553,6 +553,15 @@ export function createTimelineDawSessionClipPassProgress(input: {
   return createTimelineDawSessionPassProgress(input.passStartedAtMs, input.passDurationMs, input.pausedAtMs ?? input.nowMs);
 }
 
+export function createTimelineDawSessionScenePassProgress(input: {
+  passStartedAtMs: number;
+  passDurationMs: number;
+  nowMs: number;
+  pausedAtMs?: number;
+}) {
+  return createTimelineDawSessionPassProgress(input.passStartedAtMs, input.passDurationMs, input.pausedAtMs ?? input.nowMs);
+}
+
 export function createTimelineDawSessionQueuedLaunchProgress(queuedAtMs: number, delayMs: number, nowMs: number) {
   return createTimelineDawSessionPassProgress(queuedAtMs, delayMs, nowMs);
 }
