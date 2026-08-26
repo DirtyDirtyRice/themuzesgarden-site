@@ -403,6 +403,17 @@ export function createTimelineDawSessionClipTransportState(input: {
   };
 }
 
+export function createTimelineDawSessionClipUpNextCue(input: {
+  mode: TimelineDawSessionClipLaunchMode;
+  currentPass?: number;
+  totalPasses?: number;
+}) {
+  if (input.mode === "loop") return "Loop restarts at pass end";
+  const currentPass = Number.isInteger(input.currentPass) && (input.currentPass ?? 0) > 0 ? input.currentPass as number : 1;
+  const totalPasses = Number.isInteger(input.totalPasses) && (input.totalPasses ?? 0) >= currentPass ? input.totalPasses as number : currentPass;
+  return currentPass < totalPasses ? `Pass ${currentPass + 1} of ${totalPasses}` : "Clip stops at pass end";
+}
+
 export function resolveTimelineDawSessionClipKeyboardCommand(
   command: TimelineDawSessionKeyboardCommand,
   hasActiveClip: boolean,

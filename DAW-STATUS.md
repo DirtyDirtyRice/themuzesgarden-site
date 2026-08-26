@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Individual Clip Pass Progress
+## Latest completed DAW milestone - Individual Clip Up Next Cue
+
+- Active individual Session View clips now show an explicit Up Next cue before the current pass ends.
+- Finite repeats identify the exact upcoming pass number, while the final pass clearly announces that the clip will stop.
+- Continuous clips announce that the loop will restart at pass end, avoiding any false finite-pass expectation.
+- The cue updates automatically through launch, repeat transitions, replay, previous/next controls, finish, and loop restart using validated transport state.
+- The amber cue is distinct from current playback status and has a dedicated accessible label for performance use.
+- Focused Session View tests passed (36 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Up Next feedback is transient playback UI and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Live Individual Clip Pass Progress
 
 - Active individual Session View clips now show a live progress bar with elapsed and remaining seconds for the current pass.
 - Progress timing comes directly from the guarded audition plan after playback-rate and stretch transforms, so the display follows the actual scheduled pass duration.
