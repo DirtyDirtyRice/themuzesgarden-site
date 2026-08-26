@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Session View Follow Actions
+## Latest completed DAW milestone - Live Scene Performance Navigation
+
+- While a Session View scene is playing, musicians now receive Previous Scene, Replay Scene, Next Scene, and Stop Scene controls.
+- Previous and Next follow the visible scene order and disable safely at the first and last scene instead of wrapping unexpectedly.
+- Replay queues the current scene again on the selected beat or bar boundary.
+- Quantized scene changes no longer stop the current scene immediately; the current audio continues until the queued boundary, avoiding an unintended silent gap.
+- A queued change can be cancelled independently while the current scene keeps playing.
+- Stop still cancels both active audio and any queued transition through the shared protected timer path.
+- Focused Session View grouping, launch-safety, quantization, follow-action, and navigation tests passed (5 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; navigation is temporary performance state and changes no source, arrangement, mix, automation, or history.
+
+## Previously completed DAW milestone - Session View Follow Actions
 
 - Session View scenes now offer three professional follow behaviors: Stop at End, Launch Next Scene, and Loop Current Scene.
 - Follow timing uses the longest active clip in the scene, so shorter clips finish naturally while the scene boundary remains deterministic.

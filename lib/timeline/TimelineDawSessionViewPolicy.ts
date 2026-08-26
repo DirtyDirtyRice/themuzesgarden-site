@@ -10,6 +10,18 @@ export type TimelineDawSessionScene = {
 
 export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-beats" | "bar";
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
+export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
+
+export function createTimelineDawSessionNavigationIndex(
+  currentIndex: number,
+  sceneCount: number,
+  action: TimelineDawSessionNavigationAction,
+): number | null {
+  if (!Number.isInteger(currentIndex) || !Number.isInteger(sceneCount) || sceneCount < 1 || currentIndex < 0 || currentIndex >= sceneCount) return null;
+  if (action === "replay") return currentIndex;
+  if (action === "previous") return currentIndex > 0 ? currentIndex - 1 : null;
+  return currentIndex + 1 < sceneCount ? currentIndex + 1 : null;
+}
 
 export function createTimelineDawSessionFollowIndex(
   currentIndex: number,

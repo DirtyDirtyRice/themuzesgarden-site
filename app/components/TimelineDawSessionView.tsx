@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import {
   createTimelineDawSessionScenes,
+  createTimelineDawSessionNavigationIndex,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
@@ -22,6 +23,7 @@ export default function TimelineDawSessionView({
   onLaunchClip,
   onLaunchScene,
   onStop,
+  onCancelQueued,
 }: {
   lanes: SessionLane[];
   labels: TimelineDawTrackRegionLabels;
@@ -30,12 +32,14 @@ export default function TimelineDawSessionView({
   onLaunchClip: (clip: { laneId: string; startSeconds: number; endSeconds: number; name: string }, settings: LaunchSettings) => void;
   onLaunchScene: (scene: TimelineDawSessionScene, settings: LaunchSettings) => void;
   onStop: () => void;
+  onCancelQueued: () => void;
 }) {
   const [bpm, setBpm] = useState(120);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const settings = { bpm, quantization, followAction };
+  const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
 
   return (
     <details className="mt-4 rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.05]">
@@ -71,8 +75,19 @@ export default function TimelineDawSessionView({
             </select>
           </label>
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>
-          {queuedLaunchName ? <button type="button" className={launchButton} onClick={onStop}>Cancel queued {queuedLaunchName}</button> : null}
+          {queuedLaunchName ? <button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued {queuedLaunchName}</button> : null}
         </div>
+        {activeSceneIndex >= 0 ? (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-3" role="group" aria-label="Live scene navigation">
+            <span className="text-xs font-black text-emerald-100">Playing {scenes[activeSceneIndex].name}</span>
+            {(["previous", "replay", "next"] as const).map((action) => {
+              const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, action);
+              const label = action === "previous" ? "Previous Scene" : action === "replay" ? "Replay Scene" : "Next Scene";
+              return <button key={action} type="button" className={launchButton} disabled={targetIndex === null} onClick={() => targetIndex === null ? undefined : onLaunchScene(scenes[targetIndex], settings)}>{label}</button>;
+            })}
+            <button type="button" className={launchButton} onClick={onStop}>Stop Scene</button>
+          </div>
+        ) : null}
         {scenes.length ? (
           <div className="overflow-x-auto">
             <div className="min-w-[720px]">

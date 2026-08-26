@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -47,5 +47,13 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionFollowIndex(2, 3, "next")).toBeNull();
     expect(createTimelineDawSessionFollowIndex(1, 3, "loop")).toBe(1);
     expect(createTimelineDawSessionFollowIndex(-1, 3, "loop")).toBeNull();
+  });
+
+  it("navigates previous, replay, and next scenes without wrapping", () => {
+    expect(createTimelineDawSessionNavigationIndex(1, 3, "previous")).toBe(0);
+    expect(createTimelineDawSessionNavigationIndex(1, 3, "replay")).toBe(1);
+    expect(createTimelineDawSessionNavigationIndex(1, 3, "next")).toBe(2);
+    expect(createTimelineDawSessionNavigationIndex(0, 3, "previous")).toBeNull();
+    expect(createTimelineDawSessionNavigationIndex(2, 3, "next")).toBeNull();
   });
 });
