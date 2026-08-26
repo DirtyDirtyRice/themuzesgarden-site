@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Tap Tempo Transport Control
+## Latest completed DAW milestone - Keyboard Tap Tempo
+
+- Focused Session View now supports T as a no-mouse Tap Tempo performance shortcut.
+- Every accepted T press enters the same recent-tap averaging engine as the on-screen Tap Tempo control and updates BPM immediately after the second tap.
+- The shortcut is blocked while typing, using menus, holding modifiers, outside the focused launcher, or on key repeat.
+- Tap Tempo cannot enter individual clip pass navigation or interfere with scene navigation, queued launch overrides, quantized stop, or immediate stop.
+- The on-screen keyboard guide now exposes T directly for rehearsal and live performance.
+- Focused Session View tests passed (46 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Keyboard taps are transient in-memory transport state and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Tap Tempo Transport Control
 
 - Session View now provides a dedicated Tap Tempo control beside the numeric BPM field.
 - Two or more taps calculate BPM from the average of recent valid intervals, smoothing normal human timing variation across up to nine taps.

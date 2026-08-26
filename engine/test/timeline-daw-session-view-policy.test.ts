@@ -82,6 +82,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "R" })).toBe("replay");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n" })).toBe("next");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "K" })).toBe("pause-resume");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "T" })).toBe("tap-tempo");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Q" })).toBe("queue-stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
@@ -90,6 +91,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", launcherFocused: false })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", ctrlKey: true })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", repeat: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "t", repeat: true })).toBeNull();
   });
 
   it("maps number keys to the first nine visible scenes safely", () => {
@@ -179,6 +181,10 @@ describe("Timeline DAW Session View policy", () => {
   it("keeps quantized stop scheduling out of individual clip navigation", () => {
     expect(resolveTimelineDawSessionClipKeyboardCommand("queue-stop", true, true)).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ key: "q", launcherFocused: true, editableTarget: true })).toBeNull();
+  });
+
+  it("keeps tap tempo out of individual clip pass navigation", () => {
+    expect(resolveTimelineDawSessionClipKeyboardCommand("tap-tempo", true, true)).toBeNull();
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
