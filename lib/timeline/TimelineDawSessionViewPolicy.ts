@@ -402,6 +402,16 @@ export function createTimelineDawSessionClipTransportState(input: {
   };
 }
 
+export function resolveTimelineDawSessionClipKeyboardCommand(
+  command: TimelineDawSessionKeyboardCommand,
+  hasActiveClip: boolean,
+  canGoPrevious: boolean,
+) {
+  if (!hasActiveClip || command === "stop") return null;
+  if (command === "previous" && !canGoPrevious) return null;
+  return command;
+}
+
 export function createTimelineDawSessionNavigationIndex(
   currentIndex: number,
   sceneCount: number,

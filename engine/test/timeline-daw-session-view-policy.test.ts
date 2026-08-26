@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipTransportState, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipTransportState, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -118,6 +118,15 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionClipTransportState({ mode: "one-shot", currentPass: 4, totalPasses: 4 })).toEqual({ canGoPrevious: true, advanceLabel: "Finish Clip" });
     expect(createTimelineDawSessionClipTransportState({ mode: "loop", currentPass: 9, totalPasses: 9 })).toEqual({ canGoPrevious: false, advanceLabel: "Restart Loop" });
     expect(createTimelineDawSessionClipTransportState({ mode: "one-shot", currentPass: 0, totalPasses: 0 })).toEqual({ canGoPrevious: false, advanceLabel: "Finish Clip" });
+  });
+
+  it("routes focused performance shortcuts to an active individual clip safely", () => {
+    expect(resolveTimelineDawSessionClipKeyboardCommand("previous", true, true)).toBe("previous");
+    expect(resolveTimelineDawSessionClipKeyboardCommand("previous", true, false)).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("replay", true, false)).toBe("replay");
+    expect(resolveTimelineDawSessionClipKeyboardCommand("next", true, false)).toBe("next");
+    expect(resolveTimelineDawSessionClipKeyboardCommand("stop", true, true)).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("replay", false, true)).toBeNull();
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {

@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Individual Clip Pass Navigation
+## Latest completed DAW milestone - Individual Clip Keyboard Transport
+
+- Focused Session View shortcuts now control active individual clips as well as full scenes.
+- P selects Previous Pass, R replays the current clip pass, N advances to the next pass or finishes the clip, and Space stops playback.
+- Active clip transport takes priority over scene navigation, while the same keys retain their established scene behavior when no individual clip is active.
+- Previous Pass is safely ignored on the first finite pass and during continuous loops; shortcuts remain disabled while typing, using menus, holding modifiers, or on key repeat.
+- The on-screen shortcut guide now explains both clip and scene behavior directly beside the launcher.
+- Focused Session View tests passed (33 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Shortcut routing is transient playback control and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Individual Clip Pass Navigation
 
 - Active individual Session View clips now have Previous Pass, Replay Clip, and context-aware advance controls beside Pause/Resume and Stop.
 - Finite clips show Next Pass until their final repetition, where the same control becomes Finish Clip; continuous clips receive an explicit Restart Loop action.

@@ -33,6 +33,7 @@ import {
   findTimelineDawSessionClipSlot,
   createTimelineDawSessionClipPlaybackStatus,
   createTimelineDawSessionClipTransportState,
+  resolveTimelineDawSessionClipKeyboardCommand,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
@@ -296,6 +297,13 @@ export default function TimelineDawSessionView({
       onStop();
       return;
     }
+    const clipCommand = resolveTimelineDawSessionClipKeyboardCommand(command, Boolean(activeClip), activeClipTransport?.canGoPrevious ?? false);
+    if (clipCommand) {
+      if (clipCommand === "previous") onPreviousClip();
+      else if (clipCommand === "replay") onReplayClip();
+      else onAdvanceClip();
+      return;
+    }
     if (activeSceneIndex < 0) return;
     const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, command);
     if (targetIndex !== null) launchSceneAndRecord(scenes[targetIndex], event.timeStamp);
@@ -426,7 +434,7 @@ export default function TimelineDawSessionView({
           </div>
         ) : null}
         {activeSceneIndex < 0 && activeClip ? <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.08] p-3" role="group" aria-label="Active individual clip controls"><span className="text-xs font-black text-cyan-50">{activeClipPlayback?.paused ? "Paused" : "Playing"} clip {activeClip.name}</span><span className="text-[11px] text-white/55">{activeClip.startSeconds.toFixed(2)}–{activeClip.endSeconds.toFixed(2)} sec</span>{activeClipPlayback ? <span className="rounded-md border border-cyan-200/20 bg-black/25 px-2 py-1 text-[11px] font-black text-cyan-50" role="status" aria-live="polite">{createTimelineDawSessionClipPlaybackStatus(activeClipPlayback)}</span> : null}{activeClipTransport ? <><button type="button" className={launchButton} disabled={!activeClipTransport.canGoPrevious} onClick={onPreviousClip}>Previous Pass</button><button type="button" className={launchButton} onClick={onReplayClip}>Replay Clip</button></> : null}{activeClipPlayback?.paused ? <button type="button" className={launchButton} onClick={onResumeClip}>Resume Clip</button> : <button type="button" className={launchButton} onClick={onPauseClip}>Pause Clip</button>}{activeClipTransport ? <button type="button" className={launchButton} onClick={onAdvanceClip}>{activeClipTransport.advanceLabel}</button> : null}<button type="button" className={launchButton} onClick={onStop}>Stop Clip</button></div> : null}
-        <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> 1–9 launch the matching visible scene · P previous · R replay · N next · Space stop. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
+        <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> 1–9 launch the matching visible scene · P previous scene/pass · R replay scene/clip · N next scene/pass or finish clip · Space stop. Active clip controls take priority over scene navigation. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
         {scenes.length ? <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3" aria-label="Live Set flow check">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-100">Live Set Flow Check</p>
           <p className="mt-1 text-xs text-white/65">{liveSetFlow.pathIds.map((id) => sceneNamesById.get(id) ?? id).join(" → ")} · {liveSetFlow.status === "loops" ? `loops at ${sceneNamesById.get(liveSetFlow.cycleAtSceneId ?? "") ?? "scene"}` : liveSetFlow.status === "stops" ? "stops by scene action" : "ends after the final safe target"}</p>
