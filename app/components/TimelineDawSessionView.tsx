@@ -34,10 +34,11 @@ import {
   type TimelineDawSessionTakeQuantization,
   type TimelineDawSessionSavedTake,
   type TimelineDawSessionSceneFollowChoice,
+  type TimelineDawSessionClipLaunchMode,
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
-type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneFollowTargetIds: Record<string, string>; scenePlayCounts: Record<string, number>; sceneOrderIds: string[] };
+type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; clipLaunchMode: TimelineDawSessionClipLaunchMode; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneFollowTargetIds: Record<string, string>; scenePlayCounts: Record<string, number>; sceneOrderIds: string[] };
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -57,7 +58,7 @@ export default function TimelineDawSessionView({
   activeSceneId?: string;
   activeSceneProgress?: { currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number };
   queuedLaunchName?: string;
-  onLaunchClip: (clip: { laneId: string; startSeconds: number; endSeconds: number; name: string }, settings: LaunchSettings) => void;
+  onLaunchClip: (clip: { id: string; laneId: string; startSeconds: number; endSeconds: number; name: string }, settings: LaunchSettings) => void;
   onLaunchScene: (scene: TimelineDawSessionScene, settings: LaunchSettings) => void;
   onStop: () => void;
   onCancelQueued: () => void;
@@ -65,6 +66,7 @@ export default function TimelineDawSessionView({
   const [bpm, setBpm] = useState(120);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
+  const [clipLaunchMode, setClipLaunchMode] = useState<TimelineDawSessionClipLaunchMode>("one-shot");
   const [performanceEvents, setPerformanceEvents] = useState<TimelineDawSessionPerformanceEvent[]>([]);
   const [takeQuantization, setTakeQuantization] = useState<TimelineDawSessionTakeQuantization>("off");
   const [takeName, setTakeName] = useState("Take 1");
@@ -84,7 +86,7 @@ export default function TimelineDawSessionView({
   const scenes = orderTimelineDawSessionScenes(baseScenes, sceneOrderIds);
   const sceneFollowActions = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionSceneFollowAction(scene.id, sceneFollowChoices, followAction)]));
   const resolvedScenePlayCounts = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionScenePlayCount(scene.id, scenePlayCounts)]));
-  const settings = { bpm, quantization, followAction, defaultFollowAction: followAction, sceneFollowActions, sceneFollowTargetIds, scenePlayCounts: resolvedScenePlayCounts, sceneOrderIds: scenes.map((scene) => scene.id) };
+  const settings = { bpm, quantization, clipLaunchMode, followAction, defaultFollowAction: followAction, sceneFollowActions, sceneFollowTargetIds, scenePlayCounts: resolvedScenePlayCounts, sceneOrderIds: scenes.map((scene) => scene.id) };
   const liveSetFlow = analyzeTimelineDawSessionLiveSetFlow(scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const sceneNamesById = new Map(scenes.map((scene) => [scene.id, scene.name]));
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
@@ -257,12 +259,13 @@ export default function TimelineDawSessionView({
       return;
     }
     const command = resolveTimelineDawSessionKeyboardCommand(shortcutContext);
-    if (!command || activeSceneIndex < 0) return;
+    if (!command) return;
     event.preventDefault();
     if (command === "stop") {
       onStop();
       return;
     }
+    if (activeSceneIndex < 0) return;
     const targetIndex = createTimelineDawSessionNavigationIndex(activeSceneIndex, scenes.length, command);
     if (targetIndex !== null) launchSceneAndRecord(scenes[targetIndex], event.timeStamp);
   }
@@ -300,8 +303,15 @@ export default function TimelineDawSessionView({
               <option value="loop">Loop Current Scene</option>
             </select>
           </label>
+          <label className="text-xs font-black text-white/70">Individual clip launch
+            <select className="mt-1 block rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={clipLaunchMode} onChange={(event) => setClipLaunchMode(event.target.value as TimelineDawSessionClipLaunchMode)}>
+              <option value="one-shot">One-Shot</option>
+              <option value="loop">Loop Until Stopped</option>
+            </select>
+          </label>
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>
           {queuedLaunchName ? <button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued {queuedLaunchName}</button> : null}
+          <button type="button" className={launchButton} onClick={onStop}>Stop Session Audio</button>
           <button type="button" className={launchButton} onClick={downloadLiveSetPlan}>Download Live Set Plan</button>
           <label className={`${launchButton} cursor-pointer`}>Import Live Set Plan<input className="sr-only" type="file" accept="application/json,.json" onChange={importLiveSetPlan} /></label>
           {liveSetNotice ? <p className="w-full text-xs text-white/55" role="status">{liveSetNotice}</p> : null}
@@ -433,9 +443,9 @@ export default function TimelineDawSessionView({
                     ...lanes.map((lane) => {
                       const slot = slotsByLane.get(lane.id);
                       return slot ? (
-                        <button key={`${scene.id}:${lane.id}`} type="button" className="rounded-xl border border-white/15 bg-white/[0.06] p-3 text-left transition hover:border-cyan-200/50" onClick={(event) => { recordPerformanceEvent({ kind: "clip", name: slot.name, clips: [{ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds }], launchedAtMs: event.timeStamp }); onLaunchClip({ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, settings); }}>
+                        <button key={`${scene.id}:${lane.id}`} type="button" className="rounded-xl border border-white/15 bg-white/[0.06] p-3 text-left transition hover:border-cyan-200/50" onClick={(event) => { recordPerformanceEvent({ kind: "clip", name: slot.name, clips: [{ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds }], launchedAtMs: event.timeStamp }); onLaunchClip({ id: slot.id, laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, settings); }}>
                           <span className="block text-xs font-black text-white">{slot.name}</span>
-                          <span className="mt-1 block text-[11px] text-white/45">{slot.startSeconds.toFixed(2)}–{slot.endSeconds.toFixed(2)} sec</span>
+                          <span className="mt-1 block text-[11px] text-white/45">{slot.startSeconds.toFixed(2)}–{slot.endSeconds.toFixed(2)} sec · {clipLaunchMode === "loop" ? "Loop" : "One-Shot"}</span>
                         </button>
                       ) : <div key={`${scene.id}:${lane.id}`} className="rounded-xl border border-dashed border-white/10 p-3 text-xs text-white/25">Empty slot</div>;
                     }),

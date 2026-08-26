@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Direct Scene Launch Hotkeys
+## Latest completed DAW milestone - Individual Clip One-Shot and Loop Launch
+
+- Session View now gives musicians an explicit One-Shot or Loop Until Stopped launch mode for individual clips.
+- One-Shot clips use the established exact-region audition path and stop cleanly at the transformed region end.
+- Loop clips reuse the established continuous Named Region loop engine instead of introducing a second playback implementation.
+- Each occupied clip slot displays its current launch behavior before playback, and a persistent Stop Session Audio control ends either mode.
+- The focused Space shortcut now stops individual clip playback even when no full scene is active.
+- Launch quantization and non-destructive performance-event capture remain intact for both modes.
+- Focused Session View tests passed (26 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Clip launch mode is transient session UI and writes no source audio, Named Regions, arrangement, take, database record, or browser storage.
+
+## Previously completed DAW milestone - Direct Scene Launch Hotkeys
 
 - Musicians can now launch visible Session View scenes directly with number keys 1 through 9.
 - Number badges on the first nine scene launchers make the live-performance mapping visible without memorization.

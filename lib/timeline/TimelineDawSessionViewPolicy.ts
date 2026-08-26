@@ -13,6 +13,7 @@ export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
 export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "stop";
+export type TimelineDawSessionClipLaunchMode = "one-shot" | "loop";
 export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
 export type TimelineDawSessionPerformanceEvent = {
   id: string;
@@ -320,6 +321,10 @@ export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
   if (!/^[1-9]$/.test(input.key) || !Number.isInteger(input.sceneCount) || input.sceneCount < 1) return null;
   const index = Number(input.key) - 1;
   return index < input.sceneCount ? index : null;
+}
+
+export function createTimelineDawSessionClipLaunchPlan(mode: TimelineDawSessionClipLaunchMode) {
+  return { repeatCount: 1, loopForever: mode === "loop" };
 }
 
 export function createTimelineDawSessionNavigationIndex(

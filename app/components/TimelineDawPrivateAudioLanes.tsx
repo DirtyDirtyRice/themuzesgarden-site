@@ -84,7 +84,7 @@ import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrack
 import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextIndex, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel, type TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimelineDawTrackFolder, renameTimelineDawTrackFolder, resolveTimelineDawTrackFolderPlayback, toggleTimelineDawTrackFolder, updateTimelineDawTrackFolderMix, type TimelineDawTrackFolders } from "@/lib/timeline/TimelineDawTrackFolderPolicy";
 import { parseTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
-import { createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, orderTimelineDawSessionScenes, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionScenePlayCount, type TimelineDawSessionFollowAction, type TimelineDawSessionLaunchQuantization, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, orderTimelineDawSessionScenes, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionScenePlayCount, type TimelineDawSessionFollowAction, type TimelineDawSessionLaunchQuantization, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -1222,7 +1222,14 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         activeSceneId={activeSessionSceneId}
         activeSceneProgress={activeSessionSceneProgress}
         queuedLaunchName={queuedSessionLaunchName}
-        onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => { setMovementNotice(`Launching ${clip.name} in Session View. The arrangement is unchanged.`); void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds); } })}
+        onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => {
+          const plan = createTimelineDawSessionClipLaunchPlan(settings.clipLaunchMode);
+          setMovementNotice(`${plan.loopForever ? "Looping" : "Launching"} ${clip.name} in Session View. The arrangement is unchanged.`);
+          if (plan.loopForever) {
+            setLoopingRegionId(clip.id);
+            previewRiffFamily([{ laneId: clip.laneId, startSeconds: clip.startSeconds, endSeconds: clip.endSeconds }], plan.repeatCount, true);
+          } else void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds);
+        } })}
         onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene, settings.followAction, settings.sceneOrderIds, settings.sceneFollowActions, settings.defaultFollowAction, settings.scenePlayCounts, settings.sceneFollowTargetIds); } })}
         onStop={() => stopTrackPreview()}
         onCancelQueued={cancelQueuedSessionLaunch}
