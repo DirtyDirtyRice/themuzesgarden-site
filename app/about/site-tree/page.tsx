@@ -69,7 +69,7 @@ export default function SiteTreePage() {
       title="Site Tree / Roadmap"
       description="This page is the map for where The Muzes Garden is now and where it is going. It tracks done, doing, and still-to-do work so the app can grow without losing the plot."
     >
-      <details open className="group rounded-2xl border border-white/10 bg-white/[0.03]">
+      <details className="group rounded-2xl border border-white/10 bg-white/[0.03]">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
           <h2 className="text-2xl font-semibold text-white">Roadmap status</h2>
           <span className="rounded-full border border-white/15 bg-black/30 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">
