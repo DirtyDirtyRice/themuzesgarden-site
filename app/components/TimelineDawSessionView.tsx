@@ -13,6 +13,8 @@ import {
   createTimelineDawSessionCompTake,
   createTimelineDawSessionTakeLaneBundle,
   parseTimelineDawSessionTakeLaneBundle,
+  moveTimelineDawSessionScene,
+  orderTimelineDawSessionScenes,
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
@@ -25,7 +27,7 @@ import {
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
-type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; followAction: TimelineDawSessionFollowAction };
+type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; followAction: TimelineDawSessionFollowAction; sceneOrderIds: string[] };
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -59,9 +61,11 @@ export default function TimelineDawSessionView({
   const [compName, setCompName] = useState("Comp 1");
   const [compSelections, setCompSelections] = useState<string[]>([]);
   const [bundleNotice, setBundleNotice] = useState("");
+  const [sceneOrderIds, setSceneOrderIds] = useState<string[]>([]);
   const performanceStartedAtRef = useRef<number | null>(null);
-  const scenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
-  const settings = { bpm, quantization, followAction };
+  const baseScenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
+  const scenes = orderTimelineDawSessionScenes(baseScenes, sceneOrderIds);
+  const settings = { bpm, quantization, followAction, sceneOrderIds: scenes.map((scene) => scene.id) };
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
@@ -321,6 +325,10 @@ export default function TimelineDawSessionView({
                       <button type="button" className={launchButton} aria-pressed={activeSceneId === scene.id} onClick={(event) => { if (activeSceneId === scene.id) onStop(); else launchSceneAndRecord(scene, event.timeStamp); }}>
                         {activeSceneId === scene.id ? `Stop ${scene.name}` : `Launch ${scene.name}`}
                       </button>
+                      <div className="mt-2 flex gap-1" aria-label={`Reorder ${scene.name} scene`}>
+                        <button type="button" className={launchButton} disabled={scenes[0]?.id === scene.id} onClick={() => setSceneOrderIds((current) => moveTimelineDawSessionScene(baseScenes, current, scene.id, "up"))}>↑</button>
+                        <button type="button" className={launchButton} disabled={scenes.at(-1)?.id === scene.id} onClick={() => setSceneOrderIds((current) => moveTimelineDawSessionScene(baseScenes, current, scene.id, "down"))}>↓</button>
+                      </div>
                       <p className="mt-2 text-[11px] text-white/45">{scene.slots.length} active clip{scene.slots.length === 1 ? "" : "s"}</p>
                     </div>,
                     ...lanes.map((lane) => {

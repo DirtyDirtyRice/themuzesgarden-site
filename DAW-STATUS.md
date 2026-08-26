@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Portable Session Take Lane Bundles
+## Latest completed DAW milestone - Editable Live Scene Order
+
+- Session View scenes now include musician-facing Move Up and Move Down controls for arranging a live set independently of source-region timeline positions.
+- Previous Scene, Replay Scene, Next Scene, and focused P/R/N keyboard navigation all follow the visible edited order.
+- Launch Next Scene follow actions now receive the same ordered scene identities inside the parent playback engine, preventing UI and automatic playback from disagreeing.
+- Boundary controls disable at the first and last scene, and attempts to move beyond either end leave the set unchanged.
+- Duplicate or stale scene identities are ignored safely, while newly created Named Region scenes are appended without erasing the musician's existing order.
+- Scene ordering remains presentation/performance state and does not rename regions, move arrangement clips, alter source audio, or enter Take Lane bundles.
+- Focused Session View tests passed (15 tests), TypeScript passed, targeted new-file lint passed, and the production build passed with 76 generated pages.
+- No database migration or browser persistence was required.
+
+## Previously completed DAW milestone - Portable Session Take Lane Bundles
 
 - Musicians can download every saved Take Lane, Comp Lane, timing mode, and explicit Preferred choice as one private local JSON bundle.
 - A bundle can be imported later to restore validated lanes and merge them by stable take identity without duplicating the same take.

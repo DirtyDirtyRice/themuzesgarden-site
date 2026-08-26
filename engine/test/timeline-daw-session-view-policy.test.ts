@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -173,5 +173,16 @@ describe("Timeline DAW Session View policy", () => {
     expect(parseTimelineDawSessionTakeLaneBundle({ ...bundle, preferredTakeId: "missing" }).preferredTakeId).toBeNull();
     expect(() => parseTimelineDawSessionTakeLaneBundle({ ...bundle, schema: "unknown" })).toThrow("unsupported format");
     expect(() => parseTimelineDawSessionTakeLaneBundle({ ...bundle, takes: [{ ...take, events: [{ ...take.events[0], bpm: 500 }] }] })).toThrow("invalid launch fields");
+  });
+
+  it("reorders live scenes safely while preserving new and unknown scenes", () => {
+    const scenes = [
+      { id: "verse", name: "Verse", slots: [] },
+      { id: "chorus", name: "Chorus", slots: [] },
+      { id: "bridge", name: "Bridge", slots: [] },
+    ];
+    expect(moveTimelineDawSessionScene(scenes, [], "chorus", "up")).toEqual(["chorus", "verse", "bridge"]);
+    expect(moveTimelineDawSessionScene(scenes, ["chorus", "verse", "bridge"], "chorus", "up")).toEqual(["chorus", "verse", "bridge"]);
+    expect(orderTimelineDawSessionScenes(scenes, ["missing", "bridge", "bridge", "verse"]).map((scene) => scene.id)).toEqual(["bridge", "verse", "chorus"]);
   });
 });

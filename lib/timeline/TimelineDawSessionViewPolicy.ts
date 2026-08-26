@@ -268,6 +268,28 @@ export function createTimelineDawSessionNavigationIndex(
   return currentIndex + 1 < sceneCount ? currentIndex + 1 : null;
 }
 
+export function orderTimelineDawSessionScenes(scenes: TimelineDawSessionScene[], orderedIds: string[]) {
+  const scenesById = new Map(scenes.map((scene) => [scene.id, scene]));
+  const seen = new Set<string>();
+  const ordered = orderedIds.flatMap((id) => {
+    if (seen.has(id)) return [];
+    seen.add(id);
+    const scene = scenesById.get(id);
+    return scene ? [scene] : [];
+  });
+  for (const scene of scenes) if (!seen.has(scene.id)) ordered.push(scene);
+  return ordered;
+}
+
+export function moveTimelineDawSessionScene(scenes: TimelineDawSessionScene[], orderedIds: string[], sceneId: string, direction: "up" | "down") {
+  const ordered = orderTimelineDawSessionScenes(scenes, orderedIds);
+  const currentIndex = ordered.findIndex((scene) => scene.id === sceneId);
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= ordered.length) return ordered.map((scene) => scene.id);
+  [ordered[currentIndex], ordered[targetIndex]] = [ordered[targetIndex], ordered[currentIndex]];
+  return ordered.map((scene) => scene.id);
+}
+
 export function createTimelineDawSessionFollowIndex(
   currentIndex: number,
   sceneCount: number,
