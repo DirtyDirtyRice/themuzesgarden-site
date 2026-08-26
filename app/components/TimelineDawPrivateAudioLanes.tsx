@@ -100,6 +100,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [riffAuditionPaused, setRiffAuditionPaused] = useState(false);
   const [riffAuditionProgress, setRiffAuditionProgress] = useState<{ trackName: string; trackNumber: number; trackCount: number; passNumber: number; passCount: number; canGoPrevious?: boolean }>();
   const [activeSessionSceneId, setActiveSessionSceneId] = useState<string>();
+  const [activeSessionClipId, setActiveSessionClipId] = useState<string>();
   const [activeSessionSceneProgress, setActiveSessionSceneProgress] = useState<{ currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number }>();
   const [queuedSessionLaunchName, setQueuedSessionLaunchName] = useState<string>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
@@ -676,6 +677,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     setRiffAuditionPaused(false);
     setRiffAuditionProgress(undefined);
     setActiveSessionSceneId(undefined);
+    setActiveSessionClipId(undefined);
     setActiveSessionSceneProgress(undefined);
     setQueuedSessionLaunchName(undefined);
     if (!preserveLoopIndicator) setLoopingRegionId(undefined);
@@ -1220,6 +1222,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         lanes={lanes.map((lane) => ({ id: lane.id, name: lane.name }))}
         labels={regionLabels}
         activeSceneId={activeSessionSceneId}
+        activeClipId={activeSessionClipId}
         activeSceneProgress={activeSessionSceneProgress}
         queuedLaunchName={queuedSessionLaunchName}
         onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => {
@@ -1230,6 +1233,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
             if (plan.loopForever) setLoopingRegionId(clip.id);
             previewRiffFamily([{ laneId: clip.laneId, startSeconds: clip.startSeconds, endSeconds: clip.endSeconds }], plan.repeatCount, plan.loopForever);
           } else void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds);
+          setActiveSessionClipId(clip.id);
         } })}
         onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene, settings.followAction, settings.sceneOrderIds, settings.sceneFollowActions, settings.defaultFollowAction, settings.scenePlayCounts, settings.sceneFollowTargetIds); } })}
         onStop={() => stopTrackPreview()}

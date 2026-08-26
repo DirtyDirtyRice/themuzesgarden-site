@@ -30,6 +30,7 @@ import {
   resolveTimelineDawSessionClipLaunchMode,
   resolveTimelineDawSessionClipQuantization,
   resolveTimelineDawSessionClipPlayCount,
+  findTimelineDawSessionClipSlot,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
   type TimelineDawSessionScene,
@@ -51,6 +52,7 @@ export default function TimelineDawSessionView({
   lanes,
   labels,
   activeSceneId,
+  activeClipId,
   activeSceneProgress,
   queuedLaunchName,
   onLaunchClip,
@@ -61,6 +63,7 @@ export default function TimelineDawSessionView({
   lanes: SessionLane[];
   labels: TimelineDawTrackRegionLabels;
   activeSceneId?: string;
+  activeClipId?: string;
   activeSceneProgress?: { currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number };
   queuedLaunchName?: string;
   onLaunchClip: (clip: { id: string; laneId: string; startSeconds: number; endSeconds: number; name: string }, settings: LaunchSettings) => void;
@@ -98,6 +101,7 @@ export default function TimelineDawSessionView({
   const liveSetFlow = analyzeTimelineDawSessionLiveSetFlow(scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const sceneNamesById = new Map(scenes.map((scene) => [scene.id, scene.name]));
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
+  const activeClip = findTimelineDawSessionClipSlot(scenes, activeClipId);
   const liveCue = createTimelineDawSessionLiveCue(activeSceneIndex, scenes, sceneFollowActions, sceneFollowTargetIds, resolvedScenePlayCounts);
   const livePassProgress = activeSceneProgress ? createTimelineDawSessionPassProgress(activeSceneProgress.passStartedAtMs, activeSceneProgress.passDurationMs, liveProgressNowMs) : null;
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
@@ -406,6 +410,7 @@ export default function TimelineDawSessionView({
             <button type="button" className={launchButton} onClick={onStop}>Stop Scene</button>
           </div>
         ) : null}
+        {activeSceneIndex < 0 && activeClip ? <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.08] p-3" role="status" aria-live="polite"><span className="text-xs font-black text-cyan-50">Playing clip {activeClip.name}</span><span className="text-[11px] text-white/55">{activeClip.startSeconds.toFixed(2)}–{activeClip.endSeconds.toFixed(2)} sec</span><button type="button" className={launchButton} onClick={onStop}>Stop Clip</button></div> : null}
         <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> 1–9 launch the matching visible scene · P previous · R replay · N next · Space stop. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
         {scenes.length ? <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3" aria-label="Live Set flow check">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-100">Live Set Flow Check</p>
@@ -458,8 +463,8 @@ export default function TimelineDawSessionView({
                       const resolvedClipLaunchMode = resolveTimelineDawSessionClipLaunchMode(slot.id, clipLaunchChoices, clipLaunchMode);
                       const resolvedClipQuantization = resolveTimelineDawSessionClipQuantization(slot.id, clipQuantizationChoices, quantization);
                       const resolvedClipPlayCount = resolveTimelineDawSessionClipPlayCount(slot.id, clipPlayCounts);
-                      return <div key={`${scene.id}:${lane.id}`} className="rounded-xl border border-white/15 bg-white/[0.06] p-2">
-                        <button type="button" className="w-full rounded-lg p-1 text-left transition hover:bg-cyan-200/10" onClick={(event) => { recordPerformanceEvent({ kind: "clip", name: slot.name, clips: [{ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds }], launchedAtMs: event.timeStamp }); onLaunchClip({ id: slot.id, laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, { ...settings, clipLaunchMode: resolvedClipLaunchMode, clipPlayCount: resolvedClipPlayCount, quantization: resolvedClipQuantization }); }}>
+                      return <div key={`${scene.id}:${lane.id}`} className={`rounded-xl border p-2 ${activeClipId === slot.id ? "border-cyan-200 bg-cyan-200/15 ring-2 ring-cyan-200/30" : "border-white/15 bg-white/[0.06]"}`}>
+                        <button type="button" aria-pressed={activeClipId === slot.id} className="w-full rounded-lg p-1 text-left transition hover:bg-cyan-200/10" onClick={(event) => { recordPerformanceEvent({ kind: "clip", name: slot.name, clips: [{ laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds }], launchedAtMs: event.timeStamp }); onLaunchClip({ id: slot.id, laneId: slot.laneId, startSeconds: slot.startSeconds, endSeconds: slot.endSeconds, name: slot.name }, { ...settings, clipLaunchMode: resolvedClipLaunchMode, clipPlayCount: resolvedClipPlayCount, quantization: resolvedClipQuantization }); }}>
                           <span className="block text-xs font-black text-white">{slot.name}</span>
                           <span className="mt-1 block text-[11px] text-white/45">{slot.startSeconds.toFixed(2)}–{slot.endSeconds.toFixed(2)} sec · {resolvedClipLaunchMode === "loop" ? "Loop" : `Play ×${resolvedClipPlayCount}`} · {resolvedClipQuantization}</span>
                         </button>

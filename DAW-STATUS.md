@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Finite Per-Clip Repeat Counts
+## Latest completed DAW milestone - Active Individual Clip Feedback
+
+- Session View now tracks the exact individual clip currently playing independently from full-scene playback.
+- The active clip slot receives a clear cyan highlight and pressed-state semantics while its audio is live.
+- When no full scene is active, a dedicated status strip names the playing clip, shows its exact region range, and provides a direct Stop Clip control.
+- Active state works for one-shot, finite-repeat, and continuous-loop launches and clears through the established stop, completion, scene-switch, and generation-guard paths.
+- Focused Session View tests passed (30 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Playback feedback is transient UI only and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Finite Per-Clip Repeat Counts
 
 - Every occupied Session View clip can now play a musician-selected 1–16 times before stopping.
 - Continuous Loop remains explicitly open-ended and disables the finite-count field so the two behaviors cannot be confused.

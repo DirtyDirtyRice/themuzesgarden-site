@@ -366,6 +366,15 @@ export function resolveTimelineDawSessionClipPlayCount(clipId: string, counts: R
   return Number.isInteger(count) && count >= 1 && count <= 16 ? count : 1;
 }
 
+export function findTimelineDawSessionClipSlot(scenes: TimelineDawSessionScene[], clipId?: string) {
+  if (!clipId) return null;
+  for (const scene of scenes) {
+    const slot = scene.slots.find((candidate) => candidate.id === clipId);
+    if (slot) return slot;
+  }
+  return null;
+}
+
 export function createTimelineDawSessionNavigationIndex(
   currentIndex: number,
   sceneCount: number,

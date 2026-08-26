@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -92,6 +92,16 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionClipPlayCount("verse", { verse: 0 })).toBe(1);
     expect(resolveTimelineDawSessionClipPlayCount("verse", { verse: 17 })).toBe(1);
     expect(resolveTimelineDawSessionClipPlayCount("missing", { verse: 4 })).toBe(1);
+  });
+
+  it("finds an active clip safely across visible scenes", () => {
+    const scenes = [
+      { id: "verse", name: "Verse", slots: [{ id: "clip-a", laneId: "guitar", name: "Verse", startSeconds: 0, endSeconds: 8, color: "cyan" as const }] },
+      { id: "chorus", name: "Chorus", slots: [{ id: "clip-b", laneId: "drums", name: "Chorus", startSeconds: 8, endSeconds: 16, color: "cyan" as const }] },
+    ];
+    expect(findTimelineDawSessionClipSlot(scenes, "clip-b")?.name).toBe("Chorus");
+    expect(findTimelineDawSessionClipSlot(scenes, "missing")).toBeNull();
+    expect(findTimelineDawSessionClipSlot(scenes)).toBeNull();
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
