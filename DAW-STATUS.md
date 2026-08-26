@@ -60,7 +60,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Per-Clip Launch Behavior Overrides
+## Latest completed DAW milestone - Per-Clip Launch Quantization
+
+- Every occupied Session View clip can now inherit the session launch boundary or independently choose Immediate, Next Beat, Next Two Beats, or Next Bar.
+- Each clip slot displays its resolved quantization alongside its One-Shot or Loop behavior before launch.
+- Per-clip timing flows through the established musical-boundary queue, cancellation, exact-region playback, and non-destructive performance-capture path.
+- Changing the global launch quantization immediately updates every clip still configured to inherit it without overwriting explicit clip choices.
+- Focused Session View tests passed (28 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Quantization overrides are transient Session View configuration and write no database, browser storage, audio source, Named Region, arrangement, plan, or take data.
+
+## Previously completed DAW milestone - Per-Clip Launch Behavior Overrides
 
 - Every occupied Session View clip slot now has its own launch-behavior menu.
 - A clip can inherit the current default, force One-Shot, or force Loop Until Stopped independently of every other clip.

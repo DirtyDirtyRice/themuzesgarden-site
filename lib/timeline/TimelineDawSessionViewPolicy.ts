@@ -9,6 +9,7 @@ export type TimelineDawSessionScene = {
 };
 
 export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-beats" | "bar";
+export type TimelineDawSessionClipQuantizationChoice = "global" | TimelineDawSessionLaunchQuantization;
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
@@ -332,6 +333,15 @@ export function resolveTimelineDawSessionClipLaunchMode(
   clipId: string,
   choices: Record<string, TimelineDawSessionClipLaunchChoice>,
   fallback: TimelineDawSessionClipLaunchMode,
+) {
+  const choice = choices[clipId];
+  return choice && choice !== "global" ? choice : fallback;
+}
+
+export function resolveTimelineDawSessionClipQuantization(
+  clipId: string,
+  choices: Record<string, TimelineDawSessionClipQuantizationChoice>,
+  fallback: TimelineDawSessionLaunchQuantization,
 ) {
   const choice = choices[clipId];
   return choice && choice !== "global" ? choice : fallback;
