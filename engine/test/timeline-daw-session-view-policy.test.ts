@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -123,5 +123,16 @@ describe("Timeline DAW Session View policy", () => {
     expect(preview.lanes.map((lane) => [lane.laneId, lane.clips.length])).toEqual([["drums", 1], ["bass", 1], ["vocals", 0]]);
     expect(preview.lanes[0].clips[0]).toMatchObject({ leftPercent: 20, widthPercent: 80 });
     expect(preview.lanes[1].clips[0]).toMatchObject({ leftPercent: 0, widthPercent: 40 });
+  });
+
+  it("creates isolated named take-lane snapshots", () => {
+    const event = createTimelineDawSessionPerformanceEvent({ id: "launch", kind: "scene", name: "Verse", takeStartedAtMs: 0, launchedAtMs: 500, bpm: 120, clips: [{ laneId: "drums", startSeconds: 0, endSeconds: 8 }] });
+    const take = createTimelineDawSessionSavedTake({ id: "take-1", name: "  First pass  ", quantization: "beat", events: [event] });
+    expect(take).toMatchObject({ id: "take-1", name: "First pass", quantization: "beat" });
+    expect(take.events[0]).not.toBe(event);
+    expect(take.events[0].clips[0]).not.toBe(event.clips[0]);
+    take.events[0].clips[0].endSeconds = 4;
+    expect(event.clips[0].endSeconds).toBe(8);
+    expect(() => createTimelineDawSessionSavedTake({ id: "", name: "", quantization: "off", events: [] })).toThrow("needs an id");
   });
 });

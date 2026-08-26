@@ -23,6 +23,23 @@ export type TimelineDawSessionPerformanceEvent = {
   bpm: number;
   clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>;
 };
+export type TimelineDawSessionSavedTake = {
+  id: string;
+  name: string;
+  quantization: TimelineDawSessionTakeQuantization;
+  events: TimelineDawSessionPerformanceEvent[];
+};
+
+export function createTimelineDawSessionSavedTake(input: TimelineDawSessionSavedTake): TimelineDawSessionSavedTake {
+  const name = input.name.trim();
+  if (!input.id || !name || name.length > 80 || !input.events.length) throw new Error("A saved Session View take needs an id, a short name, and at least one launch.");
+  return {
+    id: input.id,
+    name,
+    quantization: input.quantization,
+    events: input.events.map((event) => ({ ...event, clips: event.clips.map((clip) => ({ ...clip })) })),
+  };
+}
 
 export function createTimelineDawSessionPerformanceEvent(input: {
   id: string;

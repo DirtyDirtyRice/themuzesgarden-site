@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Visual Session-to-Arrangement Preview
+## Latest completed DAW milestone - Session Performance Take Lanes
+
+- Musicians can now name and save multiple Session View performances as separate Take Lanes during one private workspace session.
+- Every saved lane displays its launch count and timing-cleanup mode for quick A/B comparison.
+- Load restores a selected performance and its timing mode into the existing arrangement preview without applying it to the song.
+- Remove deletes only that temporary saved lane; the current performance, source audio, Named Regions, and linear arrangement remain untouched.
+- Saved and loaded takes deep-clone events and clip ranges, preventing later cleanup or editing from silently mutating another take.
+- Launching after loading a saved lane safely starts a fresh performance rather than appending timestamps from an unrelated clock origin.
+- Focused Session View tests passed (11 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or browser persistence was added; private take lanes exist only in component memory until the page closes.
+
+## Previously completed DAW milestone - Visual Session-to-Arrangement Preview
 
 - Captured Session View performances now display a read-only mini arrangement before download.
 - Every DAW track receives its own horizontal preview lane in the same track order musicians already know.
