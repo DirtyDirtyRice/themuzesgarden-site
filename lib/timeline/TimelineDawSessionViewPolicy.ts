@@ -550,6 +550,10 @@ export function createTimelineDawSessionClipPassProgress(input: {
   return createTimelineDawSessionPassProgress(input.passStartedAtMs, input.passDurationMs, input.pausedAtMs ?? input.nowMs);
 }
 
+export function createTimelineDawSessionQueuedLaunchProgress(queuedAtMs: number, delayMs: number, nowMs: number) {
+  return createTimelineDawSessionPassProgress(queuedAtMs, delayMs, nowMs);
+}
+
 export function analyzeTimelineDawSessionLiveSetFlow(
   scenes: TimelineDawSessionScene[],
   sceneFollowActions: Record<string, TimelineDawSessionFollowAction>,

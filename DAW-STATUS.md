@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Individual Clip Total Playback ETA
+## Latest completed DAW milestone - Quantized Launch Countdown
+
+- Queued Session View clip and scene launches now show a live countdown to the selected beat, two-beat, or bar boundary.
+- The queue panel names the pending launch, displays remaining seconds, and fills an accessible progress bar until playback begins.
+- Replacing a queued launch resets the countdown to the new target; Cancel, Stop, immediate launch, and timer completion clear it through the established queue controls.
+- Countdown timing reuses the validated BPM, playhead, quantization-delay, and bounded progress policies rather than creating a parallel clock.
+- The visual countdown makes launch timing predictable during rehearsal and live performance without changing the arrangement.
+- Focused Session View tests passed (38 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Queue feedback is transient playback UI and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Individual Clip Total Playback ETA
 
 - Active finite Session View clips now show a live total remaining-time estimate across the current pass and every scheduled future repeat.
 - The estimate combines the current pass's exact remaining time with the transformed duration of each future pass and updates alongside the live progress meter.

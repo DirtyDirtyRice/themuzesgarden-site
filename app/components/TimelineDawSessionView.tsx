@@ -36,6 +36,7 @@ import {
   createTimelineDawSessionClipTransportState,
   createTimelineDawSessionClipUpNextCue,
   createTimelineDawSessionClipRemainingLabel,
+  createTimelineDawSessionQueuedLaunchProgress,
   resolveTimelineDawSessionClipKeyboardCommand,
   type TimelineDawSessionFollowAction,
   type TimelineDawSessionLaunchQuantization,
@@ -62,6 +63,7 @@ export default function TimelineDawSessionView({
   activeClipPlayback,
   activeSceneProgress,
   queuedLaunchName,
+  queuedLaunchProgress,
   onLaunchClip,
   onLaunchScene,
   onStop,
@@ -79,6 +81,7 @@ export default function TimelineDawSessionView({
   activeClipPlayback?: { mode: TimelineDawSessionClipLaunchMode; currentPass: number; totalPasses: number; paused: boolean; passStartedAtMs?: number; passDurationMs?: number; pausedAtMs?: number };
   activeSceneProgress?: { currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number };
   queuedLaunchName?: string;
+  queuedLaunchProgress?: { queuedAtMs: number; delayMs: number };
   onLaunchClip: (clip: { id: string; laneId: string; startSeconds: number; endSeconds: number; name: string }, settings: LaunchSettings) => void;
   onLaunchScene: (scene: TimelineDawSessionScene, settings: LaunchSettings) => void;
   onStop: () => void;
@@ -126,16 +129,17 @@ export default function TimelineDawSessionView({
   const livePassProgress = activeSceneProgress ? createTimelineDawSessionPassProgress(activeSceneProgress.passStartedAtMs, activeSceneProgress.passDurationMs, liveProgressNowMs) : null;
   const activeClipPassProgress = activeClipPlayback?.passStartedAtMs !== undefined && activeClipPlayback.passDurationMs !== undefined ? createTimelineDawSessionClipPassProgress({ passStartedAtMs: activeClipPlayback.passStartedAtMs, passDurationMs: activeClipPlayback.passDurationMs, pausedAtMs: activeClipPlayback.pausedAtMs, nowMs: liveProgressNowMs }) : null;
   const activeClipRemainingLabel = activeClipPlayback && activeClipPassProgress ? createTimelineDawSessionClipRemainingLabel({ ...activeClipPlayback, passDurationSeconds: (activeClipPlayback.passDurationMs ?? 0) / 1000, currentPassRemainingSeconds: activeClipPassProgress.remainingSeconds }) : null;
+  const queuedProgress = queuedLaunchProgress ? createTimelineDawSessionQueuedLaunchProgress(queuedLaunchProgress.queuedAtMs, queuedLaunchProgress.delayMs, liveProgressNowMs) : null;
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
   const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
 
   useEffect(() => {
-    if (!activeSceneProgress && (!activeClipPassProgress || activeClipPlayback?.paused)) return;
+    if (!activeSceneProgress && !queuedProgress && (!activeClipPassProgress || activeClipPlayback?.paused)) return;
     const timer = window.setInterval(() => setLiveProgressNowMs(Date.now()), 250);
     return () => window.clearInterval(timer);
-  }, [activeClipPassProgress, activeClipPlayback?.paused, activeSceneProgress]);
+  }, [activeClipPassProgress, activeClipPlayback?.paused, activeSceneProgress, queuedProgress]);
 
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
@@ -358,7 +362,7 @@ export default function TimelineDawSessionView({
             </select>
           </label>
           <p className="max-w-xl text-xs text-white/45">Queued launches wait for the selected musical boundary. Stop cancels a queued launch before any audio starts.</p>
-          {queuedLaunchName ? <button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued {queuedLaunchName}</button> : null}
+          {queuedLaunchName ? <div className="w-full rounded-lg border border-amber-300/20 bg-amber-300/[0.06] p-3" role="status" aria-live="polite"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-black text-amber-100">Queued: {queuedLaunchName}</span>{queuedProgress ? <span className="text-[11px] font-black text-amber-50">Launches in {queuedProgress.remainingSeconds.toFixed(2)} sec</span> : null}<button type="button" className={launchButton} onClick={onCancelQueued}>Cancel queued launch</button></div>{queuedProgress ? <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-label="Queued launch countdown" aria-valuemin={0} aria-valuemax={100} aria-valuenow={queuedProgress.percent}><div className="h-full rounded-full bg-amber-300 transition-[width] duration-100" style={{ width: `${queuedProgress.percent}%` }} /></div> : null}</div> : null}
           <button type="button" className={launchButton} onClick={onStop}>Stop Session Audio</button>
           <button type="button" className={launchButton} onClick={downloadLiveSetPlan}>Download Live Set Plan</button>
           <label className={`${launchButton} cursor-pointer`}>Import Live Set Plan<input className="sr-only" type="file" accept="application/json,.json" onChange={importLiveSetPlan} /></label>

@@ -104,6 +104,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [activeSessionClipLaunch, setActiveSessionClipLaunch] = useState<{ mode: "one-shot" | "loop"; playCount: number }>();
   const [activeSessionSceneProgress, setActiveSessionSceneProgress] = useState<{ currentIteration: number; totalIterations: number | null; passStartedAtMs: number; passDurationMs: number }>();
   const [queuedSessionLaunchName, setQueuedSessionLaunchName] = useState<string>();
+  const [queuedSessionLaunchProgress, setQueuedSessionLaunchProgress] = useState<{ queuedAtMs: number; delayMs: number }>();
   const [meters, setMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
   const [waveforms, setWaveforms] = useState<Record<string, DawPrivateLaneWaveform>>({});
   const [historyRevision, setHistoryRevision] = useState(0);
@@ -682,6 +683,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     setActiveSessionClipLaunch(undefined);
     setActiveSessionSceneProgress(undefined);
     setQueuedSessionLaunchName(undefined);
+    setQueuedSessionLaunchProgress(undefined);
     if (!preserveLoopIndicator) setLoopingRegionId(undefined);
     synchronize(playheadRef.current, false);
   }
@@ -849,6 +851,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
     sessionLaunchTimerRef.current = null;
     setQueuedSessionLaunchName(undefined);
+    setQueuedSessionLaunchProgress(undefined);
     try {
       const delay = createTimelineDawSessionLaunchDelay({
         playheadSeconds: playheadRef.current,
@@ -861,9 +864,11 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       }
       setMovementNotice(`${input.name} queued for the next ${input.quantization === "bar" ? "bar" : input.quantization === "two-beats" ? "two-beat boundary" : "beat"} at ${input.bpm} BPM.`);
       setQueuedSessionLaunchName(input.name);
+      setQueuedSessionLaunchProgress({ queuedAtMs: Date.now(), delayMs: delay });
       sessionLaunchTimerRef.current = setTimeout(() => {
         sessionLaunchTimerRef.current = null;
         setQueuedSessionLaunchName(undefined);
+        setQueuedSessionLaunchProgress(undefined);
         input.launch();
       }, delay);
     } catch (cause) {
@@ -875,6 +880,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
     sessionLaunchTimerRef.current = null;
     setQueuedSessionLaunchName(undefined);
+    setQueuedSessionLaunchProgress(undefined);
     setMovementNotice(activeSessionSceneId ? "Queued scene change cancelled. The current scene keeps playing." : "Queued Session View launch cancelled.");
   }
 
@@ -1231,6 +1237,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         activeClipPlayback={activeSessionClipLaunch ? { mode: activeSessionClipLaunch.mode, currentPass: riffAuditionProgress?.passNumber ?? 1, totalPasses: activeSessionClipLaunch.playCount, paused: riffAuditionPaused, passStartedAtMs: riffAuditionProgress?.passStartedAtMs, passDurationMs: riffAuditionProgress?.passDurationMs, pausedAtMs: riffAuditionProgress?.pausedAtMs } : undefined}
         activeSceneProgress={activeSessionSceneProgress}
         queuedLaunchName={queuedSessionLaunchName}
+        queuedLaunchProgress={queuedSessionLaunchProgress}
         onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => {
           const plan = createTimelineDawSessionClipLaunchPlan(settings.clipLaunchMode, settings.clipPlayCount);
           const launchDescription = plan.loopForever ? `Looping ${clip.name}` : plan.repeatCount > 1 ? `Playing ${clip.name} ${plan.repeatCount} times` : `Launching ${clip.name}`;
