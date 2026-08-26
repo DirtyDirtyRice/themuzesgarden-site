@@ -13,7 +13,7 @@ export type TimelineDawSessionClipQuantizationChoice = "global" | TimelineDawSes
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
-export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "stop";
+export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "launch-queued" | "cancel-queued" | "stop";
 export type TimelineDawSessionClipLaunchMode = "one-shot" | "loop";
 export type TimelineDawSessionClipLaunchChoice = "global" | TimelineDawSessionClipLaunchMode;
 export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
@@ -319,6 +319,8 @@ export function resolveTimelineDawSessionKeyboardCommand(input: {
   if (key === "r") return "replay";
   if (key === "n") return "next";
   if (key === "k") return "pause-resume";
+  if (key === "enter") return "launch-queued";
+  if (key === "escape") return "cancel-queued";
   if (key === " " || key === "spacebar") return "stop";
   return null;
 }
@@ -435,7 +437,7 @@ export function resolveTimelineDawSessionClipKeyboardCommand(
   hasActiveClip: boolean,
   canGoPrevious: boolean,
 ) {
-  if (!hasActiveClip || command === "stop") return null;
+  if (!hasActiveClip || command === "stop" || command === "launch-queued" || command === "cancel-queued") return null;
   if (command === "previous" && !canGoPrevious) return null;
   return command;
 }

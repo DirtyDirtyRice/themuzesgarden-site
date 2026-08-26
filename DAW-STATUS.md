@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Quantized Launch Countdown
+## Latest completed DAW milestone - Queued Launch Override Controls
+
+- Every quantized Session View queue now offers Launch Now beside Cancel, allowing a musician to override the remaining beat/bar wait intentionally.
+- Enter fires the pending clip or scene immediately, while Escape cancels it; both shortcuts retain the established focus, typing, modifier, and key-repeat safeguards.
+- The guarded queue owns one pending launch callback, clears its timer and visible state first, and then allows exactly one automatic or manual launch path.
+- Stop, replacement queues, immediate launches, cancellation, timer completion, and manual override all clear the callback so stale launches cannot fire later.
+- The queue panel and keyboard guide expose both overrides directly for rehearsal and live performance.
+- Focused Session View tests passed (39 tests), TypeScript passed, targeted lint completed with only the seven pre-existing parent-component hook warnings, and the production build passed with 76 generated pages.
+- Queue overrides are transient playback controls and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Quantized Launch Countdown
 
 - Queued Session View clip and scene launches now show a live countdown to the selected beat, two-beat, or bar boundary.
 - The queue panel names the pending launch, displays remaining seconds, and fills an accessible progress bar until playback begins.

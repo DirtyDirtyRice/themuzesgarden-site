@@ -142,6 +142,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const saveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionLaunchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionQueuedLaunchRef = useRef<(() => void) | null>(null);
   const riffAuditionGenerationRef = useRef(0);
   const riffAuditionSkipRef = useRef<(() => void) | null>(null);
   const riffAuditionPreviousRef = useRef<(() => void) | null>(null);
@@ -664,6 +665,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     previewTimerRef.current = null;
     if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
     sessionLaunchTimerRef.current = null;
+    sessionQueuedLaunchRef.current = null;
     riffAuditionSkipRef.current = null;
     riffAuditionPreviousRef.current = null;
     riffAuditionReplayRef.current = null;
@@ -850,6 +852,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   }) {
     if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
     sessionLaunchTimerRef.current = null;
+    sessionQueuedLaunchRef.current = null;
     setQueuedSessionLaunchName(undefined);
     setQueuedSessionLaunchProgress(undefined);
     try {
@@ -865,11 +868,14 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       setMovementNotice(`${input.name} queued for the next ${input.quantization === "bar" ? "bar" : input.quantization === "two-beats" ? "two-beat boundary" : "beat"} at ${input.bpm} BPM.`);
       setQueuedSessionLaunchName(input.name);
       setQueuedSessionLaunchProgress({ queuedAtMs: Date.now(), delayMs: delay });
+      sessionQueuedLaunchRef.current = input.launch;
       sessionLaunchTimerRef.current = setTimeout(() => {
         sessionLaunchTimerRef.current = null;
+        const launch = sessionQueuedLaunchRef.current;
+        sessionQueuedLaunchRef.current = null;
         setQueuedSessionLaunchName(undefined);
         setQueuedSessionLaunchProgress(undefined);
-        input.launch();
+        launch?.();
       }, delay);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : `${input.name} could not be queued.`);
@@ -879,9 +885,22 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   function cancelQueuedSessionLaunch() {
     if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
     sessionLaunchTimerRef.current = null;
+    sessionQueuedLaunchRef.current = null;
     setQueuedSessionLaunchName(undefined);
     setQueuedSessionLaunchProgress(undefined);
     setMovementNotice(activeSessionSceneId ? "Queued scene change cancelled. The current scene keeps playing." : "Queued Session View launch cancelled.");
+  }
+
+  function launchQueuedSessionNow() {
+    const launch = sessionQueuedLaunchRef.current;
+    if (!launch) return;
+    if (sessionLaunchTimerRef.current) clearTimeout(sessionLaunchTimerRef.current);
+    sessionLaunchTimerRef.current = null;
+    sessionQueuedLaunchRef.current = null;
+    setQueuedSessionLaunchName(undefined);
+    setQueuedSessionLaunchProgress(undefined);
+    setMovementNotice("Queued Session View launch started immediately.");
+    launch();
   }
 
   function previewRiffFamily(regions: Array<{ laneId: string; startSeconds: number; endSeconds: number }>, repeatCount = 1, loopForever = false) {
@@ -1255,6 +1274,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         onReplayClip={() => riffAuditionReplayRef.current?.()}
         onAdvanceClip={() => riffAuditionSkipRef.current?.()}
         onCancelQueued={cancelQueuedSessionLaunch}
+        onLaunchQueuedNow={launchQueuedSessionNow}
       />
       <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />

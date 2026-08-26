@@ -68,6 +68,8 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "R" })).toBe("replay");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n" })).toBe("next");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "K" })).toBe("pause-resume");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: " " })).toBe("stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", editableTarget: true })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "n", launcherFocused: false })).toBeNull();
@@ -152,6 +154,11 @@ describe("Timeline DAW Session View policy", () => {
   it("routes pause and resume only when an individual clip is active", () => {
     expect(resolveTimelineDawSessionClipKeyboardCommand("pause-resume", true, false)).toBe("pause-resume");
     expect(resolveTimelineDawSessionClipKeyboardCommand("pause-resume", false, true)).toBeNull();
+  });
+
+  it("keeps queued-launch overrides out of individual clip navigation", () => {
+    expect(resolveTimelineDawSessionClipKeyboardCommand("launch-queued", true, true)).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("cancel-queued", true, true)).toBeNull();
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
