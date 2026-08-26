@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
   it("groups matching named regions into scenes across tracks", () => {
@@ -184,5 +184,13 @@ describe("Timeline DAW Session View policy", () => {
     expect(moveTimelineDawSessionScene(scenes, [], "chorus", "up")).toEqual(["chorus", "verse", "bridge"]);
     expect(moveTimelineDawSessionScene(scenes, ["chorus", "verse", "bridge"], "chorus", "up")).toEqual(["chorus", "verse", "bridge"]);
     expect(orderTimelineDawSessionScenes(scenes, ["missing", "bridge", "bridge", "verse"]).map((scene) => scene.id)).toEqual(["bridge", "verse", "chorus"]);
+  });
+
+  it("resolves independent per-scene follow actions with a global fallback", () => {
+    const choices = { verse: "next", chorus: "loop", bridge: "global" } as const;
+    expect(resolveTimelineDawSessionSceneFollowAction("verse", choices, "stop")).toBe("next");
+    expect(resolveTimelineDawSessionSceneFollowAction("chorus", choices, "stop")).toBe("loop");
+    expect(resolveTimelineDawSessionSceneFollowAction("bridge", choices, "stop")).toBe("stop");
+    expect(resolveTimelineDawSessionSceneFollowAction("outro", choices, "next")).toBe("next");
   });
 });

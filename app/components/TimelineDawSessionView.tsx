@@ -15,6 +15,7 @@ import {
   parseTimelineDawSessionTakeLaneBundle,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
+  resolveTimelineDawSessionSceneFollowAction,
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
@@ -24,10 +25,11 @@ import {
   type TimelineDawSessionPerformanceEvent,
   type TimelineDawSessionTakeQuantization,
   type TimelineDawSessionSavedTake,
+  type TimelineDawSessionSceneFollowChoice,
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
-type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; followAction: TimelineDawSessionFollowAction; sceneOrderIds: string[] };
+type LaunchSettings = { bpm: number; quantization: TimelineDawSessionLaunchQuantization; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneOrderIds: string[] };
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -62,10 +64,12 @@ export default function TimelineDawSessionView({
   const [compSelections, setCompSelections] = useState<string[]>([]);
   const [bundleNotice, setBundleNotice] = useState("");
   const [sceneOrderIds, setSceneOrderIds] = useState<string[]>([]);
+  const [sceneFollowChoices, setSceneFollowChoices] = useState<Record<string, TimelineDawSessionSceneFollowChoice>>({});
   const performanceStartedAtRef = useRef<number | null>(null);
   const baseScenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const scenes = orderTimelineDawSessionScenes(baseScenes, sceneOrderIds);
-  const settings = { bpm, quantization, followAction, sceneOrderIds: scenes.map((scene) => scene.id) };
+  const sceneFollowActions = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionSceneFollowAction(scene.id, sceneFollowChoices, followAction)]));
+  const settings = { bpm, quantization, followAction, defaultFollowAction: followAction, sceneFollowActions, sceneOrderIds: scenes.map((scene) => scene.id) };
   const activeSceneIndex = scenes.findIndex((scene) => scene.id === activeSceneId);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
@@ -176,7 +180,7 @@ export default function TimelineDawSessionView({
 
   function launchSceneAndRecord(scene: TimelineDawSessionScene, launchedAtMs: number) {
     recordPerformanceEvent({ kind: "scene", name: scene.name, clips: createTimelineDawSessionSceneLaunch(scene), launchedAtMs });
-    onLaunchScene(scene, settings);
+    onLaunchScene(scene, { ...settings, followAction: sceneFollowActions[scene.id] ?? followAction });
   }
 
   function handleLauncherKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -329,6 +333,14 @@ export default function TimelineDawSessionView({
                         <button type="button" className={launchButton} disabled={scenes[0]?.id === scene.id} onClick={() => setSceneOrderIds((current) => moveTimelineDawSessionScene(baseScenes, current, scene.id, "up"))}>↑</button>
                         <button type="button" className={launchButton} disabled={scenes.at(-1)?.id === scene.id} onClick={() => setSceneOrderIds((current) => moveTimelineDawSessionScene(baseScenes, current, scene.id, "down"))}>↓</button>
                       </div>
+                      <label className="mt-2 block text-[10px] font-black text-white/55">After this scene
+                        <select className="mt-1 block w-full rounded-md border border-white/15 bg-black px-2 py-1 text-white" value={sceneFollowChoices[scene.id] ?? "global"} onChange={(event) => setSceneFollowChoices((current) => ({ ...current, [scene.id]: event.target.value as TimelineDawSessionSceneFollowChoice }))}>
+                          <option value="global">Use global ({followAction})</option>
+                          <option value="stop">Stop</option>
+                          <option value="next">Launch Next</option>
+                          <option value="loop">Loop</option>
+                        </select>
+                      </label>
                       <p className="mt-2 text-[11px] text-white/45">{scene.slots.length} active clip{scene.slots.length === 1 ? "" : "s"}</p>
                     </div>,
                     ...lanes.map((lane) => {

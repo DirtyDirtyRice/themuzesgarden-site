@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Editable Live Scene Order
+## Latest completed DAW milestone - Per-Scene Follow Actions
+
+- Every Session View scene now has its own After This Scene choice: Use Global, Stop, Launch Next, or Loop.
+- Musicians can build live flows such as Verse advances, Chorus loops, and Outro stops without changing the global default between launches.
+- Mouse launches, Previous/Replay/Next controls, and focused keyboard navigation resolve the target scene's own follow choice before playback.
+- The complete resolved per-scene action map travels with the edited scene order into the parent playback timer.
+- When Follow Next starts another scene, that new scene's own action takes control instead of inheriting the previous scene's behavior.
+- Global remains a safe fallback for new scenes and scenes without an override; all choices remain temporary performance state.
+- Focused Session View tests passed (16 tests), TypeScript passed, targeted new-file lint passed, and the production build passed with 76 generated pages.
+- No arrangement, source audio, Take Lane bundle, database, or browser-persistence changes were required.
+
+## Previously completed DAW milestone - Editable Live Scene Order
 
 - Session View scenes now include musician-facing Move Up and Move Down controls for arranging a live set independently of source-region timeline positions.
 - Previous Scene, Replay Scene, Next Scene, and focused P/R/N keyboard navigation all follow the visible edited order.

@@ -771,7 +771,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     }
   }
 
-  async function previewSessionScene(scene: TimelineDawSessionScene, followAction: TimelineDawSessionFollowAction = "stop", sceneOrderIds: string[] = []) {
+  async function previewSessionScene(scene: TimelineDawSessionScene, followAction: TimelineDawSessionFollowAction = "stop", sceneOrderIds: string[] = [], sceneFollowActions: Record<string, TimelineDawSessionFollowAction> = {}, defaultFollowAction: TimelineDawSessionFollowAction = followAction) {
     setError(undefined);
     stopTrackPreview();
     const generation = riffAuditionGenerationRef.current;
@@ -817,7 +817,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         }
         const nextScene = scenes[followIndex];
         setMovementNotice(followAction === "loop" ? `Looping ${scene.name} scene.` : `Following ${scene.name} with ${nextScene.name}.`);
-        void previewSessionScene(nextScene, followAction, sceneOrderIds);
+        const nextFollowAction = sceneFollowActions[nextScene.id] ?? defaultFollowAction;
+        void previewSessionScene(nextScene, nextFollowAction, sceneOrderIds, sceneFollowActions, defaultFollowAction);
       }, Math.max(...prepared.map(({ plan }) => plan.stopAfterMilliseconds)));
     } catch (cause) {
       stopTrackPreview();
@@ -1211,7 +1212,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         activeSceneId={activeSessionSceneId}
         queuedLaunchName={queuedSessionLaunchName}
         onLaunchClip={(clip, settings) => queueSessionLaunch({ name: clip.name, ...settings, launch: () => { setMovementNotice(`Launching ${clip.name} in Session View. The arrangement is unchanged.`); void previewRiff(clip.laneId, clip.startSeconds, clip.endSeconds); } })}
-        onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene, settings.followAction, settings.sceneOrderIds); } })}
+        onLaunchScene={(scene, settings) => queueSessionLaunch({ name: scene.name, ...settings, launch: () => { setMovementNotice(`Launching ${scene.name} across ${scene.slots.length} tracks. The arrangement is unchanged.`); void previewSessionScene(scene, settings.followAction, settings.sceneOrderIds, settings.sceneFollowActions, settings.defaultFollowAction); } })}
         onStop={() => stopTrackPreview()}
         onCancelQueued={cancelQueuedSessionLaunch}
       />

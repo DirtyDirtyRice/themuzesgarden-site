@@ -10,6 +10,7 @@ export type TimelineDawSessionScene = {
 
 export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-beats" | "bar";
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
+export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
 export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "stop";
 export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
@@ -299,6 +300,15 @@ export function createTimelineDawSessionFollowIndex(
   if (action === "loop") return currentIndex;
   if (action === "next") return currentIndex + 1 < sceneCount ? currentIndex + 1 : null;
   return null;
+}
+
+export function resolveTimelineDawSessionSceneFollowAction(
+  sceneId: string,
+  choices: Record<string, TimelineDawSessionSceneFollowChoice>,
+  fallback: TimelineDawSessionFollowAction,
+) {
+  const choice = choices[sceneId];
+  return choice && choice !== "global" ? choice : fallback;
 }
 
 export function createTimelineDawSessionLaunchDelay(input: {
