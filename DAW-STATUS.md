@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Compound and Denominator-Based Meters
+## Latest completed DAW milestone - Tap Tempo Transport Control
+
+- Session View now provides a dedicated Tap Tempo control beside the numeric BPM field.
+- Two or more taps calculate BPM from the average of recent valid intervals, smoothing normal human timing variation across up to nine taps.
+- A pause longer than two seconds starts a fresh tap sequence instead of contaminating the next tempo estimate.
+- Detected tempo updates the live bar/beat position and all beat-, two-beat-, and bar-quantized clip, scene, and stop boundaries immediately.
+- The interface shows tap count and detected BPM and provides an explicit Reset Taps control.
+- Focused Session View tests passed (45 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Tap history is transient in-memory transport state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Compound and Denominator-Based Meters
 
 - Session View now supports quarter-note, eighth-note, and sixteenth-note beat units, enabling meters such as 6/8, 7/8, and 11/16.
 - The denominator changes the musical beat length used by the live bar/beat clock and by beat-, two-beat-, and bar-quantized launches and stops.

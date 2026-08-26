@@ -22,6 +22,7 @@ import {
   createTimelineDawSessionSceneRemainingLabel,
   createTimelineDawSessionSceneUpNextCue,
   createTimelineDawSessionMusicalPosition,
+  createTimelineDawSessionTapTempo,
   createTimelineDawSessionClipPassProgress,
   moveTimelineDawSessionScene,
   orderTimelineDawSessionScenes,
@@ -107,6 +108,7 @@ export default function TimelineDawSessionView({
   onQueueStop: (settings: { bpm: number; beatsPerBar: number; beatUnit: number; quantization: TimelineDawSessionLaunchQuantization }) => void;
 }) {
   const [bpm, setBpm] = useState(120);
+  const [tapTempoCount, setTapTempoCount] = useState(0);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   const [beatUnit, setBeatUnit] = useState<4 | 8 | 16>(4);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
@@ -130,6 +132,7 @@ export default function TimelineDawSessionView({
   const [sceneFollowTargetIds, setSceneFollowTargetIds] = useState<Record<string, string>>({});
   const [liveProgressNowMs, setLiveProgressNowMs] = useState(() => Date.now());
   const performanceStartedAtRef = useRef<number | null>(null);
+  const tapTempoTimesRef = useRef<number[]>([]);
   const baseScenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const scenes = orderTimelineDawSessionScenes(baseScenes, sceneOrderIds);
   const sceneFollowActions = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionSceneFollowAction(scene.id, sceneFollowChoices, followAction)]));
@@ -154,6 +157,21 @@ export default function TimelineDawSessionView({
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
   const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
+
+  function tapTempo() {
+    const now = performance.now();
+    const previous = tapTempoTimesRef.current.at(-1);
+    const taps = previous !== undefined && now - previous <= 2_000 ? [...tapTempoTimesRef.current, now].slice(-9) : [now];
+    tapTempoTimesRef.current = taps;
+    setTapTempoCount(taps.length);
+    const detectedBpm = createTimelineDawSessionTapTempo(taps);
+    if (detectedBpm !== null) setBpm(detectedBpm);
+  }
+
+  function resetTapTempo() {
+    tapTempoTimesRef.current = [];
+    setTapTempoCount(0);
+  }
 
   useEffect(() => {
     if ((!activeSceneProgress || activeScenePaused) && !queuedProgress && (!activeClipPassProgress || activeClipPlayback?.paused)) return;
@@ -379,6 +397,10 @@ export default function TimelineDawSessionView({
           <label className="text-xs font-black text-white/70">Session BPM
             <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white" type="number" min={30} max={300} step={1} value={bpm} onChange={(event) => setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120)))} />
           </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" className={launchButton} onClick={tapTempo}>Tap Tempo</button>
+            {tapTempoCount ? <><span className="text-[11px] font-black text-cyan-100" role="status">{tapTempoCount} tap{tapTempoCount === 1 ? "" : "s"} · {bpm} BPM</span><button type="button" className={launchButton} onClick={resetTapTempo}>Reset Taps</button></> : null}
+          </div>
           <label className="text-xs font-black text-white/70">Beats per bar
             <select className="mt-1 block rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={beatsPerBar} onChange={(event) => setBeatsPerBar(Number(event.target.value))}>
               {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((beats) => <option key={beats} value={beats}>{beats}</option>)}

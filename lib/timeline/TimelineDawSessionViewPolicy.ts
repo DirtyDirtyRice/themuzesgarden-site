@@ -613,6 +613,15 @@ export function createTimelineDawSessionMusicalPosition(elapsedSeconds: number, 
   };
 }
 
+export function createTimelineDawSessionTapTempo(timestampsMs: number[]) {
+  const taps = timestampsMs.filter((timestamp) => Number.isFinite(timestamp) && timestamp >= 0).slice(-9);
+  if (taps.length < 2) return null;
+  const intervals = taps.slice(1).map((timestamp, index) => timestamp - taps[index]).filter((interval) => interval >= 200 && interval <= 2_000);
+  if (!intervals.length) return null;
+  const averageInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+  return Math.min(300, Math.max(30, Math.round(60_000 / averageInterval)));
+}
+
 export function createTimelineDawSessionQueuedLaunchProgress(queuedAtMs: number, delayMs: number, nowMs: number) {
   return createTimelineDawSessionPassProgress(queuedAtMs, delayMs, nowMs);
 }
