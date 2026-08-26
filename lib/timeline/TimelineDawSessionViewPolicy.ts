@@ -388,6 +388,20 @@ export function createTimelineDawSessionClipPlaybackStatus(input: {
   return `${prefix} · pass ${currentPass} of ${totalPasses}`;
 }
 
+export function createTimelineDawSessionClipTransportState(input: {
+  mode: TimelineDawSessionClipLaunchMode;
+  currentPass?: number;
+  totalPasses?: number;
+}) {
+  const currentPass = Number.isInteger(input.currentPass) && (input.currentPass ?? 0) > 0 ? input.currentPass as number : 1;
+  const totalPasses = Number.isInteger(input.totalPasses) && (input.totalPasses ?? 0) >= currentPass ? input.totalPasses as number : currentPass;
+  if (input.mode === "loop") return { canGoPrevious: false, advanceLabel: "Restart Loop" as const };
+  return {
+    canGoPrevious: currentPass > 1,
+    advanceLabel: currentPass < totalPasses ? "Next Pass" as const : "Finish Clip" as const,
+  };
+}
+
 export function createTimelineDawSessionNavigationIndex(
   currentIndex: number,
   sceneCount: number,
