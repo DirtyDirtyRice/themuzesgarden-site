@@ -54,3 +54,14 @@ export function resolveTimelineDawTrackFolderSendDestinations(
   };
   return [...new Set(busIds.map((id) => id.trim()).filter(Boolean))].filter((id) => id !== sourceId && !existingDestinations.has(id) && !reachesSource(id));
 }
+
+export function copyTimelineDawTrackFolderSend(
+  send: { sourceKind: "lane" | "bus"; sourceId: string; destinationBusId: string; level: number; preFader: boolean; muted: boolean },
+  destinationBusId: string,
+) {
+  if (send.sourceKind !== "bus") throw new Error("Folder sends must originate from a shared bus.");
+  const destinationId = destinationBusId.trim();
+  if (!destinationId || destinationId === send.sourceId) throw new Error("Copied folder send requires a different destination bus.");
+  if (!Number.isFinite(send.level) || send.level < 0 || send.level > 2) throw new Error("Folder send level must be between 0 and 2.");
+  return { sourceKind: "bus" as const, sourceId: send.sourceId, destinationBusId: destinationId, level: send.level, preFader: send.preFader, muted: send.muted };
+}

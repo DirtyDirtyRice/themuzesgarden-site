@@ -44,6 +44,7 @@ THE MUZES GARDEN DAW
 │   ├── folder effects insert chain and sends ............ DONE 8/22/26
 │   ├── folder send level, pre/post and mute controls .... DONE 8/27/26
 │   ├── feedback-safe folder send destination planning ... DONE 8/27/26
+│   ├── copy folder send mix to a new destination ........ DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -62,7 +63,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Feedback-Safe Folder Send Planning
+## Latest completed DAW milestone - Copy Folder Send Mix Settings
+
+- When adding a new feedback-safe folder send, musicians can now start at the standard 50% post-fader setting or copy any existing send on that folder.
+- The copy picker identifies the original destination, level percentage, and pre/post-fader mode before the route is created.
+- Copying preserves the source send's exact level, tap mode, and mute state while assigning a new destination and a new durable send identity.
+- The original route remains unchanged, so established reverb, delay, cue, and parallel-processing balances are never moved or overwritten.
+- New destinations still pass the client-side duplicate and multi-hop feedback planner plus the authenticated server-side acyclic graph guard.
+- Focused folder-routing tests passed (5 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the existing owner/session-scoped private-send operation persists the copied settings.
+
+## Previously completed DAW milestone - Feedback-Safe Folder Send Planning
 
 - The folder mixer now offers only destinations that are safe for a new shared-bus send.
 - The source bus, destinations already connected from that folder, and direct or indirect return paths into the source are removed from the picker.

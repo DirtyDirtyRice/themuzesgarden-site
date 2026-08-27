@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 describe("DAW track folder routing policy", () => {
   it("deduplicates a bounded folder assignment", () => {
@@ -28,5 +28,12 @@ describe("DAW track folder routing policy", () => {
     ];
     expect(resolveTimelineDawTrackFolderSendDestinations("folder", ["folder", "room", "safe", "return", "deep", "safe"], sends)).toEqual(["safe"]);
     expect(resolveTimelineDawTrackFolderSendDestinations("folder", ["return"], sends.map((send) => ({ ...send, muted: true })))).toEqual(["return"]);
+  });
+
+  it("copies a folder send mix to a different destination without copying its identity", () => {
+    const send = { id: "send-1", sourceKind: "bus" as const, sourceId: "folder", destinationBusId: "room", level: 0.72, preFader: true, muted: false };
+    expect(copyTimelineDawTrackFolderSend(send, " delay ")).toEqual({ sourceKind: "bus", sourceId: "folder", destinationBusId: "delay", level: 0.72, preFader: true, muted: false });
+    expect(() => copyTimelineDawTrackFolderSend(send, "folder")).toThrow(/different destination/);
+    expect(() => copyTimelineDawTrackFolderSend({ ...send, sourceKind: "lane" }, "delay")).toThrow(/shared bus/);
   });
 });
