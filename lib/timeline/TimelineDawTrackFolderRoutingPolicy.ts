@@ -82,3 +82,20 @@ export function timelineDawTrackFolderSendDbToLevel(decibels: number) {
   if (!Number.isFinite(decibels) || decibels < -60 || decibels > 20 * Math.log10(2)) throw new Error("Folder send decibels must be between -60 and +6.02 dB.");
   return decibels === -60 ? 0 : 10 ** (decibels / 20);
 }
+
+export function createTimelineDawTrackFolderSendDryCheck<T extends { id: string; sourceKind: "lane" | "bus"; sourceId: string; muted: boolean }>(sends: T[], sourceBusId: string) {
+  const sourceId = sourceBusId.trim();
+  if (!sourceId) throw new Error("Folder dry check requires a shared bus.");
+  const snapshot: Record<string, boolean> = {};
+  const next = sends.map((send) => {
+    if (send.sourceKind !== "bus" || send.sourceId !== sourceId) return send;
+    snapshot[send.id] = send.muted;
+    return { ...send, muted: true };
+  });
+  if (!Object.keys(snapshot).length) throw new Error("Folder dry check requires at least one shared send.");
+  return { sends: next, snapshot };
+}
+
+export function restoreTimelineDawTrackFolderSendDryCheck<T extends { id: string; muted: boolean }>(sends: T[], snapshot: Record<string, boolean>) {
+  return sends.map((send) => Object.prototype.hasOwnProperty.call(snapshot, send.id) ? { ...send, muted: snapshot[send.id] } : send);
+}

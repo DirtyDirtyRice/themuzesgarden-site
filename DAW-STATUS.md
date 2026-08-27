@@ -48,6 +48,7 @@ THE MUZES GARDEN DAW
 │   ├── protected folder send disconnection .............. DONE 8/27/26
 │   ├── professional decibel folder send controls ........ DONE 8/27/26
 │   ├── cancellable expiring send removal confirmation ... DONE 8/27/26
+│   ├── temporary dry/wet folder send comparison ......... DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -66,7 +67,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Cancellable Expiring Send Removal
+## Latest completed DAW milestone - Folder Send Dry/Wet A/B Check
+
+- Every folder with shared sends now has one Dry Check All Sends action for hearing its unsent signal without rebuilding the mix.
+- Dry Check temporarily mutes only that folder bus's sends; other folders, lane sends, inserts, output routing, and source tracks remain untouched.
+- Restore Wet Sends returns every route to its exact prior mute state, including sends that were already intentionally muted before the comparison.
+- Send creation, levels, tap modes, mute changes, and removal are disabled during the dry check so the reversible snapshot cannot become ambiguous.
+- The dry/wet audition changes only in-memory monitoring state and never writes temporary mute values to the private database.
+- Focused folder-routing tests passed (8 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or browser persistence was required; the feature creates no audio, routing, project, or Library changes.
+
+## Previously completed DAW milestone - Cancellable Expiring Send Removal
 
 - Arming Remove Send now opens a deliberate ten-second confirmation window instead of leaving a destructive action armed indefinitely.
 - The red confirmation clearly says Confirm Remove Within 10s and automatically returns to the safe Remove Send state when time expires.
