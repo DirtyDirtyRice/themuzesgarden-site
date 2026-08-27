@@ -340,6 +340,10 @@ export function resolveTimelineDawSessionKeyboardCommand(input: {
   return null;
 }
 
+export function isTimelineDawSessionTempoCommand(command: TimelineDawSessionKeyboardCommand) {
+  return command === "tap-tempo" || command === "tempo-down" || command === "tempo-up" || command === "tempo-half" || command === "tempo-double";
+}
+
 export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
   key: string;
   sceneCount: number;

@@ -32,6 +32,7 @@ import {
   quantizeTimelineDawSessionPerformanceTake,
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
+  isTimelineDawSessionTempoCommand,
   resolveTimelineDawSessionSceneHotkeyIndex,
   resolveTimelineDawSessionClipLaunchMode,
   resolveTimelineDawSessionClipQuantization,
@@ -109,6 +110,7 @@ export default function TimelineDawSessionView({
   onQueueStop: (settings: { bpm: number; beatsPerBar: number; beatUnit: number; quantization: TimelineDawSessionLaunchQuantization }) => void;
 }) {
   const [bpm, setBpm] = useState(120);
+  const [tempoLocked, setTempoLocked] = useState(false);
   const [tapTempoCount, setTapTempoCount] = useState(0);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   const [beatUnit, setBeatUnit] = useState<4 | 8 | 16>(4);
@@ -160,6 +162,7 @@ export default function TimelineDawSessionView({
   const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
 
   function tapTempo(now: number) {
+    if (tempoLocked) return;
     const previous = tapTempoTimesRef.current.at(-1);
     const taps = previous !== undefined && now - previous <= 2_000 ? [...tapTempoTimesRef.current, now].slice(-9) : [now];
     tapTempoTimesRef.current = taps;
@@ -174,6 +177,7 @@ export default function TimelineDawSessionView({
   }
 
   function adjustTempo(action: "decrease" | "increase" | "half" | "double") {
+    if (tempoLocked) return;
     resetTapTempo();
     setBpm((current) => adjustTimelineDawSessionTempo(current, action));
   }
@@ -278,6 +282,7 @@ export default function TimelineDawSessionView({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    if (tempoLocked) { setLiveSetNotice("Unlock Tempo before importing a Live Set Plan that can change BPM."); return; }
     try {
       if (file.size > 1_000_000) throw new Error("Live Set Plans must be 1 MB or smaller.");
       const plan = parseTimelineDawSessionLiveSetPlan(JSON.parse(await file.text()) as unknown);
@@ -348,6 +353,7 @@ export default function TimelineDawSessionView({
     const command = resolveTimelineDawSessionKeyboardCommand(shortcutContext);
     if (!command) return;
     event.preventDefault();
+    if (tempoLocked && isTimelineDawSessionTempoCommand(command)) return;
     if (command === "stop") {
       onStop();
       return;
@@ -412,16 +418,17 @@ export default function TimelineDawSessionView({
       <div className="border-t border-cyan-300/15 p-4" tabIndex={0} onKeyDown={handleLauncherKeyDown} aria-label="Session View performance controls">
         <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
           <label className="text-xs font-black text-white/70">Session BPM
-            <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white" type="number" min={30} max={300} step={1} value={bpm} onChange={(event) => { resetTapTempo(); setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120))); }} />
+            <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white disabled:opacity-50" type="number" min={30} max={300} step={1} value={bpm} disabled={tempoLocked} onChange={(event) => { resetTapTempo(); setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120))); }} />
           </label>
+          <button type="button" className={launchButton} aria-pressed={tempoLocked} onClick={() => { resetTapTempo(); setTempoLocked((current) => !current); }}>{tempoLocked ? "Unlock Tempo" : "Lock Tempo"}</button>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Session tempo adjustments">
-            <button type="button" className={launchButton} onClick={() => adjustTempo("decrease")}>−1 BPM</button>
-            <button type="button" className={launchButton} onClick={() => adjustTempo("increase")}>+1 BPM</button>
-            <button type="button" className={launchButton} onClick={() => adjustTempo("half")}>Half Tempo</button>
-            <button type="button" className={launchButton} onClick={() => adjustTempo("double")}>Double Tempo</button>
+            <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("decrease")}>−1 BPM</button>
+            <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("increase")}>+1 BPM</button>
+            <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("half")}>Half Tempo</button>
+            <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("double")}>Double Tempo</button>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" className={launchButton} onClick={(event) => tapTempo(event.timeStamp)}>Tap Tempo</button>
+            <button type="button" className={launchButton} disabled={tempoLocked} onClick={(event) => tapTempo(event.timeStamp)}>Tap Tempo</button>
             {tapTempoCount ? <><span className="text-[11px] font-black text-cyan-100" role="status">{tapTempoCount} tap{tapTempoCount === 1 ? "" : "s"} · {bpm} BPM</span><button type="button" className={launchButton} onClick={resetTapTempo}>Reset Taps</button></> : null}
           </div>
           <label className="text-xs font-black text-white/70">Beats per bar
@@ -462,7 +469,7 @@ export default function TimelineDawSessionView({
           <button type="button" className={launchButton} onClick={onStop}>Stop Session Audio</button>
           <button type="button" className={launchButton} onClick={() => onQueueStop({ bpm, beatsPerBar, beatUnit, quantization })}>{queuedStopLabel}</button>
           <button type="button" className={launchButton} onClick={downloadLiveSetPlan}>Download Live Set Plan</button>
-          <label className={`${launchButton} cursor-pointer`}>Import Live Set Plan<input className="sr-only" type="file" accept="application/json,.json" onChange={importLiveSetPlan} /></label>
+          <label className={`${launchButton} cursor-pointer ${tempoLocked ? "opacity-40" : ""}`}>Import Live Set Plan<input className="sr-only" type="file" accept="application/json,.json" disabled={tempoLocked} onChange={importLiveSetPlan} /></label>
           {liveSetNotice ? <p className="w-full text-xs text-white/55" role="status">{liveSetNotice}</p> : null}
         </div>
         <div className="mb-4 rounded-xl border border-violet-300/20 bg-violet-300/[0.05] p-3">

@@ -60,7 +60,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Keyboard Half and Double Tempo
+## Latest completed DAW milestone - Live Performance Tempo Lock
+
+- Session View now provides an explicit Lock Tempo / Unlock Tempo safety control for live performance.
+- While locked, numeric BPM editing, Tap Tempo, ±1 BPM nudges, half/double controls, and every matching keyboard shortcut are disabled.
+- Importing a Live Set Plan is also blocked while locked because a plan can restore a different BPM.
+- Scene and clip transport, quantized stop, queued launch overrides, and immediate stop remain available while tempo is protected.
+- Locking or unlocking clears stale tap history so the next unlocked tap sequence starts cleanly.
+- Focused Session View tests passed (50 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Tempo Lock is transient performance safety state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Keyboard Half and Double Tempo
 
 - Focused Session View now supports `{` to halve tempo and `}` to double tempo without using the mouse.
 - Both commands share the on-screen controls' safe rounding, 30–300 BPM limits, and tap-history reset behavior.

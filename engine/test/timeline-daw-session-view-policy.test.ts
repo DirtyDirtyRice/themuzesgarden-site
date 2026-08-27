@@ -4,6 +4,7 @@ import { createTimelineDawSessionSceneRemainingLabel, createTimelineDawSessionSc
 import { createTimelineDawSessionMusicalPosition } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionTapTempo } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { adjustTimelineDawSessionTempo } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { isTimelineDawSessionTempoCommand } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPassProgress, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipRemainingLabel, createTimelineDawSessionClipTransportState, createTimelineDawSessionClipUpNextCue, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionQueuedLaunchProgress, createTimelineDawSessionQueuedStopLabel, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
@@ -204,6 +205,13 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionClipKeyboardCommand("tempo-double", true, true)).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ key: "{", launcherFocused: true, editableTarget: true })).toBeNull();
     expect(resolveTimelineDawSessionKeyboardCommand({ key: "}", launcherFocused: true, editableTarget: false, repeat: true })).toBeNull();
+  });
+
+  it("identifies only tempo-changing performance commands for Tempo Lock", () => {
+    expect(["tap-tempo", "tempo-down", "tempo-up", "tempo-half", "tempo-double"].every((command) => isTimelineDawSessionTempoCommand(command as never))).toBe(true);
+    expect(isTimelineDawSessionTempoCommand("pause-resume")).toBe(false);
+    expect(isTimelineDawSessionTempoCommand("queue-stop")).toBe(false);
+    expect(isTimelineDawSessionTempoCommand("stop")).toBe(false);
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
