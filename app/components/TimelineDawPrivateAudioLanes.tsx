@@ -128,7 +128,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [folderBusTargets, setFolderBusTargets] = useState<Record<string, string>>({});
   const [folderSendTargets, setFolderSendTargets] = useState<Record<string, string>>({});
   const [folderSendCopySources, setFolderSendCopySources] = useState<Record<string, string>>({});
-  const [pendingFolderSendRemovalId, setPendingFolderSendRemovalId] = useState<string>();
+  const [pendingFolderSendRemoval, setPendingFolderSendRemoval] = useState<{ sendId: string; expiresAt: number }>();
   const loadedTrackFoldersRef = useRef<string | null>(null);
   const [buses, setBuses] = useState<DawPrivateBus[]>([]);
   const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
@@ -190,6 +190,12 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     });
     return () => { cancelled = true; };
   }, [laneIdentityKey, trackLockLoadKey, trackLockStorageKey]);
+
+  useEffect(() => {
+    if (!pendingFolderSendRemoval) return;
+    const timer = window.setTimeout(() => setPendingFolderSendRemoval((current) => current?.sendId === pendingFolderSendRemoval.sendId ? undefined : current), Math.max(0, pendingFolderSendRemoval.expiresAt - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [pendingFolderSendRemoval]);
 
   useEffect(() => {
     if (loadedTrackLocksRef.current === trackLockLoadKey) localStorage.setItem(trackLockStorageKey, serializeTimelineDawTrackLocks(lockedIds));
@@ -1060,9 +1066,10 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
 
   async function persistSend(input: Omit<DawPrivateSend, "id"> & { id?: string }) { setError(undefined); try { const { send } = await saveDawPrivateSend(sessionId, input); setSends((current) => [...current.filter((item) => item.id !== send.id && !(item.sourceKind === send.sourceKind && item.sourceId === send.sourceId && item.destinationBusId === send.destinationBusId)), send]); } catch (cause) { setError(cause instanceof Error ? cause.message : "Private send could not be saved."); } }
   async function removeFolderSend(send: DawPrivateSend) {
-    if (resolveTimelineDawTrackFolderSendRemoval(pendingFolderSendRemovalId, send.id) === "confirm") { setPendingFolderSendRemovalId(send.id); return; }
+    const now = Date.now();
+    if (resolveTimelineDawTrackFolderSendRemoval(pendingFolderSendRemoval, send.id, now) === "confirm") { setPendingFolderSendRemoval({ sendId: send.id, expiresAt: now + 10_000 }); return; }
     setBusy(true); setError(undefined);
-    try { await deleteDawPrivateProcessing(sessionId, "send", send.id); setSends((current) => current.filter((item) => item.id !== send.id)); setPendingFolderSendRemovalId(undefined); setMovementNotice("Shared folder send removed. Its source tracks and destination bus remain unchanged."); }
+    try { await deleteDawPrivateProcessing(sessionId, "send", send.id); setSends((current) => current.filter((item) => item.id !== send.id)); setPendingFolderSendRemoval(undefined); setMovementNotice("Shared folder send removed. Its source tracks and destination bus remain unchanged."); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Folder send could not be removed."); }
     finally { setBusy(false); }
   }
@@ -1379,7 +1386,8 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
               <button type="button" className={button} disabled={send.level === 1} onClick={() => void persistSend(updateTimelineDawTrackFolderSend(send, { level: 1 }))}>Unity 0 dB</button>
               <button type="button" className={button} onClick={() => void persistSend(updateTimelineDawTrackFolderSend(send, { preFader: !send.preFader }))}>{send.preFader ? "Pre-Fader" : "Post-Fader"}</button>
               <button type="button" className={send.muted ? "rounded-xl border border-amber-300 bg-amber-200 px-3 py-2 text-sm font-black text-amber-950" : button} aria-pressed={send.muted} onClick={() => void persistSend(updateTimelineDawTrackFolderSend(send, { muted: !send.muted }))}>{send.muted ? "Enable Send" : "Mute Send"}</button>
-              <button type="button" className={pendingFolderSendRemovalId === send.id ? "rounded-xl border border-red-300 bg-red-200 px-3 py-2 text-sm font-black text-red-950" : button} disabled={busy} onClick={() => void removeFolderSend(send)}>{pendingFolderSendRemovalId === send.id ? "Confirm Remove Send" : "Remove Send"}</button>
+              <button type="button" className={pendingFolderSendRemoval?.sendId === send.id ? "rounded-xl border border-red-300 bg-red-200 px-3 py-2 text-sm font-black text-red-950" : button} disabled={busy} onClick={() => void removeFolderSend(send)}>{pendingFolderSendRemoval?.sendId === send.id ? "Confirm Remove Within 10s" : "Remove Send"}</button>
+              {pendingFolderSendRemoval?.sendId === send.id ? <button type="button" className={button} onClick={() => setPendingFolderSendRemoval(undefined)}>Cancel Removal</button> : null}
             </div>)}</div> : null}
           </div>;
         })}</div> : null}

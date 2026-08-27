@@ -37,11 +37,12 @@ describe("DAW track folder routing policy", () => {
     expect(() => copyTimelineDawTrackFolderSend({ ...send, sourceKind: "lane" }, "delay")).toThrow(/shared bus/);
   });
 
-  it("requires the same folder send to be selected twice before removal", () => {
-    expect(resolveTimelineDawTrackFolderSendRemoval(undefined, "send-1")).toBe("confirm");
-    expect(resolveTimelineDawTrackFolderSendRemoval("send-2", "send-1")).toBe("confirm");
-    expect(resolveTimelineDawTrackFolderSendRemoval("send-1", "send-1")).toBe("remove");
-    expect(() => resolveTimelineDawTrackFolderSendRemoval(undefined, " ")).toThrow(/identifier/);
+  it("requires the same folder send twice inside an unexpired removal window", () => {
+    expect(resolveTimelineDawTrackFolderSendRemoval(undefined, "send-1", 1_000)).toBe("confirm");
+    expect(resolveTimelineDawTrackFolderSendRemoval({ sendId: "send-2", expiresAt: 2_000 }, "send-1", 1_000)).toBe("confirm");
+    expect(resolveTimelineDawTrackFolderSendRemoval({ sendId: "send-1", expiresAt: 2_000 }, "send-1", 1_999)).toBe("remove");
+    expect(resolveTimelineDawTrackFolderSendRemoval({ sendId: "send-1", expiresAt: 2_000 }, "send-1", 2_000)).toBe("confirm");
+    expect(() => resolveTimelineDawTrackFolderSendRemoval(undefined, " ", 1_000)).toThrow(/identifier/);
   });
 
   it("converts folder send levels to professional decibel values", () => {

@@ -66,10 +66,11 @@ export function copyTimelineDawTrackFolderSend(
   return { sourceKind: "bus" as const, sourceId: send.sourceId, destinationBusId: destinationId, level: send.level, preFader: send.preFader, muted: send.muted };
 }
 
-export function resolveTimelineDawTrackFolderSendRemoval(pendingSendId: string | undefined, selectedSendId: string) {
+export function resolveTimelineDawTrackFolderSendRemoval(pending: { sendId: string; expiresAt: number } | undefined, selectedSendId: string, now: number) {
   const sendId = selectedSendId.trim();
   if (!sendId) throw new Error("Folder send identifier is required.");
-  return pendingSendId === sendId ? "remove" as const : "confirm" as const;
+  if (!Number.isFinite(now)) throw new Error("Folder send confirmation time is required.");
+  return pending?.sendId === sendId && pending.expiresAt > now ? "remove" as const : "confirm" as const;
 }
 
 export function timelineDawTrackFolderSendLevelToDb(level: number) {

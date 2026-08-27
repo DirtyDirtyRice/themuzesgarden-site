@@ -47,6 +47,7 @@ THE MUZES GARDEN DAW
 │   ├── copy folder send mix to a new destination ........ DONE 8/27/26
 │   ├── protected folder send disconnection .............. DONE 8/27/26
 │   ├── professional decibel folder send controls ........ DONE 8/27/26
+│   ├── cancellable expiring send removal confirmation ... DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -65,7 +66,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Professional Folder Send Decibel Controls
+## Latest completed DAW milestone - Cancellable Expiring Send Removal
+
+- Arming Remove Send now opens a deliberate ten-second confirmation window instead of leaving a destructive action armed indefinitely.
+- The red confirmation clearly says Confirm Remove Within 10s and automatically returns to the safe Remove Send state when time expires.
+- A dedicated Cancel Removal action immediately disarms the route without changing any routing or processing data.
+- Selecting another send starts a fresh confirmation for only that route; expired or mismatched confirmations cannot disconnect it.
+- The authenticated owner/session-scoped server delete remains the final operation, and local routing changes only after server success.
+- Focused folder-routing tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or new persistence was required; confirmation state is transient UI safety state.
+
+## Previously completed DAW milestone - Professional Folder Send Decibel Controls
 
 - Folder send balances now display professional decibel values instead of only linear percentages.
 - Each route has exact dB entry from the -60 dB floor through +6.02 dB, with validated conversion back into the existing 0–200% engine range.
