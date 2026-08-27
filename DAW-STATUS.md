@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Protected Timing-Slot Overwrite
+## Latest completed DAW milestone - Cancellable Timing Overwrite
+
+- A pending A, B, or C timing-slot overwrite can now be dismissed with a visible Cancel Overwrite control or the focused Escape key.
+- Escape prioritizes protecting the armed timing snapshot before applying its existing queued-launch cancellation behavior.
+- When no overwrite is armed, Escape continues to cancel a queued scene or clip launch exactly as before.
+- Cancelling restores the normal Capture label and snapshot readout without changing timing or slot contents.
+- Slot switching still cancels overwrite arming automatically, providing a second safe exit path.
+- Capture, recall, reversible return, Timing Lock, transport, pause, and stop remain unaffected.
+- Focused Session View tests passed (58 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Overwrite cancellation is transient performance safety state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Protected Timing-Slot Overwrite
 
 - Capturing into an empty A, B, or C timing slot remains immediate, while replacing a filled slot now requires a deliberate second Capture or F9 action.
 - The capture control changes to Confirm Overwrite and an amber live alert identifies the exact slot at risk.

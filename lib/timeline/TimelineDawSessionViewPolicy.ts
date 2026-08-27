@@ -356,6 +356,12 @@ export function resolveTimelineDawSessionTimingCaptureAction(hasSnapshot: boolea
   return hasSnapshot && !overwriteArmed ? "confirm-overwrite" as const : "capture" as const;
 }
 
+export function resolveTimelineDawSessionCancelTarget(overwriteArmed: boolean, queuedLaunch: boolean) {
+  if (overwriteArmed) return "timing-overwrite" as const;
+  if (queuedLaunch) return "queued-launch" as const;
+  return null;
+}
+
 export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
   key: string;
   sceneCount: number;
