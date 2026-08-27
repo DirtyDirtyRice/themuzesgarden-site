@@ -352,6 +352,10 @@ export function isTimelineDawSessionTempoCommand(command: TimelineDawSessionKeyb
   return command === "tap-tempo" || command === "tempo-down" || command === "tempo-up" || command === "tempo-half" || command === "tempo-double";
 }
 
+export function resolveTimelineDawSessionTimingCaptureAction(hasSnapshot: boolean, overwriteArmed: boolean) {
+  return hasSnapshot && !overwriteArmed ? "confirm-overwrite" as const : "capture" as const;
+}
+
 export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
   key: string;
   sceneCount: number;

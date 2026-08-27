@@ -33,6 +33,7 @@ import {
   createTimelineDawSessionSceneLaunch,
   resolveTimelineDawSessionKeyboardCommand,
   isTimelineDawSessionTempoCommand,
+  resolveTimelineDawSessionTimingCaptureAction,
   resolveTimelineDawSessionSceneHotkeyIndex,
   resolveTimelineDawSessionClipLaunchMode,
   resolveTimelineDawSessionClipQuantization,
@@ -119,6 +120,7 @@ export default function TimelineDawSessionView({
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
   const [timingSnapshots, setTimingSnapshots] = useState<Partial<Record<TimingSnapshotSlot, TimingSnapshot>>>({});
   const [activeTimingSlot, setActiveTimingSlot] = useState<TimingSnapshotSlot>("A");
+  const [captureOverwriteArmedSlot, setCaptureOverwriteArmedSlot] = useState<TimingSnapshotSlot | null>(null);
   const [previousTiming, setPreviousTiming] = useState<TimingSnapshot | null>(null);
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const [clipLaunchMode, setClipLaunchMode] = useState<TimelineDawSessionClipLaunchMode>("one-shot");
@@ -189,7 +191,18 @@ export default function TimelineDawSessionView({
   }
 
   function captureTimingSnapshot() {
+    const action = resolveTimelineDawSessionTimingCaptureAction(Boolean(timingSnapshot), captureOverwriteArmedSlot === activeTimingSlot);
+    if (action === "confirm-overwrite") {
+      setCaptureOverwriteArmedSlot(activeTimingSlot);
+      return;
+    }
     setTimingSnapshots((current) => ({ ...current, [activeTimingSlot]: currentTiming() }));
+    setCaptureOverwriteArmedSlot(null);
+  }
+
+  function selectTimingSlot(slot: TimingSnapshotSlot) {
+    setActiveTimingSlot(slot);
+    setCaptureOverwriteArmedSlot(null);
   }
 
   function currentTiming(): TimingSnapshot {
@@ -402,7 +415,7 @@ export default function TimelineDawSessionView({
       return;
     }
     if (command === "timing-slot-a" || command === "timing-slot-b" || command === "timing-slot-c") {
-      setActiveTimingSlot(command.slice(-1).toUpperCase() as TimingSnapshotSlot);
+      selectTimingSlot(command.slice(-1).toUpperCase() as TimingSnapshotSlot);
       return;
     }
     if (command === "timing-capture") {
@@ -478,12 +491,12 @@ export default function TimelineDawSessionView({
           </label>
           <button type="button" className={launchButton} aria-pressed={tempoLocked} onClick={() => { resetTapTempo(); setTempoLocked((current) => !current); }}>{tempoLocked ? "Unlock Timing" : "Lock Timing"}</button>
           <div className="flex gap-1" role="group" aria-label="Timing snapshot bank">
-            {(["A", "B", "C"] as const).map((slot) => <button key={slot} type="button" className={launchButton} aria-pressed={activeTimingSlot === slot} onClick={() => setActiveTimingSlot(slot)}>{slot}{timingSnapshots[slot] ? " •" : ""}</button>)}
+            {(["A", "B", "C"] as const).map((slot) => <button key={slot} type="button" className={launchButton} aria-pressed={activeTimingSlot === slot} onClick={() => selectTimingSlot(slot)}>{slot}{timingSnapshots[slot] ? " •" : ""}</button>)}
           </div>
-          <button type="button" className={launchButton} onClick={captureTimingSnapshot}>Capture {activeTimingSlot}</button>
+          <button type="button" className={launchButton} onClick={captureTimingSnapshot}>{captureOverwriteArmedSlot === activeTimingSlot ? `Confirm Overwrite ${activeTimingSlot}` : `Capture ${activeTimingSlot}`}</button>
           <button type="button" className={launchButton} disabled={tempoLocked || !timingSnapshot} onClick={recallTimingSnapshot}>Recall {activeTimingSlot}</button>
           <button type="button" className={launchButton} disabled={tempoLocked || !previousTiming} onClick={returnToPreviousTiming}>Return Timing</button>
-          {timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
+          {captureOverwriteArmedSlot === activeTimingSlot ? <span className="text-[11px] font-black text-amber-100" role="alert">Press Capture or F9 again to replace snapshot {activeTimingSlot}</span> : timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
           <div className="flex flex-wrap gap-2" role="group" aria-label="Session tempo adjustments">
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("decrease")}>−1 BPM</button>
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("increase")}>+1 BPM</button>

@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Keyboard Timing-Bank Recall
+## Latest completed DAW milestone - Protected Timing-Slot Overwrite
+
+- Capturing into an empty A, B, or C timing slot remains immediate, while replacing a filled slot now requires a deliberate second Capture or F9 action.
+- The capture control changes to Confirm Overwrite and an amber live alert identifies the exact slot at risk.
+- Switching timing slots cancels the pending overwrite so confirmation cannot leak from one slot to another.
+- Confirmed replacement changes only the selected slot and preserves the other timing-bank setups.
+- Timing Lock still permits capture because snapshot writes read the protected clock without changing playback timing.
+- Recall, reversible return, scene and clip transport, queue controls, pause, and stop remain unaffected.
+- Focused Session View tests passed (57 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Overwrite confirmation is transient performance safety state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Keyboard Timing-Bank Recall
 
 - Focused Session View now supports F10 to recall the selected A, B, or C timing snapshot without reaching for the mouse.
 - The complete function-key workflow is now F6–F8 select, F9 capture, and F10 recall.
