@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 describe("DAW track folder routing policy", () => {
   it("deduplicates a bounded folder assignment", () => {
@@ -67,5 +67,19 @@ describe("DAW track folder routing policy", () => {
     expect(dry.sends.map((send) => send.muted)).toEqual([true, true, false, false]);
     expect(restoreTimelineDawTrackFolderSendDryCheck(dry.sends, dry.snapshot)).toEqual(sends);
     expect(() => createTimelineDawTrackFolderSendDryCheck(sends, "missing")).toThrow(/at least one/);
+  });
+
+  it("focuses one folder send and restores the complete prior send state", () => {
+    const sends = [
+      { id: "room", sourceKind: "bus" as const, sourceId: "folder", muted: false },
+      { id: "delay", sourceKind: "bus" as const, sourceId: "folder", muted: true },
+      { id: "other", sourceKind: "bus" as const, sourceId: "other-folder", muted: false },
+    ];
+    const focused = createTimelineDawTrackFolderSendFocusCheck(sends, "folder", "delay");
+    expect(focused.snapshot).toEqual({ room: false, delay: true });
+    expect(focused.focusedSendId).toBe("delay");
+    expect(focused.sends.map((send) => send.muted)).toEqual([true, false, false]);
+    expect(restoreTimelineDawTrackFolderSendDryCheck(focused.sends, focused.snapshot)).toEqual(sends);
+    expect(() => createTimelineDawTrackFolderSendFocusCheck(sends, "folder", "other")).toThrow(/belong/);
   });
 });

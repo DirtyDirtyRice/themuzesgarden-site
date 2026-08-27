@@ -49,6 +49,7 @@ THE MUZES GARDEN DAW
 │   ├── professional decibel folder send controls ........ DONE 8/27/26
 │   ├── cancellable expiring send removal confirmation ... DONE 8/27/26
 │   ├── temporary dry/wet folder send comparison ......... DONE 8/27/26
+│   ├── focused single-send effect audition .............. DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -67,7 +68,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Folder Send Dry/Wet A/B Check
+## Latest completed DAW milestone - Focused Single-Send Audition
+
+- Every shared folder route now has Hear Only This Send for isolating one reverb, delay, cue, or parallel effect during playback.
+- Focus audition mutes the folder's other sends and explicitly enables the chosen route, even when it was muted before the comparison.
+- Restore All Sends returns every route to its exact prior mute state, preserving intentional mutes as well as active routes.
+- Other folders, lane sends, inserts, buses, track playback, and source recordings remain untouched throughout the audition.
+- Dry Check and focused-send audition are mutually exclusive, and conflicting send edits remain disabled until the comparison is restored.
+- Focused folder-routing tests passed (9 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or durable write was required; the comparison snapshot exists only in current in-memory monitoring state.
+
+## Previously completed DAW milestone - Folder Send Dry/Wet A/B Check
 
 - Every folder with shared sends now has one Dry Check All Sends action for hearing its unsent signal without rebuilding the mix.
 - Dry Check temporarily mutes only that folder bus's sends; other folders, lane sends, inserts, output routing, and source tracks remain untouched.

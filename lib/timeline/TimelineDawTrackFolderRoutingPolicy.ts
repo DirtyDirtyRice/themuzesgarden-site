@@ -99,3 +99,12 @@ export function createTimelineDawTrackFolderSendDryCheck<T extends { id: string;
 export function restoreTimelineDawTrackFolderSendDryCheck<T extends { id: string; muted: boolean }>(sends: T[], snapshot: Record<string, boolean>) {
   return sends.map((send) => Object.prototype.hasOwnProperty.call(snapshot, send.id) ? { ...send, muted: snapshot[send.id] } : send);
 }
+
+export function createTimelineDawTrackFolderSendFocusCheck<T extends { id: string; sourceKind: "lane" | "bus"; sourceId: string; muted: boolean }>(sends: T[], sourceBusId: string, focusedSendId: string) {
+  const sourceId = sourceBusId.trim(), focusId = focusedSendId.trim();
+  if (!sourceId || !focusId) throw new Error("Folder send focus requires a shared bus and send.");
+  const folderSends = sends.filter((send) => send.sourceKind === "bus" && send.sourceId === sourceId);
+  if (!folderSends.some((send) => send.id === focusId)) throw new Error("Focused send must belong to the folder bus.");
+  const snapshot = Object.fromEntries(folderSends.map((send) => [send.id, send.muted]));
+  return { sends: sends.map((send) => send.sourceKind === "bus" && send.sourceId === sourceId ? { ...send, muted: send.id !== focusId } : send), snapshot, focusedSendId: focusId };
+}
