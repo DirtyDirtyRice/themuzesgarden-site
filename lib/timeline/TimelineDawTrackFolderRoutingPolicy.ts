@@ -114,3 +114,12 @@ export function switchTimelineDawTrackFolderSendFocus<T extends { id: string; so
   if (!sends.some((send) => send.id === focusId && send.sourceKind === "bus" && send.sourceId === sourceId)) throw new Error("Focused send must belong to the folder bus.");
   return sends.map((send) => send.sourceKind === "bus" && send.sourceId === sourceId ? { ...send, muted: send.id !== focusId } : send);
 }
+
+export function cycleTimelineDawTrackFolderSendFocus<T extends { id: string; sourceKind: "lane" | "bus"; sourceId: string; muted: boolean }>(sends: T[], sourceBusId: string, focusedSendId: string, direction: -1 | 1) {
+  const sourceId = sourceBusId.trim(), focusId = focusedSendId.trim();
+  const folderSendIds = sends.filter((send) => send.sourceKind === "bus" && send.sourceId === sourceId).map((send) => send.id);
+  const currentIndex = folderSendIds.indexOf(focusId);
+  if (currentIndex < 0) throw new Error("Focused send must belong to the folder bus.");
+  const nextId = folderSendIds[(currentIndex + direction + folderSendIds.length) % folderSendIds.length];
+  return { sends: switchTimelineDawTrackFolderSendFocus(sends, sourceId, nextId), focusedSendId: nextId };
+}

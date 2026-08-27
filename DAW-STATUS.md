@@ -51,6 +51,7 @@ THE MUZES GARDEN DAW
 │   ├── temporary dry/wet folder send comparison ......... DONE 8/27/26
 │   ├── focused single-send effect audition .............. DONE 8/27/26
 │   ├── direct switching between focused sends ........... DONE 8/27/26
+│   ├── previous/next focused-send navigation ............. DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -69,7 +70,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Direct Focused-Send Switching
+## Latest completed DAW milestone - Previous/Next Focused-Send Navigation
+
+- During focused folder-send audition, musicians can now step through every reverb, delay, cue, or parallel route with Previous Focus and Next Focus.
+- Navigation wraps cleanly from the first send to the last and from the last send to the first for uninterrupted listening comparisons.
+- Only the selected route remains audible while stepping; other folders, lane sends, inserts, buses, and source tracks remain unchanged.
+- The first focus action still retains the one authoritative restoration snapshot across the complete navigation sequence.
+- Restore All Sends returns the exact pre-audition mute state after any number of previous, next, or direct focus changes.
+- Focused folder-routing tests passed (11 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or durable write was required; navigation changes only transient in-memory monitoring state.
+
+## Previously completed DAW milestone - Direct Focused-Send Switching
 
 - During a focused folder-send audition, every other route now offers Switch Focus Here instead of forcing a restore between effects.
 - Switching immediately mutes the previous effect and enables the newly chosen reverb, delay, cue, or parallel route for rapid like-for-like listening.
