@@ -1,6 +1,6 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 26, 2026
+Last updated: August 27, 2026
 
 ## Current objective
 
@@ -18,32 +18,33 @@ THE MUZES GARDEN DAW
 ├── Tracks and arrangement
 │   ├── import, waveform, move, trim, split, repeat, fades ..... DONE
 │   ├── selection, group editing, undo/redo and snapshots ...... DONE
-│   ├── track locking, colors and keyboard shortcuts ........... DONE
-│   └── track folders and collapsible arrangement groups ....... DONE
+│   ├── track locking, colors and keyboard shortcuts .... DONE 8/21/26
+│   └── track folders and collapsible arrangement groups  DONE 8/21/26
 ├── Regions
-│   ├── name sections (Verse, Chorus, Solo, etc.) .............. DONE
-│   ├── color-coded bounded start/end regions .................. DONE
-│   ├── hear one exact named region ............................ DONE
-│   ├── play all, repeat, previous, replay, pause, next, stop .. DONE
-│   ├── rename or adjust a saved region directly ............... DONE
-│   └── loop one named region continuously ..................... DONE
+│   ├── name sections (Verse, Chorus, Solo, etc.) ....... DONE 8/21/26
+│   ├── color-coded bounded start/end regions ........... DONE 8/21/26
+│   ├── hear one exact named region ..................... DONE 8/21/26
+│   ├── play all/repeat/previous/replay/pause/next/stop . DONE 8/21/26
+│   ├── rename or adjust a saved region directly ........ DONE 8/21/26
+│   └── loop one named region continuously .............. DONE 8/21/26
 ├── Three-version riff comparison
-│   ├── tempo/key alignment and matching-riff detection ........ DONE
-│   ├── color-coded riff families and exact-section audition ... DONE
-│   └── automatic cross-version comparison controls ............ DONE
+│   ├── tempo/key alignment and matching-riff detection . DONE 8/20/26
+│   ├── color-coded riff families/exact-section audition  DONE 8/20/26
+│   └── automatic cross-version comparison controls ..... DONE 8/21/26
 ├── Hybrid edit track
-│   ├── copy/cut/duplicate/reorder matched riffs ............... DONE
-│   └── audition assembled hybrid edit without source changes .. DONE
+│   ├── copy/cut/duplicate/reorder matched riffs ........ DONE 8/21/26
+│   └── audition hybrid edit without source changes ..... DONE 8/21/26
 ├── Session View
-│   ├── named regions become per-track clip slots ............... DONE
-│   └── matching region names launch as simultaneous scenes ..... DONE
+│   ├── named regions become per-track clip slots ........ DONE 8/26/26
+│   └── matching names launch as simultaneous scenes ..... DONE 8/26/26
 ├── Mixing and effects
 │   ├── gain, pan, mute, solo, buses, sends and master bus ...... DONE
 │   ├── inserts, automation, freeze and delay compensation ...... DONE
-│   ├── folder/subgroup shared volume, mute and solo ............ DONE
-│   ├── folder effects insert chain and sends ................... DONE
-│   ├── professional Grid, Slip, Shuffle and Spot modes ......... DONE
-│   └── musician-facing effect presets and preset browser ....... DONE
+│   ├── folder/subgroup shared volume, mute and solo ..... DONE 8/22/26
+│   ├── folder effects insert chain and sends ............ DONE 8/22/26
+│   ├── folder send level, pre/post and mute controls .... DONE 8/27/26
+│   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
+│   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
 │   ├── sequencing, controller events and quantization ......... DONE
 │   └── virtual-instrument preview and MIDI export .............. DONE
@@ -54,13 +55,24 @@ THE MUZES GARDEN DAW
 │   ├── private WAV/MP3 render, stems ZIP and interchange ....... DONE
 │   └── musician export presets and loudness targets ............ DONE
 └── Final production readiness
-    ├── large-session performance and memory pass ............... DONE
-    ├── accessibility and keyboard-command completion ........... DONE
-    ├── real-musician end-to-end acceptance gate ................ DONE
+    ├── large-session performance and memory pass ........ DONE 8/23/26
+    ├── accessibility and keyboard-command completion .... DONE 8/23/26
+    ├── real-musician end-to-end acceptance gate ......... DONE 8/23/26
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Queued Timing Recall Launch Now
+## Latest completed DAW milestone - Professional Folder Send Controls
+
+- Every routed track folder now shows each of its durable shared-bus sends directly beneath the folder routing controls.
+- Musicians can continuously set an exact 0–200% send level for parallel ambience, cue, and effect balances.
+- Each shared send can switch independently between post-fader and pre-fader operation.
+- Mute Send safely takes a route out of the live graph without deleting its saved destination or level; Enable Send restores it.
+- Destination names, live levels, tap mode, and mute state remain visible together, while active-send counts exclude muted routes.
+- Updates reuse the authenticated owner/session-scoped private-send operation and retain feedback-cycle validation.
+- Focused folder-routing tests passed (3 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; source tracks, recordings, folder membership, inserts, and Library records remain unchanged.
+
+## Previously completed DAW milestone - Queued Timing Recall Launch Now
 
 - A queued next-bar timing recall can now be applied immediately with Recall Timing Now or the focused Enter key.
 - Launch Now preserves the original outgoing timing setup so Backspace return and A/B toggling remain correct.

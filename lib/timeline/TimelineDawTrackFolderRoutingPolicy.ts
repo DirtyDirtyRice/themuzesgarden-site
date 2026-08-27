@@ -17,3 +17,13 @@ export function parseTimelineDawTrackFolderSend(sourceBusId: string, destination
   if (!Number.isFinite(level) || level < 0 || level > 2) throw new Error("Folder send level must be between 0 and 2.");
   return { sourceKind: "bus" as const, sourceId, destinationBusId: destinationId, level, preFader: false, muted: false };
 }
+
+export function updateTimelineDawTrackFolderSend(
+  send: { id: string; sourceKind: "lane" | "bus"; sourceId: string; destinationBusId: string; level: number; preFader: boolean; muted: boolean },
+  update: Partial<Pick<typeof send, "level" | "preFader" | "muted">>,
+) {
+  if (send.sourceKind !== "bus") throw new Error("Folder sends must originate from a shared bus.");
+  const level = update.level ?? send.level;
+  if (!Number.isFinite(level) || level < 0 || level > 2) throw new Error("Folder send level must be between 0 and 2.");
+  return { ...send, ...update, level };
+}
