@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Expiring Timing Overwrite Confirmation
+## Latest completed DAW milestone - Visible Timing Overwrite Countdown
+
+- Armed A, B, or C timing-slot replacement now displays a live 4…3…2…1 second countdown.
+- The amber alert identifies the exact snapshot at risk and keeps the required second Capture or F9 action visible.
+- At zero, confirmation expires automatically and the prepared snapshot remains untouched.
+- Escape, Cancel Overwrite, and switching slots immediately clear both the armed state and countdown.
+- Confirming an overwrite also clears the timer cleanly so no stale expiry can affect a later slot.
+- Timing Lock, capture, recall, reversible return, transport, queue, pause, and stop behavior remain unchanged.
+- Focused Session View tests passed (59 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Countdown state is transient performance safety state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Expiring Timing Overwrite Confirmation
 
 - Armed A, B, or C timing-slot replacement now expires automatically after four seconds.
 - If the second Capture or F9 action does not arrive inside that window, the prepared snapshot remains untouched.
