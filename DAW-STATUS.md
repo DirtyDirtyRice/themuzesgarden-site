@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Performance Tempo Lock
+## Latest completed DAW milestone - Full Performance Timing Lock
+
+- Session View's live safety lock now protects the full performance timing setup: BPM, time-signature numerator, beat unit, launch quantization, and Live Set Plan imports.
+- The visible control now reads Lock Timing / Unlock Timing so its scope is clear before a performance.
+- Focused performers can press `\` to lock or unlock timing without reaching for the mouse.
+- The shortcut stays off while typing, using menus, outside the focused launcher, or on key repeat, and it cannot enter clip pass navigation.
+- Scene and clip transport, pause/resume, queued launch controls, quantized stop, and immediate stop remain available while timing is locked.
+- Locking or unlocking clears stale tap history so the next unlocked tap sequence starts cleanly.
+- Focused Session View tests passed (51 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Timing Lock is transient performance safety state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Live Performance Tempo Lock
 
 - Session View now provides an explicit Lock Tempo / Unlock Tempo safety control for live performance.
 - While locked, numeric BPM editing, Tap Tempo, ±1 BPM nudges, half/double controls, and every matching keyboard shortcut are disabled.

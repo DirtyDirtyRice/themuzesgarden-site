@@ -13,7 +13,7 @@ export type TimelineDawSessionClipQuantizationChoice = "global" | TimelineDawSes
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
-export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "tap-tempo" | "tempo-down" | "tempo-up" | "tempo-half" | "tempo-double" | "queue-stop" | "launch-queued" | "cancel-queued" | "stop";
+export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "tap-tempo" | "tempo-down" | "tempo-up" | "tempo-half" | "tempo-double" | "timing-lock" | "queue-stop" | "launch-queued" | "cancel-queued" | "stop";
 export type TimelineDawSessionClipLaunchMode = "one-shot" | "loop";
 export type TimelineDawSessionClipLaunchChoice = "global" | TimelineDawSessionClipLaunchMode;
 export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
@@ -333,6 +333,7 @@ export function resolveTimelineDawSessionKeyboardCommand(input: {
   if (key === "]") return "tempo-up";
   if (key === "{") return "tempo-half";
   if (key === "}") return "tempo-double";
+  if (key === "\\") return "timing-lock";
   if (key === "q") return "queue-stop";
   if (key === "enter") return "launch-queued";
   if (key === "escape") return "cancel-queued";
@@ -456,7 +457,7 @@ export function resolveTimelineDawSessionClipKeyboardCommand(
   hasActiveClip: boolean,
   canGoPrevious: boolean,
 ) {
-  if (!hasActiveClip || command === "stop" || command === "tap-tempo" || command === "tempo-down" || command === "tempo-up" || command === "tempo-half" || command === "tempo-double" || command === "queue-stop" || command === "launch-queued" || command === "cancel-queued") return null;
+  if (!hasActiveClip || command === "stop" || command === "tap-tempo" || command === "tempo-down" || command === "tempo-up" || command === "tempo-half" || command === "tempo-double" || command === "timing-lock" || command === "queue-stop" || command === "launch-queued" || command === "cancel-queued") return null;
   if (command === "previous" && !canGoPrevious) return null;
   return command;
 }

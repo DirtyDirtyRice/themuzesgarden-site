@@ -89,6 +89,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "]" })).toBe("tempo-up");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "{" })).toBe("tempo-half");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "}" })).toBe("tempo-double");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "\\" })).toBe("timing-lock");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Q" })).toBe("queue-stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
@@ -212,6 +213,15 @@ describe("Timeline DAW Session View policy", () => {
     expect(isTimelineDawSessionTempoCommand("pause-resume")).toBe(false);
     expect(isTimelineDawSessionTempoCommand("queue-stop")).toBe(false);
     expect(isTimelineDawSessionTempoCommand("stop")).toBe(false);
+  });
+
+  it("keeps the timing lock shortcut focused, repeat-safe, and outside clip navigation", () => {
+    const base = { key: "\\", launcherFocused: true, editableTarget: false };
+    expect(resolveTimelineDawSessionKeyboardCommand(base)).toBe("timing-lock");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, repeat: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, editableTarget: true })).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("timing-lock", true, true)).toBeNull();
+    expect(isTimelineDawSessionTempoCommand("timing-lock")).toBe(false);
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
