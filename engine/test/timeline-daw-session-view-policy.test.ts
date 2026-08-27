@@ -11,6 +11,7 @@ import { advanceTimelineDawSessionOverwriteCountdown } from "../../lib/timeline/
 import { createTimelineDawSessionTimingSnapshotComparison } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionTimingRecallDelay } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionQueuedTimingRecallLabel } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { resolveTimelineDawSessionLaunchNowTarget } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPassProgress, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipRemainingLabel, createTimelineDawSessionClipTransportState, createTimelineDawSessionClipUpNextCue, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionQueuedLaunchProgress, createTimelineDawSessionQueuedStopLabel, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
@@ -284,6 +285,12 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionCancelTarget(false, true, true)).toBe("timing-recall");
     expect(resolveTimelineDawSessionCancelTarget(false, false, true)).toBe("queued-launch");
     expect(resolveTimelineDawSessionCancelTarget(false, false, false)).toBeNull();
+  });
+
+  it("launches queued timing recall before a queued scene override", () => {
+    expect(resolveTimelineDawSessionLaunchNowTarget(true, true)).toBe("timing-recall");
+    expect(resolveTimelineDawSessionLaunchNowTarget(false, true)).toBe("queued-launch");
+    expect(resolveTimelineDawSessionLaunchNowTarget(false, false)).toBeNull();
   });
 
   it("advances a safe timing-overwrite countdown without going below zero", () => {

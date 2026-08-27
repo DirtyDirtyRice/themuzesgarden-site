@@ -364,6 +364,12 @@ export function resolveTimelineDawSessionCancelTarget(overwriteArmed: boolean, q
   return null;
 }
 
+export function resolveTimelineDawSessionLaunchNowTarget(queuedTimingRecall: boolean, queuedLaunch: boolean) {
+  if (queuedTimingRecall) return "timing-recall" as const;
+  if (queuedLaunch) return "queued-launch" as const;
+  return null;
+}
+
 export function advanceTimelineDawSessionOverwriteCountdown(secondsRemaining: number) {
   const safeSeconds = Number.isFinite(secondsRemaining) ? Math.max(0, Math.ceil(secondsRemaining)) : 0;
   return Math.max(0, safeSeconds - 1);

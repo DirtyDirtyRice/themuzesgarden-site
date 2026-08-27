@@ -35,6 +35,7 @@ import {
   isTimelineDawSessionTempoCommand,
   resolveTimelineDawSessionTimingCaptureAction,
   resolveTimelineDawSessionCancelTarget,
+  resolveTimelineDawSessionLaunchNowTarget,
   advanceTimelineDawSessionOverwriteCountdown,
   createTimelineDawSessionTimingSnapshotComparison,
   createTimelineDawSessionTimingRecallDelay,
@@ -245,6 +246,14 @@ export default function TimelineDawSessionView({
   function applyRecalledTiming(snapshot: TimingSnapshot, outgoingTiming: TimingSnapshot) {
     setPreviousTiming(outgoingTiming);
     applyTiming(snapshot);
+  }
+
+  function applyQueuedTimingRecallNow() {
+    if (!queuedTimingRecall) return;
+    if (timingRecallTimerRef.current !== null) window.clearTimeout(timingRecallTimerRef.current);
+    timingRecallTimerRef.current = null;
+    applyRecalledTiming(queuedTimingRecall.snapshot, queuedTimingRecall.outgoingTiming);
+    setQueuedTimingRecall(null);
   }
 
   function recallTimingSnapshot() {
@@ -509,7 +518,9 @@ export default function TimelineDawSessionView({
       return;
     }
     if (command === "launch-queued") {
-      if (queuedLaunchName) onLaunchQueuedNow();
+      const launchTarget = resolveTimelineDawSessionLaunchNowTarget(Boolean(queuedTimingRecall), Boolean(queuedLaunchName));
+      if (launchTarget === "timing-recall") applyQueuedTimingRecallNow();
+      else if (launchTarget === "queued-launch") onLaunchQueuedNow();
       return;
     }
     if (command === "cancel-queued") {
@@ -570,7 +581,7 @@ export default function TimelineDawSessionView({
               <option value="next-bar">Next Bar</option>
             </select>
           </label>
-          {queuedTimingRecall && queuedTimingRecallProgress ? <div className="min-w-56 flex-1" aria-label={`Queued timing ${queuedTimingRecall.slot} recall progress`}><div className="mb-1 flex items-center justify-between gap-2"><span className="text-[11px] font-black text-amber-100" role="status">{createTimelineDawSessionQueuedTimingRecallLabel(queuedTimingRecall.slot, queuedTimingRecallProgress.remainingSeconds)}</span><button type="button" className={launchButton} onClick={cancelQueuedTimingRecall}>Cancel Timing Recall</button></div><div className="h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={queuedTimingRecallProgress.percent}><div className="h-full rounded-full bg-amber-300 transition-[width] duration-200" style={{ width: `${queuedTimingRecallProgress.percent}%` }} /></div></div> : null}
+          {queuedTimingRecall && queuedTimingRecallProgress ? <div className="min-w-56 flex-1" aria-label={`Queued timing ${queuedTimingRecall.slot} recall progress`}><div className="mb-1 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-black text-amber-100" role="status">{createTimelineDawSessionQueuedTimingRecallLabel(queuedTimingRecall.slot, queuedTimingRecallProgress.remainingSeconds)}</span><div className="flex gap-2"><button type="button" className={launchButton} onClick={applyQueuedTimingRecallNow}>Recall Timing Now</button><button type="button" className={launchButton} onClick={cancelQueuedTimingRecall}>Cancel Timing Recall</button></div></div><div className="h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={queuedTimingRecallProgress.percent}><div className="h-full rounded-full bg-amber-300 transition-[width] duration-200" style={{ width: `${queuedTimingRecallProgress.percent}%` }} /></div></div> : null}
           <button type="button" className={launchButton} disabled={tempoLocked || !previousTiming} onClick={returnToPreviousTiming}>Return Timing</button>
           {captureOverwriteArmedSlot === activeTimingSlot ? <span className="text-[11px] font-black text-amber-100" role="alert">Replace snapshot {activeTimingSlot}? Press Capture or F9 again · {captureOverwriteSeconds}s</span> : timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
           {timingSnapshotComparison && captureOverwriteArmedSlot !== activeTimingSlot ? <span className="text-[11px] font-black text-violet-100" aria-label={`Timing snapshot ${activeTimingSlot} comparison`}>Recall change: {timingSnapshotComparison}</span> : null}
@@ -708,7 +719,7 @@ export default function TimelineDawSessionView({
           </div>
         ) : null}
         {activeSceneIndex < 0 && activeClip ? <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.08] p-3" role="group" aria-label="Active individual clip controls"><span className="text-xs font-black text-cyan-50">{activeClipPlayback?.paused ? "Paused" : "Playing"} clip {activeClip.name}</span><span className="text-[11px] text-white/55">{activeClip.startSeconds.toFixed(2)}–{activeClip.endSeconds.toFixed(2)} sec</span>{activeClipPlayback ? <span className="rounded-md border border-cyan-200/20 bg-black/25 px-2 py-1 text-[11px] font-black text-cyan-50" role="status" aria-live="polite">{createTimelineDawSessionClipPlaybackStatus(activeClipPlayback)}</span> : null}{activeClipUpNextCue ? <span className="rounded-md border border-amber-200/25 bg-amber-200/10 px-2 py-1 text-[11px] font-black text-amber-50" aria-label="Active clip up next cue">Up Next: {activeClipUpNextCue}</span> : null}{activeClipRemainingLabel ? <span className="rounded-md border border-violet-200/25 bg-violet-200/10 px-2 py-1 text-[11px] font-black text-violet-50" aria-label="Active clip total remaining time">{activeClipRemainingLabel}</span> : null}{activeClipPassProgress ? <div className="w-full" aria-label="Current clip pass time"><div className="mb-1 flex justify-between gap-3 text-[10px] font-black text-cyan-50/70"><span>{activeClipPassProgress.elapsedSeconds.toFixed(1)} sec elapsed</span><span>{activeClipPassProgress.remainingSeconds.toFixed(1)} sec remaining</span></div><div className="h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={activeClipPassProgress.percent}><div className="h-full rounded-full bg-cyan-300 transition-[width] duration-200" style={{ width: `${activeClipPassProgress.percent}%` }} /></div></div> : null}{activeClipTransport ? <><button type="button" className={launchButton} disabled={!activeClipTransport.canGoPrevious} onClick={onPreviousClip}>Previous Pass</button><button type="button" className={launchButton} onClick={onReplayClip}>Replay Clip</button></> : null}{activeClipPlayback?.paused ? <button type="button" className={launchButton} onClick={onResumeClip}>Resume Clip</button> : <button type="button" className={launchButton} onClick={onPauseClip}>Pause Clip</button>}{activeClipTransport ? <button type="button" className={launchButton} onClick={onAdvanceClip}>{activeClipTransport.advanceLabel}</button> : null}<button type="button" className={launchButton} onClick={onStop}>Stop Clip</button></div> : null}
-        <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> 1–9 launch the matching visible scene · P previous scene/pass · R replay scene/clip · N next scene/pass or finish clip · K pause/resume active clip or scene · T tap tempo · [ / ] nudge tempo −1 / +1 BPM · {'{'} / {'}'} half / double tempo · F6 / F7 / F8 select timing A / B / C · F9 capture selected timing · F10 or | recall selected timing · \ lock/unlock timing · Backspace return/toggle timing · Q quantized stop · Enter launch queued now · Escape cancel overwrite or queued launch · Space immediate stop. Active clip and queue controls take priority over scene navigation. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
+        <p className="mb-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/55"><strong>Focused Session View keyboard:</strong> 1–9 launch the matching visible scene · P previous scene/pass · R replay scene/clip · N next scene/pass or finish clip · K pause/resume active clip or scene · T tap tempo · [ / ] nudge tempo −1 / +1 BPM · {'{'} / {'}'} half / double tempo · F6 / F7 / F8 select timing A / B / C · F9 capture selected timing · F10 or | recall selected timing · \ lock/unlock timing · Backspace return/toggle timing · Q quantized stop · Enter apply queued timing or launch now · Escape cancel overwrite, timing recall, or queued launch · Space immediate stop. Active clip and queue controls take priority over scene navigation. Click inside the launcher first; shortcuts stay off while typing or using menus.</p>
         {scenes.length ? <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-3" aria-label="Live Set flow check">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-amber-100">Live Set Flow Check</p>
           <p className="mt-1 text-xs text-white/65">{liveSetFlow.pathIds.map((id) => sceneNamesById.get(id) ?? id).join(" → ")} · {liveSetFlow.status === "loops" ? `loops at ${sceneNamesById.get(liveSetFlow.cycleAtSceneId ?? "") ?? "scene"}` : liveSetFlow.status === "stops" ? "stops by scene action" : "ends after the final safe target"}</p>

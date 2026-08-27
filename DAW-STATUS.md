@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Live Quantized Timing Recall Progress
+## Latest completed DAW milestone - Queued Timing Recall Launch Now
+
+- A queued next-bar timing recall can now be applied immediately with Recall Timing Now or the focused Enter key.
+- Launch Now preserves the original outgoing timing setup so Backspace return and A/B toggling remain correct.
+- Enter prioritizes a pending timing recall before its existing queued scene or clip launch override.
+- When no timing recall is queued, Enter continues to launch the queued scene or clip exactly as before.
+- Applying now clears the pending timer and progress cue so the scheduled boundary cannot fire twice.
+- Cancel, Timing Lock, protected capture, comparison, immediate recall, and transport behavior remain intact.
+- Focused Session View tests passed (63 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Launch Now is transient performance control state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Live Quantized Timing Recall Progress
 
 - Queued next-bar timing recall now displays a continuously updating remaining-time countdown.
 - A dedicated amber progress meter advances from the request moment to the exact meter-aware bar boundary.
