@@ -340,6 +340,7 @@ export function resolveTimelineDawSessionKeyboardCommand(input: {
   if (key === "f7") return "timing-slot-b";
   if (key === "f8") return "timing-slot-c";
   if (key === "f9") return "timing-capture";
+  if (key === "f10") return "timing-recall";
   if (key === "q") return "queue-stop";
   if (key === "enter") return "launch-queued";
   if (key === "escape") return "cancel-queued";

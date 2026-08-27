@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Keyboard Timing-Bank Capture
+## Latest completed DAW milestone - Keyboard Timing-Bank Recall
+
+- Focused Session View now supports F10 to recall the selected A, B, or C timing snapshot without reaching for the mouse.
+- The complete function-key workflow is now F6–F8 select, F9 capture, and F10 recall.
+- F10 shares the existing recall engine, preserving the outgoing timing setup for Backspace return or A/B toggling.
+- Timing Lock blocks F10 recall exactly like the visible Recall control and `Shift+\` (`|`) shortcut.
+- Empty selected slots remain a safe no-op and do not change BPM, meter, quantization, or playback.
+- F10 is blocked while typing, using menus, outside the focused launcher, or on key repeat.
+- Focused Session View tests passed (56 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Keyboard timing recall is transient performance state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Keyboard Timing-Bank Capture
 
 - Focused Session View now supports F9 to capture the current BPM, meter, beat unit, and launch quantization into the selected A, B, or C timing slot.
 - F6–F8 select the destination slot, so a full timing bank can be prepared without reaching for the mouse.
