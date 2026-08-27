@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyTimelineDawTrackFolderSend, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 describe("DAW track folder routing policy", () => {
   it("deduplicates a bounded folder assignment", () => {
@@ -42,5 +42,15 @@ describe("DAW track folder routing policy", () => {
     expect(resolveTimelineDawTrackFolderSendRemoval("send-2", "send-1")).toBe("confirm");
     expect(resolveTimelineDawTrackFolderSendRemoval("send-1", "send-1")).toBe("remove");
     expect(() => resolveTimelineDawTrackFolderSendRemoval(undefined, " ")).toThrow(/identifier/);
+  });
+
+  it("converts folder send levels to professional decibel values", () => {
+    expect(timelineDawTrackFolderSendLevelToDb(0)).toBeNull();
+    expect(timelineDawTrackFolderSendLevelToDb(0.5)).toBeCloseTo(-6.0206);
+    expect(timelineDawTrackFolderSendLevelToDb(1)).toBeCloseTo(0);
+    expect(timelineDawTrackFolderSendDbToLevel(-60)).toBe(0);
+    expect(timelineDawTrackFolderSendDbToLevel(-6.0206)).toBeCloseTo(0.5);
+    expect(timelineDawTrackFolderSendDbToLevel(0)).toBe(1);
+    expect(() => timelineDawTrackFolderSendDbToLevel(7)).toThrow(/6.02/);
   });
 });

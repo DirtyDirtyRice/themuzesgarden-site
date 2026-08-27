@@ -46,6 +46,7 @@ THE MUZES GARDEN DAW
 │   ├── feedback-safe folder send destination planning ... DONE 8/27/26
 │   ├── copy folder send mix to a new destination ........ DONE 8/27/26
 │   ├── protected folder send disconnection .............. DONE 8/27/26
+│   ├── professional decibel folder send controls ........ DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -64,7 +65,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Protected Folder Send Removal
+## Latest completed DAW milestone - Professional Folder Send Decibel Controls
+
+- Folder send balances now display professional decibel values instead of only linear percentages.
+- Each route has exact dB entry from the -60 dB floor through +6.02 dB, with validated conversion back into the existing 0–200% engine range.
+- A zero-level send is shown as negative infinity dB so silence is visually unambiguous.
+- Send Off instantly reaches true zero, while Unity 0 dB returns a route to exact unity gain without dragging a slider.
+- Existing level sliders, pre/post-fader selection, mute, copied settings, safe destination planning, and protected removal remain available.
+- Focused folder-routing tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; durable sends retain the established validated linear level representation.
+
+## Previously completed DAW milestone - Protected Folder Send Removal
 
 - Every folder send now includes a clear Remove Send action beside its level, tap-mode, and mute controls.
 - Removal requires the same route to be selected twice; the first action arms a red Confirm Remove Send control instead of deleting immediately.

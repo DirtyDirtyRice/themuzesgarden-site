@@ -71,3 +71,13 @@ export function resolveTimelineDawTrackFolderSendRemoval(pendingSendId: string |
   if (!sendId) throw new Error("Folder send identifier is required.");
   return pendingSendId === sendId ? "remove" as const : "confirm" as const;
 }
+
+export function timelineDawTrackFolderSendLevelToDb(level: number) {
+  if (!Number.isFinite(level) || level < 0 || level > 2) throw new Error("Folder send level must be between 0 and 2.");
+  return level === 0 ? null : 20 * Math.log10(level);
+}
+
+export function timelineDawTrackFolderSendDbToLevel(decibels: number) {
+  if (!Number.isFinite(decibels) || decibels < -60 || decibels > 20 * Math.log10(2)) throw new Error("Folder send decibels must be between -60 and +6.02 dB.");
+  return decibels === -60 ? 0 : 10 ** (decibels / 20);
+}
