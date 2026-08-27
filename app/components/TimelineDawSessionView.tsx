@@ -237,6 +237,12 @@ export default function TimelineDawSessionView({
     return () => window.clearInterval(timer);
   }, [activeClipPassProgress, activeClipPlayback?.paused, activeScenePaused, activeSceneProgress, queuedProgress]);
 
+  useEffect(() => {
+    if (!captureOverwriteArmedSlot) return;
+    const timer = window.setTimeout(() => setCaptureOverwriteArmedSlot(null), 4_000);
+    return () => window.clearTimeout(timer);
+  }, [captureOverwriteArmedSlot]);
+
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
     const startsFreshTake = performanceStartedAtRef.current === null;
@@ -500,7 +506,7 @@ export default function TimelineDawSessionView({
           {captureOverwriteArmedSlot === activeTimingSlot ? <button type="button" className={launchButton} onClick={() => setCaptureOverwriteArmedSlot(null)}>Cancel Overwrite</button> : null}
           <button type="button" className={launchButton} disabled={tempoLocked || !timingSnapshot} onClick={recallTimingSnapshot}>Recall {activeTimingSlot}</button>
           <button type="button" className={launchButton} disabled={tempoLocked || !previousTiming} onClick={returnToPreviousTiming}>Return Timing</button>
-          {captureOverwriteArmedSlot === activeTimingSlot ? <span className="text-[11px] font-black text-amber-100" role="alert">Press Capture or F9 again to replace snapshot {activeTimingSlot}</span> : timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
+          {captureOverwriteArmedSlot === activeTimingSlot ? <span className="text-[11px] font-black text-amber-100" role="alert">Press Capture or F9 again within 4 seconds to replace snapshot {activeTimingSlot}</span> : timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
           <div className="flex flex-wrap gap-2" role="group" aria-label="Session tempo adjustments">
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("decrease")}>−1 BPM</button>
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("increase")}>+1 BPM</button>

@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Cancellable Timing Overwrite
+## Latest completed DAW milestone - Expiring Timing Overwrite Confirmation
+
+- Armed A, B, or C timing-slot replacement now expires automatically after four seconds.
+- If the second Capture or F9 action does not arrive inside that window, the prepared snapshot remains untouched.
+- The amber live alert now states the four-second confirmation window clearly.
+- Expiry restores the normal Capture label and selected-slot readout automatically.
+- Escape, Cancel Overwrite, and switching slots continue to cancel confirmation immediately.
+- Timing Lock, capture, recall, reversible return, scene and clip transport, queue controls, pause, and stop remain unaffected.
+- Focused Session View tests passed (58 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Confirmation expiry is transient performance safety state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Cancellable Timing Overwrite
 
 - A pending A, B, or C timing-slot overwrite can now be dismissed with a visible Cancel Overwrite control or the focused Escape key.
 - Escape prioritizes protecting the armed timing snapshot before applying its existing queued-launch cancellation behavior.
