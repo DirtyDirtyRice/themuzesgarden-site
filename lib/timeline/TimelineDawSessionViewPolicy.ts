@@ -13,7 +13,7 @@ export type TimelineDawSessionClipQuantizationChoice = "global" | TimelineDawSes
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
 export type TimelineDawSessionNavigationAction = "previous" | "replay" | "next";
-export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "tap-tempo" | "tempo-down" | "tempo-up" | "tempo-half" | "tempo-double" | "timing-lock" | "timing-recall" | "queue-stop" | "launch-queued" | "cancel-queued" | "stop";
+export type TimelineDawSessionKeyboardCommand = TimelineDawSessionNavigationAction | "pause-resume" | "tap-tempo" | "tempo-down" | "tempo-up" | "tempo-half" | "tempo-double" | "timing-lock" | "timing-recall" | "timing-return" | "queue-stop" | "launch-queued" | "cancel-queued" | "stop";
 export type TimelineDawSessionClipLaunchMode = "one-shot" | "loop";
 export type TimelineDawSessionClipLaunchChoice = "global" | TimelineDawSessionClipLaunchMode;
 export type TimelineDawSessionTakeQuantization = "off" | "beat" | "two-beats" | "bar";
@@ -335,6 +335,7 @@ export function resolveTimelineDawSessionKeyboardCommand(input: {
   if (key === "}") return "tempo-double";
   if (key === "\\") return "timing-lock";
   if (key === "|") return "timing-recall";
+  if (key === "backspace") return "timing-return";
   if (key === "q") return "queue-stop";
   if (key === "enter") return "launch-queued";
   if (key === "escape") return "cancel-queued";
@@ -458,7 +459,7 @@ export function resolveTimelineDawSessionClipKeyboardCommand(
   hasActiveClip: boolean,
   canGoPrevious: boolean,
 ) {
-  if (!hasActiveClip || command === "stop" || command === "tap-tempo" || command === "tempo-down" || command === "tempo-up" || command === "tempo-half" || command === "tempo-double" || command === "timing-lock" || command === "timing-recall" || command === "queue-stop" || command === "launch-queued" || command === "cancel-queued") return null;
+  if (!hasActiveClip || command === "stop" || command === "tap-tempo" || command === "tempo-down" || command === "tempo-up" || command === "tempo-half" || command === "tempo-double" || command === "timing-lock" || command === "timing-recall" || command === "timing-return" || command === "queue-stop" || command === "launch-queued" || command === "cancel-queued") return null;
   if (command === "previous" && !canGoPrevious) return null;
   return command;
 }

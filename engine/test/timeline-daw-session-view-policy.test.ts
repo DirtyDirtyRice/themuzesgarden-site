@@ -91,6 +91,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "}" })).toBe("tempo-double");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "\\" })).toBe("timing-lock");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "|" })).toBe("timing-recall");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Backspace" })).toBe("timing-return");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Q" })).toBe("queue-stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
@@ -232,6 +233,15 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, editableTarget: true })).toBeNull();
     expect(resolveTimelineDawSessionClipKeyboardCommand("timing-recall", true, true)).toBeNull();
     expect(isTimelineDawSessionTempoCommand("timing-recall")).toBe(false);
+  });
+
+  it("keeps reversible timing return focused, repeat-safe, and outside clip navigation", () => {
+    const base = { key: "Backspace", launcherFocused: true, editableTarget: false };
+    expect(resolveTimelineDawSessionKeyboardCommand(base)).toBe("timing-return");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, repeat: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, editableTarget: true })).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("timing-return", true, true)).toBeNull();
+    expect(isTimelineDawSessionTempoCommand("timing-return")).toBe(false);
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {

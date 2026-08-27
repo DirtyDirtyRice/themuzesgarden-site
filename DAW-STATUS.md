@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Performance Timing Snapshot and Recall
+## Latest completed DAW milestone - Reversible Performance Timing Recall
+
+- Recalling a Session View timing snapshot now preserves the outgoing BPM, meter, beat unit, and launch quantization as a return point.
+- Return Timing restores the pre-recall setup without stopping the active scene or clip.
+- Repeated Return Timing presses toggle safely between the recalled and outgoing setups for live A/B timing decisions.
+- Focused performers can press Backspace to return or toggle timing without reaching for the mouse.
+- Timing Lock blocks both recall and return, preventing a protected performance clock from changing accidentally.
+- The shortcut stays off while typing, using menus, outside the focused launcher, or on key repeat and cannot enter clip navigation.
+- Focused Session View tests passed (53 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Return points are transient performance state and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Performance Timing Snapshot and Recall
 
 - Session View can capture a known-good performance timing snapshot containing BPM, time signature, beat unit, and launch quantization.
 - Recall Timing restores the complete captured timing setup together without stopping the active scene or clip transport.
