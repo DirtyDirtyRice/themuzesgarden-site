@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Full Performance Timing Lock
+## Latest completed DAW milestone - Performance Timing Snapshot and Recall
+
+- Session View can capture a known-good performance timing snapshot containing BPM, time signature, beat unit, and launch quantization.
+- Recall Timing restores the complete captured timing setup together without stopping the active scene or clip transport.
+- Focused performers can press `Shift+\` (`|`) to recall the snapshot without reaching for the mouse.
+- Timing Lock blocks recall, while Capture Timing remains safe to use because it does not change live timing.
+- The snapshot readout keeps its BPM, meter, and quantization visible before recall.
+- Recall clears stale tap history and remains isolated from clip pass navigation, scene navigation, and queue controls.
+- Focused Session View tests passed (52 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Timing snapshots are transient performance state and create no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Full Performance Timing Lock
 
 - Session View's live safety lock now protects the full performance timing setup: BPM, time-signature numerator, beat unit, launch quantization, and Live Set Plan imports.
 - The visible control now reads Lock Timing / Unlock Timing so its scope is clear before a performance.
