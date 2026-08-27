@@ -60,6 +60,7 @@ import {
 type SessionLane = { id: string; name: string };
 type LaunchSettings = { bpm: number; beatsPerBar: number; beatUnit: number; quantization: TimelineDawSessionLaunchQuantization; clipLaunchMode: TimelineDawSessionClipLaunchMode; clipPlayCount: number; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneFollowTargetIds: Record<string, string>; scenePlayCounts: Record<string, number>; sceneOrderIds: string[] };
 type TimingSnapshot = Pick<LaunchSettings, "bpm" | "beatsPerBar" | "beatUnit" | "quantization">;
+type TimingSnapshotSlot = "A" | "B" | "C";
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -116,7 +117,8 @@ export default function TimelineDawSessionView({
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   const [beatUnit, setBeatUnit] = useState<4 | 8 | 16>(4);
   const [quantization, setQuantization] = useState<TimelineDawSessionLaunchQuantization>("bar");
-  const [timingSnapshot, setTimingSnapshot] = useState<TimingSnapshot | null>(null);
+  const [timingSnapshots, setTimingSnapshots] = useState<Partial<Record<TimingSnapshotSlot, TimingSnapshot>>>({});
+  const [activeTimingSlot, setActiveTimingSlot] = useState<TimingSnapshotSlot>("A");
   const [previousTiming, setPreviousTiming] = useState<TimingSnapshot | null>(null);
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const [clipLaunchMode, setClipLaunchMode] = useState<TimelineDawSessionClipLaunchMode>("one-shot");
@@ -163,6 +165,7 @@ export default function TimelineDawSessionView({
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
   const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
+  const timingSnapshot = timingSnapshots[activeTimingSlot] ?? null;
 
   function tapTempo(now: number) {
     if (tempoLocked) return;
@@ -186,7 +189,7 @@ export default function TimelineDawSessionView({
   }
 
   function captureTimingSnapshot() {
-    setTimingSnapshot(currentTiming());
+    setTimingSnapshots((current) => ({ ...current, [activeTimingSlot]: currentTiming() }));
   }
 
   function currentTiming(): TimingSnapshot {
@@ -466,10 +469,13 @@ export default function TimelineDawSessionView({
             <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white disabled:opacity-50" type="number" min={30} max={300} step={1} value={bpm} disabled={tempoLocked} onChange={(event) => { resetTapTempo(); setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120))); }} />
           </label>
           <button type="button" className={launchButton} aria-pressed={tempoLocked} onClick={() => { resetTapTempo(); setTempoLocked((current) => !current); }}>{tempoLocked ? "Unlock Timing" : "Lock Timing"}</button>
-          <button type="button" className={launchButton} onClick={captureTimingSnapshot}>Capture Timing</button>
-          <button type="button" className={launchButton} disabled={tempoLocked || !timingSnapshot} onClick={recallTimingSnapshot}>Recall Timing</button>
+          <div className="flex gap-1" role="group" aria-label="Timing snapshot bank">
+            {(["A", "B", "C"] as const).map((slot) => <button key={slot} type="button" className={launchButton} aria-pressed={activeTimingSlot === slot} onClick={() => setActiveTimingSlot(slot)}>{slot}{timingSnapshots[slot] ? " •" : ""}</button>)}
+          </div>
+          <button type="button" className={launchButton} onClick={captureTimingSnapshot}>Capture {activeTimingSlot}</button>
+          <button type="button" className={launchButton} disabled={tempoLocked || !timingSnapshot} onClick={recallTimingSnapshot}>Recall {activeTimingSlot}</button>
           <button type="button" className={launchButton} disabled={tempoLocked || !previousTiming} onClick={returnToPreviousTiming}>Return Timing</button>
-          {timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : null}
+          {timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
           <div className="flex flex-wrap gap-2" role="group" aria-label="Session tempo adjustments">
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("decrease")}>−1 BPM</button>
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("increase")}>+1 BPM</button>

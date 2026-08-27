@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Reversible Performance Timing Recall
+## Latest completed DAW milestone - Three-Slot Performance Timing Bank
+
+- Session View now provides independent A, B, and C timing snapshot slots for different song sections, rehearsal options, or live-set transitions.
+- Each slot stores its own BPM, time signature, beat unit, and launch quantization without changing the active transport.
+- Filled slots show a visible marker, while the selected slot's complete timing setup remains readable before recall.
+- Capture and Recall controls follow the selected slot, and the existing `Shift+\` (`|`) shortcut recalls that selection.
+- Every slot recall still preserves the outgoing setup for Return Timing and live A/B comparison.
+- Timing Lock blocks all recalls while still allowing performers to capture the protected setup into another slot safely.
+- Focused Session View tests passed (53 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- The timing bank is transient performance state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Reversible Performance Timing Recall
 
 - Recalling a Session View timing snapshot now preserves the outgoing BPM, meter, beat unit, and launch quantization as a return point.
 - Return Timing restores the pre-recall setup without stopping the active scene or clip.
