@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Keyboard Timing-Bank Selection
+## Latest completed DAW milestone - Keyboard Timing-Bank Capture
+
+- Focused Session View now supports F9 to capture the current BPM, meter, beat unit, and launch quantization into the selected A, B, or C timing slot.
+- F6–F8 select the destination slot, so a full timing bank can be prepared without reaching for the mouse.
+- Capture is allowed while Timing Lock is active because it reads the protected clock without changing it.
+- Capturing overwrites only the selected slot and leaves the other two timing setups intact.
+- F9 is blocked while typing, using menus, outside the focused launcher, or on key repeat.
+- Timing capture cannot enter clip pass navigation or interfere with scene, queue, recall, return, stop, or pause controls.
+- Focused Session View tests passed (55 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Keyboard timing capture is transient performance state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Keyboard Timing-Bank Selection
 
 - Focused Session View now supports F6, F7, and F8 to select timing snapshot slots A, B, and C without reaching for the mouse.
 - Slot selection does not alter BPM, meter, quantization, playback, or the saved contents of any timing slot.

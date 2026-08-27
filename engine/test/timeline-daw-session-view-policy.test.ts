@@ -95,6 +95,7 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F6" })).toBe("timing-slot-a");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F7" })).toBe("timing-slot-b");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F8" })).toBe("timing-slot-c");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F9" })).toBe("timing-capture");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Q" })).toBe("queue-stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
@@ -254,6 +255,15 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F7", editableTarget: true })).toBeNull();
     expect(resolveTimelineDawSessionClipKeyboardCommand("timing-slot-c", true, true)).toBeNull();
     expect(isTimelineDawSessionTempoCommand("timing-slot-a")).toBe(false);
+  });
+
+  it("captures the selected timing slot with a focused, repeat-safe F9 command", () => {
+    const base = { key: "F9", launcherFocused: true, editableTarget: false };
+    expect(resolveTimelineDawSessionKeyboardCommand(base)).toBe("timing-capture");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, repeat: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, editableTarget: true })).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("timing-capture", true, true)).toBeNull();
+    expect(isTimelineDawSessionTempoCommand("timing-capture")).toBe(false);
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
