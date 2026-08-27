@@ -27,3 +27,30 @@ export function updateTimelineDawTrackFolderSend(
   if (!Number.isFinite(level) || level < 0 || level > 2) throw new Error("Folder send level must be between 0 and 2.");
   return { ...send, ...update, level };
 }
+
+export function resolveTimelineDawTrackFolderSendDestinations(
+  sourceBusId: string,
+  busIds: string[],
+  sends: Array<{ sourceKind: "lane" | "bus"; sourceId: string; destinationBusId: string; muted: boolean }>,
+) {
+  const sourceId = sourceBusId.trim();
+  const existingDestinations = new Set(sends.filter((send) => send.sourceKind === "bus" && send.sourceId === sourceId).map((send) => send.destinationBusId));
+  const activeEdges = new Map<string, string[]>();
+  for (const send of sends) {
+    if (send.muted || send.sourceKind !== "bus") continue;
+    activeEdges.set(send.sourceId, [...(activeEdges.get(send.sourceId) ?? []), send.destinationBusId]);
+  }
+  const reachesSource = (start: string) => {
+    const pending = [start];
+    const visited = new Set<string>();
+    while (pending.length) {
+      const current = pending.pop()!;
+      if (current === sourceId) return true;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      pending.push(...(activeEdges.get(current) ?? []));
+    }
+    return false;
+  };
+  return [...new Set(busIds.map((id) => id.trim()).filter(Boolean))].filter((id) => id !== sourceId && !existingDestinations.has(id) && !reachesSource(id));
+}

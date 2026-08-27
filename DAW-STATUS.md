@@ -43,6 +43,7 @@ THE MUZES GARDEN DAW
 │   ├── folder/subgroup shared volume, mute and solo ..... DONE 8/22/26
 │   ├── folder effects insert chain and sends ............ DONE 8/22/26
 │   ├── folder send level, pre/post and mute controls .... DONE 8/27/26
+│   ├── feedback-safe folder send destination planning ... DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -61,7 +62,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Professional Folder Send Controls
+## Latest completed DAW milestone - Feedback-Safe Folder Send Planning
+
+- The folder mixer now offers only destinations that are safe for a new shared-bus send.
+- The source bus, destinations already connected from that folder, and direct or indirect return paths into the source are removed from the picker.
+- Multi-hop cycle detection follows the complete active bus-send graph, preventing routes such as Folder → Delay → Reverb → Folder before they reach the server.
+- Muted routes do not create a live feedback path, while an existing muted send still remains an editable route instead of appearing as a duplicate destination.
+- When every destination is already used or unsafe, the disabled picker clearly reports No new safe destinations.
+- The authenticated server-side acyclic graph validation remains the final durable-write guard.
+- Focused folder-routing tests passed (4 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; this planning layer creates no audio, routing, folder, session, or Library writes by itself.
+
+## Previously completed DAW milestone - Professional Folder Send Controls
 
 - Every routed track folder now shows each of its durable shared-bus sends directly beneath the folder routing controls.
 - Musicians can continuously set an exact 0–200% send level for parallel ambience, cue, and effect balances.
