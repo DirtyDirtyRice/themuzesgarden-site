@@ -50,6 +50,7 @@ THE MUZES GARDEN DAW
 │   ├── cancellable expiring send removal confirmation ... DONE 8/27/26
 │   ├── temporary dry/wet folder send comparison ......... DONE 8/27/26
 │   ├── focused single-send effect audition .............. DONE 8/27/26
+│   ├── direct switching between focused sends ........... DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -68,7 +69,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Focused Single-Send Audition
+## Latest completed DAW milestone - Direct Focused-Send Switching
+
+- During a focused folder-send audition, every other route now offers Switch Focus Here instead of forcing a restore between effects.
+- Switching immediately mutes the previous effect and enables the newly chosen reverb, delay, cue, or parallel route for rapid like-for-like listening.
+- The first focus action retains the one authoritative restoration snapshot across every switch.
+- Restore All Sends still returns the complete folder mix to its exact pre-audition mute state, including originally muted routes.
+- Other folders, lane sends, inserts, track playback, routing, and source recordings remain untouched, and send-edit controls stay locked during comparison.
+- Focused folder-routing tests passed (10 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or durable write was required; switching changes only transient in-memory monitoring state.
+
+## Previously completed DAW milestone - Focused Single-Send Audition
 
 - Every shared folder route now has Hear Only This Send for isolating one reverb, delay, cue, or parallel effect during playback.
 - Focus audition mutes the folder's other sends and explicitly enables the chosen route, even when it was muted before the comparison.
