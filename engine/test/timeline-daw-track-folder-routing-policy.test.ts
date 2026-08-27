@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, jumpTimelineDawTrackFolderSendFocus, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, jumpTimelineDawTrackFolderSendFocus, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, toggleTimelineDawTrackFolderSendFocusReference, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 describe("DAW track folder routing policy", () => {
   it("deduplicates a bounded folder assignment", () => {
@@ -127,5 +127,22 @@ describe("DAW track folder routing policy", () => {
     expect(first.focusedSendId).toBe("room");
     expect(first.sends.map((send) => send.muted)).toEqual([false, true, true, false]);
     expect(() => jumpTimelineDawTrackFolderSendFocus(sends, "missing", "first")).toThrow(/at least one/);
+  });
+
+  it("toggles between focused audition and the exact original send mix", () => {
+    const sends = [
+      { id: "room", sourceKind: "bus" as const, sourceId: "folder", muted: false },
+      { id: "delay", sourceKind: "bus" as const, sourceId: "folder", muted: true },
+      { id: "cue", sourceKind: "bus" as const, sourceId: "folder", muted: false },
+      { id: "other", sourceKind: "bus" as const, sourceId: "other-folder", muted: false },
+    ];
+    const focused = createTimelineDawTrackFolderSendFocusCheck(sends, "folder", "delay");
+    const original = toggleTimelineDawTrackFolderSendFocusReference(focused.sends, "folder", "delay", focused.snapshot, false);
+    expect(original.showingOriginal).toBe(true);
+    expect(original.sends).toEqual(sends);
+    const compared = toggleTimelineDawTrackFolderSendFocusReference(original.sends, "folder", "delay", focused.snapshot, true);
+    expect(compared.showingOriginal).toBe(false);
+    expect(compared.sends.map((send) => send.muted)).toEqual([true, false, true, false]);
+    expect(() => toggleTimelineDawTrackFolderSendFocusReference(sends, "folder", "other", focused.snapshot, false)).toThrow(/belong/);
   });
 });

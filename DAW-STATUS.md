@@ -53,6 +53,7 @@ THE MUZES GARDEN DAW
 │   ├── direct switching between focused sends ........... DONE 8/27/26
 │   ├── previous/next focused-send navigation ............. DONE 8/27/26
 │   ├── first/last focused-send navigation ................ DONE 8/27/26
+│   ├── original mix versus focused-send A/B .............. DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -71,7 +72,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - First/Last Focused-Send Navigation
+## Latest completed DAW milestone - Original Mix Versus Focused-Send A/B
+
+- Focused folder-send audition now includes Hear Original Mix for immediate comparison against the complete pre-audition routing balance.
+- Hear Focused Send returns to the currently selected reverb, delay, cue, or parallel route without ending the comparison session.
+- The A/B action can be repeated indefinitely while retaining one authoritative original mute-state snapshot.
+- Direct, Previous, Next, First, and Last focus navigation automatically returns to the focused side before selecting the requested route.
+- Restore All Sends still ends the audition and returns the exact original mix, including routes that were already intentionally muted.
+- Focused folder-routing tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or durable write was required; A/B comparison changes only transient in-memory monitoring state.
+
+## Previously completed DAW milestone - First/Last Focused-Send Navigation
 
 - Focused folder-send audition now includes First Focus and Last Focus for instant boundary jumps across long effect-routing chains.
 - The unavailable boundary action disables automatically, clearly showing when the audition is already on the first or last route.

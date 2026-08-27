@@ -131,3 +131,11 @@ export function jumpTimelineDawTrackFolderSendFocus<T extends { id: string; sour
   const focusedSendId = edge === "first" ? folderSendIds[0] : folderSendIds[folderSendIds.length - 1];
   return { sends: switchTimelineDawTrackFolderSendFocus(sends, sourceId, focusedSendId), focusedSendId };
 }
+
+export function toggleTimelineDawTrackFolderSendFocusReference<T extends { id: string; sourceKind: "lane" | "bus"; sourceId: string; muted: boolean }>(sends: T[], sourceBusId: string, focusedSendId: string, snapshot: Record<string, boolean>, showingOriginal: boolean) {
+  const sourceId = sourceBusId.trim(), focusId = focusedSendId.trim();
+  if (!sends.some((send) => send.id === focusId && send.sourceKind === "bus" && send.sourceId === sourceId)) throw new Error("Focused send must belong to the folder bus.");
+  return showingOriginal
+    ? { sends: switchTimelineDawTrackFolderSendFocus(sends, sourceId, focusId), showingOriginal: false }
+    : { sends: restoreTimelineDawTrackFolderSendDryCheck(sends, snapshot), showingOriginal: true };
+}
