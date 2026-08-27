@@ -367,6 +367,18 @@ export function advanceTimelineDawSessionOverwriteCountdown(secondsRemaining: nu
   return Math.max(0, safeSeconds - 1);
 }
 
+export function createTimelineDawSessionTimingSnapshotComparison(
+  current: { bpm: number; beatsPerBar: number; beatUnit: number; quantization: string },
+  target: { bpm: number; beatsPerBar: number; beatUnit: number; quantization: string },
+) {
+  const changes: string[] = [];
+  const bpmDelta = target.bpm - current.bpm;
+  if (bpmDelta !== 0) changes.push(`${bpmDelta > 0 ? "+" : ""}${bpmDelta} BPM`);
+  if (target.beatsPerBar !== current.beatsPerBar || target.beatUnit !== current.beatUnit) changes.push(`${current.beatsPerBar}/${current.beatUnit} → ${target.beatsPerBar}/${target.beatUnit}`);
+  if (target.quantization !== current.quantization) changes.push(`${current.quantization} → ${target.quantization}`);
+  return changes.length ? changes.join(" · ") : "Matches current timing";
+}
+
 export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
   key: string;
   sceneCount: number;

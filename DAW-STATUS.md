@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Visible Timing Overwrite Countdown
+## Latest completed DAW milestone - Timing Snapshot Recall Comparison
+
+- The selected A, B, or C timing snapshot now previews every change it would apply before recall.
+- BPM differences appear as signed deltas such as +8 BPM or -10 BPM.
+- Meter changes show the current and target signatures together, while launch quantization changes show their exact transition.
+- A snapshot identical to the live setup reports Matches current timing instead of implying a change.
+- Comparison updates immediately as live BPM, meter, quantization, or selected snapshot changes.
+- Timing Lock, protected capture, overwrite countdown, recall, reversible return, and transport behavior remain unchanged.
+- Focused Session View tests passed (60 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Recall comparison is derived transient UI state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Visible Timing Overwrite Countdown
 
 - Armed A, B, or C timing-slot replacement now displays a live 4…3…2…1 second countdown.
 - The amber alert identifies the exact snapshot at risk and keeps the required second Capture or F9 action visible.

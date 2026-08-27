@@ -36,6 +36,7 @@ import {
   resolveTimelineDawSessionTimingCaptureAction,
   resolveTimelineDawSessionCancelTarget,
   advanceTimelineDawSessionOverwriteCountdown,
+  createTimelineDawSessionTimingSnapshotComparison,
   resolveTimelineDawSessionSceneHotkeyIndex,
   resolveTimelineDawSessionClipLaunchMode,
   resolveTimelineDawSessionClipQuantization,
@@ -171,6 +172,7 @@ export default function TimelineDawSessionView({
   const arrangementTimeline = createTimelineDawSessionArrangementPreview(arrangementPreview, lanes.map((lane) => lane.id));
   const savedTakeSummaries = new Map(savedTakes.map((take) => [take.id, createTimelineDawSessionTakeSummary(take)]));
   const timingSnapshot = timingSnapshots[activeTimingSlot] ?? null;
+  const timingSnapshotComparison = timingSnapshot ? createTimelineDawSessionTimingSnapshotComparison({ bpm, beatsPerBar, beatUnit, quantization }, timingSnapshot) : null;
 
   function tapTempo(now: number) {
     if (tempoLocked) return;
@@ -522,6 +524,7 @@ export default function TimelineDawSessionView({
           <button type="button" className={launchButton} disabled={tempoLocked || !timingSnapshot} onClick={recallTimingSnapshot}>Recall {activeTimingSlot}</button>
           <button type="button" className={launchButton} disabled={tempoLocked || !previousTiming} onClick={returnToPreviousTiming}>Return Timing</button>
           {captureOverwriteArmedSlot === activeTimingSlot ? <span className="text-[11px] font-black text-amber-100" role="alert">Replace snapshot {activeTimingSlot}? Press Capture or F9 again · {captureOverwriteSeconds}s</span> : timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
+          {timingSnapshotComparison && captureOverwriteArmedSlot !== activeTimingSlot ? <span className="text-[11px] font-black text-violet-100" aria-label={`Timing snapshot ${activeTimingSlot} comparison`}>Recall change: {timingSnapshotComparison}</span> : null}
           <div className="flex flex-wrap gap-2" role="group" aria-label="Session tempo adjustments">
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("decrease")}>−1 BPM</button>
             <button type="button" className={launchButton} disabled={tempoLocked} onClick={() => adjustTempo("increase")}>+1 BPM</button>

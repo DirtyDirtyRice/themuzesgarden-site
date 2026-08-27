@@ -8,6 +8,7 @@ import { isTimelineDawSessionTempoCommand } from "../../lib/timeline/TimelineDaw
 import { resolveTimelineDawSessionTimingCaptureAction } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { resolveTimelineDawSessionCancelTarget } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { advanceTimelineDawSessionOverwriteCountdown } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionTimingSnapshotComparison } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPassProgress, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipRemainingLabel, createTimelineDawSessionClipTransportState, createTimelineDawSessionClipUpNextCue, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionQueuedLaunchProgress, createTimelineDawSessionQueuedStopLabel, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
@@ -285,6 +286,13 @@ describe("Timeline DAW Session View policy", () => {
   it("advances a safe timing-overwrite countdown without going below zero", () => {
     expect([4, 3, 2, 1, 0].map(advanceTimelineDawSessionOverwriteCountdown)).toEqual([3, 2, 1, 0, 0]);
     expect(advanceTimelineDawSessionOverwriteCountdown(Number.NaN)).toBe(0);
+  });
+
+  it("previews every timing change before snapshot recall", () => {
+    const current = { bpm: 120, beatsPerBar: 4, beatUnit: 4, quantization: "bar" };
+    expect(createTimelineDawSessionTimingSnapshotComparison(current, { bpm: 128, beatsPerBar: 7, beatUnit: 8, quantization: "beat" })).toBe("+8 BPM · 4/4 → 7/8 · bar → beat");
+    expect(createTimelineDawSessionTimingSnapshotComparison(current, { ...current, bpm: 110 })).toBe("-10 BPM");
+    expect(createTimelineDawSessionTimingSnapshotComparison(current, current)).toBe("Matches current timing");
   });
 
   it("recalls the selected timing slot with a focused, repeat-safe F10 command", () => {
