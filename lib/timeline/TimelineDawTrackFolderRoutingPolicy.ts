@@ -123,3 +123,11 @@ export function cycleTimelineDawTrackFolderSendFocus<T extends { id: string; sou
   const nextId = folderSendIds[(currentIndex + direction + folderSendIds.length) % folderSendIds.length];
   return { sends: switchTimelineDawTrackFolderSendFocus(sends, sourceId, nextId), focusedSendId: nextId };
 }
+
+export function jumpTimelineDawTrackFolderSendFocus<T extends { id: string; sourceKind: "lane" | "bus"; sourceId: string; muted: boolean }>(sends: T[], sourceBusId: string, edge: "first" | "last") {
+  const sourceId = sourceBusId.trim();
+  const folderSendIds = sends.filter((send) => send.sourceKind === "bus" && send.sourceId === sourceId).map((send) => send.id);
+  if (!folderSendIds.length) throw new Error("Folder send focus requires at least one shared send.");
+  const focusedSendId = edge === "first" ? folderSendIds[0] : folderSendIds[folderSendIds.length - 1];
+  return { sends: switchTimelineDawTrackFolderSendFocus(sends, sourceId, focusedSendId), focusedSendId };
+}

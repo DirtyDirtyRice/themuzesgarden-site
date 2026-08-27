@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, jumpTimelineDawTrackFolderSendFocus, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 describe("DAW track folder routing policy", () => {
   it("deduplicates a bounded folder assignment", () => {
@@ -111,5 +111,21 @@ describe("DAW track folder routing policy", () => {
     const wrapped = cycleTimelineDawTrackFolderSendFocus(previous.sends, "folder", "room", -1);
     expect(wrapped.focusedSendId).toBe("cue");
     expect(() => cycleTimelineDawTrackFolderSendFocus(sends, "folder", "other", 1)).toThrow(/belong/);
+  });
+
+  it("jumps focused audition to the first or last folder send", () => {
+    const sends = [
+      { id: "room", sourceKind: "bus" as const, sourceId: "folder", muted: true },
+      { id: "delay", sourceKind: "bus" as const, sourceId: "folder", muted: false },
+      { id: "cue", sourceKind: "bus" as const, sourceId: "folder", muted: true },
+      { id: "other", sourceKind: "bus" as const, sourceId: "other-folder", muted: false },
+    ];
+    const last = jumpTimelineDawTrackFolderSendFocus(sends, "folder", "last");
+    expect(last.focusedSendId).toBe("cue");
+    expect(last.sends.map((send) => send.muted)).toEqual([true, true, false, false]);
+    const first = jumpTimelineDawTrackFolderSendFocus(last.sends, "folder", "first");
+    expect(first.focusedSendId).toBe("room");
+    expect(first.sends.map((send) => send.muted)).toEqual([false, true, true, false]);
+    expect(() => jumpTimelineDawTrackFolderSendFocus(sends, "missing", "first")).toThrow(/at least one/);
   });
 });

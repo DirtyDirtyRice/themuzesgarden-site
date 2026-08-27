@@ -52,6 +52,7 @@ THE MUZES GARDEN DAW
 │   ├── focused single-send effect audition .............. DONE 8/27/26
 │   ├── direct switching between focused sends ........... DONE 8/27/26
 │   ├── previous/next focused-send navigation ............. DONE 8/27/26
+│   ├── first/last focused-send navigation ................ DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -70,7 +71,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Previous/Next Focused-Send Navigation
+## Latest completed DAW milestone - First/Last Focused-Send Navigation
+
+- Focused folder-send audition now includes First Focus and Last Focus for instant boundary jumps across long effect-routing chains.
+- The unavailable boundary action disables automatically, clearly showing when the audition is already on the first or last route.
+- Boundary jumps isolate exactly one selected route while leaving other folders, lane sends, inserts, buses, tracks, and recordings unchanged.
+- Previous Focus, Next Focus, direct route switching, and wraparound navigation remain available within the same reversible audition.
+- Restore All Sends still returns the exact pre-audition mute state after any combination of direct, sequential, or boundary focus changes.
+- Focused folder-routing tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration or durable write was required; boundary navigation changes only transient in-memory monitoring state.
+
+## Previously completed DAW milestone - Previous/Next Focused-Send Navigation
 
 - During focused folder-send audition, musicians can now step through every reverb, delay, cue, or parallel route with Previous Focus and Next Focus.
 - Navigation wraps cleanly from the first send to the last and from the last send to the first for uninterrupted listening comparisons.
