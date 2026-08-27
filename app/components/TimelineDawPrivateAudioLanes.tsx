@@ -8,6 +8,7 @@ import {
   assignDawPrivateLaneBus,
   assignDawPrivateFolderBus,
   deleteDawPrivateBus,
+  deleteDawPrivateProcessing,
   arrangeDawPrivateAudioLane,
   duplicateDawPrivateAudioLane,
   repeatDawPrivateAudioLane,
@@ -83,7 +84,7 @@ import { parseTimelineDawTrackColors, setTimelineDawTrackColor, TIMELINE_DAW_TRA
 import { resolveTimelineDawTrackShortcut } from "@/lib/timeline/TimelineDawTrackShortcutPolicy";
 import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextIndex, createTimelineDawTrackRegionSequence, parseTimelineDawTrackRegionLabels, removeTimelineDawTrackRegionLabel, timelineDawTrackLocalSeconds, updateTimelineDawTrackRegionLabel, type TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
 import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimelineDawTrackFolder, renameTimelineDawTrackFolder, resolveTimelineDawTrackFolderPlayback, toggleTimelineDawTrackFolder, updateTimelineDawTrackFolderMix, type TimelineDawTrackFolders } from "@/lib/timeline/TimelineDawTrackFolderPolicy";
-import { copyTimelineDawTrackFolderSend, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, updateTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, updateTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 import { createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, orderTimelineDawSessionScenes, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionScenePlayCount, type TimelineDawSessionFollowAction, type TimelineDawSessionLaunchQuantization, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
@@ -127,6 +128,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [folderBusTargets, setFolderBusTargets] = useState<Record<string, string>>({});
   const [folderSendTargets, setFolderSendTargets] = useState<Record<string, string>>({});
   const [folderSendCopySources, setFolderSendCopySources] = useState<Record<string, string>>({});
+  const [pendingFolderSendRemovalId, setPendingFolderSendRemovalId] = useState<string>();
   const loadedTrackFoldersRef = useRef<string | null>(null);
   const [buses, setBuses] = useState<DawPrivateBus[]>([]);
   const [busMeters, setBusMeters] = useState<Record<string, TimelineDawPrivateLaneMeter>>({});
@@ -1057,6 +1059,13 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   }
 
   async function persistSend(input: Omit<DawPrivateSend, "id"> & { id?: string }) { setError(undefined); try { const { send } = await saveDawPrivateSend(sessionId, input); setSends((current) => [...current.filter((item) => item.id !== send.id && !(item.sourceKind === send.sourceKind && item.sourceId === send.sourceId && item.destinationBusId === send.destinationBusId)), send]); } catch (cause) { setError(cause instanceof Error ? cause.message : "Private send could not be saved."); } }
+  async function removeFolderSend(send: DawPrivateSend) {
+    if (resolveTimelineDawTrackFolderSendRemoval(pendingFolderSendRemovalId, send.id) === "confirm") { setPendingFolderSendRemovalId(send.id); return; }
+    setBusy(true); setError(undefined);
+    try { await deleteDawPrivateProcessing(sessionId, "send", send.id); setSends((current) => current.filter((item) => item.id !== send.id)); setPendingFolderSendRemovalId(undefined); setMovementNotice("Shared folder send removed. Its source tracks and destination bus remain unchanged."); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Folder send could not be removed."); }
+    finally { setBusy(false); }
+  }
   async function persistInsert(input: Omit<DawPrivateInsert, "id"> & { id?: string }) { setError(undefined); try { const { insert } = await saveDawPrivateInsert(sessionId, input); setInserts((current) => [...current.filter((item) => item.id !== insert.id && !(item.sourceKind === insert.sourceKind && item.sourceId === insert.sourceId && item.slot === insert.slot)), insert]); } catch (cause) { setError(cause instanceof Error ? cause.message : "Private insert could not be saved."); } }
   async function applyGroupEdit(edit: PrivateLaneGroupEditInput, successMessage?: string) {
     if ([...selectedIds].some((laneId) => lockedIds.has(laneId))) {
@@ -1367,6 +1376,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
               <label className="min-w-40 flex-1 text-xs text-white/60">Send level {Math.round(send.level * 100)}%<input className="block w-full accent-fuchsia-300" type="range" min={0} max={2} step={0.01} value={send.level} onChange={(event) => void persistSend(updateTimelineDawTrackFolderSend(send, { level: Number(event.target.value) }))} /></label>
               <button type="button" className={button} onClick={() => void persistSend(updateTimelineDawTrackFolderSend(send, { preFader: !send.preFader }))}>{send.preFader ? "Pre-Fader" : "Post-Fader"}</button>
               <button type="button" className={send.muted ? "rounded-xl border border-amber-300 bg-amber-200 px-3 py-2 text-sm font-black text-amber-950" : button} aria-pressed={send.muted} onClick={() => void persistSend(updateTimelineDawTrackFolderSend(send, { muted: !send.muted }))}>{send.muted ? "Enable Send" : "Mute Send"}</button>
+              <button type="button" className={pendingFolderSendRemovalId === send.id ? "rounded-xl border border-red-300 bg-red-200 px-3 py-2 text-sm font-black text-red-950" : button} disabled={busy} onClick={() => void removeFolderSend(send)}>{pendingFolderSendRemovalId === send.id ? "Confirm Remove Send" : "Remove Send"}</button>
             </div>)}</div> : null}
           </div>;
         })}</div> : null}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyTimelineDawTrackFolderSend, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 describe("DAW track folder routing policy", () => {
   it("deduplicates a bounded folder assignment", () => {
@@ -35,5 +35,12 @@ describe("DAW track folder routing policy", () => {
     expect(copyTimelineDawTrackFolderSend(send, " delay ")).toEqual({ sourceKind: "bus", sourceId: "folder", destinationBusId: "delay", level: 0.72, preFader: true, muted: false });
     expect(() => copyTimelineDawTrackFolderSend(send, "folder")).toThrow(/different destination/);
     expect(() => copyTimelineDawTrackFolderSend({ ...send, sourceKind: "lane" }, "delay")).toThrow(/shared bus/);
+  });
+
+  it("requires the same folder send to be selected twice before removal", () => {
+    expect(resolveTimelineDawTrackFolderSendRemoval(undefined, "send-1")).toBe("confirm");
+    expect(resolveTimelineDawTrackFolderSendRemoval("send-2", "send-1")).toBe("confirm");
+    expect(resolveTimelineDawTrackFolderSendRemoval("send-1", "send-1")).toBe("remove");
+    expect(() => resolveTimelineDawTrackFolderSendRemoval(undefined, " ")).toThrow(/identifier/);
   });
 });

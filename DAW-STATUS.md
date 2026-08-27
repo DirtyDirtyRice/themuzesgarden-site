@@ -45,6 +45,7 @@ THE MUZES GARDEN DAW
 │   ├── folder send level, pre/post and mute controls .... DONE 8/27/26
 │   ├── feedback-safe folder send destination planning ... DONE 8/27/26
 │   ├── copy folder send mix to a new destination ........ DONE 8/27/26
+│   ├── protected folder send disconnection .............. DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -63,7 +64,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Copy Folder Send Mix Settings
+## Latest completed DAW milestone - Protected Folder Send Removal
+
+- Every folder send now includes a clear Remove Send action beside its level, tap-mode, and mute controls.
+- Removal requires the same route to be selected twice; the first action arms a red Confirm Remove Send control instead of deleting immediately.
+- Selecting a different send starts a new confirmation, preventing a stale confirmation from disconnecting another route.
+- The durable delete remains authenticated and restricted by owner plus private session, and the UI removes the route only after the server confirms success.
+- Disconnecting a send leaves its source tracks, folder membership, shared bus, destination bus, inserts, and source recordings unchanged.
+- Focused folder-routing tests passed (6 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the milestone reuses the established private-processing delete operation.
+
+## Previously completed DAW milestone - Copy Folder Send Mix Settings
 
 - When adding a new feedback-safe folder send, musicians can now start at the standard 50% post-fader setting or copy any existing send on that folder.
 - The copy picker identifies the original destination, level percentage, and pre/post-fader mode before the route is created.

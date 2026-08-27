@@ -65,3 +65,9 @@ export function copyTimelineDawTrackFolderSend(
   if (!Number.isFinite(send.level) || send.level < 0 || send.level > 2) throw new Error("Folder send level must be between 0 and 2.");
   return { sourceKind: "bus" as const, sourceId: send.sourceId, destinationBusId: destinationId, level: send.level, preFader: send.preFader, muted: send.muted };
 }
+
+export function resolveTimelineDawTrackFolderSendRemoval(pendingSendId: string | undefined, selectedSendId: string) {
+  const sendId = selectedSendId.trim();
+  if (!sendId) throw new Error("Folder send identifier is required.");
+  return pendingSendId === sendId ? "remove" as const : "confirm" as const;
+}
