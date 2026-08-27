@@ -392,6 +392,12 @@ export function createTimelineDawSessionTimingRecallDelay(input: {
   return createTimelineDawSessionLaunchDelay({ ...input, quantization: "bar" });
 }
 
+export function createTimelineDawSessionQueuedTimingRecallLabel(slot: string, remainingSeconds: number) {
+  const safeSlot = slot.trim().toUpperCase() || "?";
+  const safeRemaining = Number.isFinite(remainingSeconds) ? Math.max(0, remainingSeconds) : 0;
+  return `Timing ${safeSlot} · ${safeRemaining.toFixed(1)} sec to next bar`;
+}
+
 export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
   key: string;
   sceneCount: number;

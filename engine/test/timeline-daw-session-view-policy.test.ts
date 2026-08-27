@@ -10,6 +10,7 @@ import { resolveTimelineDawSessionCancelTarget } from "../../lib/timeline/Timeli
 import { advanceTimelineDawSessionOverwriteCountdown } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionTimingSnapshotComparison } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawSessionTimingRecallDelay } from "../../lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawSessionQueuedTimingRecallLabel } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 import { analyzeTimelineDawSessionLiveSetFlow, createTimelineDawSessionArrangementPlan, createTimelineDawSessionArrangementPreview, createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionClipPassProgress, createTimelineDawSessionClipPlaybackStatus, createTimelineDawSessionClipRemainingLabel, createTimelineDawSessionClipTransportState, createTimelineDawSessionClipUpNextCue, createTimelineDawSessionCompTake, createTimelineDawSessionConsolidatedArrangementPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionLiveCue, createTimelineDawSessionLiveProgressLabel, createTimelineDawSessionLiveSetPlan, createTimelineDawSessionNavigationIndex, createTimelineDawSessionPassProgress, createTimelineDawSessionPerformanceEvent, createTimelineDawSessionQueuedLaunchProgress, createTimelineDawSessionQueuedStopLabel, createTimelineDawSessionSavedTake, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, createTimelineDawSessionTakeLaneBundle, createTimelineDawSessionTakeSummary, findTimelineDawSessionClipSlot, moveTimelineDawSessionScene, orderTimelineDawSessionScenes, parseTimelineDawSessionLiveSetPlan, parseTimelineDawSessionTakeLaneBundle, quantizeTimelineDawSessionPerformanceTake, resolveTimelineDawSessionClipKeyboardCommand, resolveTimelineDawSessionClipLaunchMode, resolveTimelineDawSessionClipPlayCount, resolveTimelineDawSessionClipQuantization, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionKeyboardCommand, resolveTimelineDawSessionSceneFollowAction, resolveTimelineDawSessionSceneHotkeyIndex, resolveTimelineDawSessionScenePlayCount } from "../../lib/timeline/TimelineDawSessionViewPolicy";
 
 describe("Timeline DAW Session View policy", () => {
@@ -302,6 +303,11 @@ describe("Timeline DAW Session View policy", () => {
     expect(createTimelineDawSessionTimingRecallDelay({ ...timing, mode: "immediate" })).toBe(0);
     expect(createTimelineDawSessionTimingRecallDelay({ ...timing, mode: "next-bar" })).toBe(750);
     expect(createTimelineDawSessionTimingRecallDelay({ ...timing, playheadSeconds: 2, mode: "next-bar" })).toBe(0);
+  });
+
+  it("labels queued timing recall with a safe live countdown", () => {
+    expect(createTimelineDawSessionQueuedTimingRecallLabel("a", 0.75)).toBe("Timing A · 0.8 sec to next bar");
+    expect(createTimelineDawSessionQueuedTimingRecallLabel(" ", Number.NaN)).toBe("Timing ? · 0.0 sec to next bar");
   });
 
   it("recalls the selected timing slot with a focused, repeat-safe F10 command", () => {

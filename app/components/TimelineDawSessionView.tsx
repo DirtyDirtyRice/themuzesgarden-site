@@ -38,6 +38,7 @@ import {
   advanceTimelineDawSessionOverwriteCountdown,
   createTimelineDawSessionTimingSnapshotComparison,
   createTimelineDawSessionTimingRecallDelay,
+  createTimelineDawSessionQueuedTimingRecallLabel,
   resolveTimelineDawSessionSceneHotkeyIndex,
   resolveTimelineDawSessionClipLaunchMode,
   resolveTimelineDawSessionClipQuantization,
@@ -67,7 +68,7 @@ type SessionLane = { id: string; name: string };
 type LaunchSettings = { bpm: number; beatsPerBar: number; beatUnit: number; quantization: TimelineDawSessionLaunchQuantization; clipLaunchMode: TimelineDawSessionClipLaunchMode; clipPlayCount: number; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneFollowTargetIds: Record<string, string>; scenePlayCounts: Record<string, number>; sceneOrderIds: string[] };
 type TimingSnapshot = Pick<LaunchSettings, "bpm" | "beatsPerBar" | "beatUnit" | "quantization">;
 type TimingSnapshotSlot = "A" | "B" | "C";
-type QueuedTimingRecall = { slot: TimingSnapshotSlot; snapshot: TimingSnapshot; outgoingTiming: TimingSnapshot; delayMs: number };
+type QueuedTimingRecall = { slot: TimingSnapshotSlot; snapshot: TimingSnapshot; outgoingTiming: TimingSnapshot; queuedAtMs: number; delayMs: number };
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -172,6 +173,7 @@ export default function TimelineDawSessionView({
   const activeClipPassProgress = activeClipPlayback?.passStartedAtMs !== undefined && activeClipPlayback.passDurationMs !== undefined ? createTimelineDawSessionClipPassProgress({ passStartedAtMs: activeClipPlayback.passStartedAtMs, passDurationMs: activeClipPlayback.passDurationMs, pausedAtMs: activeClipPlayback.pausedAtMs, nowMs: liveProgressNowMs }) : null;
   const activeClipRemainingLabel = activeClipPlayback && activeClipPassProgress ? createTimelineDawSessionClipRemainingLabel({ ...activeClipPlayback, passDurationSeconds: (activeClipPlayback.passDurationMs ?? 0) / 1000, currentPassRemainingSeconds: activeClipPassProgress.remainingSeconds }) : null;
   const queuedProgress = queuedLaunchProgress ? createTimelineDawSessionQueuedLaunchProgress(queuedLaunchProgress.queuedAtMs, queuedLaunchProgress.delayMs, liveProgressNowMs) : null;
+  const queuedTimingRecallProgress = queuedTimingRecall ? createTimelineDawSessionQueuedLaunchProgress(queuedTimingRecall.queuedAtMs, queuedTimingRecall.delayMs, liveProgressNowMs) : null;
   const queuedStopLabel = createTimelineDawSessionQueuedStopLabel(quantization);
   const cleanedPerformanceEvents = quantizeTimelineDawSessionPerformanceTake(performanceEvents, takeQuantization);
   const arrangementPreview = createTimelineDawSessionConsolidatedArrangementPlan(cleanedPerformanceEvents);
@@ -252,7 +254,7 @@ export default function TimelineDawSessionView({
     const playheadSeconds = livePassProgress?.elapsedSeconds ?? activeClipPassProgress?.elapsedSeconds;
     const delayMs = playheadSeconds === undefined ? 0 : createTimelineDawSessionTimingRecallDelay({ mode: timingRecallMode, playheadSeconds, bpm, beatsPerBar, beatUnit });
     if (delayMs > 0) {
-      const queuedRecall = { slot: activeTimingSlot, snapshot: timingSnapshot, outgoingTiming, delayMs };
+      const queuedRecall = { slot: activeTimingSlot, snapshot: timingSnapshot, outgoingTiming, queuedAtMs: liveProgressNowMs, delayMs };
       setQueuedTimingRecall(queuedRecall);
       timingRecallTimerRef.current = window.setTimeout(() => {
         applyRecalledTiming(queuedRecall.snapshot, queuedRecall.outgoingTiming);
@@ -278,10 +280,10 @@ export default function TimelineDawSessionView({
   }
 
   useEffect(() => {
-    if ((!activeSceneProgress || activeScenePaused) && !queuedProgress && (!activeClipPassProgress || activeClipPlayback?.paused)) return;
+    if ((!activeSceneProgress || activeScenePaused) && !queuedProgress && !queuedTimingRecall && (!activeClipPassProgress || activeClipPlayback?.paused)) return;
     const timer = window.setInterval(() => setLiveProgressNowMs(Date.now()), 250);
     return () => window.clearInterval(timer);
-  }, [activeClipPassProgress, activeClipPlayback?.paused, activeScenePaused, activeSceneProgress, queuedProgress]);
+  }, [activeClipPassProgress, activeClipPlayback?.paused, activeScenePaused, activeSceneProgress, queuedProgress, queuedTimingRecall]);
 
   useEffect(() => {
     if (!captureOverwriteArmedSlot) return;
@@ -568,7 +570,7 @@ export default function TimelineDawSessionView({
               <option value="next-bar">Next Bar</option>
             </select>
           </label>
-          {queuedTimingRecall ? <><span className="text-[11px] font-black text-amber-100" role="status">Timing {queuedTimingRecall.slot} queued for next bar · {(queuedTimingRecall.delayMs / 1000).toFixed(1)}s</span><button type="button" className={launchButton} onClick={cancelQueuedTimingRecall}>Cancel Timing Recall</button></> : null}
+          {queuedTimingRecall && queuedTimingRecallProgress ? <div className="min-w-56 flex-1" aria-label={`Queued timing ${queuedTimingRecall.slot} recall progress`}><div className="mb-1 flex items-center justify-between gap-2"><span className="text-[11px] font-black text-amber-100" role="status">{createTimelineDawSessionQueuedTimingRecallLabel(queuedTimingRecall.slot, queuedTimingRecallProgress.remainingSeconds)}</span><button type="button" className={launchButton} onClick={cancelQueuedTimingRecall}>Cancel Timing Recall</button></div><div className="h-2 overflow-hidden rounded-full bg-black/40" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={queuedTimingRecallProgress.percent}><div className="h-full rounded-full bg-amber-300 transition-[width] duration-200" style={{ width: `${queuedTimingRecallProgress.percent}%` }} /></div></div> : null}
           <button type="button" className={launchButton} disabled={tempoLocked || !previousTiming} onClick={returnToPreviousTiming}>Return Timing</button>
           {captureOverwriteArmedSlot === activeTimingSlot ? <span className="text-[11px] font-black text-amber-100" role="alert">Replace snapshot {activeTimingSlot}? Press Capture or F9 again · {captureOverwriteSeconds}s</span> : timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
           {timingSnapshotComparison && captureOverwriteArmedSlot !== activeTimingSlot ? <span className="text-[11px] font-black text-violet-100" aria-label={`Timing snapshot ${activeTimingSlot} comparison`}>Recall change: {timingSnapshotComparison}</span> : null}
