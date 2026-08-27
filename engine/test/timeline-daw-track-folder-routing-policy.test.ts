@@ -63,6 +63,13 @@ describe("DAW track folder routing policy", () => {
     expect(() => nudgeTimelineDawTrackFolderSendLevelDb(1, 0)).toThrow(/non-zero/);
   });
 
+  it("supports mastering-grade tenth-decibel send trims", () => {
+    const raised = nudgeTimelineDawTrackFolderSendLevelDb(0.5, 0.1);
+    expect(timelineDawTrackFolderSendLevelToDb(raised)).toBeCloseTo(-5.9206);
+    const restored = nudgeTimelineDawTrackFolderSendLevelDb(raised, -0.1);
+    expect(restored).toBeCloseTo(0.5);
+  });
+
   it("temporarily dries one folder and restores every prior send mute state", () => {
     const sends = [
       { id: "room", sourceKind: "bus" as const, sourceId: "folder", muted: false },

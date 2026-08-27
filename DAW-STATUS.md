@@ -55,6 +55,7 @@ THE MUZES GARDEN DAW
 │   ├── first/last focused-send navigation ................ DONE 8/27/26
 │   ├── original mix versus focused-send A/B .............. DONE 8/27/26
 │   ├── precise one-decibel send level nudging ............. DONE 8/27/26
+│   ├── mastering-grade tenth-decibel send trims ........... DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -73,7 +74,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Precise One-Decibel Send Level Nudging
+## Latest completed DAW milestone - Mastering-Grade Tenth-Decibel Send Trims
+
+- Every folder send now includes −0.1 dB and +0.1 dB fine-trim controls alongside the existing one-decibel moves.
+- Fine trims operate in the logarithmic decibel domain, making subtle ambience, cue, delay, and parallel-processing balance changes repeatable.
+- Opposite tenth-decibel moves return to the original level without accumulating a coarse linear-gain error.
+- Fine trims share the true-off floor, +6.02 dB ceiling, authenticated save path, and comparison-mode write lock.
+- Exact dB entry, continuous slider, coarse nudges, Send Off, Unity, tap mode, mute, focus audition, and A/B remain available.
+- Focused folder-routing tests passed (15 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; fine trims reuse the established validated linear level representation.
+
+## Previously completed DAW milestone - Precise One-Decibel Send Level Nudging
 
 - Every folder send now includes −1 dB and +1 dB controls for fast, repeatable mix moves without typing or coarse slider dragging.
 - Each nudge operates in the logarithmic decibel domain and converts safely back into the established linear send-level engine value.
