@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Three-Slot Performance Timing Bank
+## Latest completed DAW milestone - Keyboard Timing-Bank Selection
+
+- Focused Session View now supports F6, F7, and F8 to select timing snapshot slots A, B, and C without reaching for the mouse.
+- Slot selection does not alter BPM, meter, quantization, playback, or the saved contents of any timing slot.
+- After selecting a slot, `Shift+\` (`|`) recalls it and Backspace returns or toggles the prior setup.
+- Timing Lock remains active across slot selection and continues to block recall or return changes.
+- Function-key commands are blocked while typing, using menus, outside the focused launcher, or on key repeat.
+- Slot-selection commands cannot enter clip pass navigation or interfere with scene, queue, stop, or pause controls.
+- Focused Session View tests passed (54 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Keyboard slot selection is transient performance state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Three-Slot Performance Timing Bank
 
 - Session View now provides independent A, B, and C timing snapshot slots for different song sections, rehearsal options, or live-set transitions.
 - Each slot stores its own BPM, time signature, beat unit, and launch quantization without changing the active transport.

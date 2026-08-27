@@ -92,6 +92,9 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "\\" })).toBe("timing-lock");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "|" })).toBe("timing-recall");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Backspace" })).toBe("timing-return");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F6" })).toBe("timing-slot-a");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F7" })).toBe("timing-slot-b");
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F8" })).toBe("timing-slot-c");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Q" })).toBe("queue-stop");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Enter" })).toBe("launch-queued");
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "Escape" })).toBe("cancel-queued");
@@ -242,6 +245,15 @@ describe("Timeline DAW Session View policy", () => {
     expect(resolveTimelineDawSessionKeyboardCommand({ ...base, editableTarget: true })).toBeNull();
     expect(resolveTimelineDawSessionClipKeyboardCommand("timing-return", true, true)).toBeNull();
     expect(isTimelineDawSessionTempoCommand("timing-return")).toBe(false);
+  });
+
+  it("selects timing-bank slots with focused, repeat-safe function keys", () => {
+    const base = { launcherFocused: true, editableTarget: false };
+    expect(["F6", "F7", "F8"].map((key) => resolveTimelineDawSessionKeyboardCommand({ ...base, key }))).toEqual(["timing-slot-a", "timing-slot-b", "timing-slot-c"]);
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F6", repeat: true })).toBeNull();
+    expect(resolveTimelineDawSessionKeyboardCommand({ ...base, key: "F7", editableTarget: true })).toBeNull();
+    expect(resolveTimelineDawSessionClipKeyboardCommand("timing-slot-c", true, true)).toBeNull();
+    expect(isTimelineDawSessionTempoCommand("timing-slot-a")).toBe(false);
   });
 
   it("resolves independent per-clip launch modes with a global fallback", () => {
