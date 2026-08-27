@@ -56,6 +56,7 @@ THE MUZES GARDEN DAW
 │   ├── original mix versus focused-send A/B .............. DONE 8/27/26
 │   ├── precise one-decibel send level nudging ............. DONE 8/27/26
 │   ├── mastering-grade tenth-decibel send trims ........... DONE 8/27/26
+│   ├── professional send level starting presets ........... DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -74,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Mastering-Grade Tenth-Decibel Send Trims
+## Latest completed DAW milestone - Professional Send Level Starting Presets
+
+- Every folder send now offers standard −18 dB, −12 dB, and −6 dB starting points for fast repeatable routing balances.
+- The quieter presets support subtle ambience and cue feeds, while −6 dB provides a stronger parallel-effect starting level.
+- Presets use exact logarithmic conversion into the established linear gain engine rather than approximate percentages.
+- Comparison modes lock preset writes so a temporary dry, focused, or original-mix audition cannot overwrite the durable mix.
+- Exact entry, continuous slider, coarse and fine nudges, Send Off, Unity, pre/post-fader, mute, focus, and A/B controls remain available.
+- Focused folder-routing tests passed (16 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; presets reuse the authenticated owner/session-scoped private-send save operation.
+
+## Previously completed DAW milestone - Mastering-Grade Tenth-Decibel Send Trims
 
 - Every folder send now includes −0.1 dB and +0.1 dB fine-trim controls alongside the existing one-decibel moves.
 - Fine trims operate in the logarithmic decibel domain, making subtle ambience, cue, delay, and parallel-processing balance changes repeatable.

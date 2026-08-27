@@ -70,6 +70,13 @@ describe("DAW track folder routing policy", () => {
     expect(restored).toBeCloseTo(0.5);
   });
 
+  it("converts standard professional send presets exactly", () => {
+    for (const decibels of [-18, -12, -6]) {
+      const level = timelineDawTrackFolderSendDbToLevel(decibels);
+      expect(timelineDawTrackFolderSendLevelToDb(level)).toBeCloseTo(decibels);
+    }
+  });
+
   it("temporarily dries one folder and restores every prior send mute state", () => {
     const sends = [
       { id: "room", sourceKind: "bus" as const, sourceId: "folder", muted: false },
