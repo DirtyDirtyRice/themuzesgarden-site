@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, jumpTimelineDawTrackFolderSendFocus, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, toggleTimelineDawTrackFolderSendFocusReference, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
+import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, jumpTimelineDawTrackFolderSendFocus, nudgeTimelineDawTrackFolderSendLevelDb, parseTimelineDawTrackFolderRouting, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, toggleTimelineDawTrackFolderSendFocusReference, updateTimelineDawTrackFolderSend } from "../../lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 
 describe("DAW track folder routing policy", () => {
   it("deduplicates a bounded folder assignment", () => {
@@ -53,6 +53,14 @@ describe("DAW track folder routing policy", () => {
     expect(timelineDawTrackFolderSendDbToLevel(-6.0206)).toBeCloseTo(0.5);
     expect(timelineDawTrackFolderSendDbToLevel(0)).toBe(1);
     expect(() => timelineDawTrackFolderSendDbToLevel(7)).toThrow(/6.02/);
+  });
+
+  it("nudges folder send levels by exact decibel steps with safe limits", () => {
+    expect(timelineDawTrackFolderSendLevelToDb(nudgeTimelineDawTrackFolderSendLevelDb(0.5, 1))).toBeCloseTo(-5.0206);
+    expect(timelineDawTrackFolderSendLevelToDb(nudgeTimelineDawTrackFolderSendLevelDb(1, -1))).toBeCloseTo(-1);
+    expect(nudgeTimelineDawTrackFolderSendLevelDb(0, -1)).toBe(0);
+    expect(nudgeTimelineDawTrackFolderSendLevelDb(2, 1)).toBeCloseTo(2);
+    expect(() => nudgeTimelineDawTrackFolderSendLevelDb(1, 0)).toThrow(/non-zero/);
   });
 
   it("temporarily dries one folder and restores every prior send mute state", () => {

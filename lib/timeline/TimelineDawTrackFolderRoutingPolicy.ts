@@ -83,6 +83,13 @@ export function timelineDawTrackFolderSendDbToLevel(decibels: number) {
   return decibels === -60 ? 0 : 10 ** (decibels / 20);
 }
 
+export function nudgeTimelineDawTrackFolderSendLevelDb(level: number, deltaDb: number) {
+  if (!Number.isFinite(deltaDb) || deltaDb === 0) throw new Error("Folder send decibel nudge must be non-zero.");
+  const currentDb = timelineDawTrackFolderSendLevelToDb(level) ?? -60;
+  const nextDb = Math.min(20 * Math.log10(2), Math.max(-60, currentDb + deltaDb));
+  return timelineDawTrackFolderSendDbToLevel(nextDb);
+}
+
 export function createTimelineDawTrackFolderSendDryCheck<T extends { id: string; sourceKind: "lane" | "bus"; sourceId: string; muted: boolean }>(sends: T[], sourceBusId: string) {
   const sourceId = sourceBusId.trim();
   if (!sourceId) throw new Error("Folder dry check requires a shared bus.");

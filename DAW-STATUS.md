@@ -54,6 +54,7 @@ THE MUZES GARDEN DAW
 │   ├── previous/next focused-send navigation ............. DONE 8/27/26
 │   ├── first/last focused-send navigation ................ DONE 8/27/26
 │   ├── original mix versus focused-send A/B .............. DONE 8/27/26
+│   ├── precise one-decibel send level nudging ............. DONE 8/27/26
 │   ├── professional Grid, Slip, Shuffle and Spot modes .. DONE 8/22/26
 │   └── musician effect presets and preset browser ....... DONE 8/22/26
 ├── MIDI
@@ -72,7 +73,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Original Mix Versus Focused-Send A/B
+## Latest completed DAW milestone - Precise One-Decibel Send Level Nudging
+
+- Every folder send now includes −1 dB and +1 dB controls for fast, repeatable mix moves without typing or coarse slider dragging.
+- Each nudge operates in the logarithmic decibel domain and converts safely back into the established linear send-level engine value.
+- Nudges clamp at true send-off and the existing +6.02 dB ceiling, preventing invalid gain values.
+- Send comparison modes lock both nudge controls so temporary audition states cannot be written into the durable mix.
+- Existing exact dB entry, continuous slider, Send Off, Unity, pre/post-fader, mute, focus audition, and A/B controls remain available.
+- Focused folder-routing tests passed (14 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; nudges reuse the authenticated owner/session-scoped private-send save operation.
+
+## Previously completed DAW milestone - Original Mix Versus Focused-Send A/B
 
 - Focused folder-send audition now includes Hear Original Mix for immediate comparison against the complete pre-audition routing balance.
 - Hear Focused Send returns to the currently selected reverb, delay, cue, or parallel route without ending the comparison session.
