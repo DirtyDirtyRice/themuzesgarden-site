@@ -60,7 +60,18 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Timing Snapshot Recall Comparison
+## Latest completed DAW milestone - Quantized Timing Snapshot Recall
+
+- Session View timing snapshots can now recall Immediately or at the Next Bar boundary.
+- Next Bar mode uses the live scene or clip playhead plus current BPM, meter, and beat unit to calculate the exact safe delay.
+- A visible queued cue identifies the selected timing slot and its remaining scheduled delay.
+- Cancel Timing Recall or focused Escape removes the pending change before it reaches the live clock.
+- Locking Timing automatically cancels a queued recall, preventing a protected performance clock from changing later.
+- Immediate recall, reversible return, comparison preview, overwrite protection, and scene or clip transport remain intact.
+- Focused Session View tests passed (61 tests), TypeScript and targeted lint passed, and the production build passed with 76 generated pages.
+- Queued timing recall is transient performance state and creates no source-audio, Named Region, arrangement, plan, take, database, or browser-storage writes.
+
+## Previously completed DAW milestone - Timing Snapshot Recall Comparison
 
 - The selected A, B, or C timing snapshot now previews every change it would apply before recall.
 - BPM differences appear as signed deltas such as +8 BPM or -10 BPM.

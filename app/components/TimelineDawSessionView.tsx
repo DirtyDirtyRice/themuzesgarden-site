@@ -37,6 +37,7 @@ import {
   resolveTimelineDawSessionCancelTarget,
   advanceTimelineDawSessionOverwriteCountdown,
   createTimelineDawSessionTimingSnapshotComparison,
+  createTimelineDawSessionTimingRecallDelay,
   resolveTimelineDawSessionSceneHotkeyIndex,
   resolveTimelineDawSessionClipLaunchMode,
   resolveTimelineDawSessionClipQuantization,
@@ -59,12 +60,14 @@ import {
   type TimelineDawSessionClipLaunchMode,
   type TimelineDawSessionClipLaunchChoice,
   type TimelineDawSessionClipQuantizationChoice,
+  type TimelineDawSessionTimingRecallMode,
 } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 
 type SessionLane = { id: string; name: string };
 type LaunchSettings = { bpm: number; beatsPerBar: number; beatUnit: number; quantization: TimelineDawSessionLaunchQuantization; clipLaunchMode: TimelineDawSessionClipLaunchMode; clipPlayCount: number; followAction: TimelineDawSessionFollowAction; defaultFollowAction: TimelineDawSessionFollowAction; sceneFollowActions: Record<string, TimelineDawSessionFollowAction>; sceneFollowTargetIds: Record<string, string>; scenePlayCounts: Record<string, number>; sceneOrderIds: string[] };
 type TimingSnapshot = Pick<LaunchSettings, "bpm" | "beatsPerBar" | "beatUnit" | "quantization">;
 type TimingSnapshotSlot = "A" | "B" | "C";
+type QueuedTimingRecall = { slot: TimingSnapshotSlot; snapshot: TimingSnapshot; outgoingTiming: TimingSnapshot; delayMs: number };
 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
@@ -125,6 +128,8 @@ export default function TimelineDawSessionView({
   const [activeTimingSlot, setActiveTimingSlot] = useState<TimingSnapshotSlot>("A");
   const [captureOverwriteArmedSlot, setCaptureOverwriteArmedSlot] = useState<TimingSnapshotSlot | null>(null);
   const [captureOverwriteSeconds, setCaptureOverwriteSeconds] = useState(0);
+  const [timingRecallMode, setTimingRecallMode] = useState<TimelineDawSessionTimingRecallMode>("immediate");
+  const [queuedTimingRecall, setQueuedTimingRecall] = useState<QueuedTimingRecall | null>(null);
   const [previousTiming, setPreviousTiming] = useState<TimingSnapshot | null>(null);
   const [followAction, setFollowAction] = useState<TimelineDawSessionFollowAction>("stop");
   const [clipLaunchMode, setClipLaunchMode] = useState<TimelineDawSessionClipLaunchMode>("one-shot");
@@ -147,6 +152,7 @@ export default function TimelineDawSessionView({
   const [liveProgressNowMs, setLiveProgressNowMs] = useState(() => Date.now());
   const performanceStartedAtRef = useRef<number | null>(null);
   const tapTempoTimesRef = useRef<number[]>([]);
+  const timingRecallTimerRef = useRef<number | null>(null);
   const baseScenes = createTimelineDawSessionScenes(labels, lanes.map((lane) => lane.id));
   const scenes = orderTimelineDawSessionScenes(baseScenes, sceneOrderIds);
   const sceneFollowActions = Object.fromEntries(scenes.map((scene) => [scene.id, resolveTimelineDawSessionSceneFollowAction(scene.id, sceneFollowChoices, followAction)]));
@@ -228,10 +234,40 @@ export default function TimelineDawSessionView({
     setQuantization(snapshot.quantization);
   }
 
+  function cancelQueuedTimingRecall() {
+    if (timingRecallTimerRef.current !== null) window.clearTimeout(timingRecallTimerRef.current);
+    timingRecallTimerRef.current = null;
+    setQueuedTimingRecall(null);
+  }
+
+  function applyRecalledTiming(snapshot: TimingSnapshot, outgoingTiming: TimingSnapshot) {
+    setPreviousTiming(outgoingTiming);
+    applyTiming(snapshot);
+  }
+
   function recallTimingSnapshot() {
     if (tempoLocked || !timingSnapshot) return;
-    setPreviousTiming(currentTiming());
-    applyTiming(timingSnapshot);
+    cancelQueuedTimingRecall();
+    const outgoingTiming = currentTiming();
+    const playheadSeconds = livePassProgress?.elapsedSeconds ?? activeClipPassProgress?.elapsedSeconds;
+    const delayMs = playheadSeconds === undefined ? 0 : createTimelineDawSessionTimingRecallDelay({ mode: timingRecallMode, playheadSeconds, bpm, beatsPerBar, beatUnit });
+    if (delayMs > 0) {
+      const queuedRecall = { slot: activeTimingSlot, snapshot: timingSnapshot, outgoingTiming, delayMs };
+      setQueuedTimingRecall(queuedRecall);
+      timingRecallTimerRef.current = window.setTimeout(() => {
+        applyRecalledTiming(queuedRecall.snapshot, queuedRecall.outgoingTiming);
+        setQueuedTimingRecall(null);
+        timingRecallTimerRef.current = null;
+      }, delayMs);
+      return;
+    }
+    applyRecalledTiming(timingSnapshot, outgoingTiming);
+  }
+
+  function toggleTimingLock() {
+    resetTapTempo();
+    if (!tempoLocked) cancelQueuedTimingRecall();
+    setTempoLocked(!tempoLocked);
   }
 
   function returnToPreviousTiming() {
@@ -259,6 +295,10 @@ export default function TimelineDawSessionView({
       window.clearTimeout(expiry);
     };
   }, [captureOverwriteArmedSlot]);
+
+  useEffect(() => () => {
+    if (timingRecallTimerRef.current !== null) window.clearTimeout(timingRecallTimerRef.current);
+  }, []);
 
   function recordPerformanceEvent(input: { kind: "clip" | "scene"; name: string; clips: Array<{ laneId: string; startSeconds: number; endSeconds: number }>; launchedAtMs: number }) {
     const { launchedAtMs, ...eventInput } = input;
@@ -426,8 +466,7 @@ export default function TimelineDawSessionView({
     if (!command) return;
     event.preventDefault();
     if (command === "timing-lock") {
-      resetTapTempo();
-      setTempoLocked((current) => !current);
+      toggleTimingLock();
       return;
     }
     if (command === "timing-recall") {
@@ -472,8 +511,9 @@ export default function TimelineDawSessionView({
       return;
     }
     if (command === "cancel-queued") {
-      const cancelTarget = resolveTimelineDawSessionCancelTarget(Boolean(captureOverwriteArmedSlot), Boolean(queuedLaunchName));
+      const cancelTarget = resolveTimelineDawSessionCancelTarget(Boolean(captureOverwriteArmedSlot), Boolean(queuedTimingRecall), Boolean(queuedLaunchName));
       if (cancelTarget === "timing-overwrite") cancelTimingOverwrite();
+      else if (cancelTarget === "timing-recall") cancelQueuedTimingRecall();
       else if (cancelTarget === "queued-launch") onCancelQueued();
       return;
     }
@@ -515,13 +555,20 @@ export default function TimelineDawSessionView({
           <label className="text-xs font-black text-white/70">Session BPM
             <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white disabled:opacity-50" type="number" min={30} max={300} step={1} value={bpm} disabled={tempoLocked} onChange={(event) => { resetTapTempo(); setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120))); }} />
           </label>
-          <button type="button" className={launchButton} aria-pressed={tempoLocked} onClick={() => { resetTapTempo(); setTempoLocked((current) => !current); }}>{tempoLocked ? "Unlock Timing" : "Lock Timing"}</button>
+          <button type="button" className={launchButton} aria-pressed={tempoLocked} onClick={toggleTimingLock}>{tempoLocked ? "Unlock Timing" : "Lock Timing"}</button>
           <div className="flex gap-1" role="group" aria-label="Timing snapshot bank">
             {(["A", "B", "C"] as const).map((slot) => <button key={slot} type="button" className={launchButton} aria-pressed={activeTimingSlot === slot} onClick={() => selectTimingSlot(slot)}>{slot}{timingSnapshots[slot] ? " •" : ""}</button>)}
           </div>
           <button type="button" className={launchButton} onClick={captureTimingSnapshot}>{captureOverwriteArmedSlot === activeTimingSlot ? `Confirm Overwrite ${activeTimingSlot}` : `Capture ${activeTimingSlot}`}</button>
           {captureOverwriteArmedSlot === activeTimingSlot ? <button type="button" className={launchButton} onClick={cancelTimingOverwrite}>Cancel Overwrite</button> : null}
           <button type="button" className={launchButton} disabled={tempoLocked || !timingSnapshot} onClick={recallTimingSnapshot}>Recall {activeTimingSlot}</button>
+          <label className="text-xs font-black text-white/70">Recall timing
+            <select className="mt-1 block rounded-lg border border-white/20 bg-black px-3 py-2 text-white disabled:opacity-50" value={timingRecallMode} disabled={tempoLocked} onChange={(event) => setTimingRecallMode(event.target.value as TimelineDawSessionTimingRecallMode)}>
+              <option value="immediate">Immediate</option>
+              <option value="next-bar">Next Bar</option>
+            </select>
+          </label>
+          {queuedTimingRecall ? <><span className="text-[11px] font-black text-amber-100" role="status">Timing {queuedTimingRecall.slot} queued for next bar · {(queuedTimingRecall.delayMs / 1000).toFixed(1)}s</span><button type="button" className={launchButton} onClick={cancelQueuedTimingRecall}>Cancel Timing Recall</button></> : null}
           <button type="button" className={launchButton} disabled={tempoLocked || !previousTiming} onClick={returnToPreviousTiming}>Return Timing</button>
           {captureOverwriteArmedSlot === activeTimingSlot ? <span className="text-[11px] font-black text-amber-100" role="alert">Replace snapshot {activeTimingSlot}? Press Capture or F9 again · {captureOverwriteSeconds}s</span> : timingSnapshot ? <span className="text-[11px] font-black text-cyan-100" role="status">Snapshot {activeTimingSlot} · {timingSnapshot.bpm} BPM · {timingSnapshot.beatsPerBar}/{timingSnapshot.beatUnit} · {timingSnapshot.quantization}</span> : <span className="text-[11px] font-black text-white/45" role="status">Snapshot {activeTimingSlot} is empty</span>}
           {timingSnapshotComparison && captureOverwriteArmedSlot !== activeTimingSlot ? <span className="text-[11px] font-black text-violet-100" aria-label={`Timing snapshot ${activeTimingSlot} comparison`}>Recall change: {timingSnapshotComparison}</span> : null}

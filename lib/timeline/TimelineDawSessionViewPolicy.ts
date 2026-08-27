@@ -9,6 +9,7 @@ export type TimelineDawSessionScene = {
 };
 
 export type TimelineDawSessionLaunchQuantization = "immediate" | "beat" | "two-beats" | "bar";
+export type TimelineDawSessionTimingRecallMode = "immediate" | "next-bar";
 export type TimelineDawSessionClipQuantizationChoice = "global" | TimelineDawSessionLaunchQuantization;
 export type TimelineDawSessionFollowAction = "stop" | "next" | "loop";
 export type TimelineDawSessionSceneFollowChoice = TimelineDawSessionFollowAction | "global";
@@ -356,8 +357,9 @@ export function resolveTimelineDawSessionTimingCaptureAction(hasSnapshot: boolea
   return hasSnapshot && !overwriteArmed ? "confirm-overwrite" as const : "capture" as const;
 }
 
-export function resolveTimelineDawSessionCancelTarget(overwriteArmed: boolean, queuedLaunch: boolean) {
+export function resolveTimelineDawSessionCancelTarget(overwriteArmed: boolean, queuedTimingRecall: boolean, queuedLaunch: boolean) {
   if (overwriteArmed) return "timing-overwrite" as const;
+  if (queuedTimingRecall) return "timing-recall" as const;
   if (queuedLaunch) return "queued-launch" as const;
   return null;
 }
@@ -377,6 +379,17 @@ export function createTimelineDawSessionTimingSnapshotComparison(
   if (target.beatsPerBar !== current.beatsPerBar || target.beatUnit !== current.beatUnit) changes.push(`${current.beatsPerBar}/${current.beatUnit} → ${target.beatsPerBar}/${target.beatUnit}`);
   if (target.quantization !== current.quantization) changes.push(`${current.quantization} → ${target.quantization}`);
   return changes.length ? changes.join(" · ") : "Matches current timing";
+}
+
+export function createTimelineDawSessionTimingRecallDelay(input: {
+  mode: TimelineDawSessionTimingRecallMode;
+  playheadSeconds: number;
+  bpm: number;
+  beatsPerBar: number;
+  beatUnit: number;
+}) {
+  if (input.mode === "immediate") return 0;
+  return createTimelineDawSessionLaunchDelay({ ...input, quantization: "bar" });
 }
 
 export function resolveTimelineDawSessionSceneHotkeyIndex(input: {
