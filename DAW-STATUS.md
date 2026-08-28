@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Export Verification Baby-Step Help
+## Latest completed DAW milestone - Recording Baby-Step Help
+
+- Live PCM Capture now includes How Do I Record and Save a Take help directly above its recording controls.
+- The guide presents one small action at a time across input selection, level preflight, recording plan, capture/private save, and saved-take review.
+- Recording and export now share one reusable Previous Step, Next Step, and Start Over control instead of maintaining parallel help-state implementations.
+- Each workflow and private session receives a separate allowlisted help-step key that survives navigation and refresh without mixing recording and export progress.
+- Browser help persistence stores only the current step number and never stores audio, take names, device labels, song data, receipts, private notes, paths, or credentials.
+- Focused recording-help, export-help, recording-preflight, and recording-setup tests passed (12 tests), TypeScript passed, targeted lint passed on the new help surfaces, and the production build passed with 76 generated pages.
+- No database migration was required; this completes the next musician-critical branch of the broader baby-step DAW help roadmap.
+
+## Previously completed DAW milestone - Export Verification Baby-Step Help
 
 - Render & Export now includes How Do I Export and Verify My Download help attached directly to the working export area.
 - The guide presents one small action at a time across delivery creation, download, local verification, receipt saving, and later receipt-to-file recheck.

@@ -7,12 +7,10 @@ export const TIMELINE_DAW_EXPORT_HELP_STEPS = [
 ] as const;
 
 export function timelineDawExportHelpStorageKey(sessionId: string) {
-  const normalized = sessionId.trim();
-  if (!normalized || normalized.length > 200) throw new Error("DAW session ID is invalid.");
-  return `the-muzes-garden:daw-export-help:${normalized}`;
+  return timelineDawBabyStepHelpStorageKey("export", sessionId);
 }
 
 export function normalizeTimelineDawExportHelpStep(value: unknown) {
-  const step = typeof value === "number" ? value : Number(value);
-  return Number.isInteger(step) && step >= 0 && step < TIMELINE_DAW_EXPORT_HELP_STEPS.length ? step : 0;
+  return normalizeTimelineDawBabyStepHelpStep(value, TIMELINE_DAW_EXPORT_HELP_STEPS.length);
 }
+import { normalizeTimelineDawBabyStepHelpStep, timelineDawBabyStepHelpStorageKey } from "./TimelineDawBabyStepHelpPolicy";

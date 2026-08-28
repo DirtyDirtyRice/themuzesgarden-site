@@ -25,6 +25,7 @@ import {
   type TimelineDawRecordingPreflightResult,
 } from "../../../../lib/timeline/TimelineDawRecordingPreflight";
 import { loadDawRecordingReadiness, recordDawRecordingReadiness, uploadDawRenderSource } from "./projectDawApi";
+import ProjectDawRecordingHelp from "./ProjectDawRecordingHelp";
 import {
   getTimelineDawRestoredDeviceWarning,
   parseTimelineDawRecordingSetup,
@@ -947,6 +948,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           {countingIn && countInBeat ? `Count-in ${countInBeat.bar}:${countInBeat.beat}` : recording ? `Recording ${elapsedSeconds}s` : uploading ? "Uploading" : "Ready"}
         </span>
       </div>
+      <ProjectDawRecordingHelp sessionId={session.id} />
       <div className="mt-5 grid gap-3 md:grid-cols-3">
         <select
           className="rounded-xl border border-white/20 bg-black px-3 py-2 text-white"
