@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Durable Render Receipt Anchoring
+## Latest completed DAW milestone - Owner Sign-Off Requires Verified Download
+
+- The seventh owner-musician sign-off step can no longer pass merely because a render job reached completed state.
+- A successful local SHA-256 match from Verify Downloaded File or the anchored receipt-to-download workflow now sends a session-scoped verification signal to the guided owner test.
+- The export-step pass control remains locked until the current session detects that actual local download match, with a clear instruction directing the musician to Render & Export.
+- The server-side owner-test policy independently rejects an export pass that lacks the verified-download confirmation.
+- The verification signal contains only session ID, render ID, checksum, and verification time; WAV and ZIP bytes remain local and are never persisted or uploaded.
+- Focused owner-signoff and download-verification tests passed (21 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; this closes a proof-quality gap in the existing seven-step owner sign-off without claiming the human listening judgment is complete.
+
+## Previously completed DAW milestone - Durable Render Receipt Anchoring
 
 - A reopened version-2 verification receipt must now match a render in the current private session's loaded durable history before it can unlock download matching.
 - The durable render must exist, be completed and fingerprinted, and match the receipt's exact render ID, delivery target, and SHA-256 checksum.

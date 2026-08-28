@@ -16,6 +16,7 @@ import {
 } from "@/lib/timeline/TimelineDawExportPresetPolicy";
 import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
 import { anchorTimelineDawDownloadVerificationReceipt, createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawReceiptArtifact, type TimelineDawDownloadVerificationReceipt } from "@/lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawOwnerDownloadVerifiedDetail, TIMELINE_DAW_OWNER_DOWNLOAD_VERIFIED_EVENT } from "@/lib/timeline/TimelineDawOwnerDownloadVerificationEvent";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -219,6 +220,7 @@ export default function ProjectDawExportWorkspace({
     try {
       const result = await verifyTimelineDawDownloadedArtifact(new Uint8Array(await file.arrayBuffer()), job.checksum);
       setDownloadVerification((current) => ({ ...current, [job.id]: { verified: result.verified, name: file.name, byteLength: result.byteLength, checksum: result.actualChecksum, verifiedAt: new Date().toISOString() } }));
+      if (result.verified) window.dispatchEvent(new CustomEvent(TIMELINE_DAW_OWNER_DOWNLOAD_VERIFIED_EVENT, { detail: createTimelineDawOwnerDownloadVerifiedDetail({ sessionId: session.id, jobId: job.id, checksum: result.actualChecksum, verifiedAt: new Date().toISOString() }) }));
       if (!result.verified) setError(`${file.name} does not match the completed render. Download a fresh copy before delivery.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Downloaded file could not be verified.");
@@ -257,6 +259,7 @@ export default function ProjectDawExportWorkspace({
     try {
       const result = await verifyTimelineDawReceiptArtifact(new Uint8Array(await file.arrayBuffer()), receiptVerification.receipt);
       setReceiptArtifactVerification({ verified: result.verified, name: file.name, byteLength: result.byteLength });
+      if (result.verified) window.dispatchEvent(new CustomEvent(TIMELINE_DAW_OWNER_DOWNLOAD_VERIFIED_EVENT, { detail: createTimelineDawOwnerDownloadVerifiedDetail({ sessionId: session.id, jobId: receiptVerification.receipt.jobId, checksum: result.actualChecksum, verifiedAt: new Date().toISOString() }) }));
       if (!result.verified) setError(`${file.name} does not match the verified receipt. Use the original download or create a fresh delivery and receipt.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Receipt download could not be verified.");

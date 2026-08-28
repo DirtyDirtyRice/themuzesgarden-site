@@ -41,11 +41,14 @@ export function evaluateTimelineDawOwnerTest(observations: TimelineDawOwnerTestO
   return { completed: completedSteps.length, required: TIMELINE_DAW_OWNER_TEST_STEPS.length, current, complete: completedSteps.length === TIMELINE_DAW_OWNER_TEST_STEPS.length, evidence };
 }
 
-export function validateTimelineDawOwnerTestResult(input: { step: TimelineDawOwnerTestStep; outcome: TimelineDawOwnerTestOutcome; evidence: TimelineDawOwnerTestEvidence }) {
+export function validateTimelineDawOwnerTestResult(input: { step: TimelineDawOwnerTestStep; outcome: TimelineDawOwnerTestOutcome; evidence: TimelineDawOwnerTestEvidence; downloadVerified?: boolean }) {
   const definition = TIMELINE_DAW_OWNER_TEST_DEFINITIONS.find((item) => item.step === input.step);
   if (!definition) throw new Error("The guided-test step is invalid.");
   if (input.outcome === "pass" && definition.proof && input.evidence[definition.proof] < 1) {
     throw new Error(`The DAW has not recorded the required proof for “${definition.title}” yet.`);
+  }
+  if (input.step === "export" && input.outcome === "pass" && !input.downloadVerified) {
+    throw new Error("Verify the downloaded WAV or stems ZIP before passing this step.");
   }
   return definition;
 }
