@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   TimelineOfflineRenderJob,
   TimelineRenderFormat,
@@ -14,6 +14,7 @@ import {
   timelineDawExportPresets,
   type TimelineDawExportPresetId,
 } from "@/lib/timeline/TimelineDawExportPresetPolicy";
+import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -47,6 +48,10 @@ export default function ProjectDawExportWorkspace({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const exportPreflight = useMemo(
+    () => selectedJob ? evaluateTimelineDawExportPreflight(selectedJob) : null,
+    [selectedJob],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,7 +71,7 @@ export default function ProjectDawExportWorkspace({
     }
   }, [onWorkspaceRevision, session.id]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { queueMicrotask(() => void load()); }, [load]);
   useEffect(() => {
     const receive = (event: Event) => {
       const detail = (event as CustomEvent<DawRecordedSourceEventDetail>).detail;
@@ -255,9 +260,10 @@ export default function ProjectDawExportWorkspace({
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploadingâ€¦" : "Upload Private Audio Sources"}</button>
         <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Workingâ€¦" : "Validate & Save Render"}</button>
-        <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav"} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
+        <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav" || exportPreflight?.safe === false} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
       </div>
+      {exportPreflight ? <p className={`mt-4 rounded-xl border px-3 py-2 text-sm ${exportPreflight.safe ? "border-emerald-300/25 bg-emerald-300/[.05] text-emerald-100" : "border-amber-300/30 bg-amber-300/[.07] text-amber-100"}`}><b>{exportPreflight.safe ? "Export size preflight passed." : "Export size preflight held this render."}</b> {exportPreflight.message}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {notice ? <p role="status" className="mt-4 text-sm text-emerald-200">{notice}</p> : null}
       <div className="mt-6">

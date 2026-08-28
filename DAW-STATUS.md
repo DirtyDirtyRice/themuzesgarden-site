@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Non-Expiring Musician Guest Passes
+## Latest completed DAW milestone - Large Export Size Preflight
+
+- Every validated WAV or stem render now receives a deterministic delivery-size estimate before server execution.
+- Stem estimates include every uncompressed per-source WAV plus ZIP structure overhead instead of presenting only one-track size.
+- Renders estimated above the 512 MB safe production budget are held before memory-intensive rendering starts.
+- The hold message gives the musician a concrete maximum duration for the current sample rate, channel count, bit depth, and stem count.
+- Safe renders display their expected delivery size, while the saved validated render and source recordings remain unchanged when a render is held.
+- Focused export preflight, stem-package, and render-delivery tests passed (7 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the preflight evaluates the existing validated private render specification without storing new private data.
+
+## Previously completed DAW milestone - Non-Expiring Musician Guest Passes
 
 - The owner can create one private, non-expiring guest pass for a named musician without requiring that musician to create a member account first.
 - Guest entry creates an isolated anonymous Supabase identity, then reuses the established hash-only, single-use invitation redemption and tester enrollment boundaries.
