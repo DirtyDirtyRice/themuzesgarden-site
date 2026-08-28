@@ -3,7 +3,7 @@
 import ManualShell from "../components/ManualShell";
 import { ManualInfoSection, ManualInlineLink } from "../components/ManualCards";
 
-const ROADMAP_UPDATED = "8/27/26";
+const ROADMAP_UPDATED = "8/28/26";
 
 const DAW_BRANCHES = [
   {
@@ -238,7 +238,7 @@ export default function SiteTreePage() {
               <details
                 key={branch.title}
                 className="group/branch rounded-xl border border-white/10 bg-black/30"
-                open={"open" in branch ? branch.open : false}
+                open
               >
                 <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-4">
                   <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-white/85">
@@ -264,12 +264,31 @@ export default function SiteTreePage() {
                 </summary>
 
                 <ul className="space-y-2 border-t border-white/10 px-5 py-4 text-sm leading-6 text-white/65">
-                  {branch.details.map((detail) => (
-                    <li key={detail} className="flex gap-2">
-                      <span aria-hidden="true" className="text-cyan-300/60">
-                        └─
+                  {branch.details.map((detail, detailIndex) => (
+                    <li
+                      key={detail}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/[.07] bg-white/[.025] px-3 py-2"
+                    >
+                      <span className="flex min-w-0 items-start gap-2">
+                        <span aria-hidden="true" className="text-cyan-300/60">
+                          {detailIndex === branch.details.length - 1 ? "└─" : "├─"}
+                        </span>
+                        <span>{detail}</span>
                       </span>
-                      <span>{detail}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span
+                          className={
+                            branch.status === "DONE"
+                              ? "rounded-full border border-emerald-300/20 bg-emerald-300/[.07] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-emerald-100"
+                              : "rounded-full border border-amber-300/20 bg-amber-300/[.07] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-amber-100"
+                          }
+                        >
+                          {branch.status}
+                        </span>
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.09em] text-white/40">
+                          {branch.date}
+                        </span>
+                      </span>
                     </li>
                   ))}
                 </ul>
