@@ -24,10 +24,18 @@ THE MUZES GARDEN DAW
 │   ├── Chrome production timing QA ......................... DONE 8/28/26
 │   ├── Edge/Firefox production QA ........ DEFERRED — owner chose Chrome only
 │   └── physical MIDI-controller QA ........ DEFERRED — hardware unavailable
-├── Recording
-│   ├── input checks, levels, latency, count-in, metronome .... DONE
-│   ├── interruption/crash recovery and saved takes ........... DONE
-│   └── punch range and multi-pass loop recording ............. DONE
+├── Recording ........................................ PARTIALLY DONE
+│   ├── input device discovery and preflight .......... DONE — date not recorded
+│   ├── latency-aware monitoring ...................... DONE — date not recorded
+│   ├── count-in and recording metronome .............. DONE — date not recorded
+│   ├── private WAV/MP3 capture ........................ DONE — date not recorded
+│   ├── punch range and multi-pass loop recording ..... DONE — date not recorded
+│   ├── interruption and crash recovery ............... DONE — date not recorded
+│   ├── long-take and storage protection .............. DONE — date not recorded
+│   ├── saved-take review and preference .............. DONE — date not recorded
+│   ├── nondestructive take comp recipes .............. DONE — date not recorded
+│   ├── multi-track arm and input-route validation .... DONE 8/28/26
+│   └── simultaneous multi-input capture .............. STILL TO DO
 ├── Tracks and arrangement
 │   ├── import, waveform, move, trim, split, repeat, fades ..... DONE
 │   ├── selection, group editing, undo/redo and snapshots ...... DONE
@@ -2765,6 +2773,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Routing back to Master cleanly removes the shared bus assignment while preserving each track, folder, source recording, and Library record.
 - Focused folder, batch-routing, and bus-processing tests passed (9 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration was required; this milestone reuses the established durable private buses, inserts, sends, and RLS boundaries.
+
+## Completed milestone - Multi-Track Recording Arm and Input-Route Validation
+
+- Recording now lets a musician name a track and arm the currently selected connected audio input as an explicit route.
+- Every armed route remains visible and can be disarmed without changing an existing take, source recording, or arrangement.
+- The route planner rejects duplicate track names, duplicate physical input assignments, disconnected inputs, missing names, and plans above the 16-track safety limit.
+- Existing single-input capture remains unchanged while simultaneous multi-input capture stays honestly listed as the next Recording milestone.
+- Focused route-planning tests passed (3 tests), TypeScript passed, new-file lint passed, and the production build passed with 76 generated pages.
+- The Recording screen still has four pre-existing React effect lint findings outside this milestone; no new lint finding was introduced by the route engine or its tests.
+- No database migration or persistent device-label storage was added.
 
 ## Working rules
 

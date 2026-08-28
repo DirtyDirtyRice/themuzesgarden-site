@@ -57,6 +57,11 @@ import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/
 import { TIMELINE_DAW_LOCAL_ACTIVITY_EVENT } from "@/lib/timeline/TimelineDawSafeExitPolicy";
 import { createTimelineDawTakeArrangementPlacement } from "@/lib/timeline/TimelineDawTakeArrangementPlacement";
 import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWorkspace";
+import {
+  assessTimelineDawMultiTrackRecordingPlan,
+  createTimelineDawArmedInputRoute,
+  type TimelineDawArmedInputRoute,
+} from "@/lib/timeline/TimelineDawMultiTrackRecordingPlan";
 
 
 const button = "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
@@ -81,6 +86,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [devicesScanned, setDevicesScanned] = useState(false);
   const [deviceId, setDeviceId] = useState("");
+  const [armTrackName, setArmTrackName] = useState("Record Track 1");
+  const [armedInputRoutes, setArmedInputRoutes] = useState<TimelineDawArmedInputRoute[]>([]);
   const [takeName, setTakeName] = useState(`${session.name} Take 1`);
   const [outputFormat, setOutputFormat] = useState<"wav" | "mp3">("wav");
   const [recordingMode, setRecordingMode] = useState<DawRecordingPlan["mode"]>("normal");
@@ -131,6 +138,32 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [maxTakeMinutes, setMaxTakeMinutes] = useState(30);
   const [storageHealth, setStorageHealth] = useState<TimelineDawRecordingStorageHealth>(() => assessTimelineDawRecordingStorage({ supported: false, persisted: false, quotaBytes: null, usageBytes: null, maxTakeMinutes: 30 }));
   const [storageBusy, setStorageBusy] = useState(false);
+  const multiTrackPlan = assessTimelineDawMultiTrackRecordingPlan({
+    routes: armedInputRoutes,
+    availableInputIds: devices.map((device) => device.deviceId),
+  });
+
+  function armSelectedInput() {
+    const selectedDevice = devices.find((device) => device.deviceId === deviceId);
+    if (!selectedDevice) return;
+    const route = createTimelineDawArmedInputRoute({
+      id: globalThis.crypto?.randomUUID?.() ?? `route-${Date.now()}`,
+      trackName: armTrackName,
+      inputId: selectedDevice.deviceId,
+      inputLabel: selectedDevice.label || `Audio input ${devices.indexOf(selectedDevice) + 1}`,
+    });
+    const assessment = assessTimelineDawMultiTrackRecordingPlan({
+      routes: [...armedInputRoutes, route],
+      availableInputIds: devices.map((device) => device.deviceId),
+    });
+    if (!assessment.ready) {
+      setError(assessment.errors[0] ?? "That input route could not be armed.");
+      return;
+    }
+    setError(null);
+    setArmedInputRoutes(assessment.routes);
+    setArmTrackName(`Record Track ${assessment.routes.length + 1}`);
+  }
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -981,6 +1014,35 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
           <option value="wav">WAV master (default)</option>
           <option value="mp3">WAV master + MP3 copy</option>
         </select>
+      </div>
+      <div className="mt-4 rounded-xl border border-violet-300/25 bg-violet-300/[0.05] p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm font-black">Multi-track input routing</p>
+            <p className="mt-1 text-xs text-white/55">Prepare one distinct connected input for each recording track. Existing single-input recording remains unchanged.</p>
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-white/65">
+              Track name
+              <input className="rounded-lg border border-white/20 bg-black px-3 py-2 text-white" value={armTrackName} onChange={(event) => setArmTrackName(event.target.value)} disabled={recording || uploading} />
+            </label>
+            <button type="button" className={button} disabled={recording || uploading || !deviceId || !armTrackName.trim() || armedInputRoutes.length >= 16} onClick={armSelectedInput}>Arm Selected Input</button>
+          </div>
+        </div>
+        {armedInputRoutes.length ? (
+          <div className="mt-3 grid gap-2">
+            {armedInputRoutes.map((route) => (
+              <div key={route.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm">
+                <span><strong>{route.trackName}</strong> ← {route.inputLabel}</span>
+                <button type="button" className="rounded-lg border border-white/20 px-3 py-1 text-xs font-black" disabled={recording || uploading} onClick={() => setArmedInputRoutes((current) => current.filter((candidate) => candidate.id !== route.id))}>Disarm</button>
+              </div>
+            ))}
+          </div>
+        ) : <p className="mt-3 text-xs text-white/55">No multi-track routes armed yet.</p>}
+        <p className={`mt-3 text-xs font-bold ${multiTrackPlan.ready ? "text-emerald-200" : "text-amber-200"}`} role="status">
+          {multiTrackPlan.ready ? `${armedInputRoutes.length} recording track${armedInputRoutes.length === 1 ? "" : "s"} safely armed.` : multiTrackPlan.errors[0]}
+        </p>
+        <p className="mt-2 text-xs text-white/45">Route planning and safeguards are ready. Simultaneous live capture will be connected in the next recording milestone.</p>
       </div>
       <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-300/[0.05] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
