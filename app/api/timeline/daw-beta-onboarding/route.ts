@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
     if (action === "invite") {
       const label = String(body.label ?? "").trim();
       if (label.length < 2 || label.length > 100) throw Error("Tester label must contain 2-100 characters.");
-      const code = createTimelineDawBetaInviteCode(), expiresAt = new Date(Date.now() + 7 * 86400000).toISOString();
-      const { data, error } = await user.client.from("timeline_daw_beta_invitations").insert({ id: `timeline-daw-beta-invite-${crypto.randomUUID()}`, owner_id: user.id, project_id: user.session.projectId, session_id: sessionId, label, invite_code_hash: hashTimelineDawBetaInviteCode(code), expires_at: expiresAt }).select("id,label,state,expires_at,created_at").single();
+      const code = createTimelineDawBetaInviteCode();
+      const { data, error } = await user.client.from("timeline_daw_beta_invitations").insert({ id: `timeline-daw-beta-invite-${crypto.randomUUID()}`, owner_id: user.id, project_id: user.session.projectId, session_id: sessionId, label, invite_code_hash: hashTimelineDawBetaInviteCode(code), expires_at: null }).select("id,label,state,expires_at,created_at").single();
       if (error) throw Error(error.message);
       return NextResponse.json({ invitation: data, code });
     }

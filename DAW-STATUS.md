@@ -1,6 +1,6 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 27, 2026
+Last updated: August 28, 2026
 
 ## Current objective
 
@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Professional Send Level Starting Presets
+## Latest completed DAW milestone - Non-Expiring Musician Guest Passes
+
+- The owner can create one private, non-expiring guest pass for a named musician without requiring that musician to create a member account first.
+- Guest entry creates an isolated anonymous Supabase identity, then reuses the established hash-only, single-use invitation redemption and tester enrollment boundaries.
+- The raw guest pass is shown only during the owner handoff; the database stores only its SHA-256 hash, and the owner can revoke both the pass and its enrollment.
+- The musician handoff now clearly explains the no-sign-in entry path, non-expiring pass, private trial steps, backup expectations, and prohibition on sharing the pass.
+- Existing member sign-in, acknowledgement, environment checks, release gates, session isolation, feedback privacy, and beta resume behavior remain available.
+- Focused invitation, onboarding, and resume tests passed (9 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Migration `20260816120000_timeline_daw_beta_nonexpiring_guest_passes.sql` was applied to the linked production database without rewriting migration history.
+
+## Previously completed DAW milestone - Professional Send Level Starting Presets
 
 - Every folder send now offers standard −18 dB, −12 dB, and −6 dB starting points for fast repeatable routing balances.
 - The quieter presets support subtle ambience and cue feeds, while −6 dB provides a stronger parallel-effect starting level.
