@@ -806,6 +806,24 @@ export default function ProjectDawTransport({
   }, []);
 
   useEffect(() => {
+    const handleMidiTransport = (event: Event) => {
+      const command = (event as CustomEvent<{ command?: string }>).detail?.command;
+      if (command === "start") {
+        void (async () => {
+          await mediaSeekRef.current(0);
+          await mediaPlayRef.current();
+        })();
+      } else if (command === "continue") {
+        void mediaPlayRef.current();
+      } else if (command === "stop") {
+        void shortcutRef.current("stop");
+      }
+    };
+    window.addEventListener("muzes:daw-midi-transport", handleMidiTransport);
+    return () => window.removeEventListener("muzes:daw-midi-transport", handleMidiTransport);
+  }, []);
+
+  useEffect(() => {
     if (!("mediaSession" in navigator)) return;
     const handlers: Array<[MediaSessionAction, MediaSessionActionHandler]> = [
       ["play", () => void mediaPlayRef.current()],

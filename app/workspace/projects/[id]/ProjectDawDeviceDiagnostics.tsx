@@ -5,6 +5,26 @@ import {
   assessTimelineDawDevices,
   type TimelineDawDeviceDiagnosticReport,
 } from "../../../../lib/timeline/TimelineDawDeviceDiagnostics";
+import {
+  resolveTimelineDawMidiTransportCommand,
+  type TimelineDawMidiTransportCommand,
+} from "../../../../lib/timeline/TimelineDawMidiTransportPolicy";
+
+type MidiInputLike = {
+  id: string;
+  name?: string | null;
+  manufacturer?: string | null;
+  onmidimessage: ((event: { data: Uint8Array }) => void) | null;
+};
+
+type MidiAccessLike = {
+  inputs: Map<string, MidiInputLike>;
+  onstatechange: (() => void) | null;
+};
+
+type NavigatorWithMidi = Navigator & {
+  requestMIDIAccess?: (options?: { sysex?: boolean }) => Promise<MidiAccessLike>;
+};
 
 const button = "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
 
@@ -13,6 +33,9 @@ export default function ProjectDawDeviceDiagnostics() {
   const [busy, setBusy] = useState(false);
   const [permission, setPermission] = useState<"unknown" | "granted" | "denied">("unknown");
   const [error, setError] = useState<string | null>(null);
+  const [midiAccess, setMidiAccess] = useState<MidiAccessLike | null>(null);
+  const [midiInputs, setMidiInputs] = useState<string[]>([]);
+  const [lastMidiCommand, setLastMidiCommand] = useState<TimelineDawMidiTransportCommand | null>(null);
 
   const inspect = useCallback(async (testMicrophone: boolean) => {
     setBusy(true);
@@ -49,6 +72,11 @@ export default function ProjectDawDeviceDiagnostics() {
         outputLatencyMs: context && "outputLatency" in context
           ? Math.round(context.outputLatency * 100_000) / 100
           : null,
+        audioWorkletSupported: typeof AudioWorkletNode !== "undefined",
+        outputTimestampSupported: typeof AudioContext !== "undefined"
+          && "getOutputTimestamp" in AudioContext.prototype,
+        mediaSessionSupported: "mediaSession" in navigator,
+        webMidiSupported: "requestMIDIAccess" in navigator,
       }));
     } finally {
       stream?.getTracks().forEach((track) => track.stop());
@@ -60,6 +88,35 @@ export default function ProjectDawDeviceDiagnostics() {
   useEffect(() => {
     void inspect(false);
   }, [inspect]);
+
+  const connectMidiTransport = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const requestMidiAccess = (navigator as NavigatorWithMidi).requestMIDIAccess;
+      if (!requestMidiAccess) throw new Error("This browser does not expose Web MIDI.");
+      const access = await requestMidiAccess.call(navigator, { sysex: false });
+      const attach = () => {
+        const inputs = [...access.inputs.values()];
+        setMidiInputs(inputs.map((input) => [input.manufacturer, input.name].filter(Boolean).join(" ") || `MIDI input ${input.id}`));
+        inputs.forEach((input) => {
+          input.onmidimessage = (event) => {
+            const command = resolveTimelineDawMidiTransportCommand(event.data);
+            if (!command) return;
+            setLastMidiCommand(command);
+            window.dispatchEvent(new CustomEvent("muzes:daw-midi-transport", { detail: { command } }));
+          };
+        });
+      };
+      access.onstatechange = attach;
+      attach();
+      setMidiAccess(access);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "MIDI transport could not connect.");
+    } finally {
+      setBusy(false);
+    }
+  }, []);
 
   useEffect(() => {
     const devices = navigator.mediaDevices;
@@ -90,6 +147,9 @@ export default function ProjectDawDeviceDiagnostics() {
         <button type="button" className={button} disabled={busy} onClick={() => void inspect(true)}>
           Test Microphone &amp; Latency
         </button>
+        <button type="button" className={button} disabled={busy || !!midiAccess} onClick={() => void connectMidiTransport()}>
+          {midiAccess ? "MIDI Transport Connected" : "Connect MIDI Transport"}
+        </button>
       </div>
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {report ? (
@@ -102,6 +162,19 @@ export default function ProjectDawDeviceDiagnostics() {
           </dl>
           {report.issues.length ? <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-amber-200">{report.issues.map((item) => <li key={item}>{item}</li>)}</ul> : null}
           {report.recommendations.length ? <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-sky-200">{report.recommendations.map((item) => <li key={item}>{item}</li>)}</ul> : null}
+          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm">
+            <p className="font-black text-white">Browser timing capabilities</p>
+            <p className="mt-1 text-white/55">
+              AudioWorklet {report.audioWorkletSupported ? "ready" : "unavailable"} · Output timestamps {report.outputTimestampSupported ? "ready" : "unavailable"} · Media Session {report.mediaSessionSupported ? "ready" : "unavailable"} · Web MIDI {report.webMidiSupported ? "ready" : "unavailable"}
+            </p>
+            <p className="mt-2 text-white/45">
+              MIDI Start returns to the beginning and plays; Continue plays from the current position; Stop uses the DAW&apos;s saved stop-return behavior.
+            </p>
+            <p className="mt-2 text-white/55">
+              {midiInputs.length ? `Inputs: ${midiInputs.join(", ")}` : "No MIDI input connected yet."}
+              {lastMidiCommand ? ` Last command: ${lastMidiCommand}.` : ""}
+            </p>
+          </div>
         </>
       ) : null}
     </section>

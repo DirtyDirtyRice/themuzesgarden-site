@@ -8,6 +8,10 @@ export type TimelineDawDeviceDiagnosticInput = {
   sampleRate: number | null;
   baseLatencyMs: number | null;
   outputLatencyMs: number | null;
+  audioWorkletSupported?: boolean;
+  outputTimestampSupported?: boolean;
+  mediaSessionSupported?: boolean;
+  webMidiSupported?: boolean;
 };
 
 export type TimelineDawDeviceDiagnosticReport = TimelineDawDeviceDiagnosticInput & {
@@ -49,6 +53,18 @@ export function assessTimelineDawDevices(
     recommendations.push("Use a smaller interface buffer, close competing audio apps, or enable direct monitoring.");
   } else if (roundTripEstimateMs !== null && roundTripEstimateMs > 20) {
     recommendations.push(`Estimated audio latency is ${roundTripEstimateMs} ms; direct monitoring may improve recording feel.`);
+  }
+  if (input.audioWorkletSupported === false) {
+    recommendations.push("This browser does not expose AudioWorklet; advanced low-latency processing may be limited.");
+  }
+  if (input.outputTimestampSupported === false) {
+    recommendations.push("This browser does not expose output timestamps; hardware timing measurements will be less precise.");
+  }
+  if (input.mediaSessionSupported === false) {
+    recommendations.push("This browser does not expose Media Session transport controls.");
+  }
+  if (input.webMidiSupported === false) {
+    recommendations.push("This browser does not expose Web MIDI transport-controller access.");
   }
   return {
     ...input,

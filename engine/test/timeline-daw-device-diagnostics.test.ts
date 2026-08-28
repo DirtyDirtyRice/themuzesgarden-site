@@ -13,11 +13,35 @@ describe("TimelineDawDeviceDiagnostics", () => {
       sampleRate: 48_000,
       baseLatencyMs: 5,
       outputLatencyMs: 7,
+      audioWorkletSupported: true,
+      outputTimestampSupported: true,
+      mediaSessionSupported: true,
+      webMidiSupported: true,
     })).toMatchObject({
       status: "ready",
       roundTripEstimateMs: 12,
       issues: [],
     });
+  });
+
+  it("reports missing advanced browser timing and controller capabilities", () => {
+    const report = assessTimelineDawDevices({
+      supported: true,
+      secureContext: true,
+      permission: "granted",
+      inputDevices: 1,
+      outputDevices: 1,
+      labeledDevices: 2,
+      sampleRate: 48_000,
+      baseLatencyMs: 5,
+      outputLatencyMs: 7,
+      audioWorkletSupported: false,
+      outputTimestampSupported: false,
+      mediaSessionSupported: false,
+      webMidiSupported: false,
+    });
+    expect(report.status).toBe("ready");
+    expect(report.recommendations.join(" ")).toMatch(/AudioWorklet|output timestamps|Media Session|Web MIDI/);
   });
 
   it("holds unavailable input, denied permission, insecure contexts, and high latency", () => {
