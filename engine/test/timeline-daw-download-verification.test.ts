@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawDownloadVerificationReceipt } from "../../lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawDownloadVerificationReceipt, verifyTimelineDawReceiptArtifact } from "../../lib/timeline/TimelineDawDownloadVerification";
 
 describe("DAW downloaded artifact verification", () => {
   it("verifies the local file against the saved render fingerprint", async () => {
@@ -56,5 +56,16 @@ describe("DAW downloaded artifact verification", () => {
     const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "stem", fileName: "stems.zip", byteLength: 4096, checksum: `sha256:${"d".repeat(64)}`, verifiedAt: "2026-08-28T16:00:00.000Z" });
     await expect(parseTimelineDawDownloadVerificationReceipt(JSON.stringify({ ...receipt, signedUrl: "private" }), "session-1")).rejects.toThrow(/unsupported field/i);
     await expect(parseTimelineDawDownloadVerificationReceipt(JSON.stringify({ ...receipt, jobId: "edited" }), "session-1")).rejects.toThrow(/checksum/i);
+  });
+
+  it("rechecks the actual download against a valid saved receipt", async () => {
+    const bytes = new TextEncoder().encode("hello");
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "mix", fileName: "mix.wav", byteLength: 5, checksum: "sha256:2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", verifiedAt: "2026-08-28T16:00:00.000Z" });
+    await expect(verifyTimelineDawReceiptArtifact(bytes, receipt)).resolves.toMatchObject({ verified: true, byteLength: 5, expectedByteLength: 5 });
+  });
+
+  it("rejects a file whose bytes or size do not match the saved receipt", async () => {
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "stem", fileName: "stems.zip", byteLength: 5, checksum: "sha256:2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", verifiedAt: "2026-08-28T16:00:00.000Z" });
+    await expect(verifyTimelineDawReceiptArtifact(new TextEncoder().encode("hello!"), receipt)).resolves.toMatchObject({ verified: false, byteLength: 6, expectedByteLength: 5 });
   });
 });

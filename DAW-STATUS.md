@@ -75,7 +75,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Saved Verification Receipt Recheck
+## Latest completed DAW milestone - Receipt-to-Download Reverification
+
+- After reopening a valid version-2 receipt, the musician can select the referenced WAV or stems ZIP and match the actual local bytes to that receipt.
+- Reverification requires both the exact SHA-256 artifact checksum and exact byte length recorded in the tamper-evident receipt.
+- A matching file receives an explicit Receipt and Download Match result; altered, truncated, substituted, or wrong files are rejected with recovery guidance.
+- The selected audio or ZIP remains local in the browser and is never uploaded, persisted, or used to modify the render, project, Library, or receipt.
+- Focused download verification, render-delivery, and export-preflight tests passed (15 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; receipt-to-download matching is a local read-only integrity operation.
+
+## Previously completed DAW milestone - Saved Verification Receipt Recheck
 
 - Render & Export now includes Verify Receipt File for reopening a previously downloaded version-2 verification receipt after navigation, refresh, or handoff.
 - Receipt files are parsed locally and must match the exact schema, allowlisted fields, no-audio declaration, and tamper-evident receipt checksum.

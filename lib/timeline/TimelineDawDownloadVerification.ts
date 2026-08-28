@@ -36,6 +36,21 @@ export async function verifyTimelineDawDownloadedArtifact(
   };
 }
 
+export async function verifyTimelineDawReceiptArtifact(
+  bytes: Uint8Array,
+  receipt: TimelineDawDownloadVerificationReceipt,
+): Promise<TimelineDawDownloadVerification & { expectedByteLength: number }> {
+  if (!await verifyTimelineDawDownloadVerificationReceipt(receipt)) {
+    throw new Error("Verification receipt checksum does not match its evidence.");
+  }
+  const verification = await verifyTimelineDawDownloadedArtifact(bytes, receipt.checksum);
+  return {
+    ...verification,
+    verified: verification.verified && verification.byteLength === receipt.byteLength,
+    expectedByteLength: receipt.byteLength,
+  };
+}
+
 export async function createTimelineDawDownloadVerificationReceipt(input: {
   sessionId: string;
   jobId: string;

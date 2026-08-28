@@ -15,7 +15,7 @@ import {
   type TimelineDawExportPresetId,
 } from "@/lib/timeline/TimelineDawExportPresetPolicy";
 import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
-import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact } from "@/lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawReceiptArtifact, type TimelineDawDownloadVerificationReceipt } from "@/lib/timeline/TimelineDawDownloadVerification";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -50,7 +50,8 @@ export default function ProjectDawExportWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [downloadVerification, setDownloadVerification] = useState<Record<string, { verified: boolean; name: string; byteLength: number; checksum: string; verifiedAt: string }>>({});
-  const [receiptVerification, setReceiptVerification] = useState<{ name: string; jobId: string; fileName: string; byteLength: number } | null>(null);
+  const [receiptVerification, setReceiptVerification] = useState<{ name: string; receipt: TimelineDawDownloadVerificationReceipt } | null>(null);
+  const [receiptArtifactVerification, setReceiptArtifactVerification] = useState<{ verified: boolean; name: string; byteLength: number } | null>(null);
   const exportPreflight = useMemo(
     () => selectedJob ? evaluateTimelineDawExportPreflight(selectedJob) : null,
     [selectedJob],
@@ -239,11 +240,25 @@ export default function ProjectDawExportWorkspace({
   async function verifyReceiptFile(file: File) {
     setError(null);
     setReceiptVerification(null);
+    setReceiptArtifactVerification(null);
     try {
       const receipt = await parseTimelineDawDownloadVerificationReceipt(await file.text(), session.id);
-      setReceiptVerification({ name: file.name, jobId: receipt.jobId, fileName: receipt.fileName, byteLength: receipt.byteLength });
+      setReceiptVerification({ name: file.name, receipt });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Verification receipt could not be validated.");
+    }
+  }
+
+  async function verifyReceiptArtifact(file: File) {
+    if (!receiptVerification) return;
+    setError(null);
+    setReceiptArtifactVerification(null);
+    try {
+      const result = await verifyTimelineDawReceiptArtifact(new Uint8Array(await file.arrayBuffer()), receiptVerification.receipt);
+      setReceiptArtifactVerification({ verified: result.verified, name: file.name, byteLength: result.byteLength });
+      if (!result.verified) setError(`${file.name} does not match the verified receipt. Use the original download or create a fresh delivery and receipt.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Receipt download could not be verified.");
     }
   }
 
@@ -305,7 +320,7 @@ export default function ProjectDawExportWorkspace({
       {exportPreflight ? <p className={`mt-4 rounded-xl border px-3 py-2 text-sm ${exportPreflight.safe ? "border-emerald-300/25 bg-emerald-300/[.05] text-emerald-100" : "border-amber-300/30 bg-amber-300/[.07] text-amber-100"}`}><b>{exportPreflight.safe ? "Export size preflight passed." : "Export size preflight held this render."}</b> {exportPreflight.message}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {notice ? <p role="status" className="mt-4 text-sm text-emerald-200">{notice}</p> : null}
-      {receiptVerification ? <p role="status" className="mt-4 rounded-xl border border-cyan-300/25 bg-cyan-300/[.05] px-3 py-2 text-sm text-cyan-100"><b>Receipt verified for this session.</b> {receiptVerification.name} proves {receiptVerification.fileName} ({(receiptVerification.byteLength / 1_048_576).toFixed(2)} MB) for render {receiptVerification.jobId}.</p> : null}
+      {receiptVerification ? <div className="mt-4 rounded-xl border border-cyan-300/25 bg-cyan-300/[.05] px-3 py-2 text-sm text-cyan-100"><p role="status"><b>Receipt verified for this session.</b> {receiptVerification.name} proves {receiptVerification.receipt.fileName} ({(receiptVerification.receipt.byteLength / 1_048_576).toFixed(2)} MB) for render {receiptVerification.receipt.jobId}.</p><label className="mt-2 inline-block cursor-pointer font-black underline">Match Download to Receipt<input className="sr-only" type="file" accept={receiptVerification.receipt.target === "stem" ? ".zip,application/zip" : ".wav,audio/wav"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyReceiptArtifact(file); event.target.value = ""; }} /></label>{receiptArtifactVerification ? <p role="status" className={`mt-2 font-black ${receiptArtifactVerification.verified ? "text-emerald-200" : "text-red-200"}`}>{receiptArtifactVerification.verified ? "Receipt and download match" : "Receipt and download do not match"} · {receiptArtifactVerification.name} · {(receiptArtifactVerification.byteLength / 1_048_576).toFixed(2)} MB</p> : null}</div> : null}
       <div className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div><p className="text-xs font-black uppercase tracking-wider text-white/40">Saved render history</p><h3 className="mt-1 text-xl font-black">{loading ? "Loadingâ€¦" : `${jobs.length} saved render${jobs.length === 1 ? "" : "s"}`}</h3></div>
