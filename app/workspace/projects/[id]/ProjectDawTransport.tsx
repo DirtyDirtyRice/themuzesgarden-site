@@ -33,6 +33,7 @@ import { getPlayableTrackUrl } from "./projectPlaybackHelpers";
 import type { DawSession } from "./projectDawTypes";
 import TimelineDawTempoMapEditor from "@/app/components/TimelineDawTempoMapEditor";
 import TimelineDawArrangementEditor from "@/app/components/TimelineDawArrangementEditor";
+import { planTimelineDawSelectionRoll } from "@/lib/timeline/TimelineDawSelectionRollPolicy";
 
 type Track = {
   id: string;
@@ -88,6 +89,9 @@ export default function ProjectDawTransport({
   const mediaSeekRef = useRef<(seconds: number) => Promise<void>>(async () => undefined);
   const mediaPlayRef = useRef<() => Promise<void>>(async () => undefined);
   const mediaPauseRef = useRef<() => Promise<void>>(async () => undefined);
+  const selectionRollEndTickRef = useRef<number | null>(null);
+  const selectionRollReturnTickRef = useRef<number | null>(null);
+  const finishSelectionRollRef = useRef<() => Promise<void>>(async () => undefined);
   const commandQueueRef = useRef(new TimelineDawTransportCommandQueue());
   const scrubSecondsRef = useRef(0);
   const scrubDirtyRef = useRef(false);
@@ -114,6 +118,9 @@ export default function ProjectDawTransport({
   const [monitorReady, setMonitorReady] = useState(false);
   const [loopStartTick, setLoopStartTick] = useState(0);
   const [loopEndTick, setLoopEndTick] = useState(0);
+  const [preRollBars, setPreRollBars] = useState(1);
+  const [postRollBars, setPostRollBars] = useState(1);
+  const [selectionRollActive, setSelectionRollActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -360,7 +367,7 @@ export default function ProjectDawTransport({
     });
   }
 
-  async function play() {
+  async function play(options?: { skipCountIn?: boolean }) {
     const audio = audioRef.current;
     if (!active || !audio || !source || !transport) return;
     setError(null);
@@ -370,6 +377,10 @@ export default function ProjectDawTransport({
         nextTransport = await update("play");
       }
       if (nextTransport?.playbackState === "counting-in") {
+        if (options?.skipCountIn) {
+          nextTransport = await update("complete-count-in");
+          if (nextTransport?.playbackState !== "playing") return;
+        } else {
         const token = ++countInTokenRef.current;
         const signature = timelineTickToMappedPosition(
           nextTransport.tick,
@@ -402,6 +413,7 @@ export default function ProjectDawTransport({
         if (token !== countInTokenRef.current) return;
         nextTransport = await update("complete-count-in");
         if (nextTransport?.playbackState !== "playing") return;
+        }
       }
       await ensureMediaPanner();
       await audio.play();
@@ -436,6 +448,9 @@ export default function ProjectDawTransport({
     countInTokenRef.current += 1;
     void countInAudioRef.current?.close();
     countInAudioRef.current = null;
+    selectionRollEndTickRef.current = null;
+    selectionRollReturnTickRef.current = null;
+    setSelectionRollActive(false);
     audio.pause();
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
     const current = transportRef.current;
@@ -453,6 +468,59 @@ export default function ProjectDawTransport({
     lastCheckpointTickRef.current = returnTick;
     try { await update("stop", { returnToTick: returnTick }); } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Stop could not be saved.");
+    }
+  }
+
+  async function finishSelectionRoll() {
+    const audio = audioRef.current;
+    const returnTick = selectionRollReturnTickRef.current;
+    if (!audio || returnTick === null) return;
+    selectionRollEndTickRef.current = null;
+    selectionRollReturnTickRef.current = null;
+    setSelectionRollActive(false);
+    audio.pause();
+    const returnSeconds = tickToSeconds(returnTick);
+    audio.currentTime = returnSeconds;
+    scrubSecondsRef.current = returnSeconds;
+    setElapsed(returnSeconds);
+    lastCheckpointTickRef.current = returnTick;
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
+    await update("stop", { returnToTick: returnTick });
+  }
+
+  finishSelectionRollRef.current = finishSelectionRoll;
+
+  async function playSelectionWithRoll() {
+    const audio = audioRef.current;
+    const current = transportRef.current;
+    if (!active || !audio || !source || !current) return;
+    if (current.loop.enabled) {
+      setError("Disable the saved loop before playing this selection with pre-roll and post-roll.");
+      return;
+    }
+    try {
+      const plan = planTimelineDawSelectionRoll({
+        selectionStartTick: loopStartTick,
+        selectionEndTick: loopEndTick,
+        preRollBars,
+        postRollBars,
+        ppq: current.ppq,
+        signatureMap: current.timeSignatureMap,
+      });
+      if (tickToSeconds(plan.playbackStartTick) >= duration) {
+        throw new Error("The selected range begins after the available audio.");
+      }
+      setError(null);
+      selectionRollEndTickRef.current = plan.playbackEndTick;
+      selectionRollReturnTickRef.current = plan.selectionStartTick;
+      setSelectionRollActive(true);
+      await locate(tickToSeconds(plan.playbackStartTick));
+      await play({ skipCountIn: true });
+    } catch (cause) {
+      selectionRollEndTickRef.current = null;
+      selectionRollReturnTickRef.current = null;
+      setSelectionRollActive(false);
+      setError(cause instanceof Error ? cause.message : "Selection playback could not start.");
     }
   }
 
@@ -1092,6 +1160,32 @@ export default function ProjectDawTransport({
         </p>
       </div>
 
+      <div className="mt-3 rounded-xl border border-sky-300/20 bg-sky-300/[0.05] p-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="grid gap-1 text-xs font-bold text-white/55">
+            Pre-roll
+            <select value={preRollBars} onChange={(event) => setPreRollBars(Number(event.target.value))} disabled={selectionRollActive} className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black disabled:opacity-35">
+              {[0, 1, 2, 4, 8].map((bars) => <option key={bars} value={bars}>{bars === 0 ? "Off" : `${bars} bar${bars === 1 ? "" : "s"}`}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-bold text-white/55">
+            Post-roll
+            <select value={postRollBars} onChange={(event) => setPostRollBars(Number(event.target.value))} disabled={selectionRollActive} className="rounded-lg border border-white/15 bg-black px-3 py-2 text-xs font-black disabled:opacity-35">
+              {[0, 1, 2, 4, 8].map((bars) => <option key={bars} value={bars}>{bars === 0 ? "Off" : `${bars} bar${bars === 1 ? "" : "s"}`}</option>)}
+            </select>
+          </label>
+          <button type="button" onClick={() => void playSelectionWithRoll()} disabled={!active || !source || loopEndTick <= loopStartTick || selectionRollActive} className="rounded-lg bg-sky-300 px-4 py-2 text-xs font-black text-black disabled:opacity-35">
+            {selectionRollActive ? "Playing Selection…" : "Play Selection with Roll"}
+          </button>
+          <span className="ml-auto font-mono text-xs text-white/55">
+            Selection {timelineTickToMappedPosition(loopStartTick, activePpq, activeSignatureMap).label} → {timelineTickToMappedPosition(loopEndTick, activePpq, activeSignatureMap).label}
+          </span>
+        </div>
+        <p className="mt-2 text-xs text-white/35">
+          Uses Loop In and Loop Out as a temporary selection, plays the chosen lead-in and tail, then returns to Selection In without changing the saved arrangement.
+        </p>
+      </div>
+
       {!active ? (
         <p className="mt-3 text-sm text-amber-200">
           Activate this DAW session before operating the transport.
@@ -1158,6 +1252,14 @@ export default function ProjectDawTransport({
         }}
         onTimeUpdate={(event) => {
           const audio = event.currentTarget;
+          const selectionRollEndTick = selectionRollEndTickRef.current;
+          if (selectionRollEndTick !== null
+            && secondsToTick(audio.currentTime) >= selectionRollEndTick) {
+            void finishSelectionRollRef.current().catch((cause) => {
+              setError(cause instanceof Error ? cause.message : "Selection playback could not finish safely.");
+            });
+            return;
+          }
           const activeLoop = transportRef.current?.loop;
           if (activeLoop?.enabled
             && secondsToTick(audio.currentTime) >= activeLoop.endTick) {
@@ -1183,6 +1285,12 @@ export default function ProjectDawTransport({
           }
         }}
         onEnded={() => {
+          if (selectionRollReturnTickRef.current !== null) {
+            void finishSelectionRollRef.current().catch((cause) => {
+              setError(cause instanceof Error ? cause.message : "Selection playback could not finish safely.");
+            });
+            return;
+          }
           setElapsed(0);
           if (transport?.playbackState === "playing") void stop();
         }}
