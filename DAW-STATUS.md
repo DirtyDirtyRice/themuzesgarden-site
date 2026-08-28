@@ -10,7 +10,7 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 
 ```text
 THE MUZES GARDEN DAW
-├── Session, Transport, and Timeline ............. PARTIALLY DONE (10/11)
+├── Session, Transport, and Timeline ........ SOFTWARE COMPLETE; QA DEFERRED
 │   ├── protected session transport and playhead ........ DONE — date not recorded
 │   ├── musical position, zoom and scrolling ............ DONE — date not recorded
 │   ├── tempo maps and changing time signatures ......... DONE — date not recorded
@@ -21,7 +21,9 @@ THE MUZES GARDEN DAW
 │   ├── selection pre-roll and post-roll ................. DONE 8/28/26
 │   ├── MIDI transport and browser timing diagnostics .... DONE 8/28/26
 │   ├── repeatable in-browser transport timing self-test ... DONE 8/28/26
-│   └── physical-controller and multi-browser QA ........... STILL TO DO
+│   ├── Chrome production timing QA ......................... DONE 8/28/26
+│   ├── Edge/Firefox production QA ........ DEFERRED — owner chose Chrome only
+│   └── physical MIDI-controller QA ........ DEFERRED — hardware unavailable
 ├── Recording
 │   ├── input checks, levels, latency, count-in, metronome .... DONE
 │   ├── interruption/crash recovery and saved takes ........... DONE
@@ -86,7 +88,15 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Recording Baby-Step Help
+## Latest completed DAW milestone - Chrome Production Transport Timing QA
+
+- The owner created and opened the private `Browser QA Test` Studio session in production Chrome; all 12 required DAW engines reported ready and the session reached Ready for Music.
+- Chrome reported AudioWorklet, output timestamps, Media Session, and Web MIDI as available.
+- The production transport timing self-test passed 20 samples with 0.65 ms average jitter, 1.8 ms p95 jitter, and 2.2 ms worst-case jitter.
+- Edge and Firefox production QA are deferred because the owner chose Chrome-only use; physical MIDI-controller QA is deferred until hardware is available.
+- Session, Transport, and Timeline software work is complete, with those two external validation items retained explicitly instead of being reported as tested.
+
+## Previously completed DAW milestone - Recording Baby-Step Help
 
 - Live PCM Capture now includes How Do I Record and Save a Take help directly above its recording controls.
 - The guide presents one small action at a time across input selection, level preflight, recording plan, capture/private save, and saved-take review.
