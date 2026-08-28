@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Tamper-Evident Download Verification Receipts
+## Latest completed DAW milestone - Saved Verification Receipt Recheck
+
+- Render & Export now includes Verify Receipt File for reopening a previously downloaded version-2 verification receipt after navigation, refresh, or handoff.
+- Receipt files are parsed locally and must match the exact schema, allowlisted fields, no-audio declaration, and tamper-evident receipt checksum.
+- A valid receipt must belong to the currently open private DAW session; foreign-session evidence is rejected instead of being presented as local proof.
+- Successful recheck identifies the receipt filename, original downloaded WAV or ZIP, byte size, and render job ID.
+- Malformed JSON, unsupported fields, altered evidence, old schemas, and checksum mismatches produce clear failures without uploading or persisting the receipt.
+- Focused download verification, render-delivery, and export-preflight tests passed (13 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; receipt recheck is a local read-only integrity operation.
+
+## Previously completed DAW milestone - Tamper-Evident Download Verification Receipts
 
 - Every portable download-verification receipt now includes its own SHA-256 receipt checksum in addition to the verified audio or ZIP checksum.
 - Receipt hashing uses one fixed canonical field order covering session, render, target, filename, byte size, artifact checksum, verification time, and the no-audio declaration.

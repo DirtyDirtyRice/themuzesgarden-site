@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawDownloadVerificationReceipt } from "../../lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawDownloadVerificationReceipt } from "../../lib/timeline/TimelineDawDownloadVerification";
 
 describe("DAW downloaded artifact verification", () => {
   it("verifies the local file against the saved render fingerprint", async () => {
@@ -43,5 +43,18 @@ describe("DAW downloaded artifact verification", () => {
     const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "mix", fileName: "mix.wav", byteLength: 2048, checksum: `sha256:${"b".repeat(64)}`, verifiedAt: "2026-08-28T16:00:00.000Z" });
     expect(await verifyTimelineDawDownloadVerificationReceipt({ ...receipt, byteLength: 2049 })).toBe(false);
     expect(await verifyTimelineDawDownloadVerificationReceipt({ ...receipt, fileName: "edited.wav" })).toBe(false);
+  });
+
+  it("reopens a valid receipt only inside its DAW session", async () => {
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "mix", fileName: "mix.wav", byteLength: 2048, checksum: `sha256:${"c".repeat(64)}`, verifiedAt: "2026-08-28T16:00:00.000Z" });
+    await expect(parseTimelineDawDownloadVerificationReceipt(JSON.stringify(receipt), "session-1")).resolves.toEqual(receipt);
+    await expect(parseTimelineDawDownloadVerificationReceipt(JSON.stringify(receipt), "session-2")).rejects.toThrow(/another DAW session/i);
+  });
+
+  it("rejects malformed, extended, and checksum-invalid receipt files", async () => {
+    await expect(parseTimelineDawDownloadVerificationReceipt("not-json", "session-1")).rejects.toThrow(/valid JSON/i);
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "stem", fileName: "stems.zip", byteLength: 4096, checksum: `sha256:${"d".repeat(64)}`, verifiedAt: "2026-08-28T16:00:00.000Z" });
+    await expect(parseTimelineDawDownloadVerificationReceipt(JSON.stringify({ ...receipt, signedUrl: "private" }), "session-1")).rejects.toThrow(/unsupported field/i);
+    await expect(parseTimelineDawDownloadVerificationReceipt(JSON.stringify({ ...receipt, jobId: "edited" }), "session-1")).rejects.toThrow(/checksum/i);
   });
 });

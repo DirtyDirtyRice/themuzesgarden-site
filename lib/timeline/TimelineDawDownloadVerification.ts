@@ -62,6 +62,24 @@ export async function verifyTimelineDawDownloadVerificationReceipt(
   }
 }
 
+export async function parseTimelineDawDownloadVerificationReceipt(
+  text: string,
+  expectedSessionId: string,
+): Promise<TimelineDawDownloadVerificationReceipt> {
+  let value: unknown;
+  try { value = JSON.parse(text); } catch { throw new Error("Verification receipt is not valid JSON."); }
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Verification receipt must be an object.");
+  const record = value as Record<string, unknown>;
+  const allowed = new Set(["schema", "sessionId", "jobId", "target", "fileName", "byteLength", "checksum", "verifiedAt", "containsAudio", "receiptChecksum"]);
+  const extra = Object.keys(record).find((key) => !allowed.has(key));
+  if (extra) throw new Error(`Verification receipt contains unsupported field: ${extra}.`);
+  if (record.schema !== "the-muzes-garden/daw-download-verification/v2" || record.containsAudio !== false) throw new Error("Verification receipt schema is invalid.");
+  const receipt = record as TimelineDawDownloadVerificationReceipt;
+  if (receipt.sessionId !== clean(expectedSessionId, "Expected session ID", 200)) throw new Error("Verification receipt belongs to another DAW session.");
+  if (!await verifyTimelineDawDownloadVerificationReceipt(receipt)) throw new Error("Verification receipt checksum does not match its evidence.");
+  return receipt;
+}
+
 function receiptBody(input: {
   sessionId: string;
   jobId: string;

@@ -15,7 +15,7 @@ import {
   type TimelineDawExportPresetId,
 } from "@/lib/timeline/TimelineDawExportPresetPolicy";
 import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
-import { createTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact } from "@/lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact } from "@/lib/timeline/TimelineDawDownloadVerification";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -50,6 +50,7 @@ export default function ProjectDawExportWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [downloadVerification, setDownloadVerification] = useState<Record<string, { verified: boolean; name: string; byteLength: number; checksum: string; verifiedAt: string }>>({});
+  const [receiptVerification, setReceiptVerification] = useState<{ name: string; jobId: string; fileName: string; byteLength: number } | null>(null);
   const exportPreflight = useMemo(
     () => selectedJob ? evaluateTimelineDawExportPreflight(selectedJob) : null,
     [selectedJob],
@@ -235,6 +236,17 @@ export default function ProjectDawExportWorkspace({
     URL.revokeObjectURL(url);
   }
 
+  async function verifyReceiptFile(file: File) {
+    setError(null);
+    setReceiptVerification(null);
+    try {
+      const receipt = await parseTimelineDawDownloadVerificationReceipt(await file.text(), session.id);
+      setReceiptVerification({ name: file.name, jobId: receipt.jobId, fileName: receipt.fileName, byteLength: receipt.byteLength });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Verification receipt could not be validated.");
+    }
+  }
+
   return (
     <section className="rounded-3xl border border-white/15 bg-[#080808] p-5 sm:p-7">
       <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">Render &amp; Export</p>
@@ -288,10 +300,12 @@ export default function ProjectDawExportWorkspace({
         <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Workingâ€¦" : "Validate & Save Render"}</button>
         <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav" || exportPreflight?.safe === false} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
+        <label className={`${button} cursor-pointer`}>Verify Receipt File<input className="sr-only" type="file" accept=".json,application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyReceiptFile(file); event.target.value = ""; }} /></label>
       </div>
       {exportPreflight ? <p className={`mt-4 rounded-xl border px-3 py-2 text-sm ${exportPreflight.safe ? "border-emerald-300/25 bg-emerald-300/[.05] text-emerald-100" : "border-amber-300/30 bg-amber-300/[.07] text-amber-100"}`}><b>{exportPreflight.safe ? "Export size preflight passed." : "Export size preflight held this render."}</b> {exportPreflight.message}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {notice ? <p role="status" className="mt-4 text-sm text-emerald-200">{notice}</p> : null}
+      {receiptVerification ? <p role="status" className="mt-4 rounded-xl border border-cyan-300/25 bg-cyan-300/[.05] px-3 py-2 text-sm text-cyan-100"><b>Receipt verified for this session.</b> {receiptVerification.name} proves {receiptVerification.fileName} ({(receiptVerification.byteLength / 1_048_576).toFixed(2)} MB) for render {receiptVerification.jobId}.</p> : null}
       <div className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div><p className="text-xs font-black uppercase tracking-wider text-white/40">Saved render history</p><h3 className="mt-1 text-xl font-black">{loading ? "Loadingâ€¦" : `${jobs.length} saved render${jobs.length === 1 ? "" : "s"}`}</h3></div>
