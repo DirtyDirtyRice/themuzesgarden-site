@@ -8,6 +8,7 @@ import type {
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
 import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
 import ProjectDawInterchangeWorkspace from "./ProjectDawInterchangeWorkspace";
+import ProjectDawExportHelp from "./ProjectDawExportHelp";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
 import {
   getTimelineDawExportPreset,
@@ -273,6 +274,7 @@ export default function ProjectDawExportWorkspace({
         <div><h2 className="text-2xl font-black">Delivery preparation</h2><p className="mt-2 max-w-2xl text-sm text-white/60">Upload real WAV sources, validate a reproducible specification, and produce a private fingerprinted PCM delivery.</p></div>
         <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-black uppercase text-amber-200">PCM WAV worker connected</span>
       </div>
+      <ProjectDawExportHelp sessionId={session.id} />
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <label className="rounded-xl border border-emerald-300/25 bg-emerald-300/[0.06] p-3 md:col-span-2 xl:col-span-3">
           <span className="text-xs font-black uppercase tracking-wider text-emerald-200">Delivery preset</span>

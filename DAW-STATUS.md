@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Owner Sign-Off Requires Verified Download
+## Latest completed DAW milestone - Export Verification Baby-Step Help
+
+- Render & Export now includes How Do I Export and Verify My Download help attached directly to the working export area.
+- The guide presents one small action at a time across delivery creation, download, local verification, receipt saving, and later receipt-to-file recheck.
+- Previous Step, Next Step, and Start Over controls let the musician move deliberately without exposing the entire procedure as one overwhelming list.
+- The current help position survives navigation and refresh, is scoped to the exact DAW session, and restores only one allowlisted step number.
+- Browser help persistence contains no song name, audio, receipt, checksum, source identifier, private note, storage path, or credential, and storage failures remain non-blocking.
+- Focused export-help, download-verification, and owner-signoff tests passed (19 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; this is the first completed branch of the broader baby-step DAW help roadmap.
+
+## Previously completed DAW milestone - Owner Sign-Off Requires Verified Download
 
 - The seventh owner-musician sign-off step can no longer pass merely because a render job reached completed state.
 - A successful local SHA-256 match from Verify Downloaded File or the anchored receipt-to-download workflow now sends a session-scoped verification signal to the guided owner test.
