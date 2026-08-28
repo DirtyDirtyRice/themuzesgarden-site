@@ -223,10 +223,10 @@ export default function ProjectDawExportWorkspace({
     }
   }
 
-  function downloadVerificationReceipt(job: TimelineOfflineRenderJob) {
+  async function downloadVerificationReceipt(job: TimelineOfflineRenderJob) {
     const verification = downloadVerification[job.id];
     if (!verification?.verified) return;
-    const receipt = createTimelineDawDownloadVerificationReceipt({ sessionId: session.id, jobId: job.id, target: job.target, fileName: verification.name, byteLength: verification.byteLength, checksum: verification.checksum, verifiedAt: verification.verifiedAt });
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: session.id, jobId: job.id, target: job.target, fileName: verification.name, byteLength: verification.byteLength, checksum: verification.checksum, verifiedAt: verification.verifiedAt });
     const url = URL.createObjectURL(new Blob([JSON.stringify(receipt, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
     link.href = url;
@@ -311,7 +311,7 @@ export default function ProjectDawExportWorkspace({
                 {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>{job.target === "stem" ? "Download private stem ZIP" : "Download private WAV"}</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>{job.target === "stem" ? "Create private ZIP link" : "Create private WAV link"}</button> : null}
                 {job.state === "completed" && job.checksum ? <label className="ml-3 mt-3 inline-block cursor-pointer text-sm font-black text-cyan-200 underline">Verify downloaded file<input className="sr-only" type="file" accept={job.target === "stem" ? ".zip,application/zip" : ".wav,audio/wav"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyDownload(job, file); event.target.value = ""; }} /></label> : null}
                 {downloadVerification[job.id] ? <p className={`mt-2 text-xs font-black ${downloadVerification[job.id].verified ? "text-emerald-200" : "text-red-200"}`}>{downloadVerification[job.id].verified ? "Verified local download" : "Download mismatch"} · {downloadVerification[job.id].name} · {(downloadVerification[job.id].byteLength / 1_048_576).toFixed(2)} MB</p> : null}
-                {downloadVerification[job.id]?.verified ? <button type="button" className="mt-2 block text-xs font-black text-cyan-200 underline" onClick={() => downloadVerificationReceipt(job)}>Download Verification Receipt</button> : null}
+                {downloadVerification[job.id]?.verified ? <button type="button" className="mt-2 block text-xs font-black text-cyan-200 underline" onClick={() => void downloadVerificationReceipt(job)}>Download Verification Receipt</button> : null}
               </div>
             </li>
           ))}

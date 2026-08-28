@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact } from "../../lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawDownloadVerificationReceipt } from "../../lib/timeline/TimelineDawDownloadVerification";
 
 describe("DAW downloaded artifact verification", () => {
   it("verifies the local file against the saved render fingerprint", async () => {
@@ -23,8 +23,8 @@ describe("DAW downloaded artifact verification", () => {
       .rejects.toThrow(/checksum is invalid/i);
   });
 
-  it("creates a portable privacy-safe verification receipt", () => {
-    const receipt = createTimelineDawDownloadVerificationReceipt({
+  it("creates a portable privacy-safe verification receipt", async () => {
+    const receipt = await createTimelineDawDownloadVerificationReceipt({
       sessionId: "session-1",
       jobId: "job-1",
       target: "stem",
@@ -34,6 +34,14 @@ describe("DAW downloaded artifact verification", () => {
       verifiedAt: "2026-08-28T16:00:00.000Z",
     });
     expect(receipt).toMatchObject({ containsAudio: false, byteLength: 1024, target: "stem" });
+    expect(receipt.receiptChecksum).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(await verifyTimelineDawDownloadVerificationReceipt(receipt)).toBe(true);
     expect(JSON.stringify(receipt)).not.toMatch(/signedUrl|storagePath|audioBytes/);
+  });
+
+  it("detects edited receipt evidence", async () => {
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "mix", fileName: "mix.wav", byteLength: 2048, checksum: `sha256:${"b".repeat(64)}`, verifiedAt: "2026-08-28T16:00:00.000Z" });
+    expect(await verifyTimelineDawDownloadVerificationReceipt({ ...receipt, byteLength: 2049 })).toBe(false);
+    expect(await verifyTimelineDawDownloadVerificationReceipt({ ...receipt, fileName: "edited.wav" })).toBe(false);
   });
 });

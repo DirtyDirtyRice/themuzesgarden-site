@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Portable Download Verification Receipts
+## Latest completed DAW milestone - Tamper-Evident Download Verification Receipts
+
+- Every portable download-verification receipt now includes its own SHA-256 receipt checksum in addition to the verified audio or ZIP checksum.
+- Receipt hashing uses one fixed canonical field order covering session, render, target, filename, byte size, artifact checksum, verification time, and the no-audio declaration.
+- A reusable verifier reconstructs that canonical evidence and rejects edited filenames, sizes, identities, targets, checksums, or timestamps.
+- The receipt schema advances to version 2 so older evidence cannot be mistaken for checksum-protected evidence.
+- Receipt generation and validation remain entirely local and never expose audio, signed URLs, storage paths, source identifiers, or credentials.
+- Focused download verification, render-delivery, and export-preflight tests passed (11 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the receipt checksum protects a local evidence artifact without adding private persistence.
+
+## Previously completed DAW milestone - Portable Download Verification Receipts
 
 - A successful local WAV or stem-ZIP verification now unlocks Download Verification Receipt on the completed render card.
 - The portable JSON receipt records the session and render IDs, delivery target, local filename, exact byte size, verified SHA-256 checksum, and verification time.
