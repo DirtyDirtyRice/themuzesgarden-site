@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { verifyTimelineDawDownloadedArtifact } from "../../lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact } from "../../lib/timeline/TimelineDawDownloadVerification";
 
 describe("DAW downloaded artifact verification", () => {
   it("verifies the local file against the saved render fingerprint", async () => {
@@ -21,5 +21,19 @@ describe("DAW downloaded artifact verification", () => {
   it("rejects malformed saved fingerprints", async () => {
     await expect(verifyTimelineDawDownloadedArtifact(new Uint8Array([1]), "sha256:bad"))
       .rejects.toThrow(/checksum is invalid/i);
+  });
+
+  it("creates a portable privacy-safe verification receipt", () => {
+    const receipt = createTimelineDawDownloadVerificationReceipt({
+      sessionId: "session-1",
+      jobId: "job-1",
+      target: "stem",
+      fileName: "song-stems.zip",
+      byteLength: 1024,
+      checksum: `sha256:${"a".repeat(64)}`,
+      verifiedAt: "2026-08-28T16:00:00.000Z",
+    });
+    expect(receipt).toMatchObject({ containsAudio: false, byteLength: 1024, target: "stem" });
+    expect(JSON.stringify(receipt)).not.toMatch(/signedUrl|storagePath|audioBytes/);
   });
 });

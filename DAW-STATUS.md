@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Local Completed-Download Integrity Verification
+## Latest completed DAW milestone - Portable Download Verification Receipts
+
+- A successful local WAV or stem-ZIP verification now unlocks Download Verification Receipt on the completed render card.
+- The portable JSON receipt records the session and render IDs, delivery target, local filename, exact byte size, verified SHA-256 checksum, and verification time.
+- Receipts explicitly declare that they contain no audio and exclude signed URLs, storage paths, source identifiers, credentials, and embedded file bytes.
+- A mismatched or unverified download cannot produce a receipt, preventing failed integrity checks from becoming delivery evidence.
+- Receipt creation remains local and does not modify the render, source recordings, project, Library, or private database.
+- Focused download verification, render-delivery, and export-preflight tests passed (10 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; the receipt packages existing completed-render evidence into a local privacy-safe artifact.
+
+## Previously completed DAW milestone - Local Completed-Download Integrity Verification
 
 - Every completed WAV and stem ZIP now offers Verify Downloaded File beside its private delivery action.
 - Verification reads the musician-selected file locally in the browser, computes its SHA-256 fingerprint, and compares it with the durable completed-render checksum.

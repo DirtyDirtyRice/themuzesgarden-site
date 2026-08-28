@@ -15,7 +15,7 @@ import {
   type TimelineDawExportPresetId,
 } from "@/lib/timeline/TimelineDawExportPresetPolicy";
 import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
-import { verifyTimelineDawDownloadedArtifact } from "@/lib/timeline/TimelineDawDownloadVerification";
+import { createTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact } from "@/lib/timeline/TimelineDawDownloadVerification";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -49,7 +49,7 @@ export default function ProjectDawExportWorkspace({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [downloadVerification, setDownloadVerification] = useState<Record<string, { verified: boolean; name: string; byteLength: number }>>({});
+  const [downloadVerification, setDownloadVerification] = useState<Record<string, { verified: boolean; name: string; byteLength: number; checksum: string; verifiedAt: string }>>({});
   const exportPreflight = useMemo(
     () => selectedJob ? evaluateTimelineDawExportPreflight(selectedJob) : null,
     [selectedJob],
@@ -216,11 +216,23 @@ export default function ProjectDawExportWorkspace({
     setError(null);
     try {
       const result = await verifyTimelineDawDownloadedArtifact(new Uint8Array(await file.arrayBuffer()), job.checksum);
-      setDownloadVerification((current) => ({ ...current, [job.id]: { verified: result.verified, name: file.name, byteLength: result.byteLength } }));
+      setDownloadVerification((current) => ({ ...current, [job.id]: { verified: result.verified, name: file.name, byteLength: result.byteLength, checksum: result.actualChecksum, verifiedAt: new Date().toISOString() } }));
       if (!result.verified) setError(`${file.name} does not match the completed render. Download a fresh copy before delivery.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Downloaded file could not be verified.");
     }
+  }
+
+  function downloadVerificationReceipt(job: TimelineOfflineRenderJob) {
+    const verification = downloadVerification[job.id];
+    if (!verification?.verified) return;
+    const receipt = createTimelineDawDownloadVerificationReceipt({ sessionId: session.id, jobId: job.id, target: job.target, fileName: verification.name, byteLength: verification.byteLength, checksum: verification.checksum, verifiedAt: verification.verifiedAt });
+    const url = URL.createObjectURL(new Blob([JSON.stringify(receipt, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${job.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "render"}.verification.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -299,6 +311,7 @@ export default function ProjectDawExportWorkspace({
                 {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>{job.target === "stem" ? "Download private stem ZIP" : "Download private WAV"}</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>{job.target === "stem" ? "Create private ZIP link" : "Create private WAV link"}</button> : null}
                 {job.state === "completed" && job.checksum ? <label className="ml-3 mt-3 inline-block cursor-pointer text-sm font-black text-cyan-200 underline">Verify downloaded file<input className="sr-only" type="file" accept={job.target === "stem" ? ".zip,application/zip" : ".wav,audio/wav"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyDownload(job, file); event.target.value = ""; }} /></label> : null}
                 {downloadVerification[job.id] ? <p className={`mt-2 text-xs font-black ${downloadVerification[job.id].verified ? "text-emerald-200" : "text-red-200"}`}>{downloadVerification[job.id].verified ? "Verified local download" : "Download mismatch"} · {downloadVerification[job.id].name} · {(downloadVerification[job.id].byteLength / 1_048_576).toFixed(2)} MB</p> : null}
+                {downloadVerification[job.id]?.verified ? <button type="button" className="mt-2 block text-xs font-black text-cyan-200 underline" onClick={() => downloadVerificationReceipt(job)}>Download Verification Receipt</button> : null}
               </div>
             </li>
           ))}
