@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Server-Enforced Export Size Guard
+## Latest completed DAW milestone - Local Completed-Download Integrity Verification
+
+- Every completed WAV and stem ZIP now offers Verify Downloaded File beside its private delivery action.
+- Verification reads the musician-selected file locally in the browser, computes its SHA-256 fingerprint, and compares it with the durable completed-render checksum.
+- A matching file receives an explicit Verified Local Download result with its filename and byte size.
+- A mismatch is clearly blocked from being treated as trusted delivery evidence and tells the musician to download a fresh copy.
+- Verification never uploads the selected WAV or ZIP, creates no new signed URL, and does not change the render, source recordings, project, or Library.
+- Focused download-integrity, render-delivery, and export-preflight tests passed (9 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; verification uses the completed render's existing checksum and transient local component state.
+
+## Previously completed DAW milestone - Server-Enforced Export Size Guard
 
 - The authenticated render API now repeats the same deterministic size preflight used by the Studio before loading private sources or starting PCM work.
 - Oversized WAV and stem-package requests receive HTTP 413 with the exact estimated size and a bounded shorter-duration recommendation.

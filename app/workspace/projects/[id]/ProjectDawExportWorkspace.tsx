@@ -15,6 +15,7 @@ import {
   type TimelineDawExportPresetId,
 } from "@/lib/timeline/TimelineDawExportPresetPolicy";
 import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
+import { verifyTimelineDawDownloadedArtifact } from "@/lib/timeline/TimelineDawDownloadVerification";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -48,6 +49,7 @@ export default function ProjectDawExportWorkspace({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [downloadVerification, setDownloadVerification] = useState<Record<string, { verified: boolean; name: string; byteLength: number }>>({});
   const exportPreflight = useMemo(
     () => selectedJob ? evaluateTimelineDawExportPreflight(selectedJob) : null,
     [selectedJob],
@@ -209,6 +211,18 @@ export default function ProjectDawExportWorkspace({
     URL.revokeObjectURL(url);
   }
 
+  async function verifyDownload(job: TimelineOfflineRenderJob, file: File) {
+    if (!job.checksum) return;
+    setError(null);
+    try {
+      const result = await verifyTimelineDawDownloadedArtifact(new Uint8Array(await file.arrayBuffer()), job.checksum);
+      setDownloadVerification((current) => ({ ...current, [job.id]: { verified: result.verified, name: file.name, byteLength: result.byteLength } }));
+      if (!result.verified) setError(`${file.name} does not match the completed render. Download a fresh copy before delivery.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Downloaded file could not be verified.");
+    }
+  }
+
   return (
     <section className="rounded-3xl border border-white/15 bg-[#080808] p-5 sm:p-7">
       <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">Render &amp; Export</p>
@@ -283,6 +297,8 @@ export default function ProjectDawExportWorkspace({
                 <p className="mt-1 text-xs text-white/35">{job.id} Â· {job.renderedFrames.toLocaleString()}/{job.totalFrames.toLocaleString()} frames</p>
                 </button>
                 {deliveryUrls[job.id] ? <a className="mt-3 inline-block text-sm font-black text-emerald-200 underline" href={deliveryUrls[job.id]}>{job.target === "stem" ? "Download private stem ZIP" : "Download private WAV"}</a> : job.state === "completed" ? <button type="button" className="mt-3 text-sm font-black text-emerald-200 underline" onClick={() => void refreshDelivery(job)}>{job.target === "stem" ? "Create private ZIP link" : "Create private WAV link"}</button> : null}
+                {job.state === "completed" && job.checksum ? <label className="ml-3 mt-3 inline-block cursor-pointer text-sm font-black text-cyan-200 underline">Verify downloaded file<input className="sr-only" type="file" accept={job.target === "stem" ? ".zip,application/zip" : ".wav,audio/wav"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyDownload(job, file); event.target.value = ""; }} /></label> : null}
+                {downloadVerification[job.id] ? <p className={`mt-2 text-xs font-black ${downloadVerification[job.id].verified ? "text-emerald-200" : "text-red-200"}`}>{downloadVerification[job.id].verified ? "Verified local download" : "Download mismatch"} · {downloadVerification[job.id].name} · {(downloadVerification[job.id].byteLength / 1_048_576).toFixed(2)} MB</p> : null}
               </div>
             </li>
           ))}
