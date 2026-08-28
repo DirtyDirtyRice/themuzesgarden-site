@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawDownloadVerificationReceipt, verifyTimelineDawReceiptArtifact } from "../../lib/timeline/TimelineDawDownloadVerification";
+import { anchorTimelineDawDownloadVerificationReceipt, createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawDownloadVerificationReceipt, verifyTimelineDawReceiptArtifact } from "../../lib/timeline/TimelineDawDownloadVerification";
+import type { TimelineOfflineRenderJob } from "../../lib/timeline/TimelineOfflineRenderAndExportEngine";
+
+const completedJob = (checksum: string, target: "mix" | "stem" = "mix"): TimelineOfflineRenderJob => ({ id: "job-1", projectId: "project-1", name: "Mix", target, sourceIds: ["source-1"], startSample: 0, endSample: 5, sampleRate: 48_000, bitDepth: 24, channels: 2, format: "wav", normalizePeakDb: null, dither: false, state: "completed", issues: [], renderedFrames: 5, totalFrames: 5, checksum, outputUri: "supabase://private/render.wav", head: 4, createdBy: "owner-1", updatedBy: "worker-1" });
 
 describe("DAW downloaded artifact verification", () => {
   it("verifies the local file against the saved render fingerprint", async () => {
@@ -67,5 +70,25 @@ describe("DAW downloaded artifact verification", () => {
   it("rejects a file whose bytes or size do not match the saved receipt", async () => {
     const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "stem", fileName: "stems.zip", byteLength: 5, checksum: "sha256:2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", verifiedAt: "2026-08-28T16:00:00.000Z" });
     await expect(verifyTimelineDawReceiptArtifact(new TextEncoder().encode("hello!"), receipt)).resolves.toMatchObject({ verified: false, byteLength: 6, expectedByteLength: 5 });
+  });
+
+  it("anchors a receipt to its completed saved render", async () => {
+    const checksum = `sha256:${"e".repeat(64)}`;
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "mix", fileName: "mix.wav", byteLength: 5, checksum, verifiedAt: "2026-08-28T16:00:00.000Z" });
+    await expect(anchorTimelineDawDownloadVerificationReceipt(receipt, [completedJob(checksum)])).resolves.toMatchObject({ id: "job-1", state: "completed", checksum });
+  });
+
+  it("rejects receipts for missing or unfinished saved renders", async () => {
+    const checksum = `sha256:${"e".repeat(64)}`;
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "mix", fileName: "mix.wav", byteLength: 5, checksum, verifiedAt: "2026-08-28T16:00:00.000Z" });
+    await expect(anchorTimelineDawDownloadVerificationReceipt(receipt, [])).rejects.toThrow(/saved render/i);
+    await expect(anchorTimelineDawDownloadVerificationReceipt(receipt, [{ ...completedJob(checksum), state: "validated" }])).rejects.toThrow(/not completed/i);
+  });
+
+  it("rejects receipt evidence that disagrees with the durable render", async () => {
+    const checksum = `sha256:${"e".repeat(64)}`;
+    const receipt = await createTimelineDawDownloadVerificationReceipt({ sessionId: "session-1", jobId: "job-1", target: "mix", fileName: "mix.wav", byteLength: 5, checksum, verifiedAt: "2026-08-28T16:00:00.000Z" });
+    await expect(anchorTimelineDawDownloadVerificationReceipt(receipt, [completedJob(`sha256:${"f".repeat(64)}`)])).rejects.toThrow(/saved render evidence/i);
+    await expect(anchorTimelineDawDownloadVerificationReceipt(receipt, [completedJob(checksum, "stem")])).rejects.toThrow(/saved render evidence/i);
   });
 });

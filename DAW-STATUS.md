@@ -75,7 +75,16 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Receipt-to-Download Reverification
+## Latest completed DAW milestone - Durable Render Receipt Anchoring
+
+- A reopened version-2 verification receipt must now match a render in the current private session's loaded durable history before it can unlock download matching.
+- The durable render must exist, be completed and fingerprinted, and match the receipt's exact render ID, delivery target, and SHA-256 checksum.
+- Self-contained, missing-job, unfinished-render, wrong-target, and checksum-disagreeing receipts are rejected instead of being presented as authoritative delivery evidence.
+- Receipt anchoring reuses the authenticated owner/session-scoped render history and does not expose storage paths, signed delivery URLs, source identifiers, or audio.
+- Focused download verification, render-delivery, and export-preflight tests passed (18 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; this milestone verifies against existing private completed-render evidence without modifying it.
+
+## Previously completed DAW milestone - Receipt-to-Download Reverification
 
 - After reopening a valid version-2 receipt, the musician can select the referenced WAV or stems ZIP and match the actual local bytes to that receipt.
 - Reverification requires both the exact SHA-256 artifact checksum and exact byte length recorded in the tamper-evident receipt.

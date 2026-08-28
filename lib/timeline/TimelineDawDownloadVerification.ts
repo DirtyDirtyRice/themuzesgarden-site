@@ -51,6 +51,22 @@ export async function verifyTimelineDawReceiptArtifact(
   };
 }
 
+export async function anchorTimelineDawDownloadVerificationReceipt(
+  receipt: TimelineDawDownloadVerificationReceipt,
+  jobs: TimelineOfflineRenderJob[],
+): Promise<TimelineOfflineRenderJob> {
+  if (!await verifyTimelineDawDownloadVerificationReceipt(receipt)) {
+    throw new Error("Verification receipt checksum does not match its evidence.");
+  }
+  const job = jobs.find((candidate) => candidate.id === receipt.jobId);
+  if (!job) throw new Error("Verification receipt does not match a saved render in this session.");
+  if (job.state !== "completed" || !job.checksum) throw new Error("Verification receipt render is not completed and fingerprinted.");
+  if (job.target !== receipt.target || job.checksum.trim().toLowerCase() !== receipt.checksum) {
+    throw new Error("Verification receipt does not match the saved render evidence.");
+  }
+  return structuredClone(job);
+}
+
 export async function createTimelineDawDownloadVerificationReceipt(input: {
   sessionId: string;
   jobId: string;
@@ -125,3 +141,4 @@ function clean(value: string, label: string, maximum: number) {
   if (!normalized || normalized.length > maximum) throw new Error(`${label} is invalid.`);
   return normalized;
 }
+import type { TimelineOfflineRenderJob } from "./TimelineOfflineRenderAndExportEngine";

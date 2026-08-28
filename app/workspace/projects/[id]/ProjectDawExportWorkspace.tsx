@@ -15,7 +15,7 @@ import {
   type TimelineDawExportPresetId,
 } from "@/lib/timeline/TimelineDawExportPresetPolicy";
 import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
-import { createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawReceiptArtifact, type TimelineDawDownloadVerificationReceipt } from "@/lib/timeline/TimelineDawDownloadVerification";
+import { anchorTimelineDawDownloadVerificationReceipt, createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawReceiptArtifact, type TimelineDawDownloadVerificationReceipt } from "@/lib/timeline/TimelineDawDownloadVerification";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -243,6 +243,7 @@ export default function ProjectDawExportWorkspace({
     setReceiptArtifactVerification(null);
     try {
       const receipt = await parseTimelineDawDownloadVerificationReceipt(await file.text(), session.id);
+      await anchorTimelineDawDownloadVerificationReceipt(receipt, jobs);
       setReceiptVerification({ name: file.name, receipt });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Verification receipt could not be validated.");
@@ -315,12 +316,12 @@ export default function ProjectDawExportWorkspace({
         <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Workingâ€¦" : "Validate & Save Render"}</button>
         <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav" || exportPreflight?.safe === false} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
-        <label className={`${button} cursor-pointer`}>Verify Receipt File<input className="sr-only" type="file" accept=".json,application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyReceiptFile(file); event.target.value = ""; }} /></label>
+        <label className={`${button} ${loading ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}>Verify Receipt File<input className="sr-only" type="file" accept=".json,application/json" disabled={loading} onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyReceiptFile(file); event.target.value = ""; }} /></label>
       </div>
       {exportPreflight ? <p className={`mt-4 rounded-xl border px-3 py-2 text-sm ${exportPreflight.safe ? "border-emerald-300/25 bg-emerald-300/[.05] text-emerald-100" : "border-amber-300/30 bg-amber-300/[.07] text-amber-100"}`}><b>{exportPreflight.safe ? "Export size preflight passed." : "Export size preflight held this render."}</b> {exportPreflight.message}</p> : null}
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {notice ? <p role="status" className="mt-4 text-sm text-emerald-200">{notice}</p> : null}
-      {receiptVerification ? <div className="mt-4 rounded-xl border border-cyan-300/25 bg-cyan-300/[.05] px-3 py-2 text-sm text-cyan-100"><p role="status"><b>Receipt verified for this session.</b> {receiptVerification.name} proves {receiptVerification.receipt.fileName} ({(receiptVerification.receipt.byteLength / 1_048_576).toFixed(2)} MB) for render {receiptVerification.receipt.jobId}.</p><label className="mt-2 inline-block cursor-pointer font-black underline">Match Download to Receipt<input className="sr-only" type="file" accept={receiptVerification.receipt.target === "stem" ? ".zip,application/zip" : ".wav,audio/wav"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyReceiptArtifact(file); event.target.value = ""; }} /></label>{receiptArtifactVerification ? <p role="status" className={`mt-2 font-black ${receiptArtifactVerification.verified ? "text-emerald-200" : "text-red-200"}`}>{receiptArtifactVerification.verified ? "Receipt and download match" : "Receipt and download do not match"} · {receiptArtifactVerification.name} · {(receiptArtifactVerification.byteLength / 1_048_576).toFixed(2)} MB</p> : null}</div> : null}
+      {receiptVerification ? <div className="mt-4 rounded-xl border border-cyan-300/25 bg-cyan-300/[.05] px-3 py-2 text-sm text-cyan-100"><p role="status"><b>Receipt verified against this session&apos;s saved render.</b> {receiptVerification.name} proves {receiptVerification.receipt.fileName} ({(receiptVerification.receipt.byteLength / 1_048_576).toFixed(2)} MB) for completed render {receiptVerification.receipt.jobId}.</p><label className="mt-2 inline-block cursor-pointer font-black underline">Match Download to Receipt<input className="sr-only" type="file" accept={receiptVerification.receipt.target === "stem" ? ".zip,application/zip" : ".wav,audio/wav"} onChange={(event) => { const file = event.target.files?.[0]; if (file) void verifyReceiptArtifact(file); event.target.value = ""; }} /></label>{receiptArtifactVerification ? <p role="status" className={`mt-2 font-black ${receiptArtifactVerification.verified ? "text-emerald-200" : "text-red-200"}`}>{receiptArtifactVerification.verified ? "Receipt and download match" : "Receipt and download do not match"} · {receiptArtifactVerification.name} · {(receiptArtifactVerification.byteLength / 1_048_576).toFixed(2)} MB</p> : null}</div> : null}
       <div className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div><p className="text-xs font-black uppercase tracking-wider text-white/40">Saved render history</p><h3 className="mt-1 text-xl font-black">{loading ? "Loadingâ€¦" : `${jobs.length} saved render${jobs.length === 1 ? "" : "s"}`}</h3></div>
