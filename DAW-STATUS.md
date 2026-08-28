@@ -75,7 +75,17 @@ THE MUZES GARDEN DAW
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
 
-## Latest completed DAW milestone - Large Export Size Preflight
+## Latest completed DAW milestone - Server-Enforced Export Size Guard
+
+- The authenticated render API now repeats the same deterministic size preflight used by the Studio before loading private sources or starting PCM work.
+- Oversized WAV and stem-package requests receive HTTP 413 with the exact estimated size and a bounded shorter-duration recommendation.
+- A stale browser tab, altered client, or direct request can no longer bypass the 512 MB production-safe export ceiling.
+- Owner/session authorization and saved-job lookup still happen before the guard, so no private render specification is exposed across accounts.
+- The byte ceiling is inclusive and covered by an exact boundary test, keeping client and server decisions consistent.
+- Focused export reliability, execution-policy, and stem-package tests passed (8 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required; rejected requests create no artifact and do not mutate the saved render job.
+
+## Previously completed DAW milestone - Large Export Size Preflight
 
 - Every validated WAV or stem render now receives a deterministic delivery-size estimate before server execution.
 - Stem estimates include every uncompressed per-source WAV plus ZIP structure overhead instead of presenting only one-track size.

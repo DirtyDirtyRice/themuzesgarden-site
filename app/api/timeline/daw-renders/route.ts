@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { parseTimelineDawRenderCommand } from "@/lib/timeline/TimelineDawRenderApiPolicy";
 import { parseTimelineDawRenderExecutionCommand } from "@/lib/timeline/TimelineDawRenderExecutionApiPolicy";
+import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
 import { TimelineDawRenderDeliveryService } from "@/lib/timeline/TimelineDawRenderDeliveryService";
 import { TimelineDawRenderExecutionService } from "@/lib/timeline/TimelineDawRenderExecutionService";
 import { TimelineDawRenderSourceMixer } from "@/lib/timeline/TimelineDawRenderSourceMixer";
@@ -83,6 +84,8 @@ export async function POST(request: NextRequest) {
         .snapshot(user.id, command.sessionId);
       const job = snapshot.jobs.find((candidate) => candidate.id === command.jobId);
       if (!job) throw new ApiError("DAW render job was not found.", 404);
+      const preflight = evaluateTimelineDawExportPreflight(job);
+      if (!preflight.safe) throw new ApiError(preflight.message, 413);
       const sourceStore = new TimelineDawRenderSupabaseSourceStore(user.client, user.id);
       const receipt = command.action === "execute-stems"
         ? await new TimelineDawStemPackageService(

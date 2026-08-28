@@ -32,4 +32,11 @@ describe("DAW export reliability preflight", () => {
   it("keeps a normal full-mix render inside the same safety policy", () => {
     expect(evaluateTimelineDawExportPreflight({ ...job, target: "mix" }).safe).toBe(true);
   });
+
+  it("treats the production byte ceiling as inclusive for server enforcement", () => {
+    const exact = evaluateTimelineDawExportPreflight(job, 103_680_664);
+    expect(exact.estimatedBytes).toBe(103_680_664);
+    expect(exact.safe).toBe(true);
+    expect(evaluateTimelineDawExportPreflight(job, 103_680_663).safe).toBe(false);
+  });
 });
