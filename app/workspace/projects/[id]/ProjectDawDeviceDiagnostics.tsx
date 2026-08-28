@@ -9,6 +9,10 @@ import {
   resolveTimelineDawMidiTransportCommand,
   type TimelineDawMidiTransportCommand,
 } from "../../../../lib/timeline/TimelineDawMidiTransportPolicy";
+import {
+  sampleTimelineDawBrowserTiming,
+  type TimelineDawBrowserTimingReport,
+} from "../../../../lib/timeline/TimelineDawBrowserTimingDiagnostics";
 
 type MidiInputLike = {
   id: string;
@@ -36,6 +40,7 @@ export default function ProjectDawDeviceDiagnostics() {
   const [midiAccess, setMidiAccess] = useState<MidiAccessLike | null>(null);
   const [midiInputs, setMidiInputs] = useState<string[]>([]);
   const [lastMidiCommand, setLastMidiCommand] = useState<TimelineDawMidiTransportCommand | null>(null);
+  const [timingReport, setTimingReport] = useState<TimelineDawBrowserTimingReport | null>(null);
 
   const inspect = useCallback(async (testMicrophone: boolean) => {
     setBusy(true);
@@ -118,6 +123,18 @@ export default function ProjectDawDeviceDiagnostics() {
     }
   }, []);
 
+  const testBrowserTiming = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setTimingReport(await sampleTimelineDawBrowserTiming());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Browser timing could not be tested.");
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
   useEffect(() => {
     const devices = navigator.mediaDevices;
     if (!devices?.addEventListener) return;
@@ -150,6 +167,9 @@ export default function ProjectDawDeviceDiagnostics() {
         <button type="button" className={button} disabled={busy || !!midiAccess} onClick={() => void connectMidiTransport()}>
           {midiAccess ? "MIDI Transport Connected" : "Connect MIDI Transport"}
         </button>
+        <button type="button" className={button} disabled={busy} onClick={() => void testBrowserTiming()}>
+          Run Transport Timing Self-Test
+        </button>
       </div>
       {error ? <p role="alert" className="mt-4 text-sm text-red-200">{error}</p> : null}
       {report ? (
@@ -174,6 +194,11 @@ export default function ProjectDawDeviceDiagnostics() {
               {midiInputs.length ? `Inputs: ${midiInputs.join(", ")}` : "No MIDI input connected yet."}
               {lastMidiCommand ? ` Last command: ${lastMidiCommand}.` : ""}
             </p>
+            {timingReport ? (
+              <p className={`mt-3 rounded-lg border px-3 py-2 font-bold ${timingReport.status === "pass" ? "border-emerald-300/30 text-emerald-200" : "border-amber-300/30 text-amber-200"}`}>
+                Timing {timingReport.status === "pass" ? "passed" : "needs review"}: average {timingReport.averageJitterMs} ms · p95 {timingReport.p95JitterMs} ms · worst {timingReport.worstJitterMs} ms across {timingReport.sampleCount} samples. {timingReport.summary}
+              </p>
+            ) : null}
           </div>
         </>
       ) : null}

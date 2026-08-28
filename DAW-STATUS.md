@@ -10,7 +10,7 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 
 ```text
 THE MUZES GARDEN DAW
-├── Session, Transport, and Timeline ............... PARTIALLY DONE (9/10)
+├── Session, Transport, and Timeline ............. PARTIALLY DONE (10/11)
 │   ├── protected session transport and playhead ........ DONE — date not recorded
 │   ├── musical position, zoom and scrolling ............ DONE — date not recorded
 │   ├── tempo maps and changing time signatures ......... DONE — date not recorded
@@ -20,7 +20,8 @@ THE MUZES GARDEN DAW
 │   ├── count-in and metronome transport ................. DONE — date not recorded
 │   ├── selection pre-roll and post-roll ................. DONE 8/28/26
 │   ├── MIDI transport and browser timing diagnostics .... DONE 8/28/26
-│   └── physical-controller and multi-browser QA .......... STILL TO DO
+│   ├── repeatable in-browser transport timing self-test ... DONE 8/28/26
+│   └── physical-controller and multi-browser QA ........... STILL TO DO
 ├── Recording
 │   ├── input checks, levels, latency, count-in, metronome .... DONE
 │   ├── interruption/crash recovery and saved takes ........... DONE
