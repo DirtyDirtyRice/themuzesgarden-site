@@ -3,7 +3,107 @@
 import ManualShell from "../components/ManualShell";
 import { ManualInfoSection, ManualInlineLink } from "../components/ManualCards";
 
-const ROADMAP_UPDATED = "8/25/26";
+const ROADMAP_UPDATED = "8/27/26";
+
+const DAW_BRANCHES = [
+  {
+    title: "Session, transport, playhead, zoom, and scrolling",
+    status: "DONE",
+    date: "8/27/26",
+    details: ["Protected sessions", "Play, pause, stop, seek, zoom, and scroll", "Tempo map and musical grid"],
+  },
+  {
+    title: "Recording",
+    status: "DONE",
+    date: "8/27/26",
+    details: ["Input checks, levels, latency, count-in, and metronome", "Saved takes and interruption recovery", "Punch and multi-pass recording"],
+  },
+  {
+    title: "Tracks and arrangement",
+    status: "DONE",
+    date: "8/21/26",
+    details: ["Import, waveform, move, trim, split, repeat, and fades", "Selection, group editing, undo/redo, and snapshots", "Track locking, colors, shortcuts, folders, and groups"],
+  },
+  {
+    title: "Regions and arrangement sections",
+    status: "DONE",
+    date: "8/21/26",
+    open: true,
+    details: ["Name and color regions", "Resize, duplicate, and move regions", "Jump, loop, and repeat regions", "Create tracks from selected regions"],
+  },
+  {
+    title: "Three-version riff comparison",
+    status: "DONE",
+    date: "8/21/26",
+    details: ["Color-coded matching riff families", "Audition each version or hear matches across tracks", "Advance through matching riffs"],
+  },
+  {
+    title: "Hybrid edit track",
+    status: "DONE",
+    date: "8/21/26",
+    details: ["Fourth edit lane", "Copy, cut, paste, and arrange sections from alternate versions"],
+  },
+  {
+    title: "Session View",
+    status: "DONE",
+    date: "8/26/26",
+    details: ["Clip launching and scene workflow", "Session-to-arrangement music workflow"],
+  },
+  {
+    title: "Mixing, routing, automation, and effects",
+    status: "DONE",
+    date: "8/27/26",
+    details: ["Gain, pan, mute, solo, sends, and routing", "Automation and effect controls", "Mix decisions and saved state"],
+  },
+  {
+    title: "MIDI and instruments",
+    status: "DONE",
+    date: "8/27/26",
+    details: ["MIDI import and clip creation", "Piano-roll editing and instrument workflow"],
+  },
+  {
+    title: "Recovery, collaboration, and review",
+    status: "DONE",
+    date: "8/25/26",
+    details: ["Protected checkpoints and session snapshots", "Review comments and collaboration controls", "Safe restore workflow"],
+  },
+  {
+    title: "Export and delivery",
+    status: "DONE",
+    date: "8/25/26",
+    details: ["WAV and stem delivery setup", "Saved render specifications and manifests", "Checksum-protected delivery workflow"],
+  },
+  {
+    title: "Owner seven-step musician sign-off",
+    status: "MUST DO",
+    date: "8/27/26",
+    details: ["Complete the final owner listening judgment", "Record the final pass or problem report"],
+  },
+  {
+    title: "Production export reliability",
+    status: "MUST DO",
+    date: "8/27/26",
+    details: ["Resolve large-file and stem-package failures", "Verify completed downloads on production"],
+  },
+  {
+    title: "Baby-step help: How do I get there? / How do I do this?",
+    status: "MUST DO",
+    date: "8/27/26",
+    details: ["Attach destination help to every important control", "Show one small action at a time", "Remember the current help step after navigation and refresh"],
+  },
+  {
+    title: "Shorter DAW workspace pages",
+    status: "MUST DO",
+    date: "8/27/26",
+    details: ["Replace long pages with compact work-area menus", "Open only the section the musician chooses", "Keep return-to-step controls visible"],
+  },
+  {
+    title: "Full browser, hardware, and plug-in production QA",
+    status: "MUST DO",
+    date: "8/27/26",
+    details: ["Chrome and supported-browser testing", "Audio-device and recording-hardware testing", "Plug-in compatibility and performance testing"],
+  },
+] as const;
 
 const TREE = [
   {
@@ -106,6 +206,77 @@ export default function SiteTreePage() {
           </article>
         ))}
       </section>
+      </details>
+
+      <details
+        className="group rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.035]"
+        open
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200/65">
+              DAW roadmap · updated {ROADMAP_UPDATED}
+            </p>
+            <h2 className="mt-1 text-2xl font-semibold text-white">
+              DAW Tree — dates, DONE, and MUST DO
+            </h2>
+          </div>
+          <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55">
+            <span className="group-open:hidden">Open</span>
+            <span className="hidden group-open:inline">Close</span>
+          </span>
+        </summary>
+
+        <div className="border-t border-cyan-300/15 p-5">
+          <p className="rounded-xl border border-white/10 bg-black/25 p-4 text-sm leading-6 text-white/65">
+            DONE means implemented in The Muzes Garden. It does not claim complete
+            Ableton Live or Pro Tools feature parity.
+          </p>
+
+          <div className="mt-4 grid gap-3">
+            {DAW_BRANCHES.map((branch) => (
+              <details
+                key={branch.title}
+                className="group/branch rounded-xl border border-white/10 bg-black/30"
+                open={"open" in branch ? branch.open : false}
+              >
+                <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-4">
+                  <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-white/85">
+                    <span aria-hidden="true" className="text-cyan-300/70">
+                      ├─
+                    </span>
+                    {branch.title}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={
+                        branch.status === "DONE"
+                          ? "rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-100"
+                          : "rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-100"
+                      }
+                    >
+                      {branch.status}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/45">
+                      Updated {branch.date}
+                    </span>
+                  </span>
+                </summary>
+
+                <ul className="space-y-2 border-t border-white/10 px-5 py-4 text-sm leading-6 text-white/65">
+                  {branch.details.map((detail) => (
+                    <li key={detail} className="flex gap-2">
+                      <span aria-hidden="true" className="text-cyan-300/60">
+                        └─
+                      </span>
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </div>
       </details>
 
       <ManualInfoSection title="Current big-picture structure">
