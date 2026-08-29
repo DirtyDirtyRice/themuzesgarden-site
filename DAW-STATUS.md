@@ -123,7 +123,7 @@ THE MUZES GARDEN DAW
 └── VERBAL EDITING ............................................... STILL TO DO
     ├── plain-language edit request workspace .................... DONE 8/29/26
     ├── protected AI edit plan shown before changing music ....... DONE 8/29/26
-    ├── approve, reject, revise and explain proposed edits ........ STILL TO DO
+    ├── approve, reject, revise and explain proposed edits ........ DONE 8/29/26
     ├── nondestructive source preservation and instant undo ....... STILL TO DO
     ├── song-section recognition and named-section selection ...... STILL TO DO
     ├── add, remove, move, copy or extend complete sections ....... STILL TO DO
@@ -182,6 +182,17 @@ THE MUZES GARDEN DAW
 - The request and plan remain current-tab memory only and are not sent to an AI provider or persisted; provider-backed musical interpretation remains a later milestone behind the same safety boundary.
 - Focused verbal-request and plan tests passed (5 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration was required. The next leaf is musician approval, rejection, revision, and explanation of the proposed plan.
+
+## Completed milestone - Verbal Edit Plan Decisions and Explanations
+
+- A musician can now explicitly **Approve Plan**, **Request Revision**, or **Reject Plan** from the protected plan preview.
+- Rejection and revision require a meaningful explanation, while approval records a plain-language statement that it authorizes only a later protected execution step.
+- Revision and rejection explanations are normalized, bounded to 2,000 characters, and shown beside the decision so the musician can verify exactly what was recorded.
+- Invented decisions, unexplained rejection/revision, and oversized explanations are rejected by the shared policy rather than trusted from the interface.
+- Every decision retains `executionAllowed: false`; **Apply Edit** remains locked and no decision can change audio, arrangements, mixes, recordings, approved edits, exports, or Library data.
+- Decisions and explanations remain current-tab memory only and are not persisted or sent to an AI provider in this milestone.
+- Focused verbal-request, plan, and decision tests passed (8 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required. The next leaf is nondestructive source preservation and instant undo for future executed edits.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

@@ -4,9 +4,11 @@ import { useState } from "react";
 import {
   parseTimelineDawVerbalEditRequest,
   createTimelineDawProtectedEditPlan,
+  decideTimelineDawVerbalEditPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
+  type TimelineDawVerbalPlanDecision,
 } from "@/lib/timeline/TimelineDawVerbalEditRequestPolicy";
 
 const fieldClass = "w-full rounded-xl border border-white/20 bg-black px-4 py-3 text-white outline-none focus:border-fuchsia-300";
@@ -16,11 +18,15 @@ export default function TimelineDawVerbalEditWorkspace() {
   const [instruction, setInstruction] = useState("");
   const [scope, setScope] = useState<TimelineDawVerbalEditRequest["scope"]>("whole-song");
   const [heldRequest, setHeldRequest] = useState<TimelineDawVerbalEditRequest | null>(null);
+  const [decisionExplanation, setDecisionExplanation] = useState("");
+  const [planDecision, setPlanDecision] = useState<TimelineDawVerbalPlanDecision | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function holdRequest() {
     try {
       setHeldRequest(parseTimelineDawVerbalEditRequest({ instruction, scope, preserveSources: true }));
+      setPlanDecision(null);
+      setDecisionExplanation("");
       setError(null);
     } catch (cause) {
       setHeldRequest(null);
@@ -30,6 +36,15 @@ export default function TimelineDawVerbalEditWorkspace() {
 
   const summary = heldRequest ? summarizeTimelineDawVerbalEditRequest(heldRequest) : null;
   const plan = heldRequest ? createTimelineDawProtectedEditPlan(heldRequest) : null;
+
+  function decidePlan(decision: TimelineDawVerbalPlanDecision["status"]) {
+    try {
+      setPlanDecision(decideTimelineDawVerbalEditPlan({ decision, explanation: decisionExplanation }));
+      setError(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The plan decision could not be recorded.");
+    }
+  }
 
   return (
     <section aria-labelledby="verbal-editing-heading" className="rounded-3xl border border-fuchsia-300/25 bg-fuchsia-300/[0.05] p-5">
@@ -66,7 +81,7 @@ export default function TimelineDawVerbalEditWorkspace() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={holdRequest}>Prepare Request for Review</button>
-        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setError(null); }}>Clear Request</button>
+        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
       </div>
 
       {error ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">{error}</p> : null}
@@ -98,8 +113,18 @@ export default function TimelineDawVerbalEditWorkspace() {
           <ul className="mt-4 space-y-1 text-xs font-bold text-emerald-200">
             {plan.protections.map((protection) => <li key={protection}>✓ {protection}</li>)}
           </ul>
+          <label className="mt-5 block text-sm font-bold">
+            Explain a rejection or requested revision
+            <textarea className={`${fieldClass} mt-2 min-h-24 resize-y`} maxLength={2_000} value={decisionExplanation} onChange={(event) => setDecisionExplanation(event.target.value)} placeholder="Example: Use only the second chorus, and keep the original guitar tone." />
+          </label>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" className={buttonClass} onClick={() => decidePlan("approved")}>Approve Plan</button>
+            <button type="button" className="rounded-xl border border-amber-200/40 px-4 py-3 text-sm font-black text-amber-100" onClick={() => decidePlan("revision-requested")}>Request Revision</button>
+            <button type="button" className="rounded-xl border border-red-300/40 px-4 py-3 text-sm font-black text-red-100" onClick={() => decidePlan("rejected")}>Reject Plan</button>
+          </div>
+          {planDecision ? <div className="mt-4 rounded-xl border border-white/15 bg-black/40 p-3" aria-live="polite"><p className="font-black uppercase text-fuchsia-200">{planDecision.status.replace("-", " ")}</p><p className="mt-1 text-sm text-white/70">{planDecision.explanation}</p><p className="mt-2 text-xs font-bold text-emerald-200">Music remains unchanged. This decision cannot execute the edit.</p></div> : null}
           <button type="button" className={`${buttonClass} mt-4`} disabled={!plan.executionAllowed}>Apply Edit</button>
-          <p className="mt-2 text-xs text-white/50">Apply Edit is intentionally locked. Approval, rejection, revision, and explanation are the next separate milestone.</p>
+          <p className="mt-2 text-xs text-white/50">Apply Edit remains intentionally locked even after plan approval. Nondestructive execution and undo are separate protected milestones.</p>
         </article>
       ) : null}
     </section>

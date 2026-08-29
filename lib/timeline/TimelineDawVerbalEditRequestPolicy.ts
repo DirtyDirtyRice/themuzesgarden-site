@@ -24,6 +24,12 @@ export type TimelineDawProtectedEditPlan = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalPlanDecision = {
+  status: "approved" | "rejected" | "revision-requested";
+  explanation: string;
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -79,6 +85,26 @@ export function createTimelineDawProtectedEditPlan(request: TimelineDawVerbalEdi
       "Do not overwrite, delete, publish, export, or activate a result automatically.",
       "Keep execution locked while this plan is held for review.",
     ],
+    executionAllowed: false,
+  };
+}
+
+export function decideTimelineDawVerbalEditPlan(input: {
+  decision: unknown;
+  explanation?: unknown;
+}): TimelineDawVerbalPlanDecision {
+  const decision = input.decision;
+  if (decision !== "approved" && decision !== "rejected" && decision !== "revision-requested") {
+    throw new Error("Choose approve, reject, or request revision.");
+  }
+  const explanation = typeof input.explanation === "string" ? input.explanation.trim().replace(/\s+/g, " ") : "";
+  if (explanation.length > 2_000) throw new Error("Keep the plan explanation under 2,000 characters.");
+  if (decision !== "approved" && explanation.length < 5) {
+    throw new Error("Explain what should be rejected or revised.");
+  }
+  return {
+    status: decision,
+    explanation: explanation || "The musician approved this plan for a later protected execution step.",
     executionAllowed: false,
   };
 }

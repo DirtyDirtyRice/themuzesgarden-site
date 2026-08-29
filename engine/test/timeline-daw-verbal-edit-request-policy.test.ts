@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   parseTimelineDawVerbalEditRequest,
   createTimelineDawProtectedEditPlan,
+  decideTimelineDawVerbalEditPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -63,5 +64,28 @@ describe("DAW verbal edit request policy", () => {
     }));
     expect(plan.steps[0]).toContain("complete arrangement");
     expect(plan.questions[0]).toContain("remain exactly");
+  });
+
+  it("records approval without unlocking musical execution", () => {
+    expect(decideTimelineDawVerbalEditPlan({ decision: "approved" })).toEqual({
+      status: "approved",
+      explanation: "The musician approved this plan for a later protected execution step.",
+      executionAllowed: false,
+    });
+  });
+
+  it("requires an explanation for rejection and revision", () => {
+    expect(() => decideTimelineDawVerbalEditPlan({ decision: "rejected" })).toThrow("Explain");
+    expect(() => decideTimelineDawVerbalEditPlan({ decision: "revision-requested", explanation: "no" })).toThrow("Explain");
+    expect(decideTimelineDawVerbalEditPlan({ decision: "revision-requested", explanation: "  Keep the original drums.  " })).toEqual({
+      status: "revision-requested",
+      explanation: "Keep the original drums.",
+      executionAllowed: false,
+    });
+  });
+
+  it("rejects invented decisions and oversized explanations", () => {
+    expect(() => decideTimelineDawVerbalEditPlan({ decision: "apply-now" })).toThrow("Choose approve");
+    expect(() => decideTimelineDawVerbalEditPlan({ decision: "rejected", explanation: "x".repeat(2_001) })).toThrow("2,000");
   });
 });
