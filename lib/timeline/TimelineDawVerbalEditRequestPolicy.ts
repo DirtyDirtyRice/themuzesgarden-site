@@ -30,6 +30,21 @@ export type TimelineDawVerbalPlanDecision = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalDraftRevision = {
+  id: string;
+  label: string;
+  sourceId: string;
+  parentRevisionId: string | null;
+  kind: "immutable-source" | "protected-draft";
+  instruction: string;
+  sourceMutable: false;
+};
+
+export type TimelineDawVerbalRevisionHistory = {
+  revisions: readonly TimelineDawVerbalDraftRevision[];
+  activeIndex: number;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -107,4 +122,53 @@ export function decideTimelineDawVerbalEditPlan(input: {
     explanation: explanation || "The musician approved this plan for a later protected execution step.",
     executionAllowed: false,
   };
+}
+
+function stableSourceId(request: TimelineDawVerbalEditRequest) {
+  let hash = 2166136261;
+  for (const character of `${request.scope}:${request.instruction}`) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `verbal-source-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+export function createTimelineDawVerbalRevisionHistory(input: {
+  request: TimelineDawVerbalEditRequest;
+  decision: TimelineDawVerbalPlanDecision;
+}): TimelineDawVerbalRevisionHistory {
+  if (input.decision.status !== "approved") {
+    throw new Error("Approve the plan before creating a protected draft.");
+  }
+  const sourceId = stableSourceId(input.request);
+  const baseline: TimelineDawVerbalDraftRevision = {
+    id: `${sourceId}-baseline`,
+    label: "Original source · locked",
+    sourceId,
+    parentRevisionId: null,
+    kind: "immutable-source",
+    instruction: "Original music before the verbal edit draft.",
+    sourceMutable: false,
+  };
+  const draft: TimelineDawVerbalDraftRevision = {
+    id: `${sourceId}-draft-1`,
+    label: "Protected verbal edit draft 1",
+    sourceId,
+    parentRevisionId: baseline.id,
+    kind: "protected-draft",
+    instruction: input.request.instruction,
+    sourceMutable: false,
+  };
+  return { revisions: [baseline, draft], activeIndex: 1 };
+}
+
+export function moveTimelineDawVerbalRevisionHistory(
+  history: TimelineDawVerbalRevisionHistory,
+  direction: "undo" | "redo",
+): TimelineDawVerbalRevisionHistory {
+  if (history.revisions.length === 0) throw new Error("Revision history must retain its protected source.");
+  const nextIndex = direction === "undo"
+    ? Math.max(0, history.activeIndex - 1)
+    : Math.min(history.revisions.length - 1, history.activeIndex + 1);
+  return { revisions: history.revisions, activeIndex: nextIndex };
 }

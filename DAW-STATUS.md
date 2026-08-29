@@ -124,7 +124,7 @@ THE MUZES GARDEN DAW
     ├── plain-language edit request workspace .................... DONE 8/29/26
     ├── protected AI edit plan shown before changing music ....... DONE 8/29/26
     ├── approve, reject, revise and explain proposed edits ........ DONE 8/29/26
-    ├── nondestructive source preservation and instant undo ....... STILL TO DO
+    ├── nondestructive source preservation and instant undo ....... DONE 8/29/26
     ├── song-section recognition and named-section selection ...... STILL TO DO
     ├── add, remove, move, copy or extend complete sections ....... STILL TO DO
     ├── generate and place new verse, chorus or bridge sections ... STILL TO DO
@@ -193,6 +193,16 @@ THE MUZES GARDEN DAW
 - Decisions and explanations remain current-tab memory only and are not persisted or sent to an AI provider in this milestone.
 - Focused verbal-request, plan, and decision tests passed (8 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
 - No database migration was required. The next leaf is nondestructive source preservation and instant undo for future executed edits.
+
+## Completed milestone - Verbal Editing Nondestructive Source Preservation And Instant Undo
+
+- An approved verbal plan can now create a separate protected draft over an immutable original-source baseline; rejected or revision-requested plans cannot create drafts.
+- The workspace visibly identifies the locked original and the active protected draft without claiming that audio has been rendered or changed.
+- **Undo to Original** immediately returns the preview pointer to the preserved baseline, and **Redo Draft** returns to the protected draft while retaining the same immutable revision list.
+- Source IDs are stable for the normalized request, draft parentage is explicit, and every revision carries `sourceMutable: false`.
+- Apply Edit remains locked. This milestone establishes revision safety and current-tab preview history only; it does not contact AI, render audio, overwrite sources, publish, export, or activate music.
+- Focused policy tests cover approval gating, immutable parentage, bounded undo, and redo. No database migration was required.
+- The next leaf is song-section recognition and named-section selection.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

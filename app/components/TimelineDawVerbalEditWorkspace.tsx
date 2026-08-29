@@ -5,10 +5,13 @@ import {
   parseTimelineDawVerbalEditRequest,
   createTimelineDawProtectedEditPlan,
   decideTimelineDawVerbalEditPlan,
+  createTimelineDawVerbalRevisionHistory,
+  moveTimelineDawVerbalRevisionHistory,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
   type TimelineDawVerbalPlanDecision,
+  type TimelineDawVerbalRevisionHistory,
 } from "@/lib/timeline/TimelineDawVerbalEditRequestPolicy";
 
 const fieldClass = "w-full rounded-xl border border-white/20 bg-black px-4 py-3 text-white outline-none focus:border-fuchsia-300";
@@ -20,12 +23,14 @@ export default function TimelineDawVerbalEditWorkspace() {
   const [heldRequest, setHeldRequest] = useState<TimelineDawVerbalEditRequest | null>(null);
   const [decisionExplanation, setDecisionExplanation] = useState("");
   const [planDecision, setPlanDecision] = useState<TimelineDawVerbalPlanDecision | null>(null);
+  const [revisionHistory, setRevisionHistory] = useState<TimelineDawVerbalRevisionHistory | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function holdRequest() {
     try {
       setHeldRequest(parseTimelineDawVerbalEditRequest({ instruction, scope, preserveSources: true }));
       setPlanDecision(null);
+      setRevisionHistory(null);
       setDecisionExplanation("");
       setError(null);
     } catch (cause) {
@@ -40,6 +45,7 @@ export default function TimelineDawVerbalEditWorkspace() {
   function decidePlan(decision: TimelineDawVerbalPlanDecision["status"]) {
     try {
       setPlanDecision(decideTimelineDawVerbalEditPlan({ decision, explanation: decisionExplanation }));
+      setRevisionHistory(null);
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The plan decision could not be recorded.");
@@ -81,7 +87,7 @@ export default function TimelineDawVerbalEditWorkspace() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={holdRequest}>Prepare Request for Review</button>
-        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
+        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
       </div>
 
       {error ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">{error}</p> : null}
@@ -123,6 +129,22 @@ export default function TimelineDawVerbalEditWorkspace() {
             <button type="button" className="rounded-xl border border-red-300/40 px-4 py-3 text-sm font-black text-red-100" onClick={() => decidePlan("rejected")}>Reject Plan</button>
           </div>
           {planDecision ? <div className="mt-4 rounded-xl border border-white/15 bg-black/40 p-3" aria-live="polite"><p className="font-black uppercase text-fuchsia-200">{planDecision.status.replace("-", " ")}</p><p className="mt-1 text-sm text-white/70">{planDecision.explanation}</p><p className="mt-2 text-xs font-bold text-emerald-200">Music remains unchanged. This decision cannot execute the edit.</p></div> : null}
+          {planDecision?.status === "approved" && heldRequest ? (
+            <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-300/[0.06] p-4">
+              <p className="font-black text-emerald-200">Nondestructive draft protection</p>
+              <p className="mt-1 text-sm text-white/65">Create a separate draft with a locked original underneath it. This prepares revision safety only; it does not render or alter audio.</p>
+              {!revisionHistory ? <button type="button" className={`${buttonClass} mt-3`} onClick={() => setRevisionHistory(createTimelineDawVerbalRevisionHistory({ request: heldRequest, decision: planDecision }))}>Create Protected Draft</button> : (
+                <div className="mt-3" aria-live="polite">
+                  <p className="text-sm"><b>Now previewing:</b> {revisionHistory.revisions[revisionHistory.activeIndex]?.label}</p>
+                  <p className="mt-1 text-xs font-bold text-emerald-200">Original source locked · {revisionHistory.revisions.length} recoverable revisions</p>
+                  <div className="mt-3 flex gap-2">
+                    <button type="button" className={buttonClass} disabled={revisionHistory.activeIndex === 0} onClick={() => setRevisionHistory(moveTimelineDawVerbalRevisionHistory(revisionHistory, "undo"))}>Undo to Original</button>
+                    <button type="button" className={buttonClass} disabled={revisionHistory.activeIndex === revisionHistory.revisions.length - 1} onClick={() => setRevisionHistory(moveTimelineDawVerbalRevisionHistory(revisionHistory, "redo"))}>Redo Draft</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
           <button type="button" className={`${buttonClass} mt-4`} disabled={!plan.executionAllowed}>Apply Edit</button>
           <p className="mt-2 text-xs text-white/50">Apply Edit remains intentionally locked even after plan approval. Nondestructive execution and undo are separate protected milestones.</p>
         </article>

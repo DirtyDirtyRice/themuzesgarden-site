@@ -3,6 +3,8 @@ import {
   parseTimelineDawVerbalEditRequest,
   createTimelineDawProtectedEditPlan,
   decideTimelineDawVerbalEditPlan,
+  createTimelineDawVerbalRevisionHistory,
+  moveTimelineDawVerbalRevisionHistory,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -87,5 +89,26 @@ describe("DAW verbal edit request policy", () => {
   it("rejects invented decisions and oversized explanations", () => {
     expect(() => decideTimelineDawVerbalEditPlan({ decision: "apply-now" })).toThrow("Choose approve");
     expect(() => decideTimelineDawVerbalEditPlan({ decision: "rejected", explanation: "x".repeat(2_001) })).toThrow("2,000");
+  });
+
+  it("creates a protected draft over an immutable source only after approval", () => {
+    const request = parseTimelineDawVerbalEditRequest({ instruction: "Extend the bridge by four bars.", scope: "section", preserveSources: true });
+    expect(() => createTimelineDawVerbalRevisionHistory({ request, decision: decideTimelineDawVerbalEditPlan({ decision: "rejected", explanation: "Keep the bridge unchanged." }) })).toThrow("Approve");
+    const history = createTimelineDawVerbalRevisionHistory({ request, decision: decideTimelineDawVerbalEditPlan({ decision: "approved" }) });
+    expect(history.activeIndex).toBe(1);
+    expect(history.revisions).toHaveLength(2);
+    expect(history.revisions[0]).toMatchObject({ kind: "immutable-source", sourceMutable: false, parentRevisionId: null });
+    expect(history.revisions[1]).toMatchObject({ kind: "protected-draft", sourceMutable: false, parentRevisionId: history.revisions[0].id });
+    expect(history.revisions[1].sourceId).toBe(history.revisions[0].sourceId);
+  });
+
+  it("undoes instantly to the original and redoes the protected draft", () => {
+    const request = parseTimelineDawVerbalEditRequest({ instruction: "Double the final guitar phrase.", scope: "phrase", preserveSources: true });
+    const history = createTimelineDawVerbalRevisionHistory({ request, decision: decideTimelineDawVerbalEditPlan({ decision: "approved" }) });
+    const undone = moveTimelineDawVerbalRevisionHistory(history, "undo");
+    expect(undone.activeIndex).toBe(0);
+    expect(undone.revisions).toBe(history.revisions);
+    expect(moveTimelineDawVerbalRevisionHistory(undone, "redo").activeIndex).toBe(1);
+    expect(moveTimelineDawVerbalRevisionHistory(undone, "undo").activeIndex).toBe(0);
   });
 });
