@@ -14,6 +14,16 @@ export type TimelineDawVerbalEditRequest = {
   preserveSources: true;
 };
 
+export type TimelineDawProtectedEditPlan = {
+  status: "held-for-review";
+  target: string;
+  interpretation: string;
+  steps: readonly string[];
+  questions: readonly string[];
+  protections: readonly string[];
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -38,5 +48,37 @@ export function summarizeTimelineDawVerbalEditRequest(request: TimelineDawVerbal
     scopeLabel: scope?.label ?? "Music",
     instruction: request.instruction,
     safetyLabel: "Original recordings and approved edits stay unchanged.",
+  };
+}
+
+export function createTimelineDawProtectedEditPlan(request: TimelineDawVerbalEditRequest): TimelineDawProtectedEditPlan {
+  const summary = summarizeTimelineDawVerbalEditRequest(request);
+  const scopeSteps: Record<TimelineDawVerbalEditScope, string> = {
+    "whole-song": "Map the complete arrangement and identify every section affected by the request.",
+    section: "Find the requested song section and confirm its exact start and end boundaries.",
+    track: "Identify the intended tracks or instruments without changing their current routing.",
+    phrase: "Locate the intended phrase, riff, chord, or drum pattern and confirm its exact range.",
+    notes: "Identify the intended notes, pitches, and timing positions before proposing note changes.",
+  };
+  const questions = request.scope === "whole-song"
+    ? ["Which existing parts must remain exactly as they are?"]
+    : ["Which exact occurrence or time range should this affect?"];
+  return {
+    status: "held-for-review",
+    target: summary.scopeLabel,
+    interpretation: request.instruction,
+    steps: [
+      scopeSteps[request.scope],
+      "Analyze the relevant tempo, key, timing, tracks, and approved source material.",
+      "Build a separate nondestructive draft and prepare a before/after audition.",
+      "Stop and show the proposed result; make no music change without musician approval.",
+    ],
+    questions,
+    protections: [
+      "Preserve every original recording and approved edit.",
+      "Do not overwrite, delete, publish, export, or activate a result automatically.",
+      "Keep execution locked while this plan is held for review.",
+    ],
+    executionAllowed: false,
   };
 }

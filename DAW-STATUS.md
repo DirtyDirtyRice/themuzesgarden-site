@@ -122,7 +122,7 @@ THE MUZES GARDEN DAW
 │   └── owner completes seven-step musician sign-off ............ MUST DO
 └── VERBAL EDITING ............................................... STILL TO DO
     ├── plain-language edit request workspace .................... DONE 8/29/26
-    ├── protected AI edit plan shown before changing music ....... STILL TO DO
+    ├── protected AI edit plan shown before changing music ....... DONE 8/29/26
     ├── approve, reject, revise and explain proposed edits ........ STILL TO DO
     ├── nondestructive source preservation and instant undo ....... STILL TO DO
     ├── song-section recognition and named-section selection ...... STILL TO DO
@@ -171,6 +171,17 @@ THE MUZES GARDEN DAW
 - The existing Studio focus and scroll-recall system recognizes Verbal Editing, so returning to the session can restore that work area without storing the request itself.
 - Focused verbal-request and Studio-focus tests passed (8 tests), targeted lint passed, TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required. The next leaf is the protected AI edit plan shown before any music can change.
+
+## Completed milestone - Protected Verbal Edit Plan Preview
+
+- Every validated verbal request now expands into a visible structured plan before any music-changing action becomes available.
+- The plan identifies the selected musical target, presents four ordered analysis/draft/review steps, asks an unresolved targeting question, and lists the protections that govern future execution.
+- Scope-specific planning distinguishes the whole song, a song section, tracks/instruments, phrases/riffs/chords/drums, and individual notes instead of presenting one generic workflow.
+- Every plan is held for review with **Music unchanged** evidence, and **Apply Edit** remains intentionally locked.
+- The planner cannot overwrite, delete, publish, export, activate, or otherwise change original recordings, approved edits, arrangements, mixes, or Library data.
+- The request and plan remain current-tab memory only and are not sent to an AI provider or persisted; provider-backed musical interpretation remains a later milestone behind the same safety boundary.
+- Focused verbal-request and plan tests passed (5 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- No database migration was required. The next leaf is musician approval, rejection, revision, and explanation of the proposed plan.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

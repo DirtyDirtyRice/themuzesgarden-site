@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   parseTimelineDawVerbalEditRequest,
+  createTimelineDawProtectedEditPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
@@ -28,6 +29,7 @@ export default function TimelineDawVerbalEditWorkspace() {
   }
 
   const summary = heldRequest ? summarizeTimelineDawVerbalEditRequest(heldRequest) : null;
+  const plan = heldRequest ? createTimelineDawProtectedEditPlan(heldRequest) : null;
 
   return (
     <section aria-labelledby="verbal-editing-heading" className="rounded-3xl border border-fuchsia-300/25 bg-fuchsia-300/[0.05] p-5">
@@ -74,6 +76,30 @@ export default function TimelineDawVerbalEditWorkspace() {
           <p className="mt-3 text-sm"><b>Scope:</b> {summary.scopeLabel}</p>
           <p className="mt-2 whitespace-pre-wrap text-sm text-white/80">{summary.instruction}</p>
           <p className="mt-3 text-xs font-bold text-emerald-200">{summary.safetyLabel}</p>
+        </article>
+      ) : null}
+      {plan ? (
+        <article className="mt-5 rounded-2xl border border-amber-200/30 bg-amber-200/[0.06] p-4" aria-labelledby="protected-edit-plan-heading">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-amber-200">Protected AI edit plan</p>
+              <h3 id="protected-edit-plan-heading" className="mt-1 text-xl font-black">Held for your review</h3>
+            </div>
+            <span className="rounded-full border border-amber-200/30 px-3 py-1 text-xs font-black uppercase text-amber-100">Music unchanged</span>
+          </div>
+          <p className="mt-3 text-sm"><b>Target:</b> {plan.target}</p>
+          <ol className="mt-4 space-y-2 text-sm text-white/75">
+            {plan.steps.map((step, index) => <li key={step} className="flex gap-3"><span className="font-black text-amber-200">{index + 1}.</span><span>{step}</span></li>)}
+          </ol>
+          <div className="mt-4 rounded-xl border border-white/10 bg-black/30 p-3">
+            <p className="text-xs font-black uppercase tracking-wider text-white/50">Question to resolve before execution</p>
+            {plan.questions.map((question) => <p key={question} className="mt-2 text-sm">{question}</p>)}
+          </div>
+          <ul className="mt-4 space-y-1 text-xs font-bold text-emerald-200">
+            {plan.protections.map((protection) => <li key={protection}>✓ {protection}</li>)}
+          </ul>
+          <button type="button" className={`${buttonClass} mt-4`} disabled={!plan.executionAllowed}>Apply Edit</button>
+          <p className="mt-2 text-xs text-white/50">Apply Edit is intentionally locked. Approval, rejection, revision, and explanation are the next separate milestone.</p>
         </article>
       ) : null}
     </section>
