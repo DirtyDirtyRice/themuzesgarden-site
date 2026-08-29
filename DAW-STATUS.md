@@ -140,6 +140,11 @@ THE MUZES GARDEN DAW
     ├── digital audio rendering and private result audition ....... STILL TO DO
     ├── connected-interface A/D capture workflow .................. STILL TO DO
     ├── connected-interface D/A monitoring workflow ............... STILL TO DO
+    ├── studio hardware inventory and connection detection ........ STILL TO DO
+    ├── step-by-step human cabling, patching and setup guidance .... STILL TO DO
+    ├── hardware safety warnings and confirmation gates ............ STILL TO DO
+    ├── gain, clock, sample-rate and synchronization preflight ..... STILL TO DO
+    ├── pause for required physical action, then verify and resume . STILL TO DO
     ├── analog round-trip latency measurement and compensation .... STILL TO DO
     ├── hardware-unavailable fallback and deferred instructions ... STILL TO DO
     ├── confidence warnings for ambiguous or destructive requests . STILL TO DO
@@ -154,6 +159,7 @@ THE MUZES GARDEN DAW
 - Development proceeds from large musical structures to small details: complete song sections, tracks and instruments, phrases and riffs, chords, and finally individual notes.
 - AI must present a concrete edit plan before execution, preserve private sources, support undo and A/B audition, and warn when a request is musically ambiguous or technically unreliable.
 - Digital edits can run within the DAW. Physical analog capture and playback require a connected audio interface; A/D and D/A conversion, round-trip measurement, and latency compensation become part of the AI-managed workflow when that hardware exists.
+- In a studio, the AI should reuse equipment already in place whenever possible. It must inventory detectable devices, ask only for missing physical information, give one precise cabling/patching/power/gain step at a time, stop at safety-sensitive confirmation points, verify the resulting signal path, and then resume the automated edit.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
