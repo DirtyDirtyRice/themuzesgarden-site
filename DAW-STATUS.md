@@ -1,6 +1,6 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 28, 2026
+Last updated: August 29, 2026
 
 ## Current objective
 
@@ -121,7 +121,7 @@ THE MUZES GARDEN DAW
 │   ├── real-musician end-to-end acceptance gate ......... DONE 8/23/26
 │   └── owner completes seven-step musician sign-off ............ MUST DO
 └── VERBAL EDITING ............................................... STILL TO DO
-    ├── plain-language edit request workspace .................... STILL TO DO
+    ├── plain-language edit request workspace .................... DONE 8/29/26
     ├── protected AI edit plan shown before changing music ....... STILL TO DO
     ├── approve, reject, revise and explain proposed edits ........ STILL TO DO
     ├── nondestructive source preservation and instant undo ....... STILL TO DO
@@ -160,6 +160,17 @@ THE MUZES GARDEN DAW
 - AI must present a concrete edit plan before execution, preserve private sources, support undo and A/B audition, and warn when a request is musically ambiguous or technically unreliable.
 - Digital edits can run within the DAW. Physical analog capture and playback require a connected audio interface; A/D and D/A conversion, round-trip measurement, and latency compensation become part of the AI-managed workflow when that hardware exists.
 - In a studio, the AI should reuse equipment already in place whenever possible. It must inventory detectable devices, ask only for missing physical information, give one precise cabling/patching/power/gain step at a time, stop at safety-sensitive confirmation points, verify the resulting signal path, and then resume the automated edit.
+
+## Completed milestone - Protected Plain-Language Edit Request Workspace
+
+- Studio now includes a dedicated **Verbal Editing** work area after the established recording, arrangement, mixing, recovery, and export workflow.
+- Musicians can describe a desired result in ordinary words and scope it to the whole song, a named section, tracks or instruments, a phrase/riff/chord/drum pattern, or individual notes.
+- **Prepare Request for Review** validates and normalizes the instruction, then holds a clear review summary without contacting AI or changing any audio, arrangement, mix, source recording, or approved edit.
+- Source preservation is mandatory and cannot be disabled; malformed, undersized, oversized, invented-scope, and unprotected requests are rejected.
+- The private instruction remains only in current React memory. It is not written to local storage, a database, logs, URLs, analytics, or the Global Library.
+- The existing Studio focus and scroll-recall system recognizes Verbal Editing, so returning to the session can restore that work area without storing the request itself.
+- Focused verbal-request and Studio-focus tests passed (8 tests), targeted lint passed, TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required. The next leaf is the protected AI edit plan shown before any music can change.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

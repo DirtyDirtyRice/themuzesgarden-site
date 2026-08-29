@@ -5,6 +5,7 @@ export const TIMELINE_DAW_STUDIO_FOCUS_AREAS = [
   { id: "mix", label: "Mix tracks and effects", help: "Set volume, pan, mute, solo, routing, and effects.", musician: true },
   { id: "recover", label: "Save or recover work", help: "Return to a protected checkpoint or recover a take.", musician: true },
   { id: "export", label: "Export the song", help: "Create and download a listening or delivery file.", musician: true },
+  { id: "verbal", label: "Verbal Editing", help: "Describe a protected musical change in ordinary words.", musician: true },
   { id: "guide", label: "Lessons and owner checks", help: "Open learning guides and technical checks.", musician: false },
   { id: "beta", label: "Beta testing tools", help: "Manage musician testing and feedback.", musician: false },
   { id: "mastering", label: "Mastering and support tools", help: "Open advanced normalization and support records.", musician: false },

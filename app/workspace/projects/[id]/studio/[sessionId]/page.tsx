@@ -36,6 +36,7 @@ import TimelineDawBetaReadinessCertification from "@/app/components/TimelineDawB
 import TimelineDawBetaLaunchOperations from "@/app/components/TimelineDawBetaLaunchOperations";
 import TimelineDawStudioFocusRestore from "@/app/components/TimelineDawStudioFocusRestore";
 import TimelineDawSafeExit from "@/app/components/TimelineDawSafeExit";
+import TimelineDawVerbalEditWorkspace from "@/app/components/TimelineDawVerbalEditWorkspace";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -276,6 +277,13 @@ export default function ProjectDawSessionPage() {
         <summary className={workspaceSummaryClass}>Export the song</summary>
         <div id="daw-export-workspace" data-daw-focus-area="export" className="mt-5 scroll-mt-24">
           <ProjectDawExportWorkspace session={session} workspaceRevision={snapshot.workspaceRevision} onWorkspaceRevision={handleWorkspaceRevision} />
+        </div>
+      </details>
+
+      <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
+        <summary className={workspaceSummaryClass}>Verbal Editing <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
+        <div data-daw-focus-area="verbal" className="mt-5 scroll-mt-24">
+          <TimelineDawVerbalEditWorkspace />
         </div>
       </details>
 

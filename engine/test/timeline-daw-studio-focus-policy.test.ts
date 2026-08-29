@@ -11,7 +11,7 @@ describe("DAW Studio focus policy", () => {
 
   it("puts essential musician destinations before advanced owner tools", () => {
     const musician = TIMELINE_DAW_STUDIO_FOCUS_AREAS.filter((area) => area.musician);
-    expect(musician.map((area) => area.id)).toEqual(["transport", "arrange", "record", "mix", "recover", "export"]);
+    expect(musician.map((area) => area.id)).toEqual(["transport", "arrange", "record", "mix", "recover", "export", "verbal"]);
     expect(musician.every((area) => area.help.length >= 20)).toBe(true);
     expect(findTimelineDawStudioFocusArea("arrange")?.label).toContain("MIDI");
     expect(findTimelineDawStudioFocusArea("unknown")).toBeNull();
@@ -22,6 +22,7 @@ describe("DAW Studio focus policy", () => {
     expect(order.indexOf("transport")).toBeLessThan(order.indexOf("record"));
     expect(order.indexOf("record")).toBeLessThan(order.indexOf("mix"));
     expect(order.indexOf("mix")).toBeLessThan(order.indexOf("export"));
+    expect(order.indexOf("export")).toBeLessThan(order.indexOf("verbal"));
   });
 
   it("scopes browser focus state to one session", () => {
