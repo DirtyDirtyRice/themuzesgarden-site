@@ -65,7 +65,8 @@ THE MUZES GARDEN DAW
 │   ├── import, waveform, move, trim, split, repeat, fades ..... DONE
 │   ├── selection, group editing, undo/redo and snapshots ...... DONE
 │   ├── track locking, colors and keyboard shortcuts .... DONE 8/21/26
-│   └── track folders and collapsible arrangement groups  DONE 8/21/26
+│   ├── track folders and collapsible arrangement groups  DONE 8/21/26
+│   └── reversible selected-track WAV consolidation ...... DONE 8/28/26
 ├── Regions
 │   ├── name sections (Verse, Chorus, Solo, etc.) ....... DONE 8/21/26
 │   ├── color-coded bounded start/end regions ........... DONE 8/21/26
@@ -120,6 +121,14 @@ THE MUZES GARDEN DAW
     ├── real-musician end-to-end acceptance gate ......... DONE 8/23/26
     └── owner completes seven-step musician sign-off ............ MUST DO
 ```
+
+## Completed milestone - Reversible Selected-Track WAV Consolidation
+
+- Musicians can select two or more private audio tracks and use **Consolidate Selected Tracks** from the existing group-edit area.
+- The selected tracks are routed through a dedicated private bus and rendered as one checksum-verified WAV replacement using the established freeze engine.
+- Every source recording, edit, and route remains private and recoverable; unfreezing restores live processing, and failed renders compensate by restoring the original routes and removing the temporary bus.
+- Consolidation policy tests passed (2 tests), targeted lint passed with only seven pre-existing hook warnings in the large lane component, and TypeScript passed.
+- No database migration or authorization-policy change was required.
 
 ## Latest completed DAW milestone - Chrome Production Transport Timing QA
 

@@ -20,6 +20,7 @@ import {
   saveDawPrivateInsert,
   loadDawPrivateLaneWaveform,
   loadDawPrivateFreezes,
+  freezeDawPrivateProcessing,
   removeDawPrivateAudioLane,
   renameDawPrivateAudioLane,
   saveDawPrivateBus,
@@ -86,6 +87,7 @@ import { addTimelineDawTrackRegionLabel, createTimelineDawTrackRegionLoopNextInd
 import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimelineDawTrackFolder, renameTimelineDawTrackFolder, resolveTimelineDawTrackFolderPlayback, toggleTimelineDawTrackFolder, updateTimelineDawTrackFolderMix, type TimelineDawTrackFolders } from "@/lib/timeline/TimelineDawTrackFolderPolicy";
 import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, jumpTimelineDawTrackFolderSendFocus, nudgeTimelineDawTrackFolderSendLevelDb, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, toggleTimelineDawTrackFolderSendFocusReference, updateTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 import { createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, orderTimelineDawSessionScenes, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionScenePlayCount, type TimelineDawSessionFollowAction, type TimelineDawSessionLaunchQuantization, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
+import { createTimelineDawTrackConsolidationPlan } from "@/lib/timeline/TimelineDawTrackConsolidationPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -1075,6 +1077,40 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     catch (cause) { setError(cause instanceof Error ? cause.message : "Folder send could not be removed."); }
     finally { setBusy(false); }
   }
+
+  async function consolidateSelectedTracks() {
+    if ([...selectedIds].some((laneId) => lockedIds.has(laneId))) {
+      setMovementNotice("One or more selected tracks are locked. Unlock them before consolidating.");
+      return;
+    }
+    const selected = lanes.filter((lane) => selectedIds.has(lane.id));
+    const plan = createTimelineDawTrackConsolidationPlan(selected.map((lane) => lane.id));
+    const originalRoutes = new Map(selected.map((lane) => [lane.id, lane.busId]));
+    let createdBus: DawPrivateBus | undefined;
+    setBusy(true); setError(undefined); setMovementNotice(undefined);
+    try {
+      const { bus } = await saveDawPrivateBus(sessionId, { name: plan.busName, muted: false, soloed: false, gain: 1, pan: 0 });
+      createdBus = bus;
+      const { lanes: assignments } = await assignDawPrivateFolderBus(sessionId, plan.laneIds, bus.id);
+      const { freeze } = await freezeDawPrivateProcessing(sessionId, "bus", bus.id);
+      const assignedById = new Map(assignments.map((assignment) => [assignment.laneId, assignment]));
+      setBuses((current) => [...current.filter((candidate) => candidate.id !== bus.id), bus]);
+      setLanes((current) => current.map((lane) => {
+        const assignment = assignedById.get(lane.id);
+        return assignment ? { ...lane, busId: assignment.busId, updatedAt: assignment.updatedAt } : lane;
+      }));
+      setFreezes((current) => [...current.filter((candidate) => !(candidate.sourceKind === "bus" && candidate.sourceId === bus.id)), freeze]);
+      setSelectedIds(new Set());
+      setHistoryRevision((current) => current + 1);
+      setMovementNotice(`${plan.laneIds.length} tracks were consolidated into one checksum-verified WAV render. Their private source tracks remain preserved and editable after unfreezing.`);
+    } catch (cause) {
+      if (createdBus) {
+        await Promise.allSettled(selected.map((lane) => assignDawPrivateLaneBus(sessionId, lane.id, originalRoutes.get(lane.id) ?? null)));
+        await deleteDawPrivateBus(sessionId, createdBus.id).catch(() => undefined);
+      }
+      setError(cause instanceof Error ? cause.message : "Selected tracks could not be consolidated.");
+    } finally { setBusy(false); }
+  }
   async function persistInsert(input: Omit<DawPrivateInsert, "id"> & { id?: string }) { setError(undefined); try { const { insert } = await saveDawPrivateInsert(sessionId, input); setInserts((current) => [...current.filter((item) => item.id !== insert.id && !(item.sourceKind === insert.sourceKind && item.sourceId === insert.sourceId && item.slot === insert.slot)), insert]); } catch (cause) { setError(cause instanceof Error ? cause.message : "Private insert could not be saved."); } }
   async function applyGroupEdit(edit: PrivateLaneGroupEditInput, successMessage?: string) {
     if ([...selectedIds].some((laneId) => lockedIds.has(laneId))) {
@@ -1308,8 +1344,9 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "sequence" }, `${selectedIds.size} selected tracks now play one after another.`)}>Place Selected One After Another</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 0.1 }, `${selectedIds.size} selected tracks now have a 0.1-second space between them.`)}>Place Selected with 0.1 Second Gaps</button>
           <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void applyGroupEdit({ groupAction: "sequence", sequenceGapSeconds: 1 }, `${selectedIds.size} selected tracks now have a 1-second space between them.`)}>Place Selected with 1 Second Gaps</button>
+          <button type="button" className={button} disabled={busy || selectedIds.size < 2} onClick={() => void consolidateSelectedTracks()}>Consolidate Selected Tracks</button>
         </div>
-        <p className="mt-2 text-xs text-white/55">Check two or more tracks below. Move keeps their spacing. Align layers their starts or endings. Place makes a continuous sequence—or adds a short or full-second pause—in their current order.</p>
+        <p className="mt-2 text-xs text-white/55">Check two or more tracks below. Move keeps their spacing. Align layers their starts or endings. Place makes a continuous sequence—or adds a short or full-second pause—in their current order. Consolidate creates one checksum-verified WAV replacement while preserving every private source track for unfreeze.</p>
         <p className="mt-2 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white/65"><strong>Selected-track keyboard:</strong> L locks or unlocks one selected track · H hears or stops one selected track. Shortcuts stay off while typing in any field or menu.</p>
       </div>
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
