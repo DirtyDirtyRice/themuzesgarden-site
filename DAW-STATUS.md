@@ -115,12 +115,45 @@ THE MUZES GARDEN DAW
 ├── Export
 │   ├── private WAV/MP3 render, stems ZIP and interchange ....... DONE
 │   └── musician export presets and loudness targets ............ DONE
-└── Final production readiness
-    ├── large-session performance and memory pass ........ DONE 8/23/26
-    ├── accessibility and keyboard-command completion .... DONE 8/23/26
-    ├── real-musician end-to-end acceptance gate ......... DONE 8/23/26
-    └── owner completes seven-step musician sign-off ............ MUST DO
+├── Final production readiness
+│   ├── large-session performance and memory pass ........ DONE 8/23/26
+│   ├── accessibility and keyboard-command completion .... DONE 8/23/26
+│   ├── real-musician end-to-end acceptance gate ......... DONE 8/23/26
+│   └── owner completes seven-step musician sign-off ............ MUST DO
+└── VERBAL EDITING ............................................... STILL TO DO
+    ├── plain-language edit request workspace .................... STILL TO DO
+    ├── protected AI edit plan shown before changing music ....... STILL TO DO
+    ├── approve, reject, revise and explain proposed edits ........ STILL TO DO
+    ├── nondestructive source preservation and instant undo ....... STILL TO DO
+    ├── song-section recognition and named-section selection ...... STILL TO DO
+    ├── add, remove, move, copy or extend complete sections ....... STILL TO DO
+    ├── generate and place new verse, chorus or bridge sections ... STILL TO DO
+    ├── arrangement-aware transitions into generated sections .... STILL TO DO
+    ├── instrument and track selection by spoken description ...... STILL TO DO
+    ├── double or triple an existing musical performance .......... STILL TO DO
+    ├── tonic, key, scale and chord-aware interval instructions ... STILL TO DO
+    ├── harmonize selected material by third, fifth or interval ... STILL TO DO
+    ├── apply different instruments only to named time ranges ..... STILL TO DO
+    ├── phrase, riff, chord and individual-note verbal editing .... STILL TO DO
+    ├── MIDI-note generation and exact pitch/timing editing ........ STILL TO DO
+    ├── audio-to-MIDI or note-analysis assistance where reliable .. STILL TO DO
+    ├── digital audio rendering and private result audition ....... STILL TO DO
+    ├── connected-interface A/D capture workflow .................. STILL TO DO
+    ├── connected-interface D/A monitoring workflow ............... STILL TO DO
+    ├── analog round-trip latency measurement and compensation .... STILL TO DO
+    ├── hardware-unavailable fallback and deferred instructions ... STILL TO DO
+    ├── confidence warnings for ambiguous or destructive requests . STILL TO DO
+    ├── before/after A/B comparison and editable AI history ........ STILL TO DO
+    └── musician acceptance testing from sections down to notes ... STILL TO DO
 ```
+
+## Planned branch - VERBAL EDITING
+
+- Added to the DAW tree on August 29, 2026.
+- The guiding principle is that musical intentions can be described with words and translated into protected, reviewable editing operations.
+- Development proceeds from large musical structures to small details: complete song sections, tracks and instruments, phrases and riffs, chords, and finally individual notes.
+- AI must present a concrete edit plan before execution, preserve private sources, support undo and A/B audition, and warn when a request is musically ambiguous or technically unreliable.
+- Digital edits can run within the DAW. Physical analog capture and playback require a connected audio interface; A/D and D/A conversion, round-trip measurement, and latency compensation become part of the AI-managed workflow when that hardware exists.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
