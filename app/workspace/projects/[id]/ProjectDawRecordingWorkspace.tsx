@@ -62,6 +62,7 @@ import {
   assessTimelineDawMultiInputReadiness,
   createTimelineDawArmedInputRoute,
   type TimelineDawArmedInputRoute,
+  synchronizeTimelineDawCapturedChannels,
 } from "@/lib/timeline/TimelineDawMultiTrackRecordingPlan";
 
 
@@ -82,6 +83,14 @@ type RecoverableRecording = {
   mp3Url?: string;
   failure: string;
 };
+type MultiTrackCaptureNode = {
+  route: TimelineDawArmedInputRoute;
+  stream: MediaStream;
+  source: MediaStreamAudioSourceNode;
+  processor: ScriptProcessorNode;
+  silence: GainNode;
+  capture: TimelineDawPcmCaptureBuffer;
+};
 
 export default function ProjectDawRecordingWorkspace({ session }: { session: DawSession }) {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -91,6 +100,10 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [armedInputRoutes, setArmedInputRoutes] = useState<TimelineDawArmedInputRoute[]>([]);
   const [multiInputTestBusy, setMultiInputTestBusy] = useState(false);
   const [multiInputTestNotice, setMultiInputTestNotice] = useState<string | null>(null);
+  const [multiTrackRecording, setMultiTrackRecording] = useState(false);
+  const [multiTrackSaving, setMultiTrackSaving] = useState(false);
+  const [multiTrackNotice, setMultiTrackNotice] = useState<string | null>(null);
+  const [multiTrackRecovery, setMultiTrackRecovery] = useState<Array<{ name: string; url: string }>>([]);
   const [takeName, setTakeName] = useState(`${session.name} Take 1`);
   const [outputFormat, setOutputFormat] = useState<"wav" | "mp3">("wav");
   const [recordingMode, setRecordingMode] = useState<DawRecordingPlan["mode"]>("normal");
@@ -141,6 +154,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [maxTakeMinutes, setMaxTakeMinutes] = useState(30);
   const [storageHealth, setStorageHealth] = useState<TimelineDawRecordingStorageHealth>(() => assessTimelineDawRecordingStorage({ supported: false, persisted: false, quotaBytes: null, usageBytes: null, maxTakeMinutes: 30 }));
   const [storageBusy, setStorageBusy] = useState(false);
+  const multiTrackCaptureNodesRef = useRef<MultiTrackCaptureNode[]>([]);
+  const multiTrackContextRef = useRef<AudioContext | null>(null);
+  const multiTrackCaptureActiveRef = useRef(false);
   const multiTrackPlan = assessTimelineDawMultiTrackRecordingPlan({
     routes: armedInputRoutes,
     availableInputIds: devices.map((device) => device.deviceId),
@@ -216,6 +232,109 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop()));
       if (context && context.state !== "closed") await context.close();
       setMultiInputTestBusy(false);
+    }
+  }
+
+  async function releaseMultiTrackCapture() {
+    multiTrackCaptureActiveRef.current = false;
+    for (const node of multiTrackCaptureNodesRef.current) {
+      node.processor.disconnect();
+      node.source.disconnect();
+      node.silence.disconnect();
+      node.stream.getTracks().forEach((track) => track.stop());
+    }
+    multiTrackCaptureNodesRef.current = [];
+    const context = multiTrackContextRef.current;
+    multiTrackContextRef.current = null;
+    if (context && context.state !== "closed") await context.close();
+  }
+
+  async function startMultiTrackCapture() {
+    if (!multiTrackPlan.ready || armedInputRoutes.length < 2 || recording || uploading || multiTrackRecording || multiTrackSaving) return;
+    setError(null);
+    setMultiTrackNotice(null);
+    multiTrackRecovery.forEach((item) => URL.revokeObjectURL(item.url));
+    setMultiTrackRecovery([]);
+    try {
+      const streams = await Promise.all(armedInputRoutes.map(async (route) => ({
+        route,
+        stream: await navigator.mediaDevices.getUserMedia({ audio: {
+          deviceId: { exact: route.inputId }, channelCount: { ideal: 2 },
+          echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+        } }),
+      })));
+      const context = new AudioContext({ latencyHint: "interactive" });
+      await context.resume();
+      multiTrackContextRef.current = context;
+      multiTrackCaptureNodesRef.current = streams.map(({ route, stream }) => {
+        const source = context.createMediaStreamSource(stream);
+        const channelCount = Math.max(1, Math.min(2, stream.getAudioTracks()[0]?.getSettings().channelCount ?? source.channelCount ?? 1));
+        const capture = new TimelineDawPcmCaptureBuffer(context.sampleRate, channelCount, context.sampleRate * 60 * maxTakeMinutes);
+        const processor = context.createScriptProcessor(4096, channelCount, channelCount);
+        const silence = context.createGain();
+        silence.gain.value = 0;
+        processor.onaudioprocess = (event) => {
+          if (!multiTrackCaptureActiveRef.current) return;
+          try {
+            const channels = Array.from({ length: channelCount }, (_, channel) => new Float32Array(event.inputBuffer.getChannelData(channel)));
+            capture.appendBounded(channels);
+          } catch (cause) {
+            captureErrorRef.current = cause instanceof Error ? cause : new Error("Multi-track PCM capture failed.");
+          }
+        };
+        source.connect(processor); processor.connect(silence); silence.connect(context.destination);
+        return { route, stream, source, processor, silence, capture };
+      });
+      captureErrorRef.current = null;
+      multiTrackCaptureActiveRef.current = true;
+      setMultiTrackRecording(true);
+      setMultiTrackNotice(`${armedInputRoutes.length} tracks are recording together.`);
+    } catch (cause) {
+      await releaseMultiTrackCapture();
+      setError(cause instanceof Error ? cause.message : "Multi-track recording could not start.");
+    }
+  }
+
+  async function stopMultiTrackCapture() {
+    if (!multiTrackRecording || multiTrackSaving) return;
+    multiTrackCaptureActiveRef.current = false;
+    setMultiTrackRecording(false);
+    setMultiTrackSaving(true);
+    setError(null);
+    const nodes = multiTrackCaptureNodesRef.current;
+    try {
+      if (captureErrorRef.current) throw captureErrorRef.current;
+      const synchronized = synchronizeTimelineDawCapturedChannels(nodes.map((node) => ({
+        trackName: node.route.trackName,
+        channels: node.capture.finalizePcm().channels,
+        sampleRate: node.capture.sampleRate,
+      })));
+      await releaseMultiTrackCapture();
+      const groupId = globalThis.crypto?.randomUUID?.() ?? `multi-${Date.now()}`;
+      const files = synchronized.map((capture) => {
+        const wav = encodeTimelineDawPcmWav(capture.channels, capture.sampleRate);
+        const safeTrack = capture.trackName.trim().replace(/[^a-zA-Z0-9._-]+/g, "-") || "record-track";
+        return { capture, file: new File([wav.bytes.slice().buffer], `${safeTrack}-${groupId.slice(0, 8)}.wav`, { type: "audio/wav" }) };
+      });
+      const recovery = files.map(({ file }) => ({ name: file.name, url: URL.createObjectURL(file) }));
+      setMultiTrackRecovery(recovery);
+      const recordingPlan: DawRecordingPlan = { mode: "normal", countInBars: 0, beatsPerBar, bpm, rangeStartFrame: 0, rangeEndFrame: null, loopPasses: 1, groupId, countInCaptured: false };
+      const registered: DawRecordingTake[] = [];
+      for (const { file } of files) {
+        const uploaded = await uploadDawRenderSource(session.id, file);
+        const result = await registerDawRecordingTake(session.id, uploaded, recordingPlan);
+        registered.push(result.take);
+        window.dispatchEvent(new CustomEvent<DawRecordedSourceEventDetail>(DAW_RECORDED_SOURCE_EVENT, { detail: uploaded }));
+      }
+      setTakes((current) => [...registered, ...current]);
+      recovery.forEach((item) => URL.revokeObjectURL(item.url));
+      setMultiTrackRecovery([]);
+      setMultiTrackNotice(`${files.length} synchronized private WAV tracks saved with ${synchronized[0].frameCount.toLocaleString()} frames each.`);
+    } catch (cause) {
+      await releaseMultiTrackCapture();
+      setError(cause instanceof Error ? `${cause.message} Local WAV recovery downloads remain available below.` : "Multi-track save failed. Local WAV recovery downloads remain available below.");
+    } finally {
+      setMultiTrackSaving(false);
     }
   }
   const streamRef = useRef<MediaStream | null>(null);
@@ -376,18 +495,20 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     mp3UrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     if (recoveryUrlRef.current) URL.revokeObjectURL(recoveryUrlRef.current);
     interruptionCleanupRef.current?.();
+    void releaseMultiTrackCapture();
+    multiTrackRecovery.forEach((item) => URL.revokeObjectURL(item.url));
   }, []);
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(TIMELINE_DAW_LOCAL_ACTIVITY_EVENT, {
-      detail: { sessionId: session.id, recording: recording || countingIn, uploading },
+      detail: { sessionId: session.id, recording: recording || countingIn || multiTrackRecording, uploading: uploading || multiTrackSaving },
     }));
     return () => {
       window.dispatchEvent(new CustomEvent(TIMELINE_DAW_LOCAL_ACTIVITY_EVENT, {
         detail: { sessionId: session.id, recording: false, uploading: false },
       }));
     };
-  }, [countingIn, recording, session.id, uploading]);
+  }, [countingIn, multiTrackRecording, multiTrackSaving, recording, session.id, uploading]);
 
   function appendCaptureBlock(capture: TimelineDawPcmCaptureBuffer, channels: Float32Array[]) {
     if (captureLimitReachedRef.current) return;
@@ -1098,7 +1219,13 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         </p>
         <button type="button" className={`${button} mt-3`} disabled={!multiTrackPlan.ready || multiInputTestBusy || recording || uploading} onClick={() => void testArmedInputsTogether()}>{multiInputTestBusy ? "Testing Armed Inputs Together..." : "Test Armed Inputs Together"}</button>
         {multiInputTestNotice ? <p className="mt-3 text-xs font-bold text-emerald-200" role="status">{multiInputTestNotice}</p> : null}
-        <p className="mt-2 text-xs text-white/45">Simultaneous permission, signal, and start-boundary testing are ready. Synchronized separate-track capture and save are the next recording milestone.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {!multiTrackRecording ? <button type="button" className={button} disabled={!multiTrackPlan.ready || armedInputRoutes.length < 2 || multiInputTestBusy || recording || uploading || multiTrackSaving} onClick={() => void startMultiTrackCapture()}>Start Multi-Track Recording</button> : null}
+          {multiTrackRecording ? <button type="button" className={button} onClick={() => void stopMultiTrackCapture()}>Stop and Save All Tracks</button> : null}
+        </div>
+        {multiTrackNotice ? <p className="mt-3 text-xs font-bold text-violet-100" role="status">{multiTrackSaving ? "Saving synchronized private tracks..." : multiTrackNotice}</p> : null}
+        {multiTrackRecovery.length ? <div className="mt-3 rounded-lg border border-amber-300/30 p-3"><p className="text-xs font-black text-amber-200">Local multi-track recovery</p><div className="mt-2 flex flex-wrap gap-2">{multiTrackRecovery.map((item) => <a key={item.url} className="rounded-lg border border-white/20 px-3 py-2 text-xs font-black" href={item.url} download={item.name}>Download {item.name}</a>)}</div></div> : null}
+        <p className="mt-2 text-xs text-white/45">Every armed input records to a separate synchronized 24-bit WAV and saves privately as one take group.</p>
       </div>
       <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-300/[0.05] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

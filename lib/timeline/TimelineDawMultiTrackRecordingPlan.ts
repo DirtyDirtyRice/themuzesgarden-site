@@ -17,6 +17,16 @@ export type TimelineDawMultiInputReadinessResult = {
   errors: string[];
 };
 
+export function synchronizeTimelineDawCapturedChannels<T extends { trackName: string; channels: Float32Array[] }>(captures: T[]): Array<T & { frameCount: number }> {
+  if (captures.length < 2) throw new Error("At least two input captures are required.");
+  if (captures.some((capture) => !capture.channels.length || !capture.channels[0]?.length)) throw new Error("Every input capture must contain audio.");
+  const frameCount = Math.min(...captures.map((capture) => capture.channels[0].length));
+  return captures.map((capture) => {
+    if (capture.channels.some((channel) => channel.length < frameCount)) throw new Error(`${capture.trackName} contains mismatched channel lengths.`);
+    return { ...capture, channels: capture.channels.map((channel) => channel.slice(0, frameCount)), frameCount };
+  });
+}
+
 export function createTimelineDawArmedInputRoute(input: TimelineDawArmedInputRoute): TimelineDawArmedInputRoute {
   return {
     id: input.id.trim(),

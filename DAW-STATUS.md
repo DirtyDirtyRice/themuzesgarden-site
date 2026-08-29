@@ -24,7 +24,7 @@ THE MUZES GARDEN DAW
 │   ├── Chrome production timing QA ......................... DONE 8/28/26
 │   ├── Edge/Firefox production QA ........ DEFERRED — owner chose Chrome only
 │   └── physical MIDI-controller QA ........ DEFERRED — hardware unavailable
-├── Recording ........................................ PARTIALLY DONE
+├── Recording ........................................ SOFTWARE COMPLETE
 │   ├── input device discovery and preflight .......... DONE — date not recorded
 │   ├── latency-aware monitoring ...................... DONE — date not recorded
 │   ├── count-in and recording metronome .............. DONE — date not recorded
@@ -36,7 +36,7 @@ THE MUZES GARDEN DAW
 │   ├── nondestructive take comp recipes .............. DONE — date not recorded
 │   ├── multi-track arm and input-route validation .... DONE 8/28/26
 │   ├── simultaneous input readiness and start test ... DONE 8/28/26
-│   └── synchronized multi-input capture and save ..... STILL TO DO
+│   └── synchronized multi-input capture and save ..... DONE 8/28/26
 ├── Tracks and arrangement
 │   ├── import, waveform, move, trim, split, repeat, fades ..... DONE
 │   ├── selection, group editing, undo/redo and snapshots ...... DONE
@@ -2794,6 +2794,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused multi-track route and readiness tests passed (4 tests), new-file lint passed, and TypeScript passed.
 - Synchronized separate-track PCM capture and private save remain the next honest Recording milestone.
 - No database migration was required.
+
+## Completed milestone - Synchronized Multi-Input Capture and Private Save
+
+- Two or more explicitly armed inputs can now record concurrently through one shared browser audio clock and one gated start boundary.
+- Every input is captured into its own bounded PCM buffer and encoded as a separate 24-bit WAV; trailing audio-callback differences are trimmed to one exact shared frame count.
+- All resulting private takes share one recording group ID, while track-derived filenames preserve which input belongs to which recorded part.
+- The workflow opens and closes every device stream explicitly and prevents the existing single-input recorder from running at the same time.
+- If private upload or take registration fails, local WAV recovery downloads remain available for every captured track instead of discarding the performance.
+- Focused multi-track planning, readiness, and synchronization tests passed (5 tests), new-file lint passed, TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required; the milestone reuses existing owner/session-scoped private source uploads and take registration.
 
 ## Working rules
 

@@ -3,6 +3,7 @@ import {
   assessTimelineDawMultiTrackRecordingPlan,
   assessTimelineDawMultiInputReadiness,
   createTimelineDawArmedInputRoute,
+  synchronizeTimelineDawCapturedChannels,
 } from "../../lib/timeline/TimelineDawMultiTrackRecordingPlan";
 
 describe("multi-track recording plan", () => {
@@ -51,5 +52,15 @@ describe("multi-track recording plan", () => {
       "Not every armed input opened successfully.",
       "Vocal did not receive a usable signal.",
     ]));
+  });
+
+  it("gives every separately captured track one exact saved duration", () => {
+    const synchronized = synchronizeTimelineDawCapturedChannels([
+      { trackName: "Vocal", channels: [new Float32Array(48010)] },
+      { trackName: "Guitar", channels: [new Float32Array(48000), new Float32Array(48000)] },
+    ]);
+    expect(synchronized.map((capture) => capture.frameCount)).toEqual([48000, 48000]);
+    expect(synchronized[0].channels[0]).toHaveLength(48000);
+    expect(() => synchronizeTimelineDawCapturedChannels([{ trackName: "Only", channels: [new Float32Array(2)] }])).toThrow("At least two input captures are required.");
   });
 });
