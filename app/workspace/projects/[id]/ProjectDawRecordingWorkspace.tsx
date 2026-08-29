@@ -59,6 +59,7 @@ import { createTimelineDawTakeArrangementPlacement } from "@/lib/timeline/Timeli
 import TimelineDawTakeCompWorkspace from "@/app/components/TimelineDawTakeCompWorkspace";
 import {
   assessTimelineDawMultiTrackRecordingPlan,
+  assessTimelineDawMultiInputReadiness,
   createTimelineDawArmedInputRoute,
   type TimelineDawArmedInputRoute,
 } from "@/lib/timeline/TimelineDawMultiTrackRecordingPlan";
@@ -88,6 +89,8 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [deviceId, setDeviceId] = useState("");
   const [armTrackName, setArmTrackName] = useState("Record Track 1");
   const [armedInputRoutes, setArmedInputRoutes] = useState<TimelineDawArmedInputRoute[]>([]);
+  const [multiInputTestBusy, setMultiInputTestBusy] = useState(false);
+  const [multiInputTestNotice, setMultiInputTestNotice] = useState<string | null>(null);
   const [takeName, setTakeName] = useState(`${session.name} Take 1`);
   const [outputFormat, setOutputFormat] = useState<"wav" | "mp3">("wav");
   const [recordingMode, setRecordingMode] = useState<DawRecordingPlan["mode"]>("normal");
@@ -163,6 +166,57 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
     setError(null);
     setArmedInputRoutes(assessment.routes);
     setArmTrackName(`Record Track ${assessment.routes.length + 1}`);
+    setMultiInputTestNotice(null);
+  }
+
+  async function testArmedInputsTogether() {
+    if (!multiTrackPlan.ready || multiInputTestBusy || recording || uploading) return;
+    setError(null);
+    setMultiInputTestNotice(null);
+    setMultiInputTestBusy(true);
+    const streams: MediaStream[] = [];
+    let context: AudioContext | null = null;
+    try {
+      const opened = await Promise.all(armedInputRoutes.map(async (route) => {
+        const requestedAtMs = performance.now();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: {
+          deviceId: { exact: route.inputId },
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        } });
+        streams.push(stream);
+        return { route, stream, startedAtMs: performance.now(), requestedAtMs };
+      }));
+      context = new AudioContext({ latencyHint: "interactive" });
+      await context.resume();
+      const measurements = await Promise.all(opened.map(async ({ route, stream, startedAtMs }) => {
+        const source = context!.createMediaStreamSource(stream);
+        const analyser = context!.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        const samples = new Float32Array(analyser.fftSize);
+        let peak = 0;
+        const finishAt = performance.now() + 1200;
+        while (performance.now() < finishAt) {
+          analyser.getFloatTimeDomainData(samples);
+          for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
+          await new Promise((resolve) => window.setTimeout(resolve, 40));
+        }
+        source.disconnect();
+        analyser.disconnect();
+        return { trackName: route.trackName, peakDbfs: peak > 0 ? 20 * Math.log10(peak) : -96, startedAtMs };
+      }));
+      const result = assessTimelineDawMultiInputReadiness({ measurements, expectedRouteCount: armedInputRoutes.length });
+      if (!result.ready) throw new Error(result.errors[0] ?? "The armed inputs are not ready together.");
+      setMultiInputTestNotice(`${armedInputRoutes.length} inputs opened together with ${result.maximumStartSkewMs.toFixed(1)} ms maximum start skew and usable signal on every route.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The armed inputs could not be tested together.");
+    } finally {
+      streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop()));
+      if (context && context.state !== "closed") await context.close();
+      setMultiInputTestBusy(false);
+    }
   }
   const streamRef = useRef<MediaStream | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
@@ -1034,7 +1088,7 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
             {armedInputRoutes.map((route) => (
               <div key={route.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm">
                 <span><strong>{route.trackName}</strong> ← {route.inputLabel}</span>
-                <button type="button" className="rounded-lg border border-white/20 px-3 py-1 text-xs font-black" disabled={recording || uploading} onClick={() => setArmedInputRoutes((current) => current.filter((candidate) => candidate.id !== route.id))}>Disarm</button>
+                <button type="button" className="rounded-lg border border-white/20 px-3 py-1 text-xs font-black" disabled={recording || uploading || multiInputTestBusy} onClick={() => { setArmedInputRoutes((current) => current.filter((candidate) => candidate.id !== route.id)); setMultiInputTestNotice(null); }}>Disarm</button>
               </div>
             ))}
           </div>
@@ -1042,7 +1096,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <p className={`mt-3 text-xs font-bold ${multiTrackPlan.ready ? "text-emerald-200" : "text-amber-200"}`} role="status">
           {multiTrackPlan.ready ? `${armedInputRoutes.length} recording track${armedInputRoutes.length === 1 ? "" : "s"} safely armed.` : multiTrackPlan.errors[0]}
         </p>
-        <p className="mt-2 text-xs text-white/45">Route planning and safeguards are ready. Simultaneous live capture will be connected in the next recording milestone.</p>
+        <button type="button" className={`${button} mt-3`} disabled={!multiTrackPlan.ready || multiInputTestBusy || recording || uploading} onClick={() => void testArmedInputsTogether()}>{multiInputTestBusy ? "Testing Armed Inputs Together..." : "Test Armed Inputs Together"}</button>
+        {multiInputTestNotice ? <p className="mt-3 text-xs font-bold text-emerald-200" role="status">{multiInputTestNotice}</p> : null}
+        <p className="mt-2 text-xs text-white/45">Simultaneous permission, signal, and start-boundary testing are ready. Synchronized separate-track capture and save are the next recording milestone.</p>
       </div>
       <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-300/[0.05] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

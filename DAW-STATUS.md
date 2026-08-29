@@ -35,7 +35,8 @@ THE MUZES GARDEN DAW
 │   ├── saved-take review and preference .............. DONE — date not recorded
 │   ├── nondestructive take comp recipes .............. DONE — date not recorded
 │   ├── multi-track arm and input-route validation .... DONE 8/28/26
-│   └── simultaneous multi-input capture .............. STILL TO DO
+│   ├── simultaneous input readiness and start test ... DONE 8/28/26
+│   └── synchronized multi-input capture and save ..... STILL TO DO
 ├── Tracks and arrangement
 │   ├── import, waveform, move, trim, split, repeat, fades ..... DONE
 │   ├── selection, group editing, undo/redo and snapshots ...... DONE
@@ -2783,6 +2784,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 - Focused route-planning tests passed (3 tests), TypeScript passed, new-file lint passed, and the production build passed with 76 generated pages.
 - The Recording screen still has four pre-existing React effect lint findings outside this milestone; no new lint finding was introduced by the route engine or its tests.
 - No database migration or persistent device-label storage was added.
+
+## Completed milestone - Simultaneous Recording Input Readiness
+
+- Musicians can now test every armed recording input in one deliberate browser action before starting a multi-input take.
+- The DAW opens all distinct devices concurrently, samples every route for usable signal, measures the maximum device-open start skew, and closes every temporary stream after the test.
+- Readiness is held if any input permission fails, any expected route is missing, any route is effectively silent, or device-open skew exceeds the 50 ms safety limit.
+- The result reports the tested route count and measured maximum skew without persisting private device labels or microphone samples.
+- Focused multi-track route and readiness tests passed (4 tests), new-file lint passed, and TypeScript passed.
+- Synchronized separate-track PCM capture and private save remain the next honest Recording milestone.
+- No database migration was required.
 
 ## Working rules
 

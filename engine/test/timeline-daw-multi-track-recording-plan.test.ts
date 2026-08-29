@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assessTimelineDawMultiTrackRecordingPlan,
+  assessTimelineDawMultiInputReadiness,
   createTimelineDawArmedInputRoute,
 } from "../../lib/timeline/TimelineDawMultiTrackRecordingPlan";
 
@@ -29,6 +30,26 @@ describe("multi-track recording plan", () => {
     expect(result.errors).toEqual(expect.arrayContaining([
       "A maximum of 1 recording tracks can be armed at once.",
       "Interface 2 is no longer connected.",
+    ]));
+  });
+
+  it("requires every simultaneously opened input to have signal and a tight start boundary", () => {
+    expect(assessTimelineDawMultiInputReadiness({
+      expectedRouteCount: 2,
+      measurements: [
+        { trackName: "Vocal", peakDbfs: -18, startedAtMs: 1000 },
+        { trackName: "Guitar", peakDbfs: -24, startedAtMs: 1012 },
+      ],
+    })).toMatchObject({ ready: true, maximumStartSkewMs: 12 });
+
+    const held = assessTimelineDawMultiInputReadiness({
+      expectedRouteCount: 2,
+      measurements: [{ trackName: "Vocal", peakDbfs: -96, startedAtMs: 1000 }],
+    });
+    expect(held.ready).toBe(false);
+    expect(held.errors).toEqual(expect.arrayContaining([
+      "Not every armed input opened successfully.",
+      "Vocal did not receive a usable signal.",
     ]));
   });
 });

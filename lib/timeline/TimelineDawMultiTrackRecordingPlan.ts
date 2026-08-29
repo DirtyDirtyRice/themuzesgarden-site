@@ -11,6 +11,12 @@ export type TimelineDawMultiTrackRecordingPlanResult = {
   errors: string[];
 };
 
+export type TimelineDawMultiInputReadinessResult = {
+  ready: boolean;
+  maximumStartSkewMs: number;
+  errors: string[];
+};
+
 export function createTimelineDawArmedInputRoute(input: TimelineDawArmedInputRoute): TimelineDawArmedInputRoute {
   return {
     id: input.id.trim(),
@@ -47,4 +53,21 @@ export function assessTimelineDawMultiTrackRecordingPlan(input: {
   }
 
   return { ready: errors.length === 0, routes: input.routes, errors: [...new Set(errors)] };
+}
+
+export function assessTimelineDawMultiInputReadiness(input: {
+  measurements: Array<{ trackName: string; peakDbfs: number; startedAtMs: number }>;
+  expectedRouteCount: number;
+  maximumStartSkewMs?: number;
+}): TimelineDawMultiInputReadinessResult {
+  const errors: string[] = [];
+  if (input.measurements.length !== input.expectedRouteCount) errors.push("Not every armed input opened successfully.");
+  for (const measurement of input.measurements) {
+    if (!Number.isFinite(measurement.peakDbfs) || measurement.peakDbfs < -60) errors.push(`${measurement.trackName} did not receive a usable signal.`);
+  }
+  const starts = input.measurements.map((measurement) => measurement.startedAtMs).filter(Number.isFinite);
+  const maximumStartSkewMs = starts.length > 1 ? Math.max(...starts) - Math.min(...starts) : 0;
+  const allowedSkew = Math.max(1, input.maximumStartSkewMs ?? 50);
+  if (maximumStartSkewMs > allowedSkew) errors.push(`Inputs opened ${maximumStartSkewMs.toFixed(1)} ms apart; the safe limit is ${allowedSkew} ms.`);
+  return { ready: errors.length === 0, maximumStartSkewMs, errors: [...new Set(errors)] };
 }
