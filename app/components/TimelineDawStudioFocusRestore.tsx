@@ -1,21 +1,37 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, timelineDawStudioFocusStorageKey, type TimelineDawStudioFocusArea } from "@/lib/timeline/TimelineDawStudioFocusPolicy";
+import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey, type TimelineDawStudioFocusArea } from "@/lib/timeline/TimelineDawStudioFocusPolicy";
 
 const button = "rounded-xl border border-white/20 bg-white px-3 py-2 text-sm font-black text-black";
 
 export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId: string }) {
   const storageKey = useMemo(() => timelineDawStudioFocusStorageKey(sessionId), [sessionId]);
+  const scrollStorageKey = useMemo(() => timelineDawStudioScrollStorageKey(sessionId), [sessionId]);
   const [saved, setSaved] = useState<TimelineDawStudioFocusArea | null>(null);
   const [destination, setDestination] = useState<TimelineDawStudioFocusArea>("transport");
 
   useEffect(() => {
     const initial = parseTimelineDawStudioFocusArea(window.localStorage.getItem(storageKey));
-    queueMicrotask(() => setSaved(initial));
+    const initialScroll = parseTimelineDawStudioScrollPosition(window.localStorage.getItem(scrollStorageKey));
+    queueMicrotask(() => { setSaved(initial); if (initial) setDestination(initial); });
     const elements = [...document.querySelectorAll<HTMLElement>("[data-daw-focus-area]")];
     const initialTarget = initial ? elements.find((element) => element.dataset.dawFocusArea === initial) : null;
     if (initialTarget && !window.location.hash) openWorkspacePanel(initialTarget);
+    if (initialScroll && !window.location.hash) requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: initialScroll, behavior: "auto" })));
+    const rememberScroll = () => window.localStorage.setItem(scrollStorageKey, String(Math.round(window.scrollY)));
+    const rememberOpenedPanel = (event: Event) => {
+      const panel = event.target as HTMLDetailsElement;
+      if (!panel.open || !panel.matches("details[data-daw-workspace-panel]")) return;
+      const area = parseTimelineDawStudioFocusArea(panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea);
+      if (!area) return;
+      window.localStorage.setItem(storageKey, area);
+      setSaved(area);
+      setDestination(area);
+    };
+    document.querySelectorAll<HTMLDetailsElement>("details[data-daw-workspace-panel]").forEach((panel) => panel.addEventListener("toggle", rememberOpenedPanel));
+    window.addEventListener("scroll", rememberScroll, { passive: true });
+    window.addEventListener("pagehide", rememberScroll);
     const observer = new IntersectionObserver((entries) => {
       const visible = entries.filter((entry) => entry.isIntersecting).sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
       const area = parseTimelineDawStudioFocusArea((visible?.target as HTMLElement | undefined)?.dataset.dawFocusArea);
@@ -26,8 +42,13 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       }
     }, { rootMargin: "-20% 0px -55%", threshold: [0.1, 0.5] });
     elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, [storageKey]);
+    return () => {
+      observer.disconnect();
+      document.querySelectorAll<HTMLDetailsElement>("details[data-daw-workspace-panel]").forEach((panel) => panel.removeEventListener("toggle", rememberOpenedPanel));
+      window.removeEventListener("scroll", rememberScroll);
+      window.removeEventListener("pagehide", rememberScroll);
+    };
+  }, [scrollStorageKey, storageKey]);
 
   useEffect(() => {
     function openHashDestination() {

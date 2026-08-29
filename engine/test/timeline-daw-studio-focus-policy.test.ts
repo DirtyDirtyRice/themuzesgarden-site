@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, timelineDawStudioFocusStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
+import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
 
 describe("DAW Studio focus policy", () => {
   it("accepts only known high-level Studio areas", () => {
@@ -26,6 +26,13 @@ describe("DAW Studio focus policy", () => {
 
   it("scopes browser focus state to one session", () => {
     expect(timelineDawStudioFocusStorageKey("session-1")).toBe("muzes:daw-studio-focus:session-1");
+    expect(timelineDawStudioScrollStorageKey("session-1")).toBe("muzes:daw-studio-scroll:session-1");
     expect(() => timelineDawStudioFocusStorageKey(" ")).toThrow("valid DAW session");
+  });
+
+  it("restores only bounded page positions", () => {
+    expect(parseTimelineDawStudioScrollPosition("1234.4")).toBe(1234);
+    expect(parseTimelineDawStudioScrollPosition("-5")).toBe(0);
+    expect(parseTimelineDawStudioScrollPosition("invalid")).toBe(0);
   });
 });

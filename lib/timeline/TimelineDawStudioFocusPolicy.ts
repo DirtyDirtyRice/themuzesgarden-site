@@ -28,3 +28,14 @@ export function timelineDawStudioFocusStorageKey(sessionId: string) {
   if (!normalized || normalized.length > 200) throw new Error("A valid DAW session is required for focus restore.");
   return `muzes:daw-studio-focus:${normalized}`;
 }
+
+export function timelineDawStudioScrollStorageKey(sessionId: string) {
+  const normalized = sessionId.trim();
+  if (!normalized || normalized.length > 200) throw new Error("A valid DAW session is required for scroll restore.");
+  return `muzes:daw-studio-scroll:${normalized}`;
+}
+
+export function parseTimelineDawStudioScrollPosition(value: unknown): number {
+  const parsed = typeof value === "string" ? Number(value) : Number.NaN;
+  return Number.isFinite(parsed) ? Math.max(0, Math.min(10_000_000, Math.round(parsed))) : 0;
+}

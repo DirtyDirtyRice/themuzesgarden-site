@@ -11,6 +11,8 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Chrome microphone and private WAV recording passed on August 28, 2026, but only one of three user-recorded takes remained visible after repeated page reloads.
 - The save order is being corrected so each stopped WAV enters durable browser recovery before private upload begins, protecting it if Chrome refreshes or suspends the page mid-save.
 - Do not mark repeated-take production QA complete until three separately recorded takes survive refresh and reload together.
+- Three separately saved takes were visible together after the recovery fix on August 28, 2026; repeated-take persistence passed.
+- A separate QA finding remains active: returning from another application resets the open Studio section and scroll position, forcing repeated navigation before the musician can continue.
 
 ## Completed milestone - Pre-Upload Recording Recovery Checkpoint
 
@@ -19,6 +21,14 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Successful private registration removes the checkpoint; interrupted saves reopen through the existing Local Recovery retry and download controls.
 - Focused persistent-recovery tests passed (4 tests), TypeScript passed, and the production build passed with 76 generated pages.
 - No database migration was required.
+
+## Completed milestone - Studio Section and Scroll Recall
+
+- Opening a Studio work-area heading now saves that exact section immediately instead of waiting for an intersection estimate.
+- The session also remembers its bounded vertical page position during scrolling and page exit.
+- Returning after Chrome refreshes or suspends the Studio restores both the open work area and the musician's prior vertical position.
+- Focus and scroll policy tests passed (5 tests), targeted lint passed, TypeScript passed, and the production build passed with 76 generated pages.
+- No recording, source audio, take, project, or database data is changed by this browser-local navigation memory.
 
 ## Current DAW tree - DONE / MUST DO
 
