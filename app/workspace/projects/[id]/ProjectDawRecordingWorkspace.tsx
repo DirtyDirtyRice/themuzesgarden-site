@@ -929,6 +929,19 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       const downloadUrl = URL.createObjectURL(file);
       recoveryUrlRef.current = downloadUrl;
       recoverable = { file, downloadUrl, plan: recordingPlan, uploaded: null, mp3Url, failure: "" };
+      try {
+        await saveTimelineDawRecordingRecovery({
+          sessionId: session.id,
+          file,
+          plan: recordingPlan,
+          uploaded: null,
+          failure: "Private upload is still in progress.",
+          savedAt: new Date().toISOString(),
+        });
+        setRecoveryStorageWarning(null);
+      } catch (storageCause) {
+        setRecoveryStorageWarning(storageCause instanceof Error ? storageCause.message : "The WAV is safe in this tab, but pre-upload recovery could not persist across refresh.");
+      }
       const uploaded = await uploadDawRenderSource(session.id, file);
       recoverable.uploaded = uploaded;
       const detail: DawRecordedSourceEventDetail = uploaded;
@@ -943,6 +956,12 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
       if (captureLimitReachedRef.current) setCaptureLimitNotice("The recording limit was reached safely. The complete bounded WAV was saved privately.");
       URL.revokeObjectURL(downloadUrl);
       recoveryUrlRef.current = null;
+      try {
+        await deleteTimelineDawRecordingRecovery(session.id);
+        setRecoveryStorageWarning(null);
+      } catch {
+        setRecoveryStorageWarning("The take saved privately, but stale browser recovery cleanup needs another page refresh.");
+      }
     } catch (cause) {
       const failure = cause instanceof Error ? cause.message : "Recorded WAV could not be uploaded.";
       if (recoverable) {

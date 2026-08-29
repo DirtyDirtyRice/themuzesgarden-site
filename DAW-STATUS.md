@@ -6,6 +6,20 @@ Last updated: August 28, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
+## Active production QA finding - Multiple Recording Takes
+
+- Chrome microphone and private WAV recording passed on August 28, 2026, but only one of three user-recorded takes remained visible after repeated page reloads.
+- The save order is being corrected so each stopped WAV enters durable browser recovery before private upload begins, protecting it if Chrome refreshes or suspends the page mid-save.
+- Do not mark repeated-take production QA complete until three separately recorded takes survive refresh and reload together.
+
+## Completed milestone - Pre-Upload Recording Recovery Checkpoint
+
+- Every stopped single-input WAV now enters durable private browser recovery before its network upload begins.
+- A Chrome refresh, suspension, navigation, or interrupted request during saving can no longer erase the only local copy before the failure path runs.
+- Successful private registration removes the checkpoint; interrupted saves reopen through the existing Local Recovery retry and download controls.
+- Focused persistent-recovery tests passed (4 tests), TypeScript passed, and the production build passed with 76 generated pages.
+- No database migration was required.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
