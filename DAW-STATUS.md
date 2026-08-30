@@ -133,7 +133,7 @@ THE MUZES GARDEN DAW
     ├── double or triple an existing musical performance .......... DONE 8/29/26
     ├── tonic, key, scale and chord-aware interval instructions ... DONE 8/29/26
     ├── harmonize selected material by third, fifth or interval ... DONE 8/29/26
-    ├── apply different instruments only to named time ranges ..... STILL TO DO
+    ├── apply different instruments only to named time ranges ..... DONE 8/29/26
     ├── phrase, riff, chord and individual-note verbal editing .... STILL TO DO
     ├── MIDI-note generation and exact pitch/timing editing ........ STILL TO DO
     ├── audio-to-MIDI or note-analysis assistance where reliable .. STILL TO DO
@@ -273,6 +273,13 @@ THE MUZES GARDEN DAW
 - The recipe preserves source rhythm, uses confirmed chord tones when supplied, and otherwise discloses its diatonic tonic/scale reference.
 - The proposed harmony receives a separate named output lane and remains held for note review; no MIDI, audio, source, or arrangement data is changed.
 - The next leaf applies different instruments only to named time ranges.
+
+### VERBAL EDITING instrument-by-range milestone — 8/29/26
+
+- A confirmed source track can now receive a protected replacement-instrument plan limited to a real named section or exact timeline ticks.
+- Entry and exit crossfade lengths are explicit and validated inside the selected range.
+- The original instrument remains the only instrument outside the range, while the source performance and arrangement stay unchanged pending review.
+- The next leaf is phrase, riff, chord, and individual-note verbal editing.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

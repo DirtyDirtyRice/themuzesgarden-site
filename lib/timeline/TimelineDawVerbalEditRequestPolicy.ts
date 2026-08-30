@@ -150,6 +150,23 @@ export type TimelineDawVerbalHarmonyRecipe = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalInstrumentRangePlan = {
+  sourceTrackId: string;
+  sourceTrackName: string;
+  targetInstrument: string;
+  rangeSource: "named-section" | "exact-ticks";
+  sectionId: string | null;
+  sectionName: string | null;
+  startTick: number;
+  endTick: number;
+  entryCrossfadeTicks: number;
+  exitCrossfadeTicks: number;
+  outsideRangePolicy: "original-instrument-only";
+  preserveSource: true;
+  status: "held-for-instrument-range-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -542,6 +559,46 @@ export function createTimelineDawHarmonyRecipe(input: {
     preserveRhythm: true,
     preserveSource: true,
     status: "held-for-harmony-note-review",
+    executionAllowed: false,
+  };
+}
+
+export function createTimelineDawInstrumentRangePlan(input: {
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  sourceTrackId: string | null;
+  targetInstrument: unknown;
+  sections: readonly TimelineDawVerbalNamedSection[];
+  sectionId?: string | null;
+  startTick?: unknown;
+  endTick?: unknown;
+  crossfadeTicks?: unknown;
+}): TimelineDawVerbalInstrumentRangePlan {
+  const source = input.sourceTrackId ? input.tracks.find((track) => track.id === input.sourceTrackId) : null;
+  if (!source) throw new Error("Confirm the source track before changing its instrument by range.");
+  const targetInstrument = normalizeInstruction(input.targetInstrument);
+  if (targetInstrument.length < 2 || targetInstrument.length > 100) throw new Error("Name the replacement instrument in 2 to 100 characters.");
+  const section = input.sectionId ? input.sections.find((item) => item.id === input.sectionId) : null;
+  if (input.sectionId && !section) throw new Error("The selected named section no longer exists.");
+  const startTick = section?.startTick ?? Number(input.startTick);
+  const endTick = section?.endTick ?? Number(input.endTick);
+  if (!Number.isSafeInteger(startTick) || startTick < 0) throw new Error("Instrument-range start must be a nonnegative whole timeline tick.");
+  if (!Number.isSafeInteger(endTick) || endTick <= startTick) throw new Error("Instrument-range end must be a whole timeline tick after the start.");
+  const crossfadeTicks = Number(input.crossfadeTicks ?? 0);
+  if (!Number.isSafeInteger(crossfadeTicks) || crossfadeTicks < 0 || crossfadeTicks * 2 > endTick - startTick) throw new Error("Crossfade must fit safely inside the selected range.");
+  return {
+    sourceTrackId: source.id,
+    sourceTrackName: source.name,
+    targetInstrument,
+    rangeSource: section ? "named-section" : "exact-ticks",
+    sectionId: section?.id ?? null,
+    sectionName: section?.name ?? null,
+    startTick,
+    endTick,
+    entryCrossfadeTicks: crossfadeTicks,
+    exitCrossfadeTicks: crossfadeTicks,
+    outsideRangePolicy: "original-instrument-only",
+    preserveSource: true,
+    status: "held-for-instrument-range-review",
     executionAllowed: false,
   };
 }

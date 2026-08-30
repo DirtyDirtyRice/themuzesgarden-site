@@ -13,6 +13,7 @@ import {
   createTimelineDawPerformanceLayerPlan,
   createTimelineDawHarmonyContext,
   createTimelineDawHarmonyRecipe,
+  createTimelineDawInstrumentRangePlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -291,5 +292,34 @@ describe("DAW verbal edit request policy", () => {
     expect(createTimelineDawHarmonyRecipe({ context, tracks, sourceTrackId: "riff", startTick: 0, endTick: 3840 })).toMatchObject({ tonalReference: "D dorian", notePolicy: "diatonic-scale" });
     expect(() => createTimelineDawHarmonyRecipe({ context, tracks, sourceTrackId: null, startTick: 0, endTick: 3840 })).toThrow("Confirm the real source track");
     expect(() => createTimelineDawHarmonyRecipe({ context, tracks, sourceTrackId: "riff", startTick: 100, endTick: 100 })).toThrow("after the start");
+  });
+
+  it("limits a replacement instrument to a real named section", () => {
+    const tracks = [{ id: "lead", name: "Lead Guitar", kind: "audio" as const }];
+    const sections = [{ id: "solo", name: "Solo 1", startTick: 7680, endTick: 11520 }];
+    expect(createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "lead", targetInstrument: "Tenor Sax", sections, sectionId: "solo", crossfadeTicks: 120 })).toEqual({
+      sourceTrackId: "lead",
+      sourceTrackName: "Lead Guitar",
+      targetInstrument: "Tenor Sax",
+      rangeSource: "named-section",
+      sectionId: "solo",
+      sectionName: "Solo 1",
+      startTick: 7680,
+      endTick: 11520,
+      entryCrossfadeTicks: 120,
+      exitCrossfadeTicks: 120,
+      outsideRangePolicy: "original-instrument-only",
+      preserveSource: true,
+      status: "held-for-instrument-range-review",
+      executionAllowed: false,
+    });
+  });
+
+  it("supports exact tick ranges and rejects unsafe boundaries", () => {
+    const tracks = [{ id: "riff", name: "Main Riff", kind: "audio" as const }];
+    expect(createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "riff", targetInstrument: "Muted Trumpet", sections: [], startTick: 960, endTick: 1920 })).toMatchObject({ rangeSource: "exact-ticks", sectionId: null, startTick: 960, endTick: 1920 });
+    expect(() => createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "riff", targetInstrument: "x", sections: [], startTick: 0, endTick: 960 })).toThrow("2 to 100");
+    expect(() => createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "riff", targetInstrument: "Sax", sections: [], sectionId: "missing" })).toThrow("no longer exists");
+    expect(() => createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "riff", targetInstrument: "Sax", sections: [], startTick: 0, endTick: 100, crossfadeTicks: 51 })).toThrow("fit safely");
   });
 });
