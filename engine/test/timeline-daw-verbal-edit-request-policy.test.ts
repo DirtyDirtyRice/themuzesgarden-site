@@ -5,6 +5,7 @@ import {
   decideTimelineDawVerbalEditPlan,
   createTimelineDawVerbalRevisionHistory,
   moveTimelineDawVerbalRevisionHistory,
+  recognizeTimelineDawVerbalSections,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -110,5 +111,30 @@ describe("DAW verbal edit request policy", () => {
     expect(undone.revisions).toBe(history.revisions);
     expect(moveTimelineDawVerbalRevisionHistory(undone, "redo").activeIndex).toBe(1);
     expect(moveTimelineDawVerbalRevisionHistory(undone, "undo").activeIndex).toBe(0);
+  });
+
+  it("recognizes one exact saved section name and selects its protected range", () => {
+    const result = recognizeTimelineDawVerbalSections({ instruction: "Extend the Bridge by four bars.", sections: [
+      { id: "verse-1", name: "Verse 1", startTick: 0, endTick: 7680 },
+      { id: "bridge", name: "Bridge", startTick: 7680, endTick: 11520 },
+    ] });
+    expect(result).toMatchObject({ recognizedSectionIds: ["bridge"], selectedSectionId: "bridge", confidence: "exact" });
+    expect(result.sections[1]).toMatchObject({ name: "Bridge", startTick: 7680, endTick: 11520 });
+  });
+
+  it("holds ambiguous or unmatched section wording for explicit musician selection", () => {
+    const sections = [
+      { id: "chorus-1", name: "Chorus 1", startTick: 0, endTick: 3840 },
+      { id: "chorus-2", name: "Chorus 2", startTick: 3840, endTick: 7680 },
+    ];
+    expect(recognizeTimelineDawVerbalSections({ instruction: "Copy Chorus 1 after Chorus 2.", sections })).toMatchObject({ confidence: "ambiguous", selectedSectionId: null });
+    expect(recognizeTimelineDawVerbalSections({ instruction: "Make that part longer.", sections, selectedSectionId: "chorus-2" })).toMatchObject({ confidence: "unmatched", selectedSectionId: "chorus-2" });
+  });
+
+  it("rejects malformed section ranges before presenting named targets", () => {
+    expect(recognizeTimelineDawVerbalSections({ instruction: "Extend Verse.", sections: [
+      { id: "bad", name: "Bad", startTick: 100, endTick: 50 },
+      { id: "verse", name: "Verse", startTick: 0, endTick: 1920 },
+    ] }).sections).toEqual([{ id: "verse", name: "Verse", startTick: 0, endTick: 1920 }]);
   });
 });

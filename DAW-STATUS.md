@@ -125,7 +125,7 @@ THE MUZES GARDEN DAW
     ├── protected AI edit plan shown before changing music ....... DONE 8/29/26
     ├── approve, reject, revise and explain proposed edits ........ DONE 8/29/26
     ├── nondestructive source preservation and instant undo ....... DONE 8/29/26
-    ├── song-section recognition and named-section selection ...... STILL TO DO
+    ├── song-section recognition and named-section selection ...... DONE 8/29/26
     ├── add, remove, move, copy or extend complete sections ....... STILL TO DO
     ├── generate and place new verse, chorus or bridge sections ... STILL TO DO
     ├── arrangement-aware transitions into generated sections .... STILL TO DO
@@ -203,6 +203,16 @@ THE MUZES GARDEN DAW
 - Apply Edit remains locked. This milestone establishes revision safety and current-tab preview history only; it does not contact AI, render audio, overwrite sources, publish, export, or activate music.
 - Focused policy tests cover approval gating, immutable parentage, bounded undo, and redo. No database migration was required.
 - The next leaf is song-section recognition and named-section selection.
+
+## Completed milestone - Verbal Editing Song-Section Recognition And Named Selection
+
+- VERBAL EDITING now reads the current owner-protected DAW session’s saved arrangement sections instead of inventing section boundaries.
+- Exact saved names mentioned in a request are recognized case-insensitively and display their precise start and end ticks.
+- Ambiguous requests that mention multiple saved sections and unmatched wording remain held until the musician explicitly chooses the intended named section.
+- Invalid or empty section records are excluded, named sections remain ordered by their musical position, and the confirmed target is visibly identified before any future edit.
+- Section discovery uses the existing authenticated, owner-scoped arrangement API. No private section data is copied into browser storage and no database migration was required.
+- Recognition and selection do not alter music or unlock Apply Edit. Focused tests cover exact, ambiguous, unmatched, explicit-selection, ordering, and malformed-range behavior.
+- The next leaf is add, remove, move, copy or extend complete sections.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

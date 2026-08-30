@@ -1,36 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { requireProjectSupabase } from "@/app/workspace/projects/[id]/projectSupabase";
 import {
   parseTimelineDawVerbalEditRequest,
   createTimelineDawProtectedEditPlan,
   decideTimelineDawVerbalEditPlan,
   createTimelineDawVerbalRevisionHistory,
   moveTimelineDawVerbalRevisionHistory,
+  recognizeTimelineDawVerbalSections,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
   type TimelineDawVerbalPlanDecision,
   type TimelineDawVerbalRevisionHistory,
+  type TimelineDawVerbalNamedSection,
 } from "@/lib/timeline/TimelineDawVerbalEditRequestPolicy";
 
 const fieldClass = "w-full rounded-xl border border-white/20 bg-black px-4 py-3 text-white outline-none focus:border-fuchsia-300";
 const buttonClass = "rounded-xl border border-fuchsia-200/40 bg-fuchsia-200 px-4 py-3 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
 
-export default function TimelineDawVerbalEditWorkspace() {
+export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionId: string }) {
   const [instruction, setInstruction] = useState("");
   const [scope, setScope] = useState<TimelineDawVerbalEditRequest["scope"]>("whole-song");
   const [heldRequest, setHeldRequest] = useState<TimelineDawVerbalEditRequest | null>(null);
   const [decisionExplanation, setDecisionExplanation] = useState("");
   const [planDecision, setPlanDecision] = useState<TimelineDawVerbalPlanDecision | null>(null);
   const [revisionHistory, setRevisionHistory] = useState<TimelineDawVerbalRevisionHistory | null>(null);
+  const [namedSections, setNamedSections] = useState<TimelineDawVerbalNamedSection[]>([]);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [sectionsLoading, setSectionsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function loadSections() {
+      try {
+        const { data } = await requireProjectSupabase().auth.getSession();
+        const response = await fetch(`/api/timeline/daw-arrangement-items?sessionId=${encodeURIComponent(sessionId)}`, { headers: { Authorization: `Bearer ${data.session?.access_token}` } });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error ?? "Named sections could not be loaded.");
+        if (active) setNamedSections((body.items ?? []).filter((item: { kind?: string; endTick?: number | null }) => item.kind === "section" && item.endTick !== null).map((item: { id: string; name: string; startTick: number; endTick: number }) => ({ id: item.id, name: item.name, startTick: item.startTick, endTick: item.endTick })));
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : "Named sections could not be loaded.");
+      } finally {
+        if (active) setSectionsLoading(false);
+      }
+    }
+    void loadSections();
+    return () => { active = false; };
+  }, [sessionId]);
 
   function holdRequest() {
     try {
       setHeldRequest(parseTimelineDawVerbalEditRequest({ instruction, scope, preserveSources: true }));
       setPlanDecision(null);
       setRevisionHistory(null);
+      setSelectedSectionId(null);
       setDecisionExplanation("");
       setError(null);
     } catch (cause) {
@@ -41,6 +67,7 @@ export default function TimelineDawVerbalEditWorkspace() {
 
   const summary = heldRequest ? summarizeTimelineDawVerbalEditRequest(heldRequest) : null;
   const plan = heldRequest ? createTimelineDawProtectedEditPlan(heldRequest) : null;
+  const sectionRecognition = heldRequest ? recognizeTimelineDawVerbalSections({ instruction: heldRequest.instruction, sections: namedSections, selectedSectionId }) : null;
 
   function decidePlan(decision: TimelineDawVerbalPlanDecision["status"]) {
     try {
@@ -87,7 +114,7 @@ export default function TimelineDawVerbalEditWorkspace() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={holdRequest}>Prepare Request for Review</button>
-        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
+        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
       </div>
 
       {error ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">{error}</p> : null}
@@ -97,6 +124,24 @@ export default function TimelineDawVerbalEditWorkspace() {
           <p className="mt-3 text-sm"><b>Scope:</b> {summary.scopeLabel}</p>
           <p className="mt-2 whitespace-pre-wrap text-sm text-white/80">{summary.instruction}</p>
           <p className="mt-3 text-xs font-bold text-emerald-200">{summary.safetyLabel}</p>
+        </article>
+      ) : null}
+      {sectionRecognition && heldRequest?.scope === "section" ? (
+        <article className="mt-5 rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.05] p-4" aria-labelledby="verbal-section-heading">
+          <p className="text-xs font-black uppercase tracking-wider text-cyan-200">Song-section recognition</p>
+          <h3 id="verbal-section-heading" className="mt-1 text-lg font-black">Confirm the named section</h3>
+          {sectionsLoading ? <p className="mt-3 text-sm text-white/60">Loading this session’s named arrangement sections…</p> : namedSections.length === 0 ? <p className="mt-3 text-sm text-amber-100">No saved arrangement sections are available yet. Name sections in Tracks, Editing, and MIDI before targeting one verbally.</p> : (
+            <>
+              <p className="mt-2 text-sm text-white/65">{sectionRecognition.confidence === "exact" ? "One named section was recognized. Confirm it below." : sectionRecognition.confidence === "ambiguous" ? "More than one named section was mentioned. Choose the exact target." : "No exact saved section name was recognized. Choose the intended target."}</p>
+              <label className="mt-3 block text-sm font-bold">Named section
+                <select className={`${fieldClass} mt-2`} value={sectionRecognition.selectedSectionId ?? ""} onChange={(event) => setSelectedSectionId(event.target.value || null)}>
+                  <option value="">Choose a named section…</option>
+                  {sectionRecognition.sections.map((section) => <option key={section.id} value={section.id}>{section.name} · ticks {section.startTick}–{section.endTick}</option>)}
+                </select>
+              </label>
+              {sectionRecognition.selectedSectionId ? <p className="mt-3 text-xs font-bold text-emerald-200">Target confirmed: {sectionRecognition.sections.find((section) => section.id === sectionRecognition.selectedSectionId)?.name}. Music remains unchanged.</p> : <p className="mt-3 text-xs font-bold text-amber-100">A named section must be confirmed before a later section edit can execute.</p>}
+            </>
+          )}
         </article>
       ) : null}
       {plan ? (

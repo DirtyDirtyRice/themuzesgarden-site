@@ -283,7 +283,7 @@ export default function ProjectDawSessionPage() {
       <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
         <summary className={workspaceSummaryClass}>Verbal Editing <span className="ml-2 text-sm font-normal text-white/50">Advanced</span></summary>
         <div data-daw-focus-area="verbal" className="mt-5 scroll-mt-24">
-          <TimelineDawVerbalEditWorkspace />
+          <TimelineDawVerbalEditWorkspace sessionId={session.id} />
         </div>
       </details>
 

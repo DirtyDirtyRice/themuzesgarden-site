@@ -45,6 +45,20 @@ export type TimelineDawVerbalRevisionHistory = {
   activeIndex: number;
 };
 
+export type TimelineDawVerbalNamedSection = {
+  id: string;
+  name: string;
+  startTick: number;
+  endTick: number;
+};
+
+export type TimelineDawVerbalSectionRecognition = {
+  sections: readonly TimelineDawVerbalNamedSection[];
+  recognizedSectionIds: readonly string[];
+  selectedSectionId: string | null;
+  confidence: "exact" | "ambiguous" | "unmatched";
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -171,4 +185,29 @@ export function moveTimelineDawVerbalRevisionHistory(
     ? Math.max(0, history.activeIndex - 1)
     : Math.min(history.revisions.length - 1, history.activeIndex + 1);
   return { revisions: history.revisions, activeIndex: nextIndex };
+}
+
+export function recognizeTimelineDawVerbalSections(input: {
+  instruction: string;
+  sections: readonly TimelineDawVerbalNamedSection[];
+  selectedSectionId?: string | null;
+}): TimelineDawVerbalSectionRecognition {
+  const sections = input.sections
+    .filter((section) => section.id.trim() && section.name.trim() && Number.isSafeInteger(section.startTick) && Number.isSafeInteger(section.endTick) && section.startTick >= 0 && section.endTick > section.startTick)
+    .map((section) => ({ ...section, id: section.id.trim(), name: section.name.trim() }))
+    .sort((left, right) => left.startTick - right.startTick || left.name.localeCompare(right.name));
+  const instruction = normalizeInstruction(input.instruction).toLocaleLowerCase();
+  const recognizedSectionIds = sections
+    .filter((section) => instruction.includes(section.name.toLocaleLowerCase()))
+    .map((section) => section.id);
+  const requestedSelection = typeof input.selectedSectionId === "string" ? input.selectedSectionId : null;
+  const selectedSectionId = requestedSelection && sections.some((section) => section.id === requestedSelection)
+    ? requestedSelection
+    : recognizedSectionIds.length === 1 ? recognizedSectionIds[0] : null;
+  return {
+    sections,
+    recognizedSectionIds,
+    selectedSectionId,
+    confidence: recognizedSectionIds.length === 1 ? "exact" : recognizedSectionIds.length > 1 ? "ambiguous" : "unmatched",
+  };
 }
