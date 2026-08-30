@@ -127,7 +127,7 @@ THE MUZES GARDEN DAW
     ├── nondestructive source preservation and instant undo ....... DONE 8/29/26
     ├── song-section recognition and named-section selection ...... DONE 8/29/26
     ├── add, remove, move, copy or extend complete sections ....... DONE 8/29/26
-    ├── generate and place new verse, chorus or bridge sections ... STILL TO DO
+    ├── generate and place new verse, chorus or bridge sections ... DONE 8/29/26
     ├── arrangement-aware transitions into generated sections .... STILL TO DO
     ├── instrument and track selection by spoken description ...... STILL TO DO
     ├── double or triple an existing musical performance .......... STILL TO DO
@@ -223,6 +223,16 @@ THE MUZES GARDEN DAW
 - Recipes remain nondestructive current-tab previews with `executionAllowed: false`; no audio, clips, saved markers, Library records, exports, or active arrangements are changed.
 - Focused tests cover all five operations, source identity, ripple timing, invalid targets, invalid lengths, and execution locking. No database migration was required.
 - The next leaf is generate and place new verse, chorus or bridge sections.
+
+## Completed milestone - Verbal Editing Generated Major-Section Plans
+
+- Musicians can prepare a provider-ready request for a new verse, chorus, or bridge with a plain-language musical description, whole-bar length, and exact placement after a saved named section or at the song end.
+- The plan converts bars, beats per bar, and ticks per beat into an exact duration and placement tick so later generation cannot guess the arrangement boundary.
+- Every request is held until an approved generation provider returns its provider, model, request ID, cleared rights record, and immutable output fingerprint.
+- Generated material is required to enter as a private draft for musician audition and approval; the plan cannot activate, publish, export, or overwrite music.
+- Unsupported section types, invalid bar counts, short or oversized prompts, invalid timing, and missing placement targets are rejected.
+- Focused tests cover musical duration, named placement, provenance requirements, provider hold, execution locking, and invalid requests. No provider was falsely contacted and no database migration was required.
+- The next leaf is arrangement-aware transitions into generated sections.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

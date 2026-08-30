@@ -70,6 +70,21 @@ export type TimelineDawVerbalSectionRecipe = {
   executionAllowed: false;
 };
 
+export type TimelineDawGeneratedSectionPlan = {
+  sectionType: "verse" | "chorus" | "bridge";
+  name: string;
+  bars: number;
+  beatsPerBar: number;
+  ticksPerBeat: number;
+  durationTicks: number;
+  prompt: string;
+  placementAfterSectionId: string | null;
+  placementStartTick: number;
+  requiredProvenance: readonly ["provider", "model", "request-id", "rights-record", "output-fingerprint"];
+  status: "held-for-generation-provider";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -267,4 +282,35 @@ export function createTimelineDawVerbalSectionRecipe(input: {
     return next;
   });
   return { operation: input.operation, sourceSectionId: input.sourceSectionId ?? null, destinationSectionId: input.destinationSectionId ?? null, before, after, executionAllowed: false };
+}
+
+export function createTimelineDawGeneratedSectionPlan(input: {
+  sectionType: unknown;
+  bars: unknown;
+  beatsPerBar?: unknown;
+  ticksPerBeat?: unknown;
+  prompt: unknown;
+  sections: readonly TimelineDawVerbalNamedSection[];
+  placementAfterSectionId?: string | null;
+}): TimelineDawGeneratedSectionPlan {
+  if (input.sectionType !== "verse" && input.sectionType !== "chorus" && input.sectionType !== "bridge") throw new Error("Choose verse, chorus, or bridge for generation.");
+  const bars = Number(input.bars), beatsPerBar = Number(input.beatsPerBar ?? 4), ticksPerBeat = Number(input.ticksPerBeat ?? 960);
+  if (!Number.isSafeInteger(bars) || bars < 1 || bars > 128) throw new Error("Generated sections must be from 1 to 128 whole bars.");
+  if (!Number.isSafeInteger(beatsPerBar) || beatsPerBar < 1 || beatsPerBar > 32) throw new Error("Beats per bar must be from 1 to 32.");
+  if (!Number.isSafeInteger(ticksPerBeat) || ticksPerBeat < 24 || ticksPerBeat > 9600) throw new Error("Ticks per beat are outside the supported musical range.");
+  const prompt = normalizeInstruction(input.prompt);
+  if (prompt.length < 10) throw new Error("Describe the generated section in at least 10 characters.");
+  if (prompt.length > 4_000) throw new Error("Keep the generation request under 4,000 characters.");
+  const sections = recognizeTimelineDawVerbalSections({ instruction: "", sections: input.sections }).sections;
+  const destination = input.placementAfterSectionId ? sections.find((section) => section.id === input.placementAfterSectionId) : null;
+  if (input.placementAfterSectionId && !destination) throw new Error("The placement section was not found.");
+  const placementStartTick = destination?.endTick ?? sections.at(-1)?.endTick ?? 0;
+  const name = `Generated ${input.sectionType[0].toUpperCase()}${input.sectionType.slice(1)}`;
+  return {
+    sectionType: input.sectionType, name, bars, beatsPerBar, ticksPerBeat,
+    durationTicks: bars * beatsPerBar * ticksPerBeat,
+    prompt, placementAfterSectionId: input.placementAfterSectionId ?? null, placementStartTick,
+    requiredProvenance: ["provider", "model", "request-id", "rights-record", "output-fingerprint"],
+    status: "held-for-generation-provider", executionAllowed: false,
+  };
 }

@@ -10,6 +10,7 @@ import {
   moveTimelineDawVerbalRevisionHistory,
   recognizeTimelineDawVerbalSections,
   createTimelineDawVerbalSectionRecipe,
+  createTimelineDawGeneratedSectionPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
@@ -18,6 +19,7 @@ import {
   type TimelineDawVerbalNamedSection,
   type TimelineDawVerbalSectionOperation,
   type TimelineDawVerbalSectionRecipe,
+  type TimelineDawGeneratedSectionPlan,
 } from "@/lib/timeline/TimelineDawVerbalEditRequestPolicy";
 
 const fieldClass = "w-full rounded-xl border border-white/20 bg-black px-4 py-3 text-white outline-none focus:border-fuchsia-300";
@@ -38,6 +40,10 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
   const [newSectionName, setNewSectionName] = useState("");
   const [sectionTicks, setSectionTicks] = useState(3840);
   const [sectionRecipe, setSectionRecipe] = useState<TimelineDawVerbalSectionRecipe | null>(null);
+  const [generatedSectionType, setGeneratedSectionType] = useState<"verse" | "chorus" | "bridge">("verse");
+  const [generatedBars, setGeneratedBars] = useState(8);
+  const [generationPrompt, setGenerationPrompt] = useState("");
+  const [generationPlan, setGenerationPlan] = useState<TimelineDawGeneratedSectionPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,6 +72,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
       setRevisionHistory(null);
       setSelectedSectionId(null);
       setSectionRecipe(null);
+      setGenerationPlan(null);
       setDecisionExplanation("");
       setError(null);
     } catch (cause) {
@@ -123,7 +130,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={holdRequest}>Prepare Request for Review</button>
-        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setSectionRecipe(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
+        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setSectionRecipe(null); setGenerationPlan(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
       </div>
 
       {error ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">{error}</p> : null}
@@ -159,6 +166,18 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
                 </div>
                 <button type="button" className={`${buttonClass} mt-3`} disabled={sectionOperation !== "add" && !sectionRecognition.selectedSectionId} onClick={() => { try { setSectionRecipe(createTimelineDawVerbalSectionRecipe({ operation: sectionOperation, sections: sectionRecognition.sections, sourceSectionId: sectionRecognition.selectedSectionId, destinationSectionId, addedName: newSectionName, durationTicks: sectionTicks })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Section recipe could not be prepared."); } }}>Preview Arrangement Recipe</button>
                 {sectionRecipe ? <div className="mt-3 rounded-xl border border-white/15 bg-black/30 p-3"><p className="font-black">Protected preview · {sectionRecipe.operation}</p><ol className="mt-2 flex flex-wrap gap-2 text-xs">{sectionRecipe.after.map((section, index) => <li key={`${section.id}-${index}`} className="rounded-lg border border-white/15 px-2 py-1">{index + 1}. {section.name} · {section.startTick}–{section.endTick}{section.sourceSectionId ? " · source preserved" : " · new placeholder"}</li>)}</ol><p className="mt-2 text-xs font-bold text-emerald-200">Original arrangement unchanged. Execution remains locked.</p></div> : null}
+              </div>
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <p className="text-xs font-black uppercase tracking-wider text-fuchsia-200">Generate a new major section</p>
+                <p className="mt-1 text-sm text-white/60">Prepare a provider-ready verse, chorus, or bridge request. No provider is contacted in this step.</p>
+                <div className="mt-2 grid gap-2 md:grid-cols-3">
+                  <label className="text-sm font-bold">Section type<select className={`${fieldClass} mt-1`} value={generatedSectionType} onChange={(event) => setGeneratedSectionType(event.target.value as typeof generatedSectionType)}><option value="verse">Verse</option><option value="chorus">Chorus</option><option value="bridge">Bridge</option></select></label>
+                  <label className="text-sm font-bold">Bars<input className={`${fieldClass} mt-1`} type="number" min={1} max={128} step={1} value={generatedBars} onChange={(event) => setGeneratedBars(Number(event.target.value))} /></label>
+                  <label className="text-sm font-bold">Place after<select className={`${fieldClass} mt-1`} value={destinationSectionId} onChange={(event) => setDestinationSectionId(event.target.value)}><option value="">End of song</option>{sectionRecognition.sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}</select></label>
+                </div>
+                <label className="mt-2 block text-sm font-bold">Describe the new section<textarea className={`${fieldClass} mt-1 min-h-24`} maxLength={4000} value={generationPrompt} onChange={(event) => setGenerationPrompt(event.target.value)} placeholder="Example: Add an eight-bar funky R&B bridge using the verse groove, with space for a sax response." /></label>
+                <button type="button" className={`${buttonClass} mt-3`} onClick={() => { try { setGenerationPlan(createTimelineDawGeneratedSectionPlan({ sectionType: generatedSectionType, bars: generatedBars, prompt: generationPrompt, sections: sectionRecognition.sections, placementAfterSectionId: destinationSectionId || null })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Generation plan could not be prepared."); } }}>Prepare Generation & Placement Plan</button>
+                {generationPlan ? <div className="mt-3 rounded-xl border border-fuchsia-200/20 bg-black/30 p-3" aria-live="polite"><p className="font-black">{generationPlan.name} · {generationPlan.bars} bars</p><p className="mt-1 text-sm">Place at tick {generationPlan.placementStartTick}; planned length {generationPlan.durationTicks} ticks.</p><p className="mt-1 text-sm text-white/65">{generationPlan.prompt}</p><p className="mt-2 text-xs text-amber-100">Held until an approved provider supplies: {generationPlan.requiredProvenance.join(", ")}.</p><p className="mt-1 text-xs font-bold text-emerald-200">Generated output must remain a private draft for musician audition and approval.</p></div> : null}
               </div>
             </>
           )}

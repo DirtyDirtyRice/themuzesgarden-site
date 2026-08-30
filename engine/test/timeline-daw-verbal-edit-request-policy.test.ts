@@ -7,6 +7,7 @@ import {
   moveTimelineDawVerbalRevisionHistory,
   recognizeTimelineDawVerbalSections,
   createTimelineDawVerbalSectionRecipe,
+  createTimelineDawGeneratedSectionPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -159,5 +160,20 @@ describe("DAW verbal edit request policy", () => {
     expect(createTimelineDawVerbalSectionRecipe({ operation: "add", sections, addedName: "New Bridge", durationTicks: 60 }).after[1]).toMatchObject({ name: "New Bridge", startTick: 100, endTick: 160, sourceSectionId: null });
     expect(() => createTimelineDawVerbalSectionRecipe({ operation: "remove", sections, sourceSectionId: "missing" })).toThrow("source section");
     expect(() => createTimelineDawVerbalSectionRecipe({ operation: "extend", sections, sourceSectionId: "verse", durationTicks: -1 })).toThrow("positive");
+  });
+
+  it("prepares a provider-held verse, chorus, or bridge with exact musical placement", () => {
+    const sections = [{ id: "verse", name: "Verse", startTick: 0, endTick: 7680 }];
+    const plan = createTimelineDawGeneratedSectionPlan({ sectionType: "bridge", bars: 8, beatsPerBar: 4, ticksPerBeat: 960, prompt: "Use the verse groove with a new sax response.", sections, placementAfterSectionId: "verse" });
+    expect(plan).toMatchObject({ name: "Generated Bridge", durationTicks: 30720, placementStartTick: 7680, status: "held-for-generation-provider", executionAllowed: false });
+    expect(plan.requiredProvenance).toEqual(["provider", "model", "request-id", "rights-record", "output-fingerprint"]);
+  });
+
+  it("rejects unsupported section generation and invented placement", () => {
+    const sections = [{ id: "verse", name: "Verse", startTick: 0, endTick: 100 }];
+    expect(() => createTimelineDawGeneratedSectionPlan({ sectionType: "solo", bars: 8, prompt: "Make a long guitar solo section.", sections })).toThrow("verse, chorus, or bridge");
+    expect(() => createTimelineDawGeneratedSectionPlan({ sectionType: "verse", bars: 0, prompt: "Make a second verse section.", sections })).toThrow("1 to 128");
+    expect(() => createTimelineDawGeneratedSectionPlan({ sectionType: "chorus", bars: 8, prompt: "too short", sections })).toThrow("at least 10");
+    expect(() => createTimelineDawGeneratedSectionPlan({ sectionType: "bridge", bars: 8, prompt: "Make a contrasting bridge section.", sections, placementAfterSectionId: "missing" })).toThrow("not found");
   });
 });
