@@ -141,7 +141,7 @@ THE MUZES GARDEN DAW
     ├── connected-interface A/D capture workflow .................. DONE 8/30/26
     ├── connected-interface D/A monitoring workflow ............... DONE 8/30/26
     ├── studio hardware inventory and connection detection ........ DONE 8/30/26
-    ├── step-by-step human cabling, patching and setup guidance .... STILL TO DO
+    ├── step-by-step human cabling, patching and setup guidance .... DONE 8/30/26
     ├── hardware safety warnings and confirmation gates ............ STILL TO DO
     ├── gain, clock, sample-rate and synchronization preflight ..... STILL TO DO
     ├── pause for required physical action, then verify and resume . STILL TO DO
@@ -332,6 +332,14 @@ THE MUZES GARDEN DAW
 - Device labels and identifiers remain current-tab memory only and are never written to browser storage, the database, logs, URLs, analytics, or the Library.
 - The inventory never claims that cables, patch bays, phantom power, speakers, or analog signal flow are physically verified.
 - The next leaf is step-by-step human cabling, patching, and setup guidance.
+
+### VERBAL EDITING baby-step cabling and patching milestone — 8/30/26
+
+- The owner can name the physical source, interface input, XLR/TRS/TS cable, and direct or patch-bay route.
+- The DAW reveals exactly one action at a time and will not reveal the next action until the musician confirms the current physical step.
+- Direct routes and patch-bay routes receive distinct instructions, beginning with interface input gain fully down and ending with DAW input selection.
+- No step can be performed automatically, no physical connection is inferred, and setup details remain current-tab memory only.
+- The next leaf is hardware safety warnings and confirmation gates.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
