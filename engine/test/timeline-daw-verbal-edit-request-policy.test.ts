@@ -19,6 +19,7 @@ import {
   assessTimelineDawNoteAnalysis,
   createTimelineDawVerbalPrivateRenderPlan,
   createTimelineDawVerbalAdCapturePlan,
+  createTimelineDawVerbalDaMonitoringPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -461,5 +462,16 @@ describe("DAW verbal edit request policy", () => {
     expect(() => createTimelineDawVerbalAdCapturePlan({ ...valid, inputChannel: 0 })).toThrow("1 to 128");
     expect(() => createTimelineDawVerbalAdCapturePlan({ ...valid, sourceType: "speaker" })).toThrow("microphone, instrument, or line");
     expect(() => createTimelineDawVerbalAdCapturePlan({ ...valid, sampleRate: 22_050 })).toThrow("44.1, 48, or 96");
+  });
+
+  it("creates a safe audition-only D/A monitoring workflow", () => {
+    expect(createTimelineDawVerbalDaMonitoringPlan({ interfaceName: "Scarlett 2i2", outputName: "Outputs 1–2", destination: "studio-monitors", sampleRate: 48_000, lowLevelConfirmedByHuman: true })).toMatchObject({ destination: "studio-monitors", auditionOnly: true, sourceMutable: false, status: "held-for-output-path-verification", executionAllowed: false });
+  });
+
+  it("holds D/A playback until a human confirms the low output level", () => {
+    const valid = { interfaceName: "Apollo Twin", outputName: "Headphone 1", destination: "headphones", sampleRate: 96_000, lowLevelConfirmedByHuman: true };
+    expect(createTimelineDawVerbalDaMonitoringPlan(valid).phases).toHaveLength(3);
+    expect(() => createTimelineDawVerbalDaMonitoringPlan({ ...valid, lowLevelConfirmedByHuman: false })).toThrow("turn the interface output down");
+    expect(() => createTimelineDawVerbalDaMonitoringPlan({ ...valid, destination: "bluetooth-speaker" })).toThrow("headphones or studio monitors");
   });
 });

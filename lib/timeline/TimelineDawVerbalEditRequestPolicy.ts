@@ -255,6 +255,19 @@ export type TimelineDawVerbalAdCapturePlan = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalDaMonitoringPlan = {
+  interfaceName: string;
+  outputName: string;
+  destination: "headphones" | "studio-monitors";
+  sampleRate: 44_100 | 48_000 | 96_000;
+  lowLevelConfirmedByHuman: true;
+  phases: readonly ["route-private-audition-to-interface", "confirm-low-output-level", "play-and-verify-left-right-monitoring"];
+  sourceMutable: false;
+  auditionOnly: true;
+  status: "held-for-output-path-verification";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -900,4 +913,17 @@ export function createTimelineDawVerbalAdCapturePlan(input: {
     status: "held-for-live-signal-verification",
     executionAllowed: false,
   };
+}
+
+export function createTimelineDawVerbalDaMonitoringPlan(input: { interfaceName: unknown; outputName: unknown; destination: unknown; sampleRate: unknown; lowLevelConfirmedByHuman: unknown }): TimelineDawVerbalDaMonitoringPlan {
+  const interfaceName = normalizeInstruction(input.interfaceName);
+  const outputName = normalizeInstruction(input.outputName);
+  if (interfaceName.length < 2 || interfaceName.length > 120) throw new Error("Name the connected audio interface in 2 to 120 characters.");
+  if (outputName.length < 2 || outputName.length > 120) throw new Error("Name the connected interface output in 2 to 120 characters.");
+  const destination = normalizeInstruction(input.destination).toLocaleLowerCase();
+  if (destination !== "headphones" && destination !== "studio-monitors") throw new Error("Choose headphones or studio monitors as the listening destination.");
+  const sampleRate = Number(input.sampleRate);
+  if (![44_100, 48_000, 96_000].includes(sampleRate)) throw new Error("Choose 44.1, 48, or 96 kHz for D/A monitoring.");
+  if (input.lowLevelConfirmedByHuman !== true) throw new Error("A human must turn the interface output down before D/A playback.");
+  return { interfaceName, outputName, destination: destination as TimelineDawVerbalDaMonitoringPlan["destination"], sampleRate: sampleRate as TimelineDawVerbalDaMonitoringPlan["sampleRate"], lowLevelConfirmedByHuman: true, phases: ["route-private-audition-to-interface", "confirm-low-output-level", "play-and-verify-left-right-monitoring"], sourceMutable: false, auditionOnly: true, status: "held-for-output-path-verification", executionAllowed: false };
 }

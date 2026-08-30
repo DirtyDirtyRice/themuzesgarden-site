@@ -139,7 +139,7 @@ THE MUZES GARDEN DAW
     ├── audio-to-MIDI or note-analysis assistance where reliable .. DONE 8/30/26
     ├── digital audio rendering and private result audition ....... DONE 8/30/26
     ├── connected-interface A/D capture workflow .................. DONE 8/30/26
-    ├── connected-interface D/A monitoring workflow ............... STILL TO DO
+    ├── connected-interface D/A monitoring workflow ............... DONE 8/30/26
     ├── studio hardware inventory and connection detection ........ STILL TO DO
     ├── step-by-step human cabling, patching and setup guidance .... STILL TO DO
     ├── hardware safety warnings and confirmation gates ............ STILL TO DO
@@ -317,6 +317,13 @@ THE MUZES GARDEN DAW
 - The plan separates connect, live-signal verification, and private WAV capture into three visible phases with a −18 to −6 dBFS peak target.
 - Capture remains held until permission, clock, sample rate, and input level are verified; any future result must enter as a new private take without changing the source.
 - The next leaf is the connected-interface D/A monitoring workflow.
+
+### VERBAL EDITING connected-interface D/A monitoring milestone — 8/30/26
+
+- The owner can define the interface output and choose headphones or studio monitors for private result audition.
+- The workflow routes the private audition, requires a human-confirmed low starting output level, and then verifies left/right monitoring before volume is raised.
+- Playback remains audition-only with source mutation and automatic execution blocked while the physical output path is unverified.
+- The next leaf is studio hardware inventory and connection detection.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
