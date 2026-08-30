@@ -130,7 +130,7 @@ THE MUZES GARDEN DAW
     ├── generate and place new verse, chorus or bridge sections ... DONE 8/29/26
     ├── arrangement-aware transitions into generated sections .... DONE 8/29/26
     ├── instrument and track selection by spoken description ...... DONE 8/29/26
-    ├── double or triple an existing musical performance .......... STILL TO DO
+    ├── double or triple an existing musical performance .......... DONE 8/29/26
     ├── tonic, key, scale and chord-aware interval instructions ... STILL TO DO
     ├── harmonize selected material by third, fifth or interval ... STILL TO DO
     ├── apply different instruments only to named time ranges ..... STILL TO DO
@@ -252,6 +252,13 @@ THE MUZES GARDEN DAW
 - Every confirmed target retains its real private lane ID; the matcher does not create duplicate tracks, change routing, expose source paths, or store private names in browser persistence.
 - Focused tests cover exact names, descriptive synonyms, unique rankings, tied ambiguity, unmatched instruments, explicit override, and execution locking.
 - The next leaf is double or triple an existing musical performance.
+
+### VERBAL EDITING performance-layer plan milestone — 8/29/26
+
+- A confirmed real session track can now become the immutable source for a spoken double or triple plan.
+- Double creates one named protected layer; triple creates two, all aligned to the source timeline position.
+- Timing stays source-locked until a later humanization review, and no audio execution is permitted by this milestone.
+- The next leaf is harmony layers by interval from the tonic or chord.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

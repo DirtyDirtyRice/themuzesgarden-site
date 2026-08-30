@@ -10,6 +10,7 @@ import {
   createTimelineDawGeneratedSectionPlan,
   createTimelineDawGeneratedTransitionPlan,
   matchTimelineDawTracksByDescription,
+  createTimelineDawPerformanceLayerPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -216,5 +217,28 @@ describe("DAW verbal edit request policy", () => {
     expect(matchTimelineDawTracksByDescription({ description: "rhythm guitar", tracks })).toMatchObject({ selectedTrackId: null, confidence: "ambiguous" });
     expect(matchTimelineDawTracksByDescription({ description: "rhythm guitar", tracks, selectedTrackId: "guitar-2" }).selectedTrackId).toBe("guitar-2");
     expect(matchTimelineDawTracksByDescription({ description: "saxophone", tracks })).toMatchObject({ selectedTrackId: null, confidence: "unmatched", matches: [] });
+  });
+
+  it("plans a source-preserving performance double", () => {
+    const tracks = [{ id: "lead", name: "Lead Guitar", kind: "audio" as const }];
+    expect(createTimelineDawPerformanceLayerPlan({ instruction: "Double the lead guitar performance", tracks, sourceTrackId: "lead" })).toEqual({
+      sourceTrackId: "lead",
+      sourceTrackName: "Lead Guitar",
+      operation: "double",
+      addedLayerCount: 1,
+      layerNames: ["Lead Guitar Double 1"],
+      placement: "same-timeline-position",
+      timingPolicy: "source-locked-pending-humanize-review",
+      sourceMutable: false,
+      status: "held-for-layer-review",
+      executionAllowed: false,
+    });
+  });
+
+  it("plans two added layers for a triple and rejects uncertain targets", () => {
+    const tracks = [{ id: "sax", name: "Tenor Sax", kind: "audio" as const }];
+    expect(createTimelineDawPerformanceLayerPlan({ instruction: "Triple this sax performance", tracks, sourceTrackId: "sax" })).toMatchObject({ operation: "triple", addedLayerCount: 2, layerNames: ["Tenor Sax Triple 1", "Tenor Sax Triple 2"] });
+    expect(() => createTimelineDawPerformanceLayerPlan({ instruction: "Layer the sax", tracks, sourceTrackId: "sax" })).toThrow("double or triple");
+    expect(() => createTimelineDawPerformanceLayerPlan({ instruction: "Double the sax", tracks, sourceTrackId: null })).toThrow("Confirm the real source track");
   });
 });

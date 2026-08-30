@@ -14,6 +14,7 @@ import {
   createTimelineDawGeneratedSectionPlan,
   createTimelineDawGeneratedTransitionPlan,
   matchTimelineDawTracksByDescription,
+  createTimelineDawPerformanceLayerPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
@@ -25,6 +26,7 @@ import {
   type TimelineDawGeneratedSectionPlan,
   type TimelineDawGeneratedTransitionPlan,
   type TimelineDawVerbalTrackCandidate,
+  type TimelineDawVerbalPerformanceLayerPlan,
 } from "@/lib/timeline/TimelineDawVerbalEditRequestPolicy";
 
 const fieldClass = "w-full rounded-xl border border-white/20 bg-black px-4 py-3 text-white outline-none focus:border-fuchsia-300";
@@ -56,6 +58,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
   const [transitionPlan, setTransitionPlan] = useState<TimelineDawGeneratedTransitionPlan | null>(null);
   const [sessionTracks, setSessionTracks] = useState<TimelineDawVerbalTrackCandidate[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const [performanceLayerPlan, setPerformanceLayerPlan] = useState<TimelineDawVerbalPerformanceLayerPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,6 +98,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
       setGenerationPlan(null);
       setTransitionPlan(null);
       setSelectedTrackId(null);
+      setPerformanceLayerPlan(null);
       setDecisionExplanation("");
       setError(null);
     } catch (cause) {
@@ -153,7 +157,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={holdRequest}>Prepare Request for Review</button>
-        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setSelectedTrackId(null); setSectionRecipe(null); setGenerationPlan(null); setTransitionPlan(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
+        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setSelectedTrackId(null); setPerformanceLayerPlan(null); setSectionRecipe(null); setGenerationPlan(null); setTransitionPlan(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
       </div>
 
       {error ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">{error}</p> : null}
@@ -208,6 +212,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
         </article>
       ) : null}
       {trackSelection ? <article className="mt-5 rounded-2xl border border-sky-300/25 bg-sky-300/[0.05] p-4" aria-labelledby="verbal-track-heading"><p className="text-xs font-black uppercase tracking-wider text-sky-200">Spoken instrument and track matching</p><h3 id="verbal-track-heading" className="mt-1 text-lg font-black">Confirm the real session track</h3>{sessionTracks.length === 0 ? <p className="mt-2 text-sm text-amber-100">No private audio tracks are available in this session yet.</p> : <><p className="mt-2 text-sm text-white/60">Match confidence: <b>{trackSelection.confidence}</b>. {trackSelection.confidence === "ambiguous" || trackSelection.confidence === "unmatched" ? "Choose the intended track explicitly." : "Confirm or change the suggested track."}</p><label className="mt-3 block text-sm font-bold">Session track<select className={`${fieldClass} mt-1`} value={trackSelection.selectedTrackId ?? ""} onChange={(event) => setSelectedTrackId(event.target.value || null)}><option value="">Choose a track…</option>{sessionTracks.map((track) => <option key={track.id} value={track.id}>{track.name} · {track.kind}</option>)}</select></label>{trackSelection.matches.length ? <ol className="mt-3 space-y-1 text-xs text-white/60">{trackSelection.matches.slice(0, 5).map((match) => <li key={match.id}>{match.name} · score {match.score} · matched {match.matchedTerms.join(", ")}</li>)}</ol> : null}{trackSelection.selectedTrackId ? <p className="mt-3 text-xs font-bold text-emerald-200">Track confirmed: {sessionTracks.find((track) => track.id === trackSelection.selectedTrackId)?.name}. Routing and audio remain unchanged.</p> : <p className="mt-3 text-xs font-bold text-amber-100">No edit can proceed until a real session track is confirmed.</p>}</>}</article> : null}
+      {trackSelection?.selectedTrackId ? <article className="mt-5 rounded-2xl border border-violet-300/25 bg-violet-300/[0.05] p-4"><p className="text-xs font-black uppercase tracking-wider text-violet-200">Performance layers</p><h3 className="mt-1 text-lg font-black">Plan a double or triple</h3><button type="button" className={`${buttonClass} mt-3`} onClick={() => { try { setPerformanceLayerPlan(createTimelineDawPerformanceLayerPlan({ instruction: heldRequest?.instruction, tracks: sessionTracks, sourceTrackId: trackSelection.selectedTrackId })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "The performance-layer plan could not be prepared."); } }}>Prepare protected layer plan</button>{performanceLayerPlan ? <div className="mt-3 rounded-xl border border-white/15 p-3 text-sm text-white/70"><p><b>{performanceLayerPlan.operation.toUpperCase()}</b> {performanceLayerPlan.sourceTrackName} by adding {performanceLayerPlan.addedLayerCount} protected {performanceLayerPlan.addedLayerCount === 1 ? "layer" : "layers"} at the same timeline position.</p><ul className="mt-2 list-disc pl-5">{performanceLayerPlan.layerNames.map((name) => <li key={name}>{name}</li>)}</ul><p className="mt-2 font-bold text-amber-100">Held for review. Timing/humanization is not assumed, and the source recording cannot be changed.</p></div> : null}</article> : null}
       {plan ? (
         <article className="mt-5 rounded-2xl border border-amber-200/30 bg-amber-200/[0.06] p-4" aria-labelledby="protected-edit-plan-heading">
           <div className="flex flex-wrap items-center justify-between gap-2">

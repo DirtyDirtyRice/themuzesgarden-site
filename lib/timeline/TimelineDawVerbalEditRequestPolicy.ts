@@ -109,6 +109,19 @@ export type TimelineDawVerbalTrackSelection = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalPerformanceLayerPlan = {
+  sourceTrackId: string;
+  sourceTrackName: string;
+  operation: "double" | "triple";
+  addedLayerCount: 1 | 2;
+  layerNames: readonly string[];
+  placement: "same-timeline-position";
+  timingPolicy: "source-locked-pending-humanize-review";
+  sourceMutable: false;
+  status: "held-for-layer-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -413,6 +426,31 @@ export function matchTimelineDawTracksByDescription(input: {
   return {
     matches, selectedTrackId: requested ?? inferred,
     confidence: top?.score === 100 && tied.length === 1 ? "exact" : inferred ? "high" : matches.length ? "ambiguous" : "unmatched",
+    executionAllowed: false,
+  };
+}
+
+export function createTimelineDawPerformanceLayerPlan(input: {
+  instruction: unknown;
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  sourceTrackId: string | null;
+}): TimelineDawVerbalPerformanceLayerPlan {
+  const instruction = normalizeInstruction(input.instruction).toLocaleLowerCase();
+  const operation = /\b(triple|tripled|tripling)\b/.test(instruction) ? "triple" : /\b(double|doubled|doubling)\b/.test(instruction) ? "double" : null;
+  if (!operation) throw new Error("Say whether to double or triple the performance.");
+  const source = input.sourceTrackId ? input.tracks.find((track) => track.id === input.sourceTrackId) : null;
+  if (!source) throw new Error("Confirm the real source track before planning performance layers.");
+  const addedLayerCount = operation === "triple" ? 2 : 1;
+  return {
+    sourceTrackId: source.id,
+    sourceTrackName: source.name,
+    operation,
+    addedLayerCount,
+    layerNames: Array.from({ length: addedLayerCount }, (_, index) => `${source.name} ${operation === "double" ? "Double" : "Triple"} ${index + 1}`),
+    placement: "same-timeline-position",
+    timingPolicy: "source-locked-pending-humanize-review",
+    sourceMutable: false,
+    status: "held-for-layer-review",
     executionAllowed: false,
   };
 }
