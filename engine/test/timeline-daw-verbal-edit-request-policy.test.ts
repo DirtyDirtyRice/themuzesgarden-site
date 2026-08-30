@@ -9,6 +9,7 @@ import {
   createTimelineDawVerbalSectionRecipe,
   createTimelineDawGeneratedSectionPlan,
   createTimelineDawGeneratedTransitionPlan,
+  matchTimelineDawTracksByDescription,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -195,5 +196,25 @@ describe("DAW verbal edit request policy", () => {
     expect(held.warnings).toHaveLength(2);
     expect(() => createTimelineDawGeneratedTransitionPlan({ generationPlan, sections, style: "crossfade", crossfadeTicks: 0 })).toThrow("positive crossfade");
     expect(() => createTimelineDawGeneratedTransitionPlan({ generationPlan, sections, style: "crossfade", crossfadeTicks: generationPlan.durationTicks })).toThrow("safe whole-tick");
+  });
+
+  it("matches spoken instrument descriptions to real session tracks", () => {
+    const tracks = [
+      { id: "guitar", name: "Lead Electric Guitar", kind: "audio" as const },
+      { id: "drums", name: "Main Drum Kit", kind: "audio" as const },
+      { id: "vocal", name: "Background Vocals", kind: "audio" as const },
+    ];
+    expect(matchTimelineDawTracksByDescription({ description: "double the lead guitar", tracks })).toMatchObject({ selectedTrackId: "guitar", confidence: "high", executionAllowed: false });
+    expect(matchTimelineDawTracksByDescription({ description: "Background Vocals", tracks })).toMatchObject({ selectedTrackId: "vocal", confidence: "exact" });
+  });
+
+  it("holds ambiguous track descriptions and accepts explicit musician selection", () => {
+    const tracks = [
+      { id: "guitar-1", name: "Rhythm Guitar Left", kind: "audio" as const },
+      { id: "guitar-2", name: "Rhythm Guitar Right", kind: "audio" as const },
+    ];
+    expect(matchTimelineDawTracksByDescription({ description: "rhythm guitar", tracks })).toMatchObject({ selectedTrackId: null, confidence: "ambiguous" });
+    expect(matchTimelineDawTracksByDescription({ description: "rhythm guitar", tracks, selectedTrackId: "guitar-2" }).selectedTrackId).toBe("guitar-2");
+    expect(matchTimelineDawTracksByDescription({ description: "saxophone", tracks })).toMatchObject({ selectedTrackId: null, confidence: "unmatched", matches: [] });
   });
 });

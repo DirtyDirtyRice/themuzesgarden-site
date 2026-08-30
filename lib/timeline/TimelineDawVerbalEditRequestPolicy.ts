@@ -100,6 +100,15 @@ export type TimelineDawGeneratedTransitionPlan = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalTrackCandidate = { id: string; name: string; kind: "audio" | "midi" | "instrument" };
+export type TimelineDawVerbalTrackMatch = TimelineDawVerbalTrackCandidate & { score: number; matchedTerms: readonly string[] };
+export type TimelineDawVerbalTrackSelection = {
+  matches: readonly TimelineDawVerbalTrackMatch[];
+  selectedTrackId: string | null;
+  confidence: "exact" | "high" | "ambiguous" | "unmatched";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -366,5 +375,44 @@ export function createTimelineDawGeneratedTransitionPlan(input: {
     preserveTail: input.preserveTail === true || style === "tail-overlap",
     tempoCompatibility, keyCompatibility, warnings,
     status: "held-for-transition-review", executionAllowed: false,
+  };
+}
+
+const TRACK_TERM_GROUPS = [
+  ["guitar", "gtr", "acoustic", "electric"], ["bass", "bassline"], ["drum", "drums", "kick", "snare", "percussion", "beat"],
+  ["vocal", "vocals", "voice", "singer"], ["piano", "keys", "keyboard", "rhodes", "organ", "synth"],
+  ["sax", "saxophone"], ["horn", "trumpet", "trombone"], ["strings", "violin", "viola", "cello"],
+] as const;
+
+function trackTerms(value: string) {
+  const normalized = value.toLocaleLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const terms = new Set(normalized.split(" ").filter((term) => term.length > 1));
+  for (const group of TRACK_TERM_GROUPS) if (group.some((term) => terms.has(term))) group.forEach((term) => terms.add(term));
+  return { normalized, terms };
+}
+
+export function matchTimelineDawTracksByDescription(input: {
+  description: unknown;
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  selectedTrackId?: string | null;
+}): TimelineDawVerbalTrackSelection {
+  const description = normalizeInstruction(input.description);
+  if (description.length < 2) throw new Error("Describe the instrument or track to select.");
+  const query = trackTerms(description);
+  const tracks = input.tracks.filter((track) => track.id.trim() && track.name.trim()).map((track) => ({ ...track, id: track.id.trim(), name: track.name.trim() }));
+  const matches = tracks.map((track) => {
+    const candidate = trackTerms(track.name);
+    const matchedTerms = [...query.terms].filter((term) => candidate.terms.has(term));
+    const exact = query.normalized === candidate.normalized || query.normalized.includes(candidate.normalized);
+    const score = exact ? 100 : Math.min(99, matchedTerms.length * 20 + (matchedTerms.some((term) => track.name.toLocaleLowerCase().includes(term)) ? 10 : 0));
+    return { ...track, score, matchedTerms };
+  }).filter((track) => track.score > 0).sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
+  const top = matches[0], tied = top ? matches.filter((match) => match.score === top.score) : [];
+  const inferred = top && tied.length === 1 && top.score >= 40 ? top.id : null;
+  const requested = input.selectedTrackId && tracks.some((track) => track.id === input.selectedTrackId) ? input.selectedTrackId : null;
+  return {
+    matches, selectedTrackId: requested ?? inferred,
+    confidence: top?.score === 100 && tied.length === 1 ? "exact" : inferred ? "high" : matches.length ? "ambiguous" : "unmatched",
+    executionAllowed: false,
   };
 }

@@ -129,7 +129,7 @@ THE MUZES GARDEN DAW
     ├── add, remove, move, copy or extend complete sections ....... DONE 8/29/26
     ├── generate and place new verse, chorus or bridge sections ... DONE 8/29/26
     ├── arrangement-aware transitions into generated sections .... DONE 8/29/26
-    ├── instrument and track selection by spoken description ...... STILL TO DO
+    ├── instrument and track selection by spoken description ...... DONE 8/29/26
     ├── double or triple an existing musical performance .......... STILL TO DO
     ├── tonic, key, scale and chord-aware interval instructions ... STILL TO DO
     ├── harmonize selected material by third, fifth or interval ... STILL TO DO
@@ -243,6 +243,15 @@ THE MUZES GARDEN DAW
 - Entry, exit, pickup, tail, overlap, and compatibility decisions remain private review plans with execution locked and original arrangements untouched.
 - Focused tests cover middle and end placement, entry/exit identity, transition modes, overlap limits, compatibility warnings, and execution locking. No database migration was required.
 - The next leaf is instrument and track selection by spoken description.
+
+## Completed milestone - Instrument And Track Selection By Spoken Description
+
+- VERBAL EDITING now matches ordinary instrument and track wording against the current session’s real owner-protected private audio lanes.
+- Exact saved names rank above descriptive matches, while instrument families and common studio terms support guitar, bass, drums, vocals, keyboards, saxophone, horns, and strings.
+- Candidates display their match score and matched terms. Unique strong matches can be suggested, but tied, weak, and unmatched wording requires explicit musician selection.
+- Every confirmed target retains its real private lane ID; the matcher does not create duplicate tracks, change routing, expose source paths, or store private names in browser persistence.
+- Focused tests cover exact names, descriptive synonyms, unique rankings, tied ambiguity, unmatched instruments, explicit override, and execution locking.
+- The next leaf is double or triple an existing musical performance.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
