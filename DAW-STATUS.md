@@ -103,6 +103,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Chrome directly qualifies only built-in and WASM instruments; desktop VST3, AU, AAX, and CLAP instruments require a separately verified bridge or verified rendered-audio exchange.
 - Held instruments cannot activate and remain silent placeholders while editable MIDI, instrument identity, and source audio stay preserved.
 
+## Completed milestone - Unsupported Instrument and Plug-In Handling
+
+- A missing, unsupported, mismatched, crashed, or incompletely qualified virtual instrument remains a silent placeholder instead of activating or emitting unpredictable audio.
+- Editable MIDI events, instrument/preset identity, source audio, routing, and session history remain preserved.
+- Musicians can prepare a review-only plan to keep the placeholder, choose a separately qualified replacement, use a fingerprint-verified render, or remove only the instrument slot.
+- Instrument-slot removal requires explicit confirmation, and every recovery plan remains held without activating an instrument or changing MIDI, audio, or routing.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
