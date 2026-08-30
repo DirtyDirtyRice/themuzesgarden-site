@@ -16,6 +16,7 @@ import {
   createTimelineDawInstrumentRangePlan,
   createTimelineDawMicroEditRecipe,
   createTimelineDawMidiNoteDraft,
+  assessTimelineDawNoteAnalysis,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -380,5 +381,33 @@ describe("DAW verbal edit request policy", () => {
     expect(() => createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation: "add", midiNote: 60, startTick: 0, durationTicks: 0, velocity: 100, channel: 1 })).toThrow("at least one");
     expect(() => createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation: "add", midiNote: 60, startTick: 0, durationTicks: 1, velocity: 0, channel: 1 })).toThrow("1 to 127");
     expect(() => createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation: "add", midiNote: 60, startTick: 0, durationTicks: 1, velocity: 100, channel: 17 })).toThrow("1 to 16");
+  });
+
+  it("allows a human-reviewed MIDI draft only for high-confidence monophonic analysis", () => {
+    const tracks = [{ id: "voice", name: "Voice Melody", kind: "audio" as const }];
+    expect(assessTimelineDawNoteAnalysis({ tracks, sourceTrackId: "voice", analysisMode: "audio-to-midi", texture: "monophonic", detectedNoteCount: 24, pitchConfidence: 0.94, onsetConfidence: 0.91 })).toEqual({
+      sourceTrackId: "voice",
+      sourceTrackName: "Voice Melody",
+      analysisMode: "audio-to-midi",
+      texture: "monophonic",
+      detectedNoteCount: 24,
+      pitchConfidence: 0.94,
+      onsetConfidence: 0.91,
+      reliability: "high",
+      midiDraftAllowed: true,
+      warnings: [],
+      humanVerificationRequired: true,
+      status: "held-for-analysis-review",
+      executionAllowed: false,
+    });
+  });
+
+  it("blocks unreliable conversion and discloses polyphonic, percussive, and low-confidence limits", () => {
+    const tracks = [{ id: "mix", name: "Full Mix", kind: "audio" as const }];
+    const polyphonic = assessTimelineDawNoteAnalysis({ tracks, sourceTrackId: "mix", analysisMode: "audio-to-midi", texture: "polyphonic", detectedNoteCount: 80, pitchConfidence: 0.98, onsetConfidence: 0.95 });
+    expect(polyphonic).toMatchObject({ reliability: "unsupported", midiDraftAllowed: false, warnings: [expect.stringContaining("Overlapping pitches")] });
+    const percussive = assessTimelineDawNoteAnalysis({ tracks, sourceTrackId: "mix", analysisMode: "pitch-and-onset", texture: "percussive", detectedNoteCount: 16, pitchConfidence: 0.2, onsetConfidence: 0.96 });
+    expect(percussive.warnings).toEqual(expect.arrayContaining([expect.stringContaining("Percussive audio"), expect.stringContaining("Pitch confidence")]));
+    expect(() => assessTimelineDawNoteAnalysis({ tracks, sourceTrackId: "mix", analysisMode: "audio-to-midi", texture: "monophonic", detectedNoteCount: 1, pitchConfidence: 1.1, onsetConfidence: 0.9 })).toThrow("between 0 and 1");
   });
 });

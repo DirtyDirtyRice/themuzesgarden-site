@@ -200,6 +200,22 @@ export type TimelineDawVerbalMidiNoteDraft = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalNoteAnalysisAssessment = {
+  sourceTrackId: string;
+  sourceTrackName: string;
+  analysisMode: "pitch-and-onset" | "audio-to-midi";
+  texture: "monophonic" | "polyphonic" | "percussive";
+  detectedNoteCount: number;
+  pitchConfidence: number;
+  onsetConfidence: number;
+  reliability: "high" | "review-required" | "unsupported";
+  midiDraftAllowed: boolean;
+  warnings: readonly string[];
+  humanVerificationRequired: true;
+  status: "held-for-analysis-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -720,6 +736,55 @@ export function createTimelineDawMidiNoteDraft(input: {
     outputLaneName: `${source.name} MIDI Draft`,
     sourceMutable: false,
     status: "held-for-midi-note-review",
+    executionAllowed: false,
+  };
+}
+
+export function assessTimelineDawNoteAnalysis(input: {
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  sourceTrackId: string | null;
+  analysisMode: unknown;
+  texture: unknown;
+  detectedNoteCount: unknown;
+  pitchConfidence: unknown;
+  onsetConfidence: unknown;
+}): TimelineDawVerbalNoteAnalysisAssessment {
+  const source = input.sourceTrackId ? input.tracks.find((track) => track.id === input.sourceTrackId) : null;
+  if (!source) throw new Error("Confirm the source track before assessing note analysis.");
+  const analysisMode = normalizeInstruction(input.analysisMode).toLocaleLowerCase();
+  if (analysisMode !== "pitch-and-onset" && analysisMode !== "audio-to-midi") throw new Error("Choose pitch-and-onset or audio-to-MIDI analysis.");
+  const texture = normalizeInstruction(input.texture).toLocaleLowerCase();
+  if (texture !== "monophonic" && texture !== "polyphonic" && texture !== "percussive") throw new Error("Classify the source as monophonic, polyphonic, or percussive.");
+  const detectedNoteCount = Number(input.detectedNoteCount);
+  const pitchConfidence = Number(input.pitchConfidence);
+  const onsetConfidence = Number(input.onsetConfidence);
+  if (!Number.isSafeInteger(detectedNoteCount) || detectedNoteCount < 0 || detectedNoteCount > 100_000) throw new Error("Detected note count must be a whole number from 0 to 100,000.");
+  if (!Number.isFinite(pitchConfidence) || pitchConfidence < 0 || pitchConfidence > 1) throw new Error("Pitch confidence must be between 0 and 1.");
+  if (!Number.isFinite(onsetConfidence) || onsetConfidence < 0 || onsetConfidence > 1) throw new Error("Onset confidence must be between 0 and 1.");
+  const unsupported = texture !== "monophonic" && analysisMode === "audio-to-midi";
+  const high = !unsupported && detectedNoteCount > 0 && pitchConfidence >= 0.9 && onsetConfidence >= 0.85;
+  const review = !unsupported && detectedNoteCount > 0 && pitchConfidence >= 0.7 && onsetConfidence >= 0.7;
+  const reliability = unsupported ? "unsupported" : high ? "high" : review ? "review-required" : "unsupported";
+  const warnings = [
+    ...(texture === "polyphonic" ? ["Overlapping pitches can produce octave errors, missing notes, or false notes."] : []),
+    ...(texture === "percussive" ? ["Percussive audio can support onset timing, but pitched-note conversion is not reliable."] : []),
+    ...(pitchConfidence < 0.9 ? ["Pitch confidence is below the high-reliability threshold."] : []),
+    ...(onsetConfidence < 0.85 ? ["Onset confidence is below the high-reliability threshold."] : []),
+    ...(detectedNoteCount === 0 ? ["No note candidates were detected."] : []),
+  ];
+  return {
+    sourceTrackId: source.id,
+    sourceTrackName: source.name,
+    analysisMode,
+    texture,
+    detectedNoteCount,
+    pitchConfidence,
+    onsetConfidence,
+    reliability,
+    midiDraftAllowed: reliability === "high",
+    warnings,
+    humanVerificationRequired: true,
+    status: "held-for-analysis-review",
     executionAllowed: false,
   };
 }
