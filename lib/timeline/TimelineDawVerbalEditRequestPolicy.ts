@@ -37,12 +37,21 @@ export type TimelineDawVerbalDraftRevision = {
   parentRevisionId: string | null;
   kind: "immutable-source" | "protected-draft";
   instruction: string;
+  note: string;
   sourceMutable: false;
 };
 
 export type TimelineDawVerbalRevisionHistory = {
   revisions: readonly TimelineDawVerbalDraftRevision[];
   activeIndex: number;
+};
+
+export type TimelineDawVerbalAbComparison = {
+  a: TimelineDawVerbalDraftRevision;
+  b: TimelineDawVerbalDraftRevision;
+  activeSide: "A" | "B";
+  sourceMutable: false;
+  executionAllowed: false;
 };
 
 export type TimelineDawVerbalNamedSection = {
@@ -371,6 +380,7 @@ export function createTimelineDawVerbalRevisionHistory(input: {
     parentRevisionId: null,
     kind: "immutable-source",
     instruction: "Original music before the verbal edit draft.",
+    note: "Immutable before version.",
     sourceMutable: false,
   };
   const draft: TimelineDawVerbalDraftRevision = {
@@ -380,9 +390,45 @@ export function createTimelineDawVerbalRevisionHistory(input: {
     parentRevisionId: baseline.id,
     kind: "protected-draft",
     instruction: input.request.instruction,
+    note: "AI draft awaiting musician notes.",
     sourceMutable: false,
   };
   return { revisions: [baseline, draft], activeIndex: 1 };
+}
+
+export function editTimelineDawVerbalDraftRevision(history: TimelineDawVerbalRevisionHistory, input: { revisionId: unknown; label: unknown; note: unknown }): TimelineDawVerbalRevisionHistory {
+  const revisionId = String(input.revisionId ?? "");
+  const index = history.revisions.findIndex((revision) => revision.id === revisionId);
+  if (index < 0) throw new Error("Choose a revision from this protected history.");
+  if (history.revisions[index].kind === "immutable-source") throw new Error("The original source label and note are locked.");
+  const label = String(input.label ?? "").replace(/\s+/g, " ").trim();
+  const note = String(input.note ?? "").replace(/\s+/g, " ").trim();
+  if (label.length < 3 || label.length > 120) throw new Error("Keep the revision label between 3 and 120 characters.");
+  if (note.length > 1_000) throw new Error("Keep the revision note to 1,000 characters or fewer.");
+  return { ...history, revisions: history.revisions.map((revision, revisionIndex) => revisionIndex === index ? { ...revision, label, note } : revision) };
+}
+
+export function appendTimelineDawVerbalDraftRevision(history: TimelineDawVerbalRevisionHistory, input: { label: unknown; instruction: unknown; note?: unknown }): TimelineDawVerbalRevisionHistory {
+  const parent = history.revisions[history.activeIndex];
+  if (!parent || parent.kind === "immutable-source") throw new Error("Select a protected draft before creating its next revision.");
+  if (history.revisions.length >= 100) throw new Error("This current-tab history has reached its 100-revision safety limit.");
+  const label = String(input.label ?? "").replace(/\s+/g, " ").trim();
+  const instruction = String(input.instruction ?? "").replace(/\s+/g, " ").trim();
+  const note = String(input.note ?? "").replace(/\s+/g, " ").trim();
+  if (label.length < 3 || label.length > 120) throw new Error("Keep the revision label between 3 and 120 characters.");
+  if (instruction.length < 4 || instruction.length > 4_000) throw new Error("Describe the revised AI instruction in 4 to 4,000 characters.");
+  if (note.length > 1_000) throw new Error("Keep the revision note to 1,000 characters or fewer.");
+  const draftNumber = history.revisions.filter((revision) => revision.kind === "protected-draft").length + 1;
+  const revision: TimelineDawVerbalDraftRevision = { id: `${parent.sourceId}-draft-${draftNumber}`, label, sourceId: parent.sourceId, parentRevisionId: parent.id, kind: "protected-draft", instruction, note, sourceMutable: false };
+  return { revisions: [...history.revisions, revision], activeIndex: history.revisions.length };
+}
+
+export function createTimelineDawVerbalAbComparison(history: TimelineDawVerbalRevisionHistory, input: { draftRevisionId: unknown; activeSide: unknown }): TimelineDawVerbalAbComparison {
+  const a = history.revisions.find((revision) => revision.kind === "immutable-source");
+  const b = history.revisions.find((revision) => revision.id === String(input.draftRevisionId ?? "") && revision.kind === "protected-draft");
+  if (!a || !b || a.sourceId !== b.sourceId) throw new Error("Choose a protected draft paired with this original source.");
+  if (input.activeSide !== "A" && input.activeSide !== "B") throw new Error("Choose A original or B protected draft.");
+  return { a, b, activeSide: input.activeSide, sourceMutable: false, executionAllowed: false };
 }
 
 export function moveTimelineDawVerbalRevisionHistory(

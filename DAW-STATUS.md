@@ -148,7 +148,7 @@ THE MUZES GARDEN DAW
     ├── analog round-trip latency measurement and compensation .... DONE 8/30/26
     ├── hardware-unavailable fallback and deferred instructions ... DONE 8/30/26
     ├── confidence warnings for ambiguous or destructive requests . DONE 8/30/26
-    ├── before/after A/B comparison and editable AI history ........ STILL TO DO
+    ├── before/after A/B comparison and editable AI history ........ DONE 8/30/26
     └── musician acceptance testing from sections down to notes ... STILL TO DO
 ```
 
@@ -388,6 +388,14 @@ THE MUZES GARDEN DAW
 - Vague requests receive exact clarification questions, including the intended action, target, boundaries, and measurable musical result.
 - Requests to overwrite, erase, flatten, bake, permanently delete, or replace original/source/master material are blocked and redirected to a protected private revision with A/B audition and undo.
 - Assessment never unlocks execution, mutates source music, or persists the private request. The next leaf is before/after A/B comparison and editable AI history.
+
+### VERBAL EDITING A/B comparison and editable AI history milestone — 8/30/26
+
+- The immutable original is permanently assigned to A while any selected protected draft can be assigned to B for a level-matched private audition handoff.
+- Musicians can rename a protected draft, add a private current-tab note, and create a child revision with an explicit recoverable parent.
+- Undo/redo remains available across the original and protected drafts, while the original label, note, instruction, and source are locked against editing.
+- A/B switching only changes audition focus; it cannot apply an edit, overwrite audio, publish a result, or mutate the source.
+- The next and final VERBAL EDITING leaf is musician acceptance testing from sections down to notes.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

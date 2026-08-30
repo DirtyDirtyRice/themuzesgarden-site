@@ -17,6 +17,9 @@ import {
   decideTimelineDawVerbalEditPlan,
   createTimelineDawVerbalRevisionHistory,
   moveTimelineDawVerbalRevisionHistory,
+  editTimelineDawVerbalDraftRevision,
+  appendTimelineDawVerbalDraftRevision,
+  createTimelineDawVerbalAbComparison,
   recognizeTimelineDawVerbalSections,
   createTimelineDawVerbalSectionRecipe,
   createTimelineDawGeneratedSectionPlan,
@@ -37,6 +40,7 @@ import {
   type TimelineDawVerbalEditRequest,
   type TimelineDawVerbalPlanDecision,
   type TimelineDawVerbalRevisionHistory,
+  type TimelineDawVerbalAbComparison,
   type TimelineDawVerbalNamedSection,
   type TimelineDawVerbalSectionOperation,
   type TimelineDawVerbalSectionRecipe,
@@ -65,6 +69,9 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
   const [decisionExplanation, setDecisionExplanation] = useState("");
   const [planDecision, setPlanDecision] = useState<TimelineDawVerbalPlanDecision | null>(null);
   const [revisionHistory, setRevisionHistory] = useState<TimelineDawVerbalRevisionHistory | null>(null);
+  const [revisionLabel, setRevisionLabel] = useState("Protected verbal edit draft 1");
+  const [revisionNote, setRevisionNote] = useState("AI draft awaiting musician notes.");
+  const [abComparison, setAbComparison] = useState<TimelineDawVerbalAbComparison | null>(null);
   const [namedSections, setNamedSections] = useState<TimelineDawVerbalNamedSection[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [sectionsLoading, setSectionsLoading] = useState(true);
@@ -202,6 +209,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
       setHeldRequest(parseTimelineDawVerbalEditRequest({ instruction, scope, preserveSources: true }));
       setPlanDecision(null);
       setRevisionHistory(null);
+      setAbComparison(null);
       setSelectedSectionId(null);
       setSectionRecipe(null);
       setGenerationPlan(null);
@@ -408,6 +416,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
                     <button type="button" className={buttonClass} disabled={revisionHistory.activeIndex === 0} onClick={() => setRevisionHistory(moveTimelineDawVerbalRevisionHistory(revisionHistory, "undo"))}>Undo to Original</button>
                     <button type="button" className={buttonClass} disabled={revisionHistory.activeIndex === revisionHistory.revisions.length - 1} onClick={() => setRevisionHistory(moveTimelineDawVerbalRevisionHistory(revisionHistory, "redo"))}>Redo Draft</button>
                   </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2"><label className="text-sm font-bold">Active draft label<input className={`${fieldClass} mt-1`} maxLength={120} value={revisionLabel} onChange={(event) => setRevisionLabel(event.target.value)} /></label><label className="text-sm font-bold">Musician note<input className={`${fieldClass} mt-1`} maxLength={1000} value={revisionNote} onChange={(event) => setRevisionNote(event.target.value)} /></label></div><div className="mt-3 flex flex-wrap gap-2"><button type="button" className={buttonClass} disabled={revisionHistory.revisions[revisionHistory.activeIndex]?.kind === "immutable-source"} onClick={() => { try { setRevisionHistory(editTimelineDawVerbalDraftRevision(revisionHistory, { revisionId: revisionHistory.revisions[revisionHistory.activeIndex]?.id, label: revisionLabel, note: revisionNote })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Revision details could not be saved."); } }}>Save Draft Label & Note</button><button type="button" className={buttonClass} disabled={revisionHistory.revisions[revisionHistory.activeIndex]?.kind === "immutable-source"} onClick={() => { try { const next = appendTimelineDawVerbalDraftRevision(revisionHistory, { label: `${revisionLabel} next`, instruction: heldRequest.instruction, note: revisionNote }); setRevisionHistory(next); setRevisionLabel(next.revisions[next.activeIndex].label); setAbComparison(null); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "The next protected revision could not be created."); } }}>Add Next Protected Revision</button></div><div className="mt-4 rounded-xl border border-sky-300/25 p-3"><p className="font-black text-sky-200">Before/after A/B</p><p className="mt-1 text-xs text-white/55">A is always the locked original. B is the currently selected protected draft.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" className={buttonClass} disabled={!revisionHistory.revisions.some((revision) => revision.kind === "protected-draft")} onClick={() => { try { const draft = revisionHistory.revisions[revisionHistory.activeIndex]?.kind === "protected-draft" ? revisionHistory.revisions[revisionHistory.activeIndex] : revisionHistory.revisions.find((revision) => revision.kind === "protected-draft"); setAbComparison(createTimelineDawVerbalAbComparison(revisionHistory, { draftRevisionId: draft?.id, activeSide: "A" })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "A/B comparison could not be prepared."); } }}>A · Original</button><button type="button" className={buttonClass} disabled={!revisionHistory.revisions.some((revision) => revision.kind === "protected-draft")} onClick={() => { try { const draft = revisionHistory.revisions[revisionHistory.activeIndex]?.kind === "protected-draft" ? revisionHistory.revisions[revisionHistory.activeIndex] : revisionHistory.revisions.find((revision) => revision.kind === "protected-draft"); setAbComparison(createTimelineDawVerbalAbComparison(revisionHistory, { draftRevisionId: draft?.id, activeSide: "B" })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "A/B comparison could not be prepared."); } }}>B · Protected Draft</button></div>{abComparison ? <div className="mt-3 text-sm"><p><b>Audition focus {abComparison.activeSide}:</b> {abComparison.activeSide === "A" ? abComparison.a.label : abComparison.b.label}</p><p className="mt-1 text-xs text-emerald-200">Level-matched private audition routing prepared. Source remains locked; switching sides cannot apply the edit.</p><a href="#daw-export-workspace" className="mt-2 inline-block rounded-xl border border-sky-200/40 px-3 py-2 font-black text-sky-100">Open private render/audition controls</a></div> : null}</div>
                 </div>
               )}
             </div>
