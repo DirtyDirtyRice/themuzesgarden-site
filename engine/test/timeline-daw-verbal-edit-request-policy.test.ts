@@ -17,6 +17,7 @@ import {
   createTimelineDawMicroEditRecipe,
   createTimelineDawMidiNoteDraft,
   assessTimelineDawNoteAnalysis,
+  createTimelineDawVerbalPrivateRenderPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -409,5 +410,38 @@ describe("DAW verbal edit request policy", () => {
     const percussive = assessTimelineDawNoteAnalysis({ tracks, sourceTrackId: "mix", analysisMode: "pitch-and-onset", texture: "percussive", detectedNoteCount: 16, pitchConfidence: 0.2, onsetConfidence: 0.96 });
     expect(percussive.warnings).toEqual(expect.arrayContaining([expect.stringContaining("Percussive audio"), expect.stringContaining("Pitch confidence")]));
     expect(() => assessTimelineDawNoteAnalysis({ tracks, sourceTrackId: "mix", analysisMode: "audio-to-midi", texture: "monophonic", detectedNoteCount: 1, pitchConfidence: 1.1, onsetConfidence: 0.9 })).toThrow("between 0 and 1");
+  });
+
+  it("prepares a private WAV handoff without publishing, replacing, or promoting the source", () => {
+    const tracks = [{ id: "draft", name: "Bridge Guitar Draft", kind: "audio" as const }];
+    expect(createTimelineDawVerbalPrivateRenderPlan({ tracks, sourceTrackId: "draft", draftKind: "protected-audio-draft", startTick: 960, endTick: 4800, bitDepth: 24 })).toEqual({
+      sourceTrackId: "draft",
+      sourceTrackName: "Bridge Guitar Draft",
+      draftKind: "protected-audio-draft",
+      startTick: 960,
+      endTick: 4800,
+      format: "wav",
+      bitDepth: 24,
+      sampleRate: 48_000,
+      channels: 2,
+      renderDestination: "timeline-daw-renders",
+      auditionAccess: "owner-signed-expiring-url",
+      sourceMutable: false,
+      publishAllowed: false,
+      replaceSourceAllowed: false,
+      promotionAllowed: false,
+      status: "ready-for-protected-render-engine",
+      executionAllowed: false,
+    });
+  });
+
+  it("rejects invented drafts, invalid render ranges, bit depths, and missing private tracks", () => {
+    const tracks = [{ id: "draft", name: "Bridge Guitar Draft", kind: "audio" as const }];
+    const valid = { tracks, sourceTrackId: "draft", draftKind: "midi-bounce-draft", startTick: 0, endTick: 960, bitDepth: 32 };
+    expect(createTimelineDawVerbalPrivateRenderPlan(valid)).toMatchObject({ bitDepth: 32, format: "wav" });
+    expect(() => createTimelineDawVerbalPrivateRenderPlan({ ...valid, sourceTrackId: "missing" })).toThrow("Confirm the private source track");
+    expect(() => createTimelineDawVerbalPrivateRenderPlan({ ...valid, draftKind: "published-master" })).toThrow("supported protected draft");
+    expect(() => createTimelineDawVerbalPrivateRenderPlan({ ...valid, endTick: 0 })).toThrow("after the start");
+    expect(() => createTimelineDawVerbalPrivateRenderPlan({ ...valid, bitDepth: 16 })).toThrow("24-bit or 32-bit");
   });
 });

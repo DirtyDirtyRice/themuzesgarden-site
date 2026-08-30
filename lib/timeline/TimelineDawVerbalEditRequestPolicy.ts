@@ -216,6 +216,26 @@ export type TimelineDawVerbalNoteAnalysisAssessment = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalPrivateRenderPlan = {
+  sourceTrackId: string;
+  sourceTrackName: string;
+  draftKind: "protected-audio-draft" | "midi-bounce-draft" | "generated-section-draft";
+  startTick: number;
+  endTick: number;
+  format: "wav";
+  bitDepth: 24 | 32;
+  sampleRate: 48_000;
+  channels: 2;
+  renderDestination: "timeline-daw-renders";
+  auditionAccess: "owner-signed-expiring-url";
+  sourceMutable: false;
+  publishAllowed: false;
+  replaceSourceAllowed: false;
+  promotionAllowed: false;
+  status: "ready-for-protected-render-engine";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -785,6 +805,45 @@ export function assessTimelineDawNoteAnalysis(input: {
     warnings,
     humanVerificationRequired: true,
     status: "held-for-analysis-review",
+    executionAllowed: false,
+  };
+}
+
+export function createTimelineDawVerbalPrivateRenderPlan(input: {
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  sourceTrackId: string | null;
+  draftKind: unknown;
+  startTick: unknown;
+  endTick: unknown;
+  bitDepth: unknown;
+}): TimelineDawVerbalPrivateRenderPlan {
+  const source = input.sourceTrackId ? input.tracks.find((track) => track.id === input.sourceTrackId) : null;
+  if (!source) throw new Error("Confirm the private source track before preparing a render handoff.");
+  const draftKind = normalizeInstruction(input.draftKind).toLocaleLowerCase();
+  if (!["protected-audio-draft", "midi-bounce-draft", "generated-section-draft"].includes(draftKind)) throw new Error("Choose a supported protected draft to render.");
+  const startTick = Number(input.startTick);
+  const endTick = Number(input.endTick);
+  const bitDepth = Number(input.bitDepth);
+  if (!Number.isSafeInteger(startTick) || startTick < 0) throw new Error("Render start must be a nonnegative whole timeline tick.");
+  if (!Number.isSafeInteger(endTick) || endTick <= startTick) throw new Error("Render end must be a whole timeline tick after the start.");
+  if (bitDepth !== 24 && bitDepth !== 32) throw new Error("Choose 24-bit or 32-bit WAV rendering.");
+  return {
+    sourceTrackId: source.id,
+    sourceTrackName: source.name,
+    draftKind: draftKind as TimelineDawVerbalPrivateRenderPlan["draftKind"],
+    startTick,
+    endTick,
+    format: "wav",
+    bitDepth,
+    sampleRate: 48_000,
+    channels: 2,
+    renderDestination: "timeline-daw-renders",
+    auditionAccess: "owner-signed-expiring-url",
+    sourceMutable: false,
+    publishAllowed: false,
+    replaceSourceAllowed: false,
+    promotionAllowed: false,
+    status: "ready-for-protected-render-engine",
     executionAllowed: false,
   };
 }

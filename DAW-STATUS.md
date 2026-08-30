@@ -137,7 +137,7 @@ THE MUZES GARDEN DAW
     ├── phrase, riff, chord and individual-note verbal editing .... DONE 8/29/26
     ├── MIDI-note generation and exact pitch/timing editing ........ DONE 8/30/26
     ├── audio-to-MIDI or note-analysis assistance where reliable .. DONE 8/30/26
-    ├── digital audio rendering and private result audition ....... STILL TO DO
+    ├── digital audio rendering and private result audition ....... DONE 8/30/26
     ├── connected-interface A/D capture workflow .................. STILL TO DO
     ├── connected-interface D/A monitoring workflow ............... STILL TO DO
     ├── studio hardware inventory and connection detection ........ STILL TO DO
@@ -301,6 +301,14 @@ THE MUZES GARDEN DAW
 - Only high-confidence monophonic evidence can proceed to a human-reviewed MIDI draft; polyphonic conversion, low confidence, and zero-note results are blocked or flagged.
 - Pitch and onset thresholds, detected-note counts, limitations, and warnings remain visible, and human verification is always mandatory.
 - The next leaf is digital audio rendering and private result audition.
+
+### VERBAL EDITING protected render and audition milestone — 8/30/26
+
+- A confirmed private source and exact timeline range can now become a protected 24-bit or 32-bit, 48 kHz stereo WAV render handoff.
+- The handoff explicitly reuses the DAW's existing protected render destination and owner-only expiring audition-link policy.
+- Original-source mutation, publishing, source replacement, and automatic promotion are all blocked; the musician must review the handoff and open the established render controls.
+- Invalid tracks, invented draft types, unsafe timeline ranges, and unsupported bit depths are rejected before a handoff can be prepared.
+- The next leaf is the connected-interface A/D capture workflow.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
