@@ -143,7 +143,7 @@ THE MUZES GARDEN DAW
     ├── studio hardware inventory and connection detection ........ DONE 8/30/26
     ├── step-by-step human cabling, patching and setup guidance .... DONE 8/30/26
     ├── hardware safety warnings and confirmation gates ............ DONE 8/30/26
-    ├── gain, clock, sample-rate and synchronization preflight ..... STILL TO DO
+    ├── gain, clock, sample-rate and synchronization preflight ..... DONE 8/30/26
     ├── pause for required physical action, then verify and resume . STILL TO DO
     ├── analog round-trip latency measurement and compensation .... STILL TO DO
     ├── hardware-unavailable fallback and deferred instructions ... STILL TO DO
@@ -348,6 +348,14 @@ THE MUZES GARDEN DAW
 - Signal testing remains blocked until input gain, monitoring level, and cable-before-power confirmations are all complete.
 - The DAW never changes phantom power or physical hardware controls automatically, and warns against connecting or disconnecting microphones while phantom power is on.
 - The next leaf is gain, clock, sample-rate, and synchronization preflight.
+
+### VERBAL EDITING gain, clock, sample-rate, and synchronization preflight milestone — 8/30/26
+
+- A four-part preflight now checks measured peak level, hardware clock lock, matching interface/session sample rates, and clock-source-compatible synchronization together.
+- Gain passes only inside the −18 to −6 dBFS target; clock, rate, and synchronization failures each receive a precise HOLD reason.
+- Internal, external word-clock, and digital-input workflows require their compatible free-run, word-clock, ADAT, or S/PDIF synchronization mode.
+- Preflight stays locked until the earlier hardware safety gate passes, remains current-tab memory only, and never starts capture automatically.
+- The next leaf is pause for required physical action, then verify and resume.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
