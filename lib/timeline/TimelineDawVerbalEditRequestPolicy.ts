@@ -236,6 +236,25 @@ export type TimelineDawVerbalPrivateRenderPlan = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalAdCapturePlan = {
+  interfaceName: string;
+  inputChannel: number;
+  sourceType: "microphone" | "instrument" | "line";
+  connectionConfirmedByHuman: true;
+  sampleRate: 44_100 | 48_000 | 96_000;
+  bitDepth: 24 | 32;
+  phases: readonly [
+    "connect-source-to-interface-input",
+    "verify-permission-clock-and-input-level",
+    "capture-private-wav-to-new-take",
+  ];
+  inputLevelTarget: "peaks-between-minus-18-and-minus-6-dbfs";
+  sourceMutable: false;
+  captureDestination: "new-private-recording-take";
+  status: "held-for-live-signal-verification";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -844,6 +863,41 @@ export function createTimelineDawVerbalPrivateRenderPlan(input: {
     replaceSourceAllowed: false,
     promotionAllowed: false,
     status: "ready-for-protected-render-engine",
+    executionAllowed: false,
+  };
+}
+
+export function createTimelineDawVerbalAdCapturePlan(input: {
+  interfaceName: unknown;
+  inputChannel: unknown;
+  sourceType: unknown;
+  connectionConfirmedByHuman: unknown;
+  sampleRate: unknown;
+  bitDepth: unknown;
+}): TimelineDawVerbalAdCapturePlan {
+  const interfaceName = normalizeInstruction(input.interfaceName);
+  if (interfaceName.length < 2 || interfaceName.length > 120) throw new Error("Name the connected audio interface in 2 to 120 characters.");
+  const inputChannel = Number(input.inputChannel);
+  if (!Number.isSafeInteger(inputChannel) || inputChannel < 1 || inputChannel > 128) throw new Error("Interface input must be a whole channel number from 1 to 128.");
+  const sourceType = normalizeInstruction(input.sourceType).toLocaleLowerCase();
+  if (!["microphone", "instrument", "line"].includes(sourceType)) throw new Error("Choose microphone, instrument, or line as the analog source.");
+  if (input.connectionConfirmedByHuman !== true) throw new Error("A human must confirm the physical source-to-interface connection.");
+  const sampleRate = Number(input.sampleRate);
+  if (![44_100, 48_000, 96_000].includes(sampleRate)) throw new Error("Choose 44.1, 48, or 96 kHz for A/D capture.");
+  const bitDepth = Number(input.bitDepth);
+  if (bitDepth !== 24 && bitDepth !== 32) throw new Error("Choose 24-bit or 32-bit A/D capture.");
+  return {
+    interfaceName,
+    inputChannel,
+    sourceType: sourceType as TimelineDawVerbalAdCapturePlan["sourceType"],
+    connectionConfirmedByHuman: true,
+    sampleRate: sampleRate as TimelineDawVerbalAdCapturePlan["sampleRate"],
+    bitDepth,
+    phases: ["connect-source-to-interface-input", "verify-permission-clock-and-input-level", "capture-private-wav-to-new-take"],
+    inputLevelTarget: "peaks-between-minus-18-and-minus-6-dbfs",
+    sourceMutable: false,
+    captureDestination: "new-private-recording-take",
+    status: "held-for-live-signal-verification",
     executionAllowed: false,
   };
 }

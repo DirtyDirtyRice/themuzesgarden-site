@@ -18,6 +18,7 @@ import {
   createTimelineDawMidiNoteDraft,
   assessTimelineDawNoteAnalysis,
   createTimelineDawVerbalPrivateRenderPlan,
+  createTimelineDawVerbalAdCapturePlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -443,5 +444,22 @@ describe("DAW verbal edit request policy", () => {
     expect(() => createTimelineDawVerbalPrivateRenderPlan({ ...valid, draftKind: "published-master" })).toThrow("supported protected draft");
     expect(() => createTimelineDawVerbalPrivateRenderPlan({ ...valid, endTick: 0 })).toThrow("after the start");
     expect(() => createTimelineDawVerbalPrivateRenderPlan({ ...valid, bitDepth: 16 })).toThrow("24-bit or 32-bit");
+  });
+
+  it("creates a human-confirmed three-phase A/D capture workflow", () => {
+    expect(createTimelineDawVerbalAdCapturePlan({ interfaceName: "Focusrite Scarlett 2i2", inputChannel: 1, sourceType: "microphone", connectionConfirmedByHuman: true, sampleRate: 48_000, bitDepth: 24 })).toEqual({
+      interfaceName: "Focusrite Scarlett 2i2", inputChannel: 1, sourceType: "microphone", connectionConfirmedByHuman: true, sampleRate: 48_000, bitDepth: 24,
+      phases: ["connect-source-to-interface-input", "verify-permission-clock-and-input-level", "capture-private-wav-to-new-take"],
+      inputLevelTarget: "peaks-between-minus-18-and-minus-6-dbfs", sourceMutable: false, captureDestination: "new-private-recording-take", status: "held-for-live-signal-verification", executionAllowed: false,
+    });
+  });
+
+  it("refuses to invent an A/D connection or unsafe capture format", () => {
+    const valid = { interfaceName: "Apollo Twin", inputChannel: 2, sourceType: "line", connectionConfirmedByHuman: true, sampleRate: 96_000, bitDepth: 32 };
+    expect(createTimelineDawVerbalAdCapturePlan(valid)).toMatchObject({ inputChannel: 2, sampleRate: 96_000, bitDepth: 32 });
+    expect(() => createTimelineDawVerbalAdCapturePlan({ ...valid, connectionConfirmedByHuman: false })).toThrow("human must confirm");
+    expect(() => createTimelineDawVerbalAdCapturePlan({ ...valid, inputChannel: 0 })).toThrow("1 to 128");
+    expect(() => createTimelineDawVerbalAdCapturePlan({ ...valid, sourceType: "speaker" })).toThrow("microphone, instrument, or line");
+    expect(() => createTimelineDawVerbalAdCapturePlan({ ...valid, sampleRate: 22_050 })).toThrow("44.1, 48, or 96");
   });
 });
