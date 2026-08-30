@@ -149,7 +149,7 @@ THE MUZES GARDEN DAW
     ├── hardware-unavailable fallback and deferred instructions ... DONE 8/30/26
     ├── confidence warnings for ambiguous or destructive requests . DONE 8/30/26
     ├── before/after A/B comparison and editable AI history ........ DONE 8/30/26
-    └── musician acceptance testing from sections down to notes ... STILL TO DO
+    └── musician acceptance testing from sections down to notes ... DONE 8/30/26
 ```
 
 ## Planned branch - VERBAL EDITING
@@ -396,6 +396,14 @@ THE MUZES GARDEN DAW
 - Undo/redo remains available across the original and protected drafts, while the original label, note, instruction, and source are locked against editing.
 - A/B switching only changes audition focus; it cannot apply an edit, overwrite audio, publish a result, or mutate the source.
 - The next and final VERBAL EDITING leaf is musician acceptance testing from sections down to notes.
+
+### VERBAL EDITING musician acceptance ladder milestone — 8/30/26
+
+- Protected A/B drafts now have a five-level listening ladder covering song sections/arrangement, tracks/instruments, phrases/riffs/drums, chords/harmony, and individual notes/timing.
+- Every tested level requires an explicit pass or needs-revision decision plus a musician listening note.
+- Acceptance remains incomplete until all five levels pass; one needs-revision result prevents acceptance and clearly sends the draft back for revision.
+- Acceptance evidence stays in current-tab memory and cannot apply edits, mutate sources, publish music, or claim that untested audio passed.
+- All 29 planned VERBAL EDITING leaves are now implemented; the VERBAL EDITING branch is software-complete as of 8/30/26.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
