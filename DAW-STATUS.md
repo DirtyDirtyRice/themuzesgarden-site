@@ -81,6 +81,14 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Musician-facing warnings explain the exact issue and offer verified bridge, compatible replacement, rendered-audio exchange, or reassessment paths.
 - Verified rendered exchange is clearly labeled as offline audio rather than a live plug-in, and a qualified live path retains crash quarantine and dry-audio recovery guidance.
 
+## Completed milestone - Professional Mixing Production Evidence Gate
+
+- Mixing now has one strict twelve-trial gate spanning a named real desktop bridge, real plug-in, and physical control surface.
+- Evidence covers instantiation, state recall, automation, latency compensation, bypass/crash recovery, missing-plug-in recovery, rendered fallback, hardware faders and controls, session reopen, complete-mix audition, and export verification.
+- Missing equipment identities, partial trials, or any reported issue cannot produce a passing result.
+- Evidence remains only in the current tab and does not store private audio, plug-in state, device settings, or session content.
+- The evidence gate is software-complete; the remaining real bridge, control-surface, and final production QA leaves stay open until actual equipment passes every trial.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
