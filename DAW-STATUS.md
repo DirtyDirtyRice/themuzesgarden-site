@@ -144,7 +144,7 @@ THE MUZES GARDEN DAW
     ├── step-by-step human cabling, patching and setup guidance .... DONE 8/30/26
     ├── hardware safety warnings and confirmation gates ............ DONE 8/30/26
     ├── gain, clock, sample-rate and synchronization preflight ..... DONE 8/30/26
-    ├── pause for required physical action, then verify and resume . STILL TO DO
+    ├── pause for required physical action, then verify and resume . DONE 8/30/26
     ├── analog round-trip latency measurement and compensation .... STILL TO DO
     ├── hardware-unavailable fallback and deferred instructions ... STILL TO DO
     ├── confidence warnings for ambiguous or destructive requests . STILL TO DO
@@ -356,6 +356,14 @@ THE MUZES GARDEN DAW
 - Internal, external word-clock, and digital-input workflows require their compatible free-run, word-clock, ADAT, or S/PDIF synchronization mode.
 - Preflight stays locked until the earlier hardware safety gate passes, remains current-tab memory only, and never starts capture automatically.
 - The next leaf is pause for required physical action, then verify and resume.
+
+### VERBAL EDITING physical-action checkpoint milestone — 8/30/26
+
+- A READY hardware preflight can now pause the software workflow on one exact physical action instead of assuming a cable, control, or studio change occurred.
+- Resume remains blocked until the musician confirms the action, identifies the verification method, and records a short evidence note.
+- Signal detection, visual connection confirmation, and hardware-indicator confirmation are supported as explicit verification paths.
+- Physical instructions and verification notes remain current-tab memory only; the DAW never performs a hardware action automatically.
+- The next leaf is analog round-trip latency measurement and compensation.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
