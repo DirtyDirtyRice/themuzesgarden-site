@@ -67,6 +67,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Mute, Solo, Gain, Pan, Output, presets, effect A/B, parallel sends, send levels, and meters remain available in both modes.
 - Only the allowlisted display mode is remembered per protected session; no private audio or mix value is stored by this preference.
 
+## Completed milestone - Third-Party Plug-In Compatibility Qualification
+
+- Mixing now exposes a musician-facing compatibility gate backed by the established fingerprint, permission, platform, architecture, sample-rate, channel, latency, state, crash, and bypass protections.
+- Built-in and WASM processing can qualify for live browser use only after all required evidence passes.
+- Desktop VST3, AU, AAX, and CLAP binaries are never claimed to load directly in Chrome; they require a separately verified desktop bridge or verified rendered-audio exchange.
+- Rendered exchange is labeled offline rendered audio rather than a live plug-in, and every path remains nondestructive to source audio.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text

@@ -37,6 +37,7 @@ import TimelineDawBetaLaunchOperations from "@/app/components/TimelineDawBetaLau
 import TimelineDawStudioFocusRestore from "@/app/components/TimelineDawStudioFocusRestore";
 import TimelineDawSafeExit from "@/app/components/TimelineDawSafeExit";
 import TimelineDawVerbalEditWorkspace from "@/app/components/TimelineDawVerbalEditWorkspace";
+import TimelineDawPluginCompatibilityWorkspace from "@/app/components/TimelineDawPluginCompatibilityWorkspace";
 import { createTimelineDawWorkspaceAreas } from "../../../../../../lib/timeline/TimelineDawWorkspaceViewModel";
 import {
   changeDawSession,
@@ -262,6 +263,7 @@ export default function ProjectDawSessionPage() {
         <summary className={workspaceSummaryClass}>Mix tracks and effects</summary>
         <div data-daw-focus-area="mix" className="mt-5 space-y-6 scroll-mt-24">
           <TimelineDawPrivateAudioLanes key={normalizationLaneRevision} sessionId={session.id} projectId={projectId} />
+          <TimelineDawPluginCompatibilityWorkspace />
           <ProjectDawDeviceDiagnostics />
         </div>
       </details>

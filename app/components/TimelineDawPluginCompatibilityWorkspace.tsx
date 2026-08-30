@@ -1,0 +1,25 @@
+"use client";
+
+import { useState } from "react";
+import { assessTimelineDawPluginCompatibility, type TimelineDawPluginCompatibilityReport, type TimelineDawPluginExecutionPath } from "@/lib/timeline/TimelineDawPluginCompatibilityPolicy";
+import type { TimelinePluginFormat } from "@/lib/timeline/TimelinePluginProcessingHostEngine";
+
+const field = "rounded-lg border border-white/20 bg-black px-3 py-2 text-white";
+const button = "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black";
+const checks = ["fingerprintVerified", "vendorVerified", "sampleRateSupported", "channelLayoutSupported", "latencyMeasured", "stateRecallPassed", "bypassRecoveryPassed", "renderedAudioVerified"] as const;
+const labels: Record<(typeof checks)[number], string> = { fingerprintVerified: "Binary fingerprint verified", vendorVerified: "Vendor and version verified", sampleRateSupported: "Sample rate supported", channelLayoutSupported: "Channel layout supported", latencyMeasured: "Latency measured", stateRecallPassed: "State recall passed", bypassRecoveryPassed: "Bypass/crash recovery passed", renderedAudioVerified: "Returned render verified" };
+
+export default function TimelineDawPluginCompatibilityWorkspace() {
+  const [format, setFormat] = useState<TimelinePluginFormat>("wasm");
+  const [executionPath, setExecutionPath] = useState<TimelineDawPluginExecutionPath>("browser-native");
+  const [evidence, setEvidence] = useState<Record<(typeof checks)[number], boolean>>({ fingerprintVerified: false, vendorVerified: false, sampleRateSupported: false, channelLayoutSupported: false, latencyMeasured: false, stateRecallPassed: false, bypassRecoveryPassed: false, renderedAudioVerified: false });
+  const [report, setReport] = useState<TimelineDawPluginCompatibilityReport | null>(null);
+  return <section className="rounded-3xl border border-fuchsia-300/25 bg-fuchsia-300/[0.05] p-5">
+    <p className="text-xs font-black uppercase tracking-wider text-fuchsia-200">Third-party plug-in compatibility</p><h2 className="mt-1 text-2xl font-black">Qualify a processing path before use</h2>
+    <p className="mt-2 text-sm text-white/60">Chrome can directly host browser-native built-in or WASM processing. Desktop VST3, AU, AAX, and CLAP require a separately tested desktop bridge or a verified rendered-audio exchange.</p>
+    <div className="mt-4 grid gap-3 md:grid-cols-2"><label className="text-sm font-black">Format<select className={`${field} mt-1 block w-full`} value={format} onChange={(event) => { setFormat(event.target.value as TimelinePluginFormat); setReport(null); }}>{["built-in", "wasm", "vst3", "au", "aax", "clap"].map((value) => <option key={value}>{value}</option>)}</select></label><label className="text-sm font-black">Processing path<select className={`${field} mt-1 block w-full`} value={executionPath} onChange={(event) => { setExecutionPath(event.target.value as TimelineDawPluginExecutionPath); setReport(null); }}><option value="browser-native">Browser native</option><option value="desktop-bridge">Verified desktop bridge</option><option value="rendered-exchange">Rendered-audio exchange</option></select></label></div>
+    <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{checks.map((check) => <label className="flex items-start gap-2 text-sm" key={check}><input type="checkbox" checked={evidence[check]} onChange={(event) => setEvidence((current) => ({ ...current, [check]: event.target.checked }))} />{labels[check]}</label>)}</div>
+    <button type="button" className={`${button} mt-4`} onClick={() => setReport(assessTimelineDawPluginCompatibility({ format, executionPath, ...evidence }))}>Assess Compatibility</button>
+    {report ? <div className={`mt-4 rounded-xl border p-4 ${report.status === "qualified" ? "border-emerald-300/35 text-emerald-100" : "border-amber-300/35 text-amber-100"}`}><p className="font-black">{report.status === "qualified" ? "QUALIFIED" : "HELD—NOT QUALIFIED"} · {report.capability.replaceAll("-", " ")}</p>{[...report.issues, ...report.requirements].length ? <ul className="mt-2 list-disc pl-5 text-sm">{[...report.issues, ...report.requirements].map((item) => <li key={item}>{item}</li>)}</ul> : <p className="mt-2 text-sm">Compatibility evidence passed. Processing remains nondestructive and the source audio is preserved.</p>}</div> : null}
+  </section>;
+}
