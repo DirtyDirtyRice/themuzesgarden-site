@@ -146,7 +146,7 @@ THE MUZES GARDEN DAW
     ├── gain, clock, sample-rate and synchronization preflight ..... DONE 8/30/26
     ├── pause for required physical action, then verify and resume . DONE 8/30/26
     ├── analog round-trip latency measurement and compensation .... DONE 8/30/26
-    ├── hardware-unavailable fallback and deferred instructions ... STILL TO DO
+    ├── hardware-unavailable fallback and deferred instructions ... DONE 8/30/26
     ├── confidence warnings for ambiguous or destructive requests . STILL TO DO
     ├── before/after A/B comparison and editable AI history ........ STILL TO DO
     └── musician acceptance testing from sections down to notes ... STILL TO DO
@@ -372,6 +372,14 @@ THE MUZES GARDEN DAW
 - Measurements with more than 2 ms spread are held for route inspection and retesting instead of producing unreliable compensation.
 - Human approval is required, compensation is never automatic, and source audio is never trimmed, overwritten, or persisted by this review tool.
 - The next leaf is hardware-unavailable fallback and deferred instructions.
+
+### VERBAL EDITING hardware-unavailable fallback milestone — 8/30/26
+
+- Analog capture, monitoring, and round-trip work can now be marked explicitly unavailable with the exact missing interface, source, cable, or listening output.
+- Musicians may continue safe digital arrangement, MIDI, lyric, draft-render, or private-audition work when an honest digital fallback exists.
+- The analog task remains visibly NOT COMPLETED; the DAW never invents a hardware substitute or treats a digital preview as proof of an analog result.
+- A current-tab return checklist directs the musician through device detection, safety, preflight, and task-specific verification when the equipment becomes available.
+- The next leaf is confidence warnings for ambiguous or destructive requests.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
