@@ -6,6 +6,7 @@ import {
   createTimelineDawVerbalRevisionHistory,
   moveTimelineDawVerbalRevisionHistory,
   recognizeTimelineDawVerbalSections,
+  createTimelineDawVerbalSectionRecipe,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -136,5 +137,27 @@ describe("DAW verbal edit request policy", () => {
       { id: "bad", name: "Bad", startTick: 100, endTick: 50 },
       { id: "verse", name: "Verse", startTick: 0, endTick: 1920 },
     ] }).sections).toEqual([{ id: "verse", name: "Verse", startTick: 0, endTick: 1920 }]);
+  });
+
+  it("previews copy, move, remove, and extend as source-preserving complete-section recipes", () => {
+    const sections = [
+      { id: "verse", name: "Verse", startTick: 0, endTick: 100 },
+      { id: "chorus", name: "Chorus", startTick: 100, endTick: 180 },
+      { id: "bridge", name: "Bridge", startTick: 180, endTick: 240 },
+    ];
+    const copied = createTimelineDawVerbalSectionRecipe({ operation: "copy", sections, sourceSectionId: "chorus", destinationSectionId: "bridge" });
+    expect(copied.after.map((section) => section.name)).toEqual(["Verse", "Chorus", "Bridge", "Chorus Copy"]);
+    expect(copied.after[3]).toMatchObject({ sourceSectionId: "chorus", startTick: 240, endTick: 320 });
+    expect(createTimelineDawVerbalSectionRecipe({ operation: "move", sections, sourceSectionId: "bridge", destinationSectionId: "verse" }).after.map((section) => section.name)).toEqual(["Verse", "Bridge", "Chorus"]);
+    expect(createTimelineDawVerbalSectionRecipe({ operation: "remove", sections, sourceSectionId: "chorus" }).after.map((section) => section.name)).toEqual(["Verse", "Bridge"]);
+    expect(createTimelineDawVerbalSectionRecipe({ operation: "extend", sections, sourceSectionId: "verse", durationTicks: 20 }).after[1].startTick).toBe(120);
+    expect(copied.executionAllowed).toBe(false);
+  });
+
+  it("adds a named placeholder section and rejects unsafe section recipes", () => {
+    const sections = [{ id: "verse", name: "Verse", startTick: 0, endTick: 100 }];
+    expect(createTimelineDawVerbalSectionRecipe({ operation: "add", sections, addedName: "New Bridge", durationTicks: 60 }).after[1]).toMatchObject({ name: "New Bridge", startTick: 100, endTick: 160, sourceSectionId: null });
+    expect(() => createTimelineDawVerbalSectionRecipe({ operation: "remove", sections, sourceSectionId: "missing" })).toThrow("source section");
+    expect(() => createTimelineDawVerbalSectionRecipe({ operation: "extend", sections, sourceSectionId: "verse", durationTicks: -1 })).toThrow("positive");
   });
 });

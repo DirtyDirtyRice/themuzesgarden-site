@@ -9,12 +9,15 @@ import {
   createTimelineDawVerbalRevisionHistory,
   moveTimelineDawVerbalRevisionHistory,
   recognizeTimelineDawVerbalSections,
+  createTimelineDawVerbalSectionRecipe,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
   type TimelineDawVerbalPlanDecision,
   type TimelineDawVerbalRevisionHistory,
   type TimelineDawVerbalNamedSection,
+  type TimelineDawVerbalSectionOperation,
+  type TimelineDawVerbalSectionRecipe,
 } from "@/lib/timeline/TimelineDawVerbalEditRequestPolicy";
 
 const fieldClass = "w-full rounded-xl border border-white/20 bg-black px-4 py-3 text-white outline-none focus:border-fuchsia-300";
@@ -30,6 +33,11 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
   const [namedSections, setNamedSections] = useState<TimelineDawVerbalNamedSection[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [sectionsLoading, setSectionsLoading] = useState(true);
+  const [sectionOperation, setSectionOperation] = useState<TimelineDawVerbalSectionOperation>("copy");
+  const [destinationSectionId, setDestinationSectionId] = useState("");
+  const [newSectionName, setNewSectionName] = useState("");
+  const [sectionTicks, setSectionTicks] = useState(3840);
+  const [sectionRecipe, setSectionRecipe] = useState<TimelineDawVerbalSectionRecipe | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,6 +65,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
       setPlanDecision(null);
       setRevisionHistory(null);
       setSelectedSectionId(null);
+      setSectionRecipe(null);
       setDecisionExplanation("");
       setError(null);
     } catch (cause) {
@@ -114,7 +123,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={holdRequest}>Prepare Request for Review</button>
-        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
+        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setSectionRecipe(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
       </div>
 
       {error ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">{error}</p> : null}
@@ -140,6 +149,17 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
                 </select>
               </label>
               {sectionRecognition.selectedSectionId ? <p className="mt-3 text-xs font-bold text-emerald-200">Target confirmed: {sectionRecognition.sections.find((section) => section.id === sectionRecognition.selectedSectionId)?.name}. Music remains unchanged.</p> : <p className="mt-3 text-xs font-bold text-amber-100">A named section must be confirmed before a later section edit can execute.</p>}
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <p className="text-xs font-black uppercase tracking-wider text-cyan-200">Complete-section recipe</p>
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  <label className="text-sm font-bold">Operation<select className={`${fieldClass} mt-1`} value={sectionOperation} onChange={(event) => { setSectionOperation(event.target.value as TimelineDawVerbalSectionOperation); setSectionRecipe(null); }}>{["add", "remove", "move", "copy", "extend"].map((operation) => <option key={operation} value={operation}>{operation[0].toUpperCase() + operation.slice(1)} complete section</option>)}</select></label>
+                  {(sectionOperation === "move" || sectionOperation === "copy" || sectionOperation === "add") ? <label className="text-sm font-bold">Place after<select className={`${fieldClass} mt-1`} value={destinationSectionId} onChange={(event) => setDestinationSectionId(event.target.value)}><option value="">End of song</option>{sectionRecognition.sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}</select></label> : null}
+                  {sectionOperation === "add" ? <label className="text-sm font-bold">New section name<input className={`${fieldClass} mt-1`} value={newSectionName} maxLength={120} onChange={(event) => setNewSectionName(event.target.value)} /></label> : null}
+                  {(sectionOperation === "add" || sectionOperation === "extend") ? <label className="text-sm font-bold">Length in ticks<input className={`${fieldClass} mt-1`} type="number" min={1} step={1} value={sectionTicks} onChange={(event) => setSectionTicks(Number(event.target.value))} /></label> : null}
+                </div>
+                <button type="button" className={`${buttonClass} mt-3`} disabled={sectionOperation !== "add" && !sectionRecognition.selectedSectionId} onClick={() => { try { setSectionRecipe(createTimelineDawVerbalSectionRecipe({ operation: sectionOperation, sections: sectionRecognition.sections, sourceSectionId: sectionRecognition.selectedSectionId, destinationSectionId, addedName: newSectionName, durationTicks: sectionTicks })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Section recipe could not be prepared."); } }}>Preview Arrangement Recipe</button>
+                {sectionRecipe ? <div className="mt-3 rounded-xl border border-white/15 bg-black/30 p-3"><p className="font-black">Protected preview · {sectionRecipe.operation}</p><ol className="mt-2 flex flex-wrap gap-2 text-xs">{sectionRecipe.after.map((section, index) => <li key={`${section.id}-${index}`} className="rounded-lg border border-white/15 px-2 py-1">{index + 1}. {section.name} · {section.startTick}–{section.endTick}{section.sourceSectionId ? " · source preserved" : " · new placeholder"}</li>)}</ol><p className="mt-2 text-xs font-bold text-emerald-200">Original arrangement unchanged. Execution remains locked.</p></div> : null}
+              </div>
             </>
           )}
         </article>

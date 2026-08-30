@@ -126,7 +126,7 @@ THE MUZES GARDEN DAW
     ├── approve, reject, revise and explain proposed edits ........ DONE 8/29/26
     ├── nondestructive source preservation and instant undo ....... DONE 8/29/26
     ├── song-section recognition and named-section selection ...... DONE 8/29/26
-    ├── add, remove, move, copy or extend complete sections ....... STILL TO DO
+    ├── add, remove, move, copy or extend complete sections ....... DONE 8/29/26
     ├── generate and place new verse, chorus or bridge sections ... STILL TO DO
     ├── arrangement-aware transitions into generated sections .... STILL TO DO
     ├── instrument and track selection by spoken description ...... STILL TO DO
@@ -213,6 +213,16 @@ THE MUZES GARDEN DAW
 - Section discovery uses the existing authenticated, owner-scoped arrangement API. No private section data is copied into browser storage and no database migration was required.
 - Recognition and selection do not alter music or unlock Apply Edit. Focused tests cover exact, ambiguous, unmatched, explicit-selection, ordering, and malformed-range behavior.
 - The next leaf is add, remove, move, copy or extend complete sections.
+
+## Completed milestone - Verbal Editing Complete-Section Operations
+
+- Musicians can now prepare protected arrangement recipes to add, remove, move, copy, or extend complete named sections as single musical units.
+- Copy and move preserve the source section identity, remove is preview-only and recoverable, extend ripples every later section boundary, and add creates an explicitly labeled placeholder for later generation or recorded material.
+- Every recipe displays the proposed ordered arrangement with exact tick ranges and identifies preserved sources versus new placeholders.
+- Invalid source selections, destinations, names, durations, and section ranges are rejected before a recipe is shown.
+- Recipes remain nondestructive current-tab previews with `executionAllowed: false`; no audio, clips, saved markers, Library records, exports, or active arrangements are changed.
+- Focused tests cover all five operations, source identity, ripple timing, invalid targets, invalid lengths, and execution locking. No database migration was required.
+- The next leaf is generate and place new verse, chorus or bridge sections.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

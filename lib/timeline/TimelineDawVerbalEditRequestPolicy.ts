@@ -59,6 +59,17 @@ export type TimelineDawVerbalSectionRecognition = {
   confidence: "exact" | "ambiguous" | "unmatched";
 };
 
+export type TimelineDawVerbalSectionOperation = "add" | "remove" | "move" | "copy" | "extend";
+
+export type TimelineDawVerbalSectionRecipe = {
+  operation: TimelineDawVerbalSectionOperation;
+  sourceSectionId: string | null;
+  destinationSectionId: string | null;
+  before: readonly TimelineDawVerbalNamedSection[];
+  after: readonly (TimelineDawVerbalNamedSection & { sourceSectionId: string | null })[];
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -210,4 +221,50 @@ export function recognizeTimelineDawVerbalSections(input: {
     selectedSectionId,
     confidence: recognizedSectionIds.length === 1 ? "exact" : recognizedSectionIds.length > 1 ? "ambiguous" : "unmatched",
   };
+}
+
+export function createTimelineDawVerbalSectionRecipe(input: {
+  operation: TimelineDawVerbalSectionOperation;
+  sections: readonly TimelineDawVerbalNamedSection[];
+  sourceSectionId?: string | null;
+  destinationSectionId?: string | null;
+  addedName?: string;
+  durationTicks?: number;
+}): TimelineDawVerbalSectionRecipe {
+  const recognized = recognizeTimelineDawVerbalSections({ instruction: "", sections: input.sections });
+  const before = recognized.sections;
+  const sourceIndex = before.findIndex((section) => section.id === input.sourceSectionId);
+  const destinationIndex = before.findIndex((section) => section.id === input.destinationSectionId);
+  if (input.operation !== "add" && sourceIndex < 0) throw new Error("Choose the complete source section.");
+  if (input.operation === "move" && destinationIndex < 0) throw new Error("Choose where the section should move.");
+  const blocks = before.map((section) => ({ ...section, duration: section.endTick - section.startTick, sourceSectionId: section.id as string | null }));
+  if (input.operation === "remove") blocks.splice(sourceIndex, 1);
+  if (input.operation === "copy") {
+    const source = blocks[sourceIndex];
+    blocks.splice(destinationIndex >= 0 ? destinationIndex + 1 : blocks.length, 0, { ...source, id: `${source.id}-copy`, name: `${source.name} Copy`, sourceSectionId: source.sourceSectionId });
+  }
+  if (input.operation === "move") {
+    const [source] = blocks.splice(sourceIndex, 1);
+    const destinationAfterRemoval = blocks.findIndex((section) => section.id === input.destinationSectionId);
+    blocks.splice(destinationAfterRemoval + 1, 0, source);
+  }
+  if (input.operation === "extend") {
+    const durationTicks = Number(input.durationTicks);
+    if (!Number.isSafeInteger(durationTicks) || durationTicks <= 0) throw new Error("Extension length must be a positive whole number of ticks.");
+    blocks[sourceIndex].duration += durationTicks;
+  }
+  if (input.operation === "add") {
+    const name = input.addedName?.trim() ?? "";
+    const durationTicks = Number(input.durationTicks);
+    if (!name || name.length > 120) throw new Error("Name the complete section being added.");
+    if (!Number.isSafeInteger(durationTicks) || durationTicks <= 0) throw new Error("Section length must be a positive whole number of ticks.");
+    blocks.splice(destinationIndex >= 0 ? destinationIndex + 1 : blocks.length, 0, { id: `verbal-added-${name.toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`, name, startTick: 0, endTick: durationTicks, duration: durationTicks, sourceSectionId: null });
+  }
+  let cursor = before[0]?.startTick ?? 0;
+  const after = blocks.map(({ duration, ...section }) => {
+    const next = { ...section, startTick: cursor, endTick: cursor + duration };
+    cursor = next.endTick;
+    return next;
+  });
+  return { operation: input.operation, sourceSectionId: input.sourceSectionId ?? null, destinationSectionId: input.destinationSectionId ?? null, before, after, executionAllowed: false };
 }
