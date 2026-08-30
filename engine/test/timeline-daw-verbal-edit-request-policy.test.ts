@@ -15,6 +15,7 @@ import {
   createTimelineDawHarmonyRecipe,
   createTimelineDawInstrumentRangePlan,
   createTimelineDawMicroEditRecipe,
+  createTimelineDawMidiNoteDraft,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -350,5 +351,34 @@ describe("DAW verbal edit request policy", () => {
     }
     expect(() => createTimelineDawMicroEditRecipe({ tracks, sourceTrackId: "keys", targetKind: "beat", targetLabel: "beat", startTick: 0, endTick: 480, operation: "move", instruction: "Move this beat to the next bar." })).toThrow("phrase, riff, chord, or note");
     expect(() => createTimelineDawMicroEditRecipe({ tracks, sourceTrackId: "keys", targetKind: "note", targetLabel: "C4", startTick: 480, endTick: 480, operation: "move", instruction: "Move this note to the next beat." })).toThrow("after the start");
+  });
+
+  it("holds an exact MIDI note with pitch, timing, velocity, and channel", () => {
+    const tracks = [{ id: "voice", name: "Voice Melody", kind: "audio" as const }];
+    expect(createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "voice", operation: "add", midiNote: 60, startTick: 960, durationTicks: 480, velocity: 96, channel: 2 })).toEqual({
+      sourceTrackId: "voice",
+      sourceTrackName: "Voice Melody",
+      operation: "add",
+      midiNote: 60,
+      noteName: "C4",
+      startTick: 960,
+      durationTicks: 480,
+      endTick: 1440,
+      velocity: 96,
+      channel: 2,
+      outputLaneName: "Voice Melody MIDI Draft",
+      sourceMutable: false,
+      status: "held-for-midi-note-review",
+      executionAllowed: false,
+    });
+  });
+
+  it("supports MIDI add, update, and remove drafts and validates every exact value", () => {
+    const tracks = [{ id: "keys", name: "Keys", kind: "midi" as const }];
+    for (const operation of ["add", "update", "remove"] as const) expect(createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation, midiNote: 127, startTick: 0, durationTicks: 1, velocity: 127, channel: 16 })).toMatchObject({ operation, noteName: "G9" });
+    expect(() => createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation: "add", midiNote: 128, startTick: 0, durationTicks: 1, velocity: 100, channel: 1 })).toThrow("0 to 127");
+    expect(() => createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation: "add", midiNote: 60, startTick: 0, durationTicks: 0, velocity: 100, channel: 1 })).toThrow("at least one");
+    expect(() => createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation: "add", midiNote: 60, startTick: 0, durationTicks: 1, velocity: 0, channel: 1 })).toThrow("1 to 127");
+    expect(() => createTimelineDawMidiNoteDraft({ tracks, sourceTrackId: "keys", operation: "add", midiNote: 60, startTick: 0, durationTicks: 1, velocity: 100, channel: 17 })).toThrow("1 to 16");
   });
 });

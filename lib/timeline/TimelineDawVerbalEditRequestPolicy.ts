@@ -183,6 +183,23 @@ export type TimelineDawVerbalMicroEditRecipe = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalMidiNoteDraft = {
+  sourceTrackId: string;
+  sourceTrackName: string;
+  operation: "add" | "update" | "remove";
+  midiNote: number;
+  noteName: string;
+  startTick: number;
+  durationTicks: number;
+  endTick: number;
+  velocity: number;
+  channel: number;
+  outputLaneName: string;
+  sourceMutable: false;
+  status: "held-for-midi-note-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -656,6 +673,53 @@ export function createTimelineDawMicroEditRecipe(input: {
     sourceMutable: false,
     createsDraftRevision: true,
     status: "held-for-micro-edit-review",
+    executionAllowed: false,
+  };
+}
+
+function midiNoteName(midiNote: number) {
+  const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  return `${names[midiNote % 12]}${Math.floor(midiNote / 12) - 1}`;
+}
+
+export function createTimelineDawMidiNoteDraft(input: {
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  sourceTrackId: string | null;
+  operation: unknown;
+  midiNote: unknown;
+  startTick: unknown;
+  durationTicks: unknown;
+  velocity: unknown;
+  channel: unknown;
+}): TimelineDawVerbalMidiNoteDraft {
+  const source = input.sourceTrackId ? input.tracks.find((track) => track.id === input.sourceTrackId) : null;
+  if (!source) throw new Error("Confirm the source track before preparing an exact MIDI note.");
+  const operation = normalizeInstruction(input.operation).toLocaleLowerCase();
+  if (operation !== "add" && operation !== "update" && operation !== "remove") throw new Error("Choose add, update, or remove for the MIDI note.");
+  const midiNote = Number(input.midiNote);
+  const startTick = Number(input.startTick);
+  const durationTicks = Number(input.durationTicks);
+  const velocity = Number(input.velocity);
+  const channel = Number(input.channel);
+  if (!Number.isInteger(midiNote) || midiNote < 0 || midiNote > 127) throw new Error("MIDI pitch must be a whole number from 0 to 127.");
+  if (!Number.isSafeInteger(startTick) || startTick < 0) throw new Error("MIDI start must be a nonnegative whole timeline tick.");
+  if (!Number.isSafeInteger(durationTicks) || durationTicks < 1) throw new Error("MIDI duration must be at least one whole timeline tick.");
+  if (!Number.isInteger(velocity) || velocity < 1 || velocity > 127) throw new Error("MIDI velocity must be a whole number from 1 to 127.");
+  if (!Number.isInteger(channel) || channel < 1 || channel > 16) throw new Error("MIDI channel must be a whole number from 1 to 16.");
+  return {
+    sourceTrackId: source.id,
+    sourceTrackName: source.name,
+    operation,
+    midiNote,
+    noteName: midiNoteName(midiNote),
+    startTick,
+    durationTicks,
+    endTick: startTick + durationTicks,
+    velocity,
+    channel,
+    outputLaneName: `${source.name} MIDI Draft`,
+    sourceMutable: false,
+    status: "held-for-midi-note-review",
     executionAllowed: false,
   };
 }

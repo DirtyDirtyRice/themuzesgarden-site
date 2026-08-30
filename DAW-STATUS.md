@@ -135,7 +135,7 @@ THE MUZES GARDEN DAW
     ├── harmonize selected material by third, fifth or interval ... DONE 8/29/26
     ├── apply different instruments only to named time ranges ..... DONE 8/29/26
     ├── phrase, riff, chord and individual-note verbal editing .... DONE 8/29/26
-    ├── MIDI-note generation and exact pitch/timing editing ........ STILL TO DO
+    ├── MIDI-note generation and exact pitch/timing editing ........ DONE 8/30/26
     ├── audio-to-MIDI or note-analysis assistance where reliable .. STILL TO DO
     ├── digital audio rendering and private result audition ....... STILL TO DO
     ├── connected-interface A/D capture workflow .................. STILL TO DO
@@ -287,6 +287,13 @@ THE MUZES GARDEN DAW
 - Supported protected actions are move, repeat, replace, transpose, trim, and quantize.
 - Every detailed edit becomes a held draft-revision recipe; it cannot mutate the source or execute before review.
 - The next leaf is MIDI-note generation and exact pitch/timing editing.
+
+### VERBAL EDITING exact MIDI-note milestone — 8/30/26
+
+- A confirmed source track can now produce a separate protected MIDI draft with exact pitch, note name, start, duration, end, velocity, and channel.
+- Add, update, and remove operations validate the full MIDI ranges: pitch 0–127, velocity 1–127, and channel 1–16.
+- The draft remains held for MIDI review and cannot mutate source notes, source audio, or the arrangement.
+- The next leaf is audio-to-MIDI or note-analysis assistance where reliable.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
