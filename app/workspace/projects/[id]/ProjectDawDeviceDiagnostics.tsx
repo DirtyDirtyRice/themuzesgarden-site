@@ -20,6 +20,13 @@ import {
   type TimelineDawControlSurfaceQaCheck,
   type TimelineDawControlSurfaceQaOutcome,
 } from "../../../../lib/timeline/TimelineDawControlSurfaceQaPolicy";
+import {
+  createTimelineDawAudioInterfaceQaReport,
+  recordTimelineDawAudioInterfaceQaEvidence,
+  TIMELINE_DAW_AUDIO_INTERFACE_QA_CHECKS,
+  type TimelineDawAudioInterfaceQaCheck,
+  type TimelineDawAudioInterfaceQaOutcome,
+} from "../../../../lib/timeline/TimelineDawAudioInterfaceQaPolicy";
 
 type MidiInputLike = {
   id: string;
@@ -52,6 +59,10 @@ export default function ProjectDawDeviceDiagnostics() {
   const [qaCheck, setQaCheck] = useState<TimelineDawControlSurfaceQaCheck>("start");
   const [qaOutcome, setQaOutcome] = useState<TimelineDawControlSurfaceQaOutcome>("pass");
   const [qaNote, setQaNote] = useState("");
+  const [interfaceQa, setInterfaceQa] = useState(() => createTimelineDawAudioInterfaceQaReport());
+  const [interfaceCheck, setInterfaceCheck] = useState<TimelineDawAudioInterfaceQaCheck>("identity");
+  const [interfaceOutcome, setInterfaceOutcome] = useState<TimelineDawAudioInterfaceQaOutcome>("pass");
+  const [interfaceNote, setInterfaceNote] = useState("");
 
   const inspect = useCallback(async (testMicrophone: boolean) => {
     setBusy(true);
@@ -73,6 +84,8 @@ export default function ProjectDawDeviceDiagnostics() {
         }
       }
       const devices = supported ? await navigator.mediaDevices.enumerateDevices() : [];
+      const namedInputs = devices.filter((device) => device.kind === "audioinput" && device.label.trim()).map((device) => device.label.trim());
+      setInterfaceQa((current) => current.interfaceName === namedInputs[0] ? current : createTimelineDawAudioInterfaceQaReport(namedInputs[0]));
       if (typeof AudioContext !== "undefined" && testMicrophone) {
         context = new AudioContext({ latencyHint: "interactive" });
       }
@@ -227,6 +240,20 @@ export default function ProjectDawDeviceDiagnostics() {
             <p className={`mt-3 font-black ${controlSurfaceQa.status === "passed" ? "text-emerald-200" : controlSurfaceQa.status === "needs-review" ? "text-red-200" : "text-amber-100"}`}>Status: {controlSurfaceQa.status.replace("-", " ")}. {controlSurfaceQa.deviceName ? `Device: ${controlSurfaceQa.deviceName}.` : "Connect MIDI Transport to begin."}</p>
             <p className="mt-1 text-white/55">Completed: {controlSurfaceQa.completedChecks.length ? controlSurfaceQa.completedChecks.join(", ") : "none"}. Remaining: {controlSurfaceQa.remainingChecks.join(", ") || "none"}. Trials: {controlSurfaceQa.trials.length}/12 minimum.</p>
             <p className="mt-2 text-xs font-bold text-amber-100">Evidence is held only in this tab. Do not mark the hardware leaf DONE unless this report passes with the actual production controller.</p>
+          </div>
+          <div className="mt-4 rounded-xl border border-sky-300/25 bg-sky-300/[0.05] p-4 text-sm">
+            <p className="text-xs font-black uppercase tracking-wider text-sky-200">Physical audio-interface production QA</p>
+            <h3 className="mt-1 text-lg font-black">Verify the complete recording signal path</h3>
+            <p className="mt-1 text-white/55">Run Test Microphone &amp; Latency first. Then confirm the named interface, real input signal, output monitoring, channel routing, sample rate, usable latency, and disconnect/reconnect recovery.</p>
+            <div className="mt-3 grid gap-2 md:grid-cols-[190px_160px_1fr_auto]">
+              <select className="rounded-xl border border-white/20 bg-black px-3 py-2" value={interfaceCheck} onChange={(event) => setInterfaceCheck(event.target.value as TimelineDawAudioInterfaceQaCheck)}>{TIMELINE_DAW_AUDIO_INTERFACE_QA_CHECKS.map((check) => <option key={check} value={check}>{check.replaceAll("-", " ")}</option>)}</select>
+              <select className="rounded-xl border border-white/20 bg-black px-3 py-2" value={interfaceOutcome} onChange={(event) => setInterfaceOutcome(event.target.value as TimelineDawAudioInterfaceQaOutcome)}><option value="pass">Physically passed</option><option value="problem">Problem observed</option></select>
+              <input className="rounded-xl border border-white/20 bg-black px-3 py-2" value={interfaceNote} maxLength={500} onChange={(event) => setInterfaceNote(event.target.value)} placeholder="What did you hear or observe?" />
+              <button type="button" className={button} disabled={!interfaceQa.interfaceName} onClick={() => { try { setInterfaceQa(recordTimelineDawAudioInterfaceQaEvidence({ report: interfaceQa, check: interfaceCheck, outcome: interfaceOutcome, note: interfaceNote })); setInterfaceNote(""); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Interface evidence could not be recorded."); } }}>Record Evidence</button>
+            </div>
+            <p className={`mt-3 font-black ${interfaceQa.status === "passed" ? "text-emerald-200" : interfaceQa.status === "needs-review" ? "text-red-200" : "text-amber-100"}`}>Status: {interfaceQa.status.replace("-", " ")}. {interfaceQa.interfaceName ? `Interface: ${interfaceQa.interfaceName}.` : "No named physical interface verified."}</p>
+            <p className="mt-1 text-white/55">Passed: {interfaceQa.passedChecks.length ? interfaceQa.passedChecks.join(", ") : "none"}. Remaining: {interfaceQa.remainingChecks.join(", ") || "none"}.</p>
+            <p className="mt-2 text-xs font-bold text-amber-100">This current-tab report cannot mark real interface QA complete without all seven physical checks.</p>
           </div>
         </>
       ) : null}

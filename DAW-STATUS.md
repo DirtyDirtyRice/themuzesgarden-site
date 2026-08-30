@@ -38,6 +38,14 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Evidence remains only in the current tab and does not alter private audio, session data, transport history, or device settings.
 - The QA harness is software-complete; the external hardware/control-surface production QA leaf remains open until an actual controller completes all 12 trials.
 
+## Completed milestone - Physical Audio-Interface Production QA Harness
+
+- Device diagnostics now tie production evidence to the physical interface name revealed by Chrome after microphone permission.
+- The interface must pass identity, real input signal, output monitoring, channel routing, sample rate, latency, and reconnect checks.
+- Partial evidence cannot pass, and any observed problem holds the report for review.
+- Evidence remains only in the current tab and cannot alter private recordings, device settings, or session data.
+- The harness is software-complete; the real audio-interface testing leaf remains open until actual connected hardware passes all seven checks.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
