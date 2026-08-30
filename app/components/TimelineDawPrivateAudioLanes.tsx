@@ -1383,7 +1383,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
         onLaunchQueuedNow={launchQueuedSessionNow}
         onQueueStop={(settings) => queueSessionLaunch({ name: "Stop Session Audio", ...settings, launch: () => stopTrackPreview() })}
       />
-      <TimelineDawMusicianMixer lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
+      <TimelineDawMusicianMixer sessionId={sessionId} lanes={lanes} buses={buses} inserts={inserts} sends={sends} meters={meters} busy={busy} onMix={queueMix} onRoute={(lane, busId) => void assignBus(lane, busId)} onInsert={(insert) => void persistInsert(insert)} onSend={(send) => void persistSend(send)} />
       <TimelineDawPrivateLaneHistory sessionId={sessionId} revision={historyRevision} onRestore={(restored) => setLanes(restored.sort((a, b) => a.timelineStartSeconds - b.timelineStartSeconds))} />
       <details className="mt-3 rounded-xl border border-white/10 p-3">
         <summary className="cursor-pointer text-sm font-black text-white/60">Advanced version-family tools</summary>

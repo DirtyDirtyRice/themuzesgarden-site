@@ -53,6 +53,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - A short engineering simulation cannot be reported as real long-session production evidence.
 - The qualification tool is software-complete; the stability leaf remains open until a real 30-minute recording passes every check in Chrome.
 
+## Completed milestone - Baby-Step Mixing Help
+
+- Quick Mix now includes eight one-action musician steps covering track choice, critical-section playback, gain, pan, mute/solo, effect A/B, bus/send routing, and final full-mix headroom review.
+- Previous Step, Next Step, and Start Over use the established accessible baby-step controls.
+- Only the current step number is remembered per protected session; no private audio, mix values, routing, or notes enter browser help storage.
+- The help explicitly protects the source recording and teaches musicians to make one audible decision at a time.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text

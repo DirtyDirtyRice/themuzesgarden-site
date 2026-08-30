@@ -13,8 +13,10 @@ import {
   summarizeTimelineDawMusicianMixHealth,
   type TimelineDawMusicianMixPreset,
 } from "@/lib/timeline/TimelineDawMusicianMixPolicy";
+import ProjectDawMixingHelp from "@/app/workspace/projects/[id]/ProjectDawMixingHelp";
 
 type Props = {
+  sessionId: string;
   lanes: DawPrivateAudioLane[];
   buses: DawPrivateBus[];
   inserts: DawPrivateInsert[];
@@ -30,7 +32,7 @@ type Props = {
 const button = "rounded-lg border border-white/20 px-2.5 py-1.5 text-xs font-black disabled:opacity-40";
 const presets: TimelineDawMusicianMixPreset[] = ["clean", "vocal", "punch", "warm"];
 
-export default function TimelineDawMusicianMixer({ lanes, buses, inserts, sends, meters, busy, onMix, onRoute, onInsert, onSend }: Props) {
+export default function TimelineDawMusicianMixer({ sessionId, lanes, buses, inserts, sends, meters, busy, onMix, onRoute, onInsert, onSend }: Props) {
   const [bypassedLanes, setBypassedLanes] = useState(new Set<string>());
 
   function laneInserts(laneId: string) {
@@ -70,6 +72,7 @@ export default function TimelineDawMusicianMixer({ lanes, buses, inserts, sends,
       <div><h3 className="text-xl font-black">Quick Mix</h3><p className="text-sm text-white/55">Changes are immediately auditionable and saved through the protected mixer engines.</p></div>
       <span className="text-xs text-white/45">A/B bypass compares effects without changing source audio.</span>
     </div>
+    <ProjectDawMixingHelp sessionId={sessionId} />
     {lanes.length ? <div className="mt-4 grid gap-3">{lanes.map((lane) => {
       const meter = meters[lane.id] ?? { peakAmplitude: 0, peakDbfs: -96, clipped: false };
       const activeInserts = laneInserts(lane.id).filter((insert) => !insert.bypassed);
