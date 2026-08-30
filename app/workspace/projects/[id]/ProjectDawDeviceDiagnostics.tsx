@@ -13,6 +13,13 @@ import {
   sampleTimelineDawBrowserTiming,
   type TimelineDawBrowserTimingReport,
 } from "../../../../lib/timeline/TimelineDawBrowserTimingDiagnostics";
+import {
+  createTimelineDawControlSurfaceQaReport,
+  recordTimelineDawControlSurfaceQaTrial,
+  TIMELINE_DAW_CONTROL_SURFACE_QA_CHECKS,
+  type TimelineDawControlSurfaceQaCheck,
+  type TimelineDawControlSurfaceQaOutcome,
+} from "../../../../lib/timeline/TimelineDawControlSurfaceQaPolicy";
 
 type MidiInputLike = {
   id: string;
@@ -41,6 +48,10 @@ export default function ProjectDawDeviceDiagnostics() {
   const [midiInputs, setMidiInputs] = useState<string[]>([]);
   const [lastMidiCommand, setLastMidiCommand] = useState<TimelineDawMidiTransportCommand | null>(null);
   const [timingReport, setTimingReport] = useState<TimelineDawBrowserTimingReport | null>(null);
+  const [controlSurfaceQa, setControlSurfaceQa] = useState(() => createTimelineDawControlSurfaceQaReport());
+  const [qaCheck, setQaCheck] = useState<TimelineDawControlSurfaceQaCheck>("start");
+  const [qaOutcome, setQaOutcome] = useState<TimelineDawControlSurfaceQaOutcome>("pass");
+  const [qaNote, setQaNote] = useState("");
 
   const inspect = useCallback(async (testMicrophone: boolean) => {
     setBusy(true);
@@ -91,7 +102,8 @@ export default function ProjectDawDeviceDiagnostics() {
   }, [permission]);
 
   useEffect(() => {
-    void inspect(false);
+    const timer = window.setTimeout(() => { void inspect(false); }, 0);
+    return () => window.clearTimeout(timer);
   }, [inspect]);
 
   const connectMidiTransport = useCallback(async () => {
@@ -103,7 +115,9 @@ export default function ProjectDawDeviceDiagnostics() {
       const access = await requestMidiAccess.call(navigator, { sysex: false });
       const attach = () => {
         const inputs = [...access.inputs.values()];
-        setMidiInputs(inputs.map((input) => [input.manufacturer, input.name].filter(Boolean).join(" ") || `MIDI input ${input.id}`));
+        const names = inputs.map((input) => [input.manufacturer, input.name].filter(Boolean).join(" ") || `MIDI input ${input.id}`);
+        setMidiInputs(names);
+        setControlSurfaceQa((current) => current.deviceName === names[0] ? current : createTimelineDawControlSurfaceQaReport(names[0]));
         inputs.forEach((input) => {
           input.onmidimessage = (event) => {
             const command = resolveTimelineDawMidiTransportCommand(event.data);
@@ -199,6 +213,20 @@ export default function ProjectDawDeviceDiagnostics() {
                 Timing {timingReport.status === "pass" ? "passed" : "needs review"}: average {timingReport.averageJitterMs} ms · p95 {timingReport.p95JitterMs} ms · worst {timingReport.worstJitterMs} ms across {timingReport.sampleCount} samples. {timingReport.summary}
               </p>
             ) : null}
+          </div>
+          <div className="mt-4 rounded-xl border border-violet-300/25 bg-violet-300/[0.05] p-4 text-sm">
+            <p className="text-xs font-black uppercase tracking-wider text-violet-200">Physical control-surface production QA</p>
+            <h3 className="mt-1 text-lg font-black">Repeatable hardware evidence</h3>
+            <p className="mt-1 text-white/55">A real connected controller must successfully perform Start, Continue, Stop, and disconnect/reconnect three times each. Browser capability alone cannot pass this test.</p>
+            <div className="mt-3 grid gap-2 md:grid-cols-[180px_160px_1fr_auto]">
+              <select className="rounded-xl border border-white/20 bg-black px-3 py-2" value={qaCheck} onChange={(event) => setQaCheck(event.target.value as TimelineDawControlSurfaceQaCheck)}>{TIMELINE_DAW_CONTROL_SURFACE_QA_CHECKS.map((check) => <option key={check} value={check}>{check === "reconnect" ? "Disconnect / reconnect" : check}</option>)}</select>
+              <select className="rounded-xl border border-white/20 bg-black px-3 py-2" value={qaOutcome} onChange={(event) => setQaOutcome(event.target.value as TimelineDawControlSurfaceQaOutcome)}><option value="pass">Responded correctly</option><option value="problem">Problem observed</option></select>
+              <input className="rounded-xl border border-white/20 bg-black px-3 py-2" value={qaNote} maxLength={500} onChange={(event) => setQaNote(event.target.value)} placeholder="What physically happened?" />
+              <button type="button" className={button} disabled={!controlSurfaceQa.deviceName} onClick={() => { try { setControlSurfaceQa(recordTimelineDawControlSurfaceQaTrial({ report: controlSurfaceQa, check: qaCheck, outcome: qaOutcome, note: qaNote })); setQaNote(""); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Hardware trial could not be recorded."); } }}>Record Trial</button>
+            </div>
+            <p className={`mt-3 font-black ${controlSurfaceQa.status === "passed" ? "text-emerald-200" : controlSurfaceQa.status === "needs-review" ? "text-red-200" : "text-amber-100"}`}>Status: {controlSurfaceQa.status.replace("-", " ")}. {controlSurfaceQa.deviceName ? `Device: ${controlSurfaceQa.deviceName}.` : "Connect MIDI Transport to begin."}</p>
+            <p className="mt-1 text-white/55">Completed: {controlSurfaceQa.completedChecks.length ? controlSurfaceQa.completedChecks.join(", ") : "none"}. Remaining: {controlSurfaceQa.remainingChecks.join(", ") || "none"}. Trials: {controlSurfaceQa.trials.length}/12 minimum.</p>
+            <p className="mt-2 text-xs font-bold text-amber-100">Evidence is held only in this tab. Do not mark the hardware leaf DONE unless this report passes with the actual production controller.</p>
           </div>
         </>
       ) : null}

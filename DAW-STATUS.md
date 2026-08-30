@@ -1,6 +1,6 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 29, 2026
+Last updated: August 30, 2026
 
 ## Current objective
 
@@ -29,6 +29,14 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Returning after Chrome refreshes or suspends the Studio restores both the open work area and the musician's prior vertical position.
 - Focus and scroll policy tests passed (5 tests), targeted lint passed, TypeScript passed, and the production build passed with 76 generated pages.
 - No recording, source audio, take, project, or database data is changed by this browser-local navigation memory.
+
+## Completed milestone - Physical Control-Surface Production QA Harness
+
+- Device diagnostics now include a production evidence ladder for a real MIDI control surface.
+- Start, Continue, Stop, and disconnect/reconnect each require three successful musician-confirmed physical trials; partial evidence cannot pass.
+- Any reported transport problem holds the report for review, and browser capability alone cannot be presented as physical hardware success.
+- Evidence remains only in the current tab and does not alter private audio, session data, transport history, or device settings.
+- The QA harness is software-complete; the external hardware/control-surface production QA leaf remains open until an actual controller completes all 12 trials.
 
 ## Current DAW tree - DONE / MUST DO
 
@@ -120,7 +128,7 @@ THE MUZES GARDEN DAW
 │   ├── accessibility and keyboard-command completion .... DONE 8/23/26
 │   ├── real-musician end-to-end acceptance gate ......... DONE 8/23/26
 │   └── owner completes seven-step musician sign-off ............ MUST DO
-└── VERBAL EDITING ............................................... STILL TO DO
+└── VERBAL EDITING ............................................... DONE 8/30/26
     ├── plain-language edit request workspace .................... DONE 8/29/26
     ├── protected AI edit plan shown before changing music ....... DONE 8/29/26
     ├── approve, reject, revise and explain proposed edits ........ DONE 8/29/26
