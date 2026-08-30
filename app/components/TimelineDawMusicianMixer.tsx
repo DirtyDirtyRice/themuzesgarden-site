@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   DawPrivateAudioLane,
   DawPrivateBus,
@@ -14,6 +14,7 @@ import {
   type TimelineDawMusicianMixPreset,
 } from "@/lib/timeline/TimelineDawMusicianMixPolicy";
 import ProjectDawMixingHelp from "@/app/workspace/projects/[id]/ProjectDawMixingHelp";
+import { parseTimelineDawMixerViewMode, timelineDawCompactMixerStorageKey, type TimelineDawMixerViewMode } from "@/lib/timeline/TimelineDawCompactMixerPolicy";
 
 type Props = {
   sessionId: string;
@@ -34,6 +35,21 @@ const presets: TimelineDawMusicianMixPreset[] = ["clean", "vocal", "punch", "war
 
 export default function TimelineDawMusicianMixer({ sessionId, lanes, buses, inserts, sends, meters, busy, onMix, onRoute, onInsert, onSend }: Props) {
   const [bypassedLanes, setBypassedLanes] = useState(new Set<string>());
+  const [viewMode, setViewMode] = useState<TimelineDawMixerViewMode>("full");
+
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      try { setViewMode(parseTimelineDawMixerViewMode(localStorage.getItem(timelineDawCompactMixerStorageKey(sessionId)))); } catch { setViewMode("full"); }
+    });
+    return () => { active = false; };
+  }, [sessionId]);
+
+  function chooseViewMode(next: TimelineDawMixerViewMode) {
+    setViewMode(next);
+    try { localStorage.setItem(timelineDawCompactMixerStorageKey(sessionId), next); } catch { /* Display preference remains usable without storage. */ }
+  }
 
   function laneInserts(laneId: string) {
     return inserts.filter((insert) => insert.sourceKind === "lane" && insert.sourceId === laneId).sort((left, right) => left.slot - right.slot);
@@ -66,32 +82,33 @@ export default function TimelineDawMusicianMixer({ sessionId, lanes, buses, inse
     });
   }
 
-  return <section id="musician-quick-mix" className="mt-4 rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.05] p-4">
+  const compact = viewMode === "compact";
+  return <section id="musician-quick-mix" className={`mt-4 rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.05] ${compact ? "p-2" : "p-4"}`}>
     <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-200">Step 2 · Shape the sound</p>
     <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
-      <div><h3 className="text-xl font-black">Quick Mix</h3><p className="text-sm text-white/55">Changes are immediately auditionable and saved through the protected mixer engines.</p></div>
-      <span className="text-xs text-white/45">A/B bypass compares effects without changing source audio.</span>
+      <div><h3 className="text-xl font-black">Quick Mix</h3>{!compact ? <p className="text-sm text-white/55">Changes are immediately auditionable and saved through the protected mixer engines.</p> : <p className="text-xs text-emerald-100">Compact channel view · all mix controls remain available</p>}</div>
+      <div className="flex items-center gap-2"><span className="text-xs text-white/45">A/B bypass preserves source audio.</span><button type="button" className={button} aria-pressed={compact} onClick={() => chooseViewMode(compact ? "full" : "compact")}>{compact ? "Full Mixer" : "Compact Mixer"}</button></div>
     </div>
-    <ProjectDawMixingHelp sessionId={sessionId} />
-    {lanes.length ? <div className="mt-4 grid gap-3">{lanes.map((lane) => {
+    {!compact ? <ProjectDawMixingHelp sessionId={sessionId} /> : null}
+    {lanes.length ? <div className={`${compact ? "mt-2 max-h-[38rem] overflow-y-auto overscroll-contain pr-1" : "mt-4"} grid ${compact ? "gap-2" : "gap-3"}`}>{lanes.map((lane) => {
       const meter = meters[lane.id] ?? { peakAmplitude: 0, peakDbfs: -96, clipped: false };
       const activeInserts = laneInserts(lane.id).filter((insert) => !insert.bypassed);
       const latencySamples = activeInserts.reduce((total, insert) => total + Math.max(0, insert.latencySamples ?? 0), 0);
       const health = summarizeTimelineDawMusicianMixHealth({ peakDbfs: meter.peakDbfs, clipped: meter.clipped, activeInsertCount: activeInserts.length, latencySamples, sampleRate: lane.audio.sampleRate });
       const laneSends = sends.filter((send) => send.sourceKind === "lane" && send.sourceId === lane.id);
-      return <article key={lane.id} className="rounded-xl border border-white/10 bg-black/55 p-3">
+      return <article key={lane.id} className={`rounded-xl border border-white/10 bg-black/55 ${compact ? "p-2" : "p-3"}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div><h4 className="font-black">{lane.name}</h4><p className={`text-xs font-bold ${health.status === "clip" ? "text-red-300" : health.status === "hot" ? "text-amber-200" : "text-emerald-200"}`}>{health.status.toUpperCase()} · {meter.peakDbfs.toFixed(1)} dBFS · {health.latencyMs.toFixed(1)} ms effects latency · {health.processingLoad} processing load</p></div>
-          <span className="text-xs text-white/45">{health.recommendation}</span>
+          <div><h4 className="font-black">{lane.name}</h4><p className={`text-xs font-bold ${health.status === "clip" ? "text-red-300" : health.status === "hot" ? "text-amber-200" : "text-emerald-200"}`}>{health.status.toUpperCase()} · {meter.peakDbfs.toFixed(1)} dBFS{compact ? "" : ` · ${health.latencyMs.toFixed(1)} ms effects latency · ${health.processingLoad} processing load`}</p></div>
+          {!compact ? <span className="text-xs text-white/45">{health.recommendation}</span> : null}
         </div>
-        <div className="mt-3 grid gap-3 lg:grid-cols-[auto_auto_minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(9rem,auto)]">
+        <div className={`${compact ? "mt-2 gap-2" : "mt-3 gap-3"} grid lg:grid-cols-[auto_auto_minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(9rem,auto)]`}>
           <button type="button" className={`${button} ${lane.mix.muted ? "border-red-300 bg-red-300 text-black" : ""}`} aria-pressed={lane.mix.muted} onClick={() => onMix(lane, { muted: !lane.mix.muted })}>{lane.mix.muted ? "Muted" : "Mute"}</button>
           <button type="button" className={`${button} ${lane.mix.soloed ? "border-amber-300 bg-amber-300 text-black" : ""}`} aria-pressed={lane.mix.soloed} onClick={() => onMix(lane, { soloed: !lane.mix.soloed })}>{lane.mix.soloed ? "Soloed" : "Solo"}</button>
           <label className="text-xs font-black text-white/55">Gain {lane.mix.gain.toFixed(2)}×<input className="mt-1 block w-full accent-emerald-300" type="range" min={0} max={2} step={0.01} value={lane.mix.gain} onChange={(event) => onMix(lane, { gain: Number(event.target.value) })} /></label>
           <label className="text-xs font-black text-white/55">Pan {lane.mix.pan === 0 ? "Center" : lane.mix.pan < 0 ? `Left ${Math.round(-lane.mix.pan * 100)}` : `Right ${Math.round(lane.mix.pan * 100)}`}<input className="mt-1 block w-full accent-emerald-300" type="range" min={-1} max={1} step={0.01} value={lane.mix.pan} onChange={(event) => onMix(lane, { pan: Number(event.target.value) })} /></label>
           <label className="text-xs font-black text-white/55">Output<select className="mt-1 block w-full rounded bg-black p-1.5 text-white" value={lane.busId ?? ""} onChange={(event) => onRoute(lane, event.target.value || null)}><option value="">Master</option>{buses.map((bus) => <option key={bus.id} value={bus.id}>{bus.name}</option>)}</select></label>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className={`${compact ? "mt-2" : "mt-3"} flex flex-wrap items-center gap-2`}>
           <span className="text-xs font-black text-white/45">Sound:</span>
           {presets.map((preset) => <button key={preset} type="button" className={button} disabled={busy} onClick={() => applyPreset(lane, preset)}>{preset[0].toUpperCase() + preset.slice(1)}</button>)}
           <button type="button" className={`${button} border-cyan-300/40 text-cyan-100`} disabled={!laneInserts(lane.id).length} aria-pressed={bypassedLanes.has(lane.id)} onClick={() => toggleEffects(lane)}>A/B Effects {bypassedLanes.has(lane.id) ? "Off" : "On"}</button>

@@ -60,6 +60,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Only the current step number is remembered per protected session; no private audio, mix values, routing, or notes enter browser help storage.
 - The help explicitly protects the source recording and teaches musicians to make one audible decision at a time.
 
+## Completed milestone - Compact Mixer Workspace
+
+- Quick Mix now switches between Full Mixer and Compact Mixer without creating a second mixing engine or changing any audio.
+- Compact mode removes tutorial height, tightens channel cards, shortens meter detail, and keeps channels inside a bounded scrolling mixer viewport.
+- Mute, Solo, Gain, Pan, Output, presets, effect A/B, parallel sends, send levels, and meters remain available in both modes.
+- Only the allowlisted display mode is remembered per protected session; no private audio or mix value is stored by this preference.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
