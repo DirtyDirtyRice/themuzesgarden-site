@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { requireProjectSupabase } from "@/app/workspace/projects/[id]/projectSupabase";
 import TimelineDawMidiBabyStepHelp from "./TimelineDawMidiBabyStepHelp";
+import TimelineDawThirdPartyInstrumentCompatibilityWorkspace from "./TimelineDawThirdPartyInstrumentCompatibilityWorkspace";
 
 type TempoPoint={tick:number;bpm:number};
 type Note={id:string;pitch:number;velocity:number;startTick:number;durationTicks:number;channel:number};
@@ -44,6 +45,7 @@ export default function TimelineDawPrivateMidiSequencer({sessionId}:{sessionId:s
 
   return <section className="mt-4 rounded-xl border border-fuchsia-300/20 bg-fuchsia-300/[.04] p-3 text-xs">
     <TimelineDawMidiBabyStepHelp sessionId={sessionId}/>
+    <TimelineDawThirdPartyInstrumentCompatibilityWorkspace/>
     <div className="flex flex-wrap gap-2"><strong>MIDI Sequencer & Instrument</strong>
       <label className={button}>Import MIDI<input className="hidden" type="file" accept=".mid,.midi,audio/midi" onChange={event=>{const file=event.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>void request({action:"import",name:file.name.replace(/\.(mid|midi)$/i,""),base64:String(reader.result).split(",")[1]??""}).then(result=>setSelected(result.clip.id)).catch(cause=>setError(cause.message));reader.readAsDataURL(file)}}/></label>
       <button className={button} onClick={()=>void request({action:"create",name:"MIDI Clip",ppq:480,lengthTicks:7680,startTick:0,instrument:{waveform:"triangle",attack:.005,release:.08,gain:.25,maxVoices:16,busId:null},notes:[],controllers:[],pitchBends:[],programChanges:[]}).then(result=>setSelected(result.clip.id)).catch(cause=>setError(cause.message))}>New Clip</button>

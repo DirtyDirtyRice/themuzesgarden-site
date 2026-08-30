@@ -96,6 +96,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Only the current help-step number is remembered for the protected session; MIDI, audio, device names, plug-in details, and settings are not stored by the guide.
 - The guide explicitly preserves editable private MIDI and requires audition before promotion, freeze, or export.
 
+## Completed milestone - Third-Party Virtual-Instrument Compatibility
+
+- MIDI now has an instrument-specific compatibility gate built on the established plug-in fingerprint, vendor, sample-rate, channel, latency, state-recall, and crash-recovery protections.
+- Live instruments additionally require verified MIDI note on/off, velocity/channel handling, preset/program recall, automation, and production polyphony evidence.
+- Chrome directly qualifies only built-in and WASM instruments; desktop VST3, AU, AAX, and CLAP instruments require a separately verified bridge or verified rendered-audio exchange.
+- Held instruments cannot activate and remain silent placeholders while editable MIDI, instrument identity, and source audio stay preserved.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
