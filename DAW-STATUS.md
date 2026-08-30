@@ -140,7 +140,7 @@ THE MUZES GARDEN DAW
     ├── digital audio rendering and private result audition ....... DONE 8/30/26
     ├── connected-interface A/D capture workflow .................. DONE 8/30/26
     ├── connected-interface D/A monitoring workflow ............... DONE 8/30/26
-    ├── studio hardware inventory and connection detection ........ STILL TO DO
+    ├── studio hardware inventory and connection detection ........ DONE 8/30/26
     ├── step-by-step human cabling, patching and setup guidance .... STILL TO DO
     ├── hardware safety warnings and confirmation gates ............ STILL TO DO
     ├── gain, clock, sample-rate and synchronization preflight ..... STILL TO DO
@@ -324,6 +324,14 @@ THE MUZES GARDEN DAW
 - The workflow routes the private audition, requires a human-confirmed low starting output level, and then verifies left/right monitoring before volume is raised.
 - Playback remains audition-only with source mutation and automatic execution blocked while the physical output path is unverified.
 - The next leaf is studio hardware inventory and connection detection.
+
+### VERBAL EDITING studio hardware inventory milestone — 8/30/26
+
+- Chrome can now request audio permission and inventory the audio inputs and outputs it actually detects, including revealed device labels.
+- Repeated browser entries are deduplicated; hidden labels and empty inventories produce explicit held or warning states.
+- Device labels and identifiers remain current-tab memory only and are never written to browser storage, the database, logs, URLs, analytics, or the Library.
+- The inventory never claims that cables, patch bays, phantom power, speakers, or analog signal flow are physically verified.
+- The next leaf is step-by-step human cabling, patching, and setup guidance.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
