@@ -8,6 +8,7 @@ import {
   recognizeTimelineDawVerbalSections,
   createTimelineDawVerbalSectionRecipe,
   createTimelineDawGeneratedSectionPlan,
+  createTimelineDawGeneratedTransitionPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -175,5 +176,24 @@ describe("DAW verbal edit request policy", () => {
     expect(() => createTimelineDawGeneratedSectionPlan({ sectionType: "verse", bars: 0, prompt: "Make a second verse section.", sections })).toThrow("1 to 128");
     expect(() => createTimelineDawGeneratedSectionPlan({ sectionType: "chorus", bars: 8, prompt: "too short", sections })).toThrow("at least 10");
     expect(() => createTimelineDawGeneratedSectionPlan({ sectionType: "bridge", bars: 8, prompt: "Make a contrasting bridge section.", sections, placementAfterSectionId: "missing" })).toThrow("not found");
+  });
+
+  it("plans entry and exit transitions around a generated section", () => {
+    const sections = [
+      { id: "verse", name: "Verse", startTick: 0, endTick: 7680 },
+      { id: "chorus", name: "Chorus", startTick: 7680, endTick: 15360 },
+    ];
+    const generationPlan = createTimelineDawGeneratedSectionPlan({ sectionType: "bridge", bars: 8, prompt: "Create a contrasting bridge groove.", sections, placementAfterSectionId: "verse" });
+    expect(createTimelineDawGeneratedTransitionPlan({ generationPlan, sections, style: "crossfade", crossfadeTicks: 240, tempoCompatibility: "confirmed", keyCompatibility: "confirmed" })).toMatchObject({ entryFromSectionId: "verse", exitToSectionId: "chorus", crossfadeTicks: 240, warnings: [], status: "held-for-transition-review", executionAllowed: false });
+  });
+
+  it("holds unconfirmed tempo/key and validates transition boundaries", () => {
+    const sections = [{ id: "verse", name: "Verse", startTick: 0, endTick: 7680 }];
+    const generationPlan = createTimelineDawGeneratedSectionPlan({ sectionType: "chorus", bars: 4, prompt: "Create a bright chorus response.", sections });
+    const held = createTimelineDawGeneratedTransitionPlan({ generationPlan, sections, style: "pickup" });
+    expect(held).toMatchObject({ entryFromSectionId: "verse", exitToSectionId: null, preservePickup: true });
+    expect(held.warnings).toHaveLength(2);
+    expect(() => createTimelineDawGeneratedTransitionPlan({ generationPlan, sections, style: "crossfade", crossfadeTicks: 0 })).toThrow("positive crossfade");
+    expect(() => createTimelineDawGeneratedTransitionPlan({ generationPlan, sections, style: "crossfade", crossfadeTicks: generationPlan.durationTicks })).toThrow("safe whole-tick");
   });
 });

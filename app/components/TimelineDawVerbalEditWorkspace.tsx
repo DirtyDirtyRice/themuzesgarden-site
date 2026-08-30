@@ -11,6 +11,7 @@ import {
   recognizeTimelineDawVerbalSections,
   createTimelineDawVerbalSectionRecipe,
   createTimelineDawGeneratedSectionPlan,
+  createTimelineDawGeneratedTransitionPlan,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
   type TimelineDawVerbalEditRequest,
@@ -20,6 +21,7 @@ import {
   type TimelineDawVerbalSectionOperation,
   type TimelineDawVerbalSectionRecipe,
   type TimelineDawGeneratedSectionPlan,
+  type TimelineDawGeneratedTransitionPlan,
 } from "@/lib/timeline/TimelineDawVerbalEditRequestPolicy";
 
 const fieldClass = "w-full rounded-xl border border-white/20 bg-black px-4 py-3 text-white outline-none focus:border-fuchsia-300";
@@ -44,6 +46,11 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
   const [generatedBars, setGeneratedBars] = useState(8);
   const [generationPrompt, setGenerationPrompt] = useState("");
   const [generationPlan, setGenerationPlan] = useState<TimelineDawGeneratedSectionPlan | null>(null);
+  const [transitionStyle, setTransitionStyle] = useState<TimelineDawGeneratedTransitionPlan["style"]>("clean-cut");
+  const [transitionTicks, setTransitionTicks] = useState(240);
+  const [tempoConfirmed, setTempoConfirmed] = useState(false);
+  const [keyConfirmed, setKeyConfirmed] = useState(false);
+  const [transitionPlan, setTransitionPlan] = useState<TimelineDawGeneratedTransitionPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,6 +80,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
       setSelectedSectionId(null);
       setSectionRecipe(null);
       setGenerationPlan(null);
+      setTransitionPlan(null);
       setDecisionExplanation("");
       setError(null);
     } catch (cause) {
@@ -130,7 +138,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={holdRequest}>Prepare Request for Review</button>
-        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setSectionRecipe(null); setGenerationPlan(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
+        <button type="button" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-black disabled:opacity-40" disabled={!instruction && !heldRequest} onClick={() => { setInstruction(""); setHeldRequest(null); setPlanDecision(null); setRevisionHistory(null); setSelectedSectionId(null); setSectionRecipe(null); setGenerationPlan(null); setTransitionPlan(null); setDecisionExplanation(""); setError(null); }}>Clear Request</button>
       </div>
 
       {error ? <p role="alert" className="mt-4 rounded-xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">{error}</p> : null}
@@ -178,6 +186,7 @@ export default function TimelineDawVerbalEditWorkspace({ sessionId }: { sessionI
                 <label className="mt-2 block text-sm font-bold">Describe the new section<textarea className={`${fieldClass} mt-1 min-h-24`} maxLength={4000} value={generationPrompt} onChange={(event) => setGenerationPrompt(event.target.value)} placeholder="Example: Add an eight-bar funky R&B bridge using the verse groove, with space for a sax response." /></label>
                 <button type="button" className={`${buttonClass} mt-3`} onClick={() => { try { setGenerationPlan(createTimelineDawGeneratedSectionPlan({ sectionType: generatedSectionType, bars: generatedBars, prompt: generationPrompt, sections: sectionRecognition.sections, placementAfterSectionId: destinationSectionId || null })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Generation plan could not be prepared."); } }}>Prepare Generation & Placement Plan</button>
                 {generationPlan ? <div className="mt-3 rounded-xl border border-fuchsia-200/20 bg-black/30 p-3" aria-live="polite"><p className="font-black">{generationPlan.name} · {generationPlan.bars} bars</p><p className="mt-1 text-sm">Place at tick {generationPlan.placementStartTick}; planned length {generationPlan.durationTicks} ticks.</p><p className="mt-1 text-sm text-white/65">{generationPlan.prompt}</p><p className="mt-2 text-xs text-amber-100">Held until an approved provider supplies: {generationPlan.requiredProvenance.join(", ")}.</p><p className="mt-1 text-xs font-bold text-emerald-200">Generated output must remain a private draft for musician audition and approval.</p></div> : null}
+                {generationPlan ? <div className="mt-4 border-t border-white/10 pt-4"><p className="text-xs font-black uppercase tracking-wider text-amber-200">Arrangement-aware transition</p><div className="mt-2 grid gap-2 md:grid-cols-2"><label className="text-sm font-bold">Transition style<select className={`${fieldClass} mt-1`} value={transitionStyle} onChange={(event) => { setTransitionStyle(event.target.value as typeof transitionStyle); setTransitionPlan(null); }}><option value="clean-cut">Clean bar-line cut</option><option value="crossfade">Crossfade</option><option value="pickup">Preserve pickup into section</option><option value="tail-overlap">Let previous tail overlap</option></select></label>{transitionStyle === "crossfade" || transitionStyle === "tail-overlap" ? <label className="text-sm font-bold">Crossfade ticks<input className={`${fieldClass} mt-1`} type="number" min={1} step={1} value={transitionTicks} onChange={(event) => setTransitionTicks(Number(event.target.value))} /></label> : null}</div><div className="mt-2 flex flex-wrap gap-4 text-sm"><label><input type="checkbox" checked={tempoConfirmed} onChange={(event) => setTempoConfirmed(event.target.checked)} /> Tempo/downbeat confirmed</label><label><input type="checkbox" checked={keyConfirmed} onChange={(event) => setKeyConfirmed(event.target.checked)} /> Key/modulation confirmed</label></div><button type="button" className={`${buttonClass} mt-3`} onClick={() => { try { setTransitionPlan(createTimelineDawGeneratedTransitionPlan({ generationPlan, sections: sectionRecognition.sections, style: transitionStyle, crossfadeTicks: transitionTicks, tempoCompatibility: tempoConfirmed ? "confirmed" : "review-required", keyCompatibility: keyConfirmed ? "confirmed" : "review-required" })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Transition plan could not be prepared."); } }}>Preview Section Transition</button>{transitionPlan ? <div className="mt-3 rounded-xl border border-amber-200/20 bg-black/30 p-3"><p className="font-black">{transitionPlan.style.replace("-", " ")} · entry {transitionPlan.entryFromSectionId ?? "song start"} · exit {transitionPlan.exitToSectionId ?? "song end"}</p><p className="mt-1 text-xs">Pickup {transitionPlan.preservePickup ? "preserved" : "none"} · tail {transitionPlan.preserveTail ? "preserved" : "none"} · crossfade {transitionPlan.crossfadeTicks} ticks</p>{transitionPlan.warnings.map((warning) => <p key={warning} className="mt-1 text-xs font-bold text-amber-100">Hold: {warning}</p>)}<p className="mt-2 text-xs font-bold text-emerald-200">Transition remains a private review plan. Music unchanged.</p></div> : null}</div> : null}
               </div>
             </>
           )}

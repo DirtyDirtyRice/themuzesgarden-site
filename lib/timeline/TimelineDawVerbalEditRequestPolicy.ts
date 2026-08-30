@@ -85,6 +85,21 @@ export type TimelineDawGeneratedSectionPlan = {
   executionAllowed: false;
 };
 
+export type TimelineDawGeneratedTransitionPlan = {
+  generatedSectionName: string;
+  entryFromSectionId: string | null;
+  exitToSectionId: string | null;
+  style: "clean-cut" | "crossfade" | "pickup" | "tail-overlap";
+  crossfadeTicks: number;
+  preservePickup: boolean;
+  preserveTail: boolean;
+  tempoCompatibility: "confirmed" | "review-required";
+  keyCompatibility: "confirmed" | "review-required";
+  warnings: readonly string[];
+  status: "held-for-transition-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -312,5 +327,44 @@ export function createTimelineDawGeneratedSectionPlan(input: {
     prompt, placementAfterSectionId: input.placementAfterSectionId ?? null, placementStartTick,
     requiredProvenance: ["provider", "model", "request-id", "rights-record", "output-fingerprint"],
     status: "held-for-generation-provider", executionAllowed: false,
+  };
+}
+
+export function createTimelineDawGeneratedTransitionPlan(input: {
+  generationPlan: TimelineDawGeneratedSectionPlan;
+  sections: readonly TimelineDawVerbalNamedSection[];
+  style: unknown;
+  crossfadeTicks?: unknown;
+  preservePickup?: unknown;
+  preserveTail?: unknown;
+  tempoCompatibility?: unknown;
+  keyCompatibility?: unknown;
+}): TimelineDawGeneratedTransitionPlan {
+  const styles = ["clean-cut", "crossfade", "pickup", "tail-overlap"] as const;
+  if (!styles.some((style) => style === input.style)) throw new Error("Choose a supported section transition style.");
+  const style = input.style as TimelineDawGeneratedTransitionPlan["style"];
+  const sections = recognizeTimelineDawVerbalSections({ instruction: "", sections: input.sections }).sections;
+  const entryIndex = input.generationPlan.placementAfterSectionId
+    ? sections.findIndex((section) => section.id === input.generationPlan.placementAfterSectionId)
+    : sections.length - 1;
+  if (input.generationPlan.placementAfterSectionId && entryIndex < 0) throw new Error("The generated section entry boundary no longer exists.");
+  const crossfadeTicks = style === "crossfade" || style === "tail-overlap" ? Number(input.crossfadeTicks ?? 0) : 0;
+  if (!Number.isSafeInteger(crossfadeTicks) || crossfadeTicks < 0 || crossfadeTicks > input.generationPlan.durationTicks / 2) throw new Error("Crossfade length must be a safe whole-tick range inside the generated section.");
+  if ((style === "crossfade" || style === "tail-overlap") && crossfadeTicks === 0) throw new Error("This transition style requires a positive crossfade length.");
+  const tempoCompatibility = input.tempoCompatibility === "confirmed" ? "confirmed" : "review-required";
+  const keyCompatibility = input.keyCompatibility === "confirmed" ? "confirmed" : "review-required";
+  const warnings = [
+    ...(tempoCompatibility === "review-required" ? ["Confirm tempo and downbeat alignment before rendering."] : []),
+    ...(keyCompatibility === "review-required" ? ["Confirm key or intentional modulation before rendering."] : []),
+  ];
+  return {
+    generatedSectionName: input.generationPlan.name,
+    entryFromSectionId: sections[entryIndex]?.id ?? null,
+    exitToSectionId: sections[entryIndex + 1]?.id ?? null,
+    style, crossfadeTicks,
+    preservePickup: input.preservePickup === true || style === "pickup",
+    preserveTail: input.preserveTail === true || style === "tail-overlap",
+    tempoCompatibility, keyCompatibility, warnings,
+    status: "held-for-transition-review", executionAllowed: false,
   };
 }

@@ -128,7 +128,7 @@ THE MUZES GARDEN DAW
     ├── song-section recognition and named-section selection ...... DONE 8/29/26
     ├── add, remove, move, copy or extend complete sections ....... DONE 8/29/26
     ├── generate and place new verse, chorus or bridge sections ... DONE 8/29/26
-    ├── arrangement-aware transitions into generated sections .... STILL TO DO
+    ├── arrangement-aware transitions into generated sections .... DONE 8/29/26
     ├── instrument and track selection by spoken description ...... STILL TO DO
     ├── double or triple an existing musical performance .......... STILL TO DO
     ├── tonic, key, scale and chord-aware interval instructions ... STILL TO DO
@@ -233,6 +233,16 @@ THE MUZES GARDEN DAW
 - Unsupported section types, invalid bar counts, short or oversized prompts, invalid timing, and missing placement targets are rejected.
 - Focused tests cover musical duration, named placement, provenance requirements, provider hold, execution locking, and invalid requests. No provider was falsely contacted and no database migration was required.
 - The next leaf is arrangement-aware transitions into generated sections.
+
+## Completed milestone - Arrangement-Aware Generated-Section Transitions
+
+- Generated verse, chorus, and bridge plans now identify the exact saved section entering the generated material and the exact section following it.
+- Musicians can choose a clean bar-line cut, bounded crossfade, preserved pickup, or preserved previous-section tail overlap.
+- Crossfade ranges are validated against the generated section duration; zero-length and oversized overlaps are rejected.
+- Tempo/downbeat and key/modulation compatibility are explicit review gates. Unconfirmed compatibility produces visible holds instead of hidden time-stretching or pitch correction.
+- Entry, exit, pickup, tail, overlap, and compatibility decisions remain private review plans with execution locked and original arrangements untouched.
+- Focused tests cover middle and end placement, entry/exit identity, transition modes, overlap limits, compatibility warnings, and execution locking. No database migration was required.
+- The next leaf is instrument and track selection by spoken description.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
