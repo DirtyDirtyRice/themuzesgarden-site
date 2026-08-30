@@ -142,7 +142,7 @@ THE MUZES GARDEN DAW
     ├── connected-interface D/A monitoring workflow ............... DONE 8/30/26
     ├── studio hardware inventory and connection detection ........ DONE 8/30/26
     ├── step-by-step human cabling, patching and setup guidance .... DONE 8/30/26
-    ├── hardware safety warnings and confirmation gates ............ STILL TO DO
+    ├── hardware safety warnings and confirmation gates ............ DONE 8/30/26
     ├── gain, clock, sample-rate and synchronization preflight ..... STILL TO DO
     ├── pause for required physical action, then verify and resume . STILL TO DO
     ├── analog round-trip latency measurement and compensation .... STILL TO DO
@@ -340,6 +340,14 @@ THE MUZES GARDEN DAW
 - Direct routes and patch-bay routes receive distinct instructions, beginning with interface input gain fully down and ending with DAW input selection.
 - No step can be performed automatically, no physical connection is inferred, and setup details remain current-tab memory only.
 - The next leaf is hardware safety warnings and confirmation gates.
+
+### VERBAL EDITING hardware safety gate milestone — 8/30/26
+
+- Dynamic, condenser, ribbon, instrument, and line-level sources now receive source-specific phantom-power rules.
+- Ribbon, instrument, line-level, and dynamic workflows block requested phantom power; condenser workflows require a separately confirmed phantom-power plan.
+- Signal testing remains blocked until input gain, monitoring level, and cable-before-power confirmations are all complete.
+- The DAW never changes phantom power or physical hardware controls automatically, and warns against connecting or disconnecting microphones while phantom power is on.
+- The next leaf is gain, clock, sample-rate, and synchronization preflight.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
