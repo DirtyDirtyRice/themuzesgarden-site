@@ -122,6 +122,18 @@ export type TimelineDawVerbalPerformanceLayerPlan = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalHarmonyContext = {
+  tonic: string;
+  scale: "major" | "minor" | "dorian" | "mixolydian" | "chromatic";
+  chord: string | null;
+  interval: "third" | "fifth";
+  direction: "above" | "below";
+  reference: "tonic-and-scale" | "confirmed-chord";
+  ambiguities: readonly string[];
+  status: "held-for-harmony-context-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -451,6 +463,38 @@ export function createTimelineDawPerformanceLayerPlan(input: {
     timingPolicy: "source-locked-pending-humanize-review",
     sourceMutable: false,
     status: "held-for-layer-review",
+    executionAllowed: false,
+  };
+}
+
+const VERBAL_MUSIC_TONICS = new Set(["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"]);
+
+export function createTimelineDawHarmonyContext(input: {
+  tonic: unknown;
+  scale: unknown;
+  chord?: unknown;
+  interval: unknown;
+  direction: unknown;
+}): TimelineDawVerbalHarmonyContext {
+  const tonic = normalizeInstruction(input.tonic).replace(/♯/g, "#").replace(/♭/g, "b");
+  if (!VERBAL_MUSIC_TONICS.has(tonic)) throw new Error("Confirm a tonic from C through B, including an optional sharp or flat.");
+  const scale = normalizeInstruction(input.scale).toLocaleLowerCase();
+  if (!["major", "minor", "dorian", "mixolydian", "chromatic"].includes(scale)) throw new Error("Choose a supported scale or mode.");
+  const interval = normalizeInstruction(input.interval).toLocaleLowerCase();
+  if (interval !== "third" && interval !== "fifth") throw new Error("Choose a third or fifth for this harmony milestone.");
+  const direction = normalizeInstruction(input.direction).toLocaleLowerCase();
+  if (direction !== "above" && direction !== "below") throw new Error("Choose whether the harmony sits above or below the source.");
+  const chord = normalizeInstruction(input.chord) || null;
+  if (chord && chord.length > 32) throw new Error("Keep the confirmed chord name under 33 characters.");
+  return {
+    tonic,
+    scale: scale as TimelineDawVerbalHarmonyContext["scale"],
+    chord,
+    interval: interval as TimelineDawVerbalHarmonyContext["interval"],
+    direction: direction as TimelineDawVerbalHarmonyContext["direction"],
+    reference: chord ? "confirmed-chord" : "tonic-and-scale",
+    ambiguities: chord ? [] : ["Chord-by-chord harmony remains unconfirmed; use the tonic and scale until chord context is supplied."],
+    status: "held-for-harmony-context-review",
     executionAllowed: false,
   };
 }

@@ -131,7 +131,7 @@ THE MUZES GARDEN DAW
     ├── arrangement-aware transitions into generated sections .... DONE 8/29/26
     ├── instrument and track selection by spoken description ...... DONE 8/29/26
     ├── double or triple an existing musical performance .......... DONE 8/29/26
-    ├── tonic, key, scale and chord-aware interval instructions ... STILL TO DO
+    ├── tonic, key, scale and chord-aware interval instructions ... DONE 8/29/26
     ├── harmonize selected material by third, fifth or interval ... STILL TO DO
     ├── apply different instruments only to named time ranges ..... STILL TO DO
     ├── phrase, riff, chord and individual-note verbal editing .... STILL TO DO
@@ -259,6 +259,13 @@ THE MUZES GARDEN DAW
 - Double creates one named protected layer; triple creates two, all aligned to the source timeline position.
 - Timing stays source-locked until a later humanization review, and no audio execution is permitted by this milestone.
 - The next leaf is harmony layers by interval from the tonic or chord.
+
+### VERBAL EDITING harmony-context milestone — 8/29/26
+
+- The owner can now explicitly confirm tonic, scale or mode, optional chord, interval, and direction for a proposed harmony.
+- Supported context includes major, minor, Dorian, Mixolydian, or chromatic treatment and a third or fifth above or below.
+- Missing chord-by-chord context is disclosed instead of guessed, and the complete musical context remains held for review without changing notes or audio.
+- The next leaf is harmonizing selected material by third, fifth, or another approved interval.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 

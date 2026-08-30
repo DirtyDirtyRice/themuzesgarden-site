@@ -11,6 +11,7 @@ import {
   createTimelineDawGeneratedTransitionPlan,
   matchTimelineDawTracksByDescription,
   createTimelineDawPerformanceLayerPlan,
+  createTimelineDawHarmonyContext,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -240,5 +241,26 @@ describe("DAW verbal edit request policy", () => {
     expect(createTimelineDawPerformanceLayerPlan({ instruction: "Triple this sax performance", tracks, sourceTrackId: "sax" })).toMatchObject({ operation: "triple", addedLayerCount: 2, layerNames: ["Tenor Sax Triple 1", "Tenor Sax Triple 2"] });
     expect(() => createTimelineDawPerformanceLayerPlan({ instruction: "Layer the sax", tracks, sourceTrackId: "sax" })).toThrow("double or triple");
     expect(() => createTimelineDawPerformanceLayerPlan({ instruction: "Double the sax", tracks, sourceTrackId: null })).toThrow("Confirm the real source track");
+  });
+
+  it("holds confirmed tonic, scale, chord, and interval context without editing", () => {
+    expect(createTimelineDawHarmonyContext({ tonic: "Bb", scale: "mixolydian", chord: "Bb7", interval: "third", direction: "above" })).toEqual({
+      tonic: "Bb",
+      scale: "mixolydian",
+      chord: "Bb7",
+      interval: "third",
+      direction: "above",
+      reference: "confirmed-chord",
+      ambiguities: [],
+      status: "held-for-harmony-context-review",
+      executionAllowed: false,
+    });
+  });
+
+  it("flags missing chord context and rejects unsupported musical context", () => {
+    expect(createTimelineDawHarmonyContext({ tonic: "F#", scale: "minor", interval: "fifth", direction: "below" })).toMatchObject({ reference: "tonic-and-scale", ambiguities: [expect.stringContaining("Chord-by-chord")] });
+    expect(() => createTimelineDawHarmonyContext({ tonic: "H", scale: "major", interval: "third", direction: "above" })).toThrow("Confirm a tonic");
+    expect(() => createTimelineDawHarmonyContext({ tonic: "C", scale: "blues", interval: "third", direction: "above" })).toThrow("supported scale");
+    expect(() => createTimelineDawHarmonyContext({ tonic: "C", scale: "major", interval: "seventh", direction: "above" })).toThrow("third or fifth");
   });
 });
