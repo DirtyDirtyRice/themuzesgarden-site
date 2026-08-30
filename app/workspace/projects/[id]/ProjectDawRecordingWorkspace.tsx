@@ -64,6 +64,7 @@ import {
   type TimelineDawArmedInputRoute,
   synchronizeTimelineDawCapturedChannels,
 } from "@/lib/timeline/TimelineDawMultiTrackRecordingPlan";
+import { assessTimelineDawLongSessionQa, type TimelineDawLongSessionQaReport } from "@/lib/timeline/TimelineDawLongSessionQaPolicy";
 
 
 const button = "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
@@ -154,6 +155,9 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
   const [maxTakeMinutes, setMaxTakeMinutes] = useState(30);
   const [storageHealth, setStorageHealth] = useState<TimelineDawRecordingStorageHealth>(() => assessTimelineDawRecordingStorage({ supported: false, persisted: false, quotaBytes: null, usageBytes: null, maxTakeMinutes: 30 }));
   const [storageBusy, setStorageBusy] = useState(false);
+  const [longSessionMinutes, setLongSessionMinutes] = useState(0);
+  const [longSessionChecks, setLongSessionChecks] = useState({ captureCompleted: false, recoveryProtected: false, reloadPassed: false, playbackPassed: false, clipped: false, errorCount: 0 });
+  const [longSessionQa, setLongSessionQa] = useState<TimelineDawLongSessionQaReport | null>(null);
   const multiTrackCaptureNodesRef = useRef<MultiTrackCaptureNode[]>([]);
   const multiTrackContextRef = useRef<AudioContext | null>(null);
   const multiTrackCaptureActiveRef = useRef(false);
@@ -1309,6 +1313,22 @@ export default function ProjectDawRecordingWorkspace({ session }: { session: Daw
         <p className="mt-3 text-xs text-white/50">
           This is an advisory, not a recording lock. Recording remains available when persistent storage is unavailable; download recovery WAVs before leaving Studio.
         </p>
+      </div>
+      <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/[0.05] p-4">
+        <p className="text-xs font-black uppercase tracking-wider text-amber-200">Long-session production stability</p>
+        <h3 className="mt-1 text-lg font-black">Qualify one complete 30-minute recording</h3>
+        <p className="mt-1 text-xs text-white/55">Record normally above, save the take, refresh the page, reload it, and audition the complete file. A short simulation cannot pass this physical production test.</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <label className="text-xs font-black uppercase text-white/65">Recorded minutes<input type="number" min={0} max={30} step={0.1} className="mt-1 w-full rounded-lg border border-white/20 bg-black px-3 py-2" value={longSessionMinutes} onChange={(event) => setLongSessionMinutes(Number(event.target.value))} /></label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={longSessionChecks.captureCompleted} onChange={(event) => setLongSessionChecks((current) => ({ ...current, captureCompleted: event.target.checked }))} /> Capture completed normally</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={longSessionChecks.recoveryProtected} onChange={(event) => setLongSessionChecks((current) => ({ ...current, recoveryProtected: event.target.checked }))} /> Recovery checkpoint protected</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={longSessionChecks.reloadPassed} onChange={(event) => setLongSessionChecks((current) => ({ ...current, reloadPassed: event.target.checked }))} /> Saved take survived reload</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={longSessionChecks.playbackPassed} onChange={(event) => setLongSessionChecks((current) => ({ ...current, playbackPassed: event.target.checked }))} /> Full playback passed</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={longSessionChecks.clipped} onChange={(event) => setLongSessionChecks((current) => ({ ...current, clipped: event.target.checked }))} /> Clipping was detected</label>
+          <label className="text-xs font-black uppercase text-white/65">Errors observed<input type="number" min={0} max={999} step={1} className="mt-1 w-full rounded-lg border border-white/20 bg-black px-3 py-2" value={longSessionChecks.errorCount} onChange={(event) => setLongSessionChecks((current) => ({ ...current, errorCount: Number(event.target.value) }))} /></label>
+          <button type="button" className={button} onClick={() => { try { setLongSessionQa(assessTimelineDawLongSessionQa({ durationMinutes: longSessionMinutes, persistentStorage: storageHealth.persisted, ...longSessionChecks })); setError(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "Long-session evidence could not be assessed."); } }}>Assess Long Session</button>
+        </div>
+        {longSessionQa ? <div className={`mt-3 rounded-lg border p-3 text-sm ${longSessionQa.status === "passed" ? "border-emerald-300/30 text-emerald-200" : "border-amber-300/30 text-amber-100"}`}><p className="font-black">Status: {longSessionQa.status.replace("-", " ")}</p>{longSessionQa.issues.length ? <ul className="mt-2 list-disc pl-5">{longSessionQa.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul> : <p className="mt-1">All extended-recording production evidence passed.</p>}</div> : null}
       </div>
       <div className="mt-4 rounded-xl border border-violet-300/25 bg-violet-300/[0.05] p-4">
         <div className="grid gap-3 md:grid-cols-[minmax(0,14rem)_1fr]">

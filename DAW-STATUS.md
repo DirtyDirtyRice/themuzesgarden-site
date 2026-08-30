@@ -46,6 +46,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Evidence remains only in the current tab and cannot alter private recordings, device settings, or session data.
 - The harness is software-complete; the real audio-interface testing leaf remains open until actual connected hardware passes all seven checks.
 
+## Completed milestone - Long-Session Recording Stability Qualification
+
+- Recording now includes a formal 30-minute production qualification after the existing storage and capture protections.
+- Passing requires persistent recovery storage, normal bounded capture completion, a protected recovery checkpoint, saved-take survival after refresh/reload, complete playback review, no clipping, and zero recording errors.
+- A short engineering simulation cannot be reported as real long-session production evidence.
+- The qualification tool is software-complete; the stability leaf remains open until a real 30-minute recording passes every check in Chrome.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
