@@ -147,7 +147,7 @@ THE MUZES GARDEN DAW
     ├── pause for required physical action, then verify and resume . DONE 8/30/26
     ├── analog round-trip latency measurement and compensation .... DONE 8/30/26
     ├── hardware-unavailable fallback and deferred instructions ... DONE 8/30/26
-    ├── confidence warnings for ambiguous or destructive requests . STILL TO DO
+    ├── confidence warnings for ambiguous or destructive requests . DONE 8/30/26
     ├── before/after A/B comparison and editable AI history ........ STILL TO DO
     └── musician acceptance testing from sections down to notes ... STILL TO DO
 ```
@@ -380,6 +380,14 @@ THE MUZES GARDEN DAW
 - The analog task remains visibly NOT COMPLETED; the DAW never invents a hardware substitute or treats a digital preview as proof of an analog result.
 - A current-tab return checklist directs the musician through device detection, safety, preflight, and task-specific verification when the equipment becomes available.
 - The next leaf is confidence warnings for ambiguous or destructive requests.
+
+### VERBAL EDITING request-confidence and destructive-wording milestone — 8/30/26
+
+- Held verbal requests can now be assessed for a concrete edit action, musical target, and timeline or named-section location.
+- High, medium, low, and blocked results show their evidence instead of presenting an unexplained confidence number.
+- Vague requests receive exact clarification questions, including the intended action, target, boundaries, and measurable musical result.
+- Requests to overwrite, erase, flatten, bake, permanently delete, or replace original/source/master material are blocked and redirected to a protected private revision with A/B audition and undo.
+- Assessment never unlocks execution, mutates source music, or persists the private request. The next leaf is before/after A/B comparison and editable AI history.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
