@@ -167,6 +167,22 @@ export type TimelineDawVerbalInstrumentRangePlan = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalMicroEditRecipe = {
+  sourceTrackId: string;
+  sourceTrackName: string;
+  targetKind: "phrase" | "riff" | "chord" | "note";
+  targetLabel: string;
+  startTick: number;
+  endTick: number;
+  operation: "move" | "repeat" | "replace" | "transpose" | "trim" | "quantize";
+  instruction: string;
+  precision: "range-confirmed";
+  sourceMutable: false;
+  createsDraftRevision: true;
+  status: "held-for-micro-edit-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -599,6 +615,47 @@ export function createTimelineDawInstrumentRangePlan(input: {
     outsideRangePolicy: "original-instrument-only",
     preserveSource: true,
     status: "held-for-instrument-range-review",
+    executionAllowed: false,
+  };
+}
+
+export function createTimelineDawMicroEditRecipe(input: {
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  sourceTrackId: string | null;
+  targetKind: unknown;
+  targetLabel: unknown;
+  startTick: unknown;
+  endTick: unknown;
+  operation: unknown;
+  instruction: unknown;
+}): TimelineDawVerbalMicroEditRecipe {
+  const source = input.sourceTrackId ? input.tracks.find((track) => track.id === input.sourceTrackId) : null;
+  if (!source) throw new Error("Confirm the source track before preparing a detailed verbal edit.");
+  const targetKind = normalizeInstruction(input.targetKind).toLocaleLowerCase();
+  if (!["phrase", "riff", "chord", "note"].includes(targetKind)) throw new Error("Choose phrase, riff, chord, or note as the target.");
+  const targetLabel = normalizeInstruction(input.targetLabel);
+  if (targetLabel.length < 2 || targetLabel.length > 120) throw new Error("Label the musical target in 2 to 120 characters.");
+  const startTick = Number(input.startTick);
+  const endTick = Number(input.endTick);
+  if (!Number.isSafeInteger(startTick) || startTick < 0) throw new Error("Detailed-edit start must be a nonnegative whole timeline tick.");
+  if (!Number.isSafeInteger(endTick) || endTick <= startTick) throw new Error("Detailed-edit end must be a whole timeline tick after the start.");
+  const operation = normalizeInstruction(input.operation).toLocaleLowerCase();
+  if (!["move", "repeat", "replace", "transpose", "trim", "quantize"].includes(operation)) throw new Error("Choose a supported detailed-edit operation.");
+  const instruction = normalizeInstruction(input.instruction);
+  if (instruction.length < 10 || instruction.length > 1_000) throw new Error("Describe the detailed edit in 10 to 1,000 characters.");
+  return {
+    sourceTrackId: source.id,
+    sourceTrackName: source.name,
+    targetKind: targetKind as TimelineDawVerbalMicroEditRecipe["targetKind"],
+    targetLabel,
+    startTick,
+    endTick,
+    operation: operation as TimelineDawVerbalMicroEditRecipe["operation"],
+    instruction,
+    precision: "range-confirmed",
+    sourceMutable: false,
+    createsDraftRevision: true,
+    status: "held-for-micro-edit-review",
     executionAllowed: false,
   };
 }

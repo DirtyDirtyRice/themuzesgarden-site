@@ -14,6 +14,7 @@ import {
   createTimelineDawHarmonyContext,
   createTimelineDawHarmonyRecipe,
   createTimelineDawInstrumentRangePlan,
+  createTimelineDawMicroEditRecipe,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -321,5 +322,33 @@ describe("DAW verbal edit request policy", () => {
     expect(() => createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "riff", targetInstrument: "x", sections: [], startTick: 0, endTick: 960 })).toThrow("2 to 100");
     expect(() => createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "riff", targetInstrument: "Sax", sections: [], sectionId: "missing" })).toThrow("no longer exists");
     expect(() => createTimelineDawInstrumentRangePlan({ tracks, sourceTrackId: "riff", targetInstrument: "Sax", sections: [], startTick: 0, endTick: 100, crossfadeTicks: 51 })).toThrow("fit safely");
+  });
+
+  it("holds a precise verbal riff edit as a protected draft revision", () => {
+    const tracks = [{ id: "bass", name: "Bass Guitar", kind: "audio" as const }];
+    expect(createTimelineDawMicroEditRecipe({ tracks, sourceTrackId: "bass", targetKind: "riff", targetLabel: "opening bass riff", startTick: 0, endTick: 960, operation: "repeat", instruction: "Repeat the opening bass riff one more time." })).toEqual({
+      sourceTrackId: "bass",
+      sourceTrackName: "Bass Guitar",
+      targetKind: "riff",
+      targetLabel: "opening bass riff",
+      startTick: 0,
+      endTick: 960,
+      operation: "repeat",
+      instruction: "Repeat the opening bass riff one more time.",
+      precision: "range-confirmed",
+      sourceMutable: false,
+      createsDraftRevision: true,
+      status: "held-for-micro-edit-review",
+      executionAllowed: false,
+    });
+  });
+
+  it("supports phrase, chord, and note targets while rejecting vague micro-edits", () => {
+    const tracks = [{ id: "keys", name: "Electric Piano", kind: "midi" as const }];
+    for (const targetKind of ["phrase", "chord", "note"] as const) {
+      expect(createTimelineDawMicroEditRecipe({ tracks, sourceTrackId: "keys", targetKind, targetLabel: `${targetKind} target`, startTick: 480, endTick: 960, operation: "transpose", instruction: `Transpose this ${targetKind} up within the confirmed key.` })).toMatchObject({ targetKind, operation: "transpose", executionAllowed: false });
+    }
+    expect(() => createTimelineDawMicroEditRecipe({ tracks, sourceTrackId: "keys", targetKind: "beat", targetLabel: "beat", startTick: 0, endTick: 480, operation: "move", instruction: "Move this beat to the next bar." })).toThrow("phrase, riff, chord, or note");
+    expect(() => createTimelineDawMicroEditRecipe({ tracks, sourceTrackId: "keys", targetKind: "note", targetLabel: "C4", startTick: 480, endTick: 480, operation: "move", instruction: "Move this note to the next beat." })).toThrow("after the start");
   });
 });

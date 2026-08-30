@@ -134,7 +134,7 @@ THE MUZES GARDEN DAW
     ├── tonic, key, scale and chord-aware interval instructions ... DONE 8/29/26
     ├── harmonize selected material by third, fifth or interval ... DONE 8/29/26
     ├── apply different instruments only to named time ranges ..... DONE 8/29/26
-    ├── phrase, riff, chord and individual-note verbal editing .... STILL TO DO
+    ├── phrase, riff, chord and individual-note verbal editing .... DONE 8/29/26
     ├── MIDI-note generation and exact pitch/timing editing ........ STILL TO DO
     ├── audio-to-MIDI or note-analysis assistance where reliable .. STILL TO DO
     ├── digital audio rendering and private result audition ....... STILL TO DO
@@ -280,6 +280,13 @@ THE MUZES GARDEN DAW
 - Entry and exit crossfade lengths are explicit and validated inside the selected range.
 - The original instrument remains the only instrument outside the range, while the source performance and arrangement stay unchanged pending review.
 - The next leaf is phrase, riff, chord, and individual-note verbal editing.
+
+### VERBAL EDITING detailed-target recipe milestone — 8/29/26
+
+- The owner can now identify a phrase, riff, chord, or note on a confirmed track using exact start/end timeline ticks and a plain-language label.
+- Supported protected actions are move, repeat, replace, transpose, trim, and quantize.
+- Every detailed edit becomes a held draft-revision recipe; it cannot mutate the source or execute before review.
+- The next leaf is MIDI-note generation and exact pitch/timing editing.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
