@@ -89,6 +89,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Evidence remains only in the current tab and does not store private audio, plug-in state, device settings, or session content.
 - The evidence gate is software-complete; the remaining real bridge, control-surface, and final production QA leaves stay open until actual equipment passes every trial.
 
+## Completed milestone - MIDI Baby-Step Help
+
+- The MIDI Sequencer and Instrument workspace now teaches one protected action at a time across import/new clip, audition, note entry, quantization, instrument choice, expression, private bounce, freeze, and export.
+- Previous Step, Next Step, and Start Over use the established accessible baby-step pattern.
+- Only the current help-step number is remembered for the protected session; MIDI, audio, device names, plug-in details, and settings are not stored by the guide.
+- The guide explicitly preserves editable private MIDI and requires audition before promotion, freeze, or export.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
