@@ -134,6 +134,22 @@ export type TimelineDawVerbalHarmonyContext = {
   executionAllowed: false;
 };
 
+export type TimelineDawVerbalHarmonyRecipe = {
+  sourceTrackId: string;
+  sourceTrackName: string;
+  startTick: number;
+  endTick: number;
+  interval: TimelineDawVerbalHarmonyContext["interval"];
+  direction: TimelineDawVerbalHarmonyContext["direction"];
+  tonalReference: string;
+  notePolicy: "diatonic-scale" | "confirmed-chord-tones";
+  outputLaneName: string;
+  preserveRhythm: true;
+  preserveSource: true;
+  status: "held-for-harmony-note-review";
+  executionAllowed: false;
+};
+
 function normalizeInstruction(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
@@ -495,6 +511,37 @@ export function createTimelineDawHarmonyContext(input: {
     reference: chord ? "confirmed-chord" : "tonic-and-scale",
     ambiguities: chord ? [] : ["Chord-by-chord harmony remains unconfirmed; use the tonic and scale until chord context is supplied."],
     status: "held-for-harmony-context-review",
+    executionAllowed: false,
+  };
+}
+
+export function createTimelineDawHarmonyRecipe(input: {
+  context: TimelineDawVerbalHarmonyContext;
+  tracks: readonly TimelineDawVerbalTrackCandidate[];
+  sourceTrackId: string | null;
+  startTick: unknown;
+  endTick: unknown;
+}): TimelineDawVerbalHarmonyRecipe {
+  const source = input.sourceTrackId ? input.tracks.find((track) => track.id === input.sourceTrackId) : null;
+  if (!source) throw new Error("Confirm the real source track before preparing harmony notes.");
+  const startTick = Number(input.startTick);
+  const endTick = Number(input.endTick);
+  if (!Number.isSafeInteger(startTick) || startTick < 0) throw new Error("Harmony start must be a nonnegative whole timeline tick.");
+  if (!Number.isSafeInteger(endTick) || endTick <= startTick) throw new Error("Harmony end must be a whole timeline tick after the start.");
+  if (input.context.executionAllowed !== false || input.context.status !== "held-for-harmony-context-review") throw new Error("Harmony context must remain held for review.");
+  return {
+    sourceTrackId: source.id,
+    sourceTrackName: source.name,
+    startTick,
+    endTick,
+    interval: input.context.interval,
+    direction: input.context.direction,
+    tonalReference: input.context.chord ?? `${input.context.tonic} ${input.context.scale}`,
+    notePolicy: input.context.chord ? "confirmed-chord-tones" : "diatonic-scale",
+    outputLaneName: `${source.name} Harmony ${input.context.interval} ${input.context.direction}`,
+    preserveRhythm: true,
+    preserveSource: true,
+    status: "held-for-harmony-note-review",
     executionAllowed: false,
   };
 }

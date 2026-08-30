@@ -12,6 +12,7 @@ import {
   matchTimelineDawTracksByDescription,
   createTimelineDawPerformanceLayerPlan,
   createTimelineDawHarmonyContext,
+  createTimelineDawHarmonyRecipe,
   summarizeTimelineDawVerbalEditRequest,
   TIMELINE_DAW_VERBAL_EDIT_SCOPES,
 } from "../../lib/timeline/TimelineDawVerbalEditRequestPolicy";
@@ -262,5 +263,33 @@ describe("DAW verbal edit request policy", () => {
     expect(() => createTimelineDawHarmonyContext({ tonic: "H", scale: "major", interval: "third", direction: "above" })).toThrow("Confirm a tonic");
     expect(() => createTimelineDawHarmonyContext({ tonic: "C", scale: "blues", interval: "third", direction: "above" })).toThrow("supported scale");
     expect(() => createTimelineDawHarmonyContext({ tonic: "C", scale: "major", interval: "seventh", direction: "above" })).toThrow("third or fifth");
+  });
+
+  it("prepares a nondestructive harmony recipe for a selected timeline range", () => {
+    const context = createTimelineDawHarmonyContext({ tonic: "A", scale: "minor", chord: "Am7", interval: "third", direction: "above" });
+    const tracks = [{ id: "lead", name: "Lead Vocal", kind: "audio" as const }];
+    expect(createTimelineDawHarmonyRecipe({ context, tracks, sourceTrackId: "lead", startTick: 960, endTick: 2880 })).toEqual({
+      sourceTrackId: "lead",
+      sourceTrackName: "Lead Vocal",
+      startTick: 960,
+      endTick: 2880,
+      interval: "third",
+      direction: "above",
+      tonalReference: "Am7",
+      notePolicy: "confirmed-chord-tones",
+      outputLaneName: "Lead Vocal Harmony third above",
+      preserveRhythm: true,
+      preserveSource: true,
+      status: "held-for-harmony-note-review",
+      executionAllowed: false,
+    });
+  });
+
+  it("uses scale context when no chord is confirmed and validates the selected range", () => {
+    const context = createTimelineDawHarmonyContext({ tonic: "D", scale: "dorian", interval: "fifth", direction: "below" });
+    const tracks = [{ id: "riff", name: "Main Riff", kind: "audio" as const }];
+    expect(createTimelineDawHarmonyRecipe({ context, tracks, sourceTrackId: "riff", startTick: 0, endTick: 3840 })).toMatchObject({ tonalReference: "D dorian", notePolicy: "diatonic-scale" });
+    expect(() => createTimelineDawHarmonyRecipe({ context, tracks, sourceTrackId: null, startTick: 0, endTick: 3840 })).toThrow("Confirm the real source track");
+    expect(() => createTimelineDawHarmonyRecipe({ context, tracks, sourceTrackId: "riff", startTick: 100, endTick: 100 })).toThrow("after the start");
   });
 });

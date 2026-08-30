@@ -132,7 +132,7 @@ THE MUZES GARDEN DAW
     ├── instrument and track selection by spoken description ...... DONE 8/29/26
     ├── double or triple an existing musical performance .......... DONE 8/29/26
     ├── tonic, key, scale and chord-aware interval instructions ... DONE 8/29/26
-    ├── harmonize selected material by third, fifth or interval ... STILL TO DO
+    ├── harmonize selected material by third, fifth or interval ... DONE 8/29/26
     ├── apply different instruments only to named time ranges ..... STILL TO DO
     ├── phrase, riff, chord and individual-note verbal editing .... STILL TO DO
     ├── MIDI-note generation and exact pitch/timing editing ........ STILL TO DO
@@ -266,6 +266,13 @@ THE MUZES GARDEN DAW
 - Supported context includes major, minor, Dorian, Mixolydian, or chromatic treatment and a third or fifth above or below.
 - Missing chord-by-chord context is disclosed instead of guessed, and the complete musical context remains held for review without changing notes or audio.
 - The next leaf is harmonizing selected material by third, fifth, or another approved interval.
+
+### VERBAL EDITING selected-material harmony milestone — 8/29/26
+
+- A confirmed source track and exact start/end timeline range can now produce a protected harmony-note recipe.
+- The recipe preserves source rhythm, uses confirmed chord tones when supplied, and otherwise discloses its diatonic tonic/scale reference.
+- The proposed harmony receives a separate named output lane and remains held for note review; no MIDI, audio, source, or arrangement data is changed.
+- The next leaf applies different instruments only to named time ranges.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
