@@ -145,7 +145,7 @@ THE MUZES GARDEN DAW
     ├── hardware safety warnings and confirmation gates ............ DONE 8/30/26
     ├── gain, clock, sample-rate and synchronization preflight ..... DONE 8/30/26
     ├── pause for required physical action, then verify and resume . DONE 8/30/26
-    ├── analog round-trip latency measurement and compensation .... STILL TO DO
+    ├── analog round-trip latency measurement and compensation .... DONE 8/30/26
     ├── hardware-unavailable fallback and deferred instructions ... STILL TO DO
     ├── confidence warnings for ambiguous or destructive requests . STILL TO DO
     ├── before/after A/B comparison and editable AI history ........ STILL TO DO
@@ -364,6 +364,14 @@ THE MUZES GARDEN DAW
 - Signal detection, visual connection confirmation, and hardware-indicator confirmation are supported as explicit verification paths.
 - Physical instructions and verification notes remain current-tab memory only; the DAW never performs a hardware action automatically.
 - The next leaf is analog round-trip latency measurement and compensation.
+
+### VERBAL EDITING analog round-trip latency milestone — 8/30/26
+
+- The musician can enter three real output-to-input loopback measurements after the physical route has been verified.
+- The policy uses the median measurement, reports measurement spread, converts the result to exact session-rate samples, and prepares an equal negative placement offset.
+- Measurements with more than 2 ms spread are held for route inspection and retesting instead of producing unreliable compensation.
+- Human approval is required, compensation is never automatic, and source audio is never trimmed, overwritten, or persisted by this review tool.
+- The next leaf is hardware-unavailable fallback and deferred instructions.
 
 ## Completed milestone - Reversible Selected-Track WAV Consolidation
 
