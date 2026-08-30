@@ -74,6 +74,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Desktop VST3, AU, AAX, and CLAP binaries are never claimed to load directly in Chrome; they require a separately verified desktop bridge or verified rendered-audio exchange.
 - Rendered exchange is labeled offline rendered audio rather than a live plug-in, and every path remains nondestructive to source audio.
 
+## Completed milestone - Unsupported Plug-In Warnings and Safe Behavior
+
+- Unsupported, missing, mismatched, or incompletely tested plug-ins cannot activate through the compatibility gate.
+- A held plug-in remains as a recoverable bypassed placeholder while dry audio continues and source audio remains untouched.
+- Musician-facing warnings explain the exact issue and offer verified bridge, compatible replacement, rendered-audio exchange, or reassessment paths.
+- Verified rendered exchange is clearly labeled as offline audio rather than a live plug-in, and a qualified live path retains crash quarantine and dry-audio recovery guidance.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
