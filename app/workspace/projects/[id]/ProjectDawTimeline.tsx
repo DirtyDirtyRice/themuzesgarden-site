@@ -84,6 +84,7 @@ import {
   type TimelineDawClipKeyboardCommand,
 } from "../../../../lib/timeline/TimelineDawKeyboardCommandPolicy";
 import type { DawSession } from "./projectDawTypes";
+import ProjectDawArrangementHelp from "./ProjectDawArrangementHelp";
 
 type Track = { id: string; title?: string | null; artist?: string | null };
 type PlayheadDetail = { sessionId: string; elapsed: number; duration: number };
@@ -1965,6 +1966,9 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
           <button type="button" onClick={() => setZoom((value) => clampTimelineZoom(value + 0.25))}
             className="rounded-lg border border-white/15 px-3 py-2 font-black" aria-label="Zoom timeline in">+</button>
         </div>
+      </div>
+      <div className="px-5">
+        <ProjectDawArrangementHelp sessionId={session.id} />
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-b border-white/10 bg-white/[0.025] px-5 py-3">

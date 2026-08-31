@@ -3211,6 +3211,14 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Baby-Step Arrangement and Editing Help
+
+- The main **Arrangement Workspace** now includes an eight-step guide covering clip selection, Grid/Slip/Shuffle/Spot modes, movement and alignment, trimming, splitting, copying, repeating, fades, folders, locks, audition, Undo, and recovery checkpoints.
+- Instructions name the real controls and distinguish single-clip edits from multi-selection operations so musicians do not accidentally change several clips.
+- Trimming, splitting, copying, and folder removal explicitly preserve private source recordings and member tracks.
+- Only a validated session-scoped help-step number is remembered; audio, clip names, lane IDs, selections, paths, and private notes are excluded.
+- Focused arrangement-help tests, TypeScript, targeted lint, and the production build passed. No database migration was required.
+
 ## Completed milestone - Baby-Step Arrangement Import Help
 
 - **Import Into Arrangement** now includes an eight-step guide for choosing linked project songs or computer files, selecting Full Song, Stems, or Alternate Versions, and choosing layered or sequential placement.
