@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Baby-Step Hybrid Edit Track Help
+
+- **Track 4 — Hybrid Edit** now includes an eight-step guide for finding source riffs, choosing the best performance, copying a protected riff reference, auditioning one copied clip, arranging playback order, duplicating or removing ideas, hearing the full edit, and intentionally clearing the recipe.
+- Instructions name the exact visible matching, copy, audition, ordering, duplicate, cut, play, stop, and clear controls.
+- The guide explains that Track 4 is an ordered recipe of protected source-region references and that its numbered list is its playback order.
+- Cutting one recipe item or clearing Track 4 explicitly preserves all source songs, private recordings, arrangement tracks, detected riffs, and Global Library records.
+- Only a validated session-scoped help-step number is remembered; riff names, source identities, clip recipes, selections, audio, and private notes are excluded.
+- Focused Hybrid Edit help tests, TypeScript, targeted lint, and the production build passed. No database migration was required.
+
 ## Completed milestone - Baby-Step Three-Version Riff Comparison Help
 
 - **Find Matching Riffs in Selected Tracks** now includes an eight-step guide for preparing exactly three song versions, selecting only those A/B/C tracks, running waveform analysis, auditioning one match, comparing the same riff across all three versions, repeating subtle comparisons, reviewing every match, and stopping safely.
