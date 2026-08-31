@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Baby-Step Three-Version Riff Comparison Help
+
+- **Find Matching Riffs in Selected Tracks** now includes an eight-step guide for preparing exactly three song versions, selecting only those A/B/C tracks, running waveform analysis, auditioning one match, comparing the same riff across all three versions, repeating subtle comparisons, reviewing every match, and stopping safely.
+- Instructions name the exact visible analysis, audition, navigation, pause/resume, repeat, and stop controls.
+- The guide explains that the current engine compares waveform and attack shapes at a strict 90% threshold; it does not claim exact note transcription or that a no-match result proves no musical similarity exists.
+- Analysis and audition explicitly preserve private recordings, arrangement tracks, and Global Library songs.
+- Only a validated session-scoped help-step number is remembered; track identities, selections, waveforms, matches, audio, and private notes are excluded.
+- Focused riff-comparison help tests, TypeScript, targeted lint, and the production build passed. No database migration was required.
+
 ## Completed milestone - Baby-Step Named Region Help
 
 - **Recorded and promoted audio** now includes an eight-step guide for choosing the correct track, setting and saving Named Region boundaries, auditioning or looping a section, correcting either boundary, renaming it, using consistent section names in Session View, and safely removing a label.
