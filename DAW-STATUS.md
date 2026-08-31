@@ -3211,6 +3211,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Compact DAW Work-Area Menu
+
+- The sticky Studio navigator is now a compact single-row **DAW work area** menu with one short destination name and one **Open** action.
+- All ten Studio areas remain available in two clear groups: seven musician work areas and three advanced/owner areas.
+- Short menu wording reduces scanning and horizontal space while the full work-area headings and explanations remain unchanged.
+- The navigator clearly reports **Open now** and retains a compact return action when the musician previews another destination.
+- Automated coverage proves that every Studio area appears exactly once, in the intended group and order, with a bounded short label.
+- Nine focused navigator/help tests, targeted lint, TypeScript, and the production release build passed. No database migration or new private-data persistence was required.
+- **Branch 14 leaf complete:** Compact DAW work-area menu.
+
 ## Completed milestone - Complete Important-Control Help Coverage
 
 - The sticky **Where do you want to work?** navigator now includes a visible **Help for every important DAW workflow** directory.

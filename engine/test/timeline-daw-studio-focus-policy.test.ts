@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
+import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
 
 describe("DAW Studio focus policy", () => {
   it("accepts only known high-level Studio areas", () => {
@@ -23,6 +23,15 @@ describe("DAW Studio focus policy", () => {
     expect(order.indexOf("record")).toBeLessThan(order.indexOf("mix"));
     expect(order.indexOf("mix")).toBeLessThan(order.indexOf("export"));
     expect(order.indexOf("export")).toBeLessThan(order.indexOf("verbal"));
+  });
+
+  it("builds one compact, complete, non-duplicated work-area menu", () => {
+    const groups = timelineDawCompactMenuGroups();
+    expect(groups.map((group) => group.label)).toEqual(["Make music", "Advanced and owner tools"]);
+    const areas = [...groups[0].areas, ...groups[1].areas];
+    expect(areas.map((area) => area.id)).toEqual(TIMELINE_DAW_STUDIO_FOCUS_AREAS.map((area) => area.id));
+    expect(new Set(areas.map((area) => area.id)).size).toBe(areas.length);
+    expect(areas.every((area) => area.menuLabel.length >= 3 && area.menuLabel.length <= 21)).toBe(true);
   });
 
   it("scopes browser focus state to one session", () => {
