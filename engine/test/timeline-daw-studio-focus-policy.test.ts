@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, shouldTimelineDawWorkspaceAreaOpen, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
+import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, resolveTimelineDawStudioRestoreState, shouldTimelineDawWorkspaceAreaOpen, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
 
 describe("DAW Studio focus policy", () => {
   it("accepts only known high-level Studio areas", () => {
@@ -52,5 +52,11 @@ describe("DAW Studio focus policy", () => {
     expect(parseTimelineDawStudioScrollPosition("1234.4")).toBe(1234);
     expect(parseTimelineDawStudioScrollPosition("-5")).toBe(0);
     expect(parseTimelineDawStudioScrollPosition("invalid")).toBe(0);
+  });
+
+  it("restores one validated area and bounded scroll position as one refresh state", () => {
+    expect(resolveTimelineDawStudioRestoreState("record", "2468.4")).toEqual({ area: "record", scrollTop: 2468 });
+    expect(resolveTimelineDawStudioRestoreState("private-lane-id", "-40")).toEqual({ area: null, scrollTop: 0 });
+    expect(resolveTimelineDawStudioRestoreState({ area: "mix" }, "not-a-number")).toEqual({ area: null, scrollTop: 0 });
   });
 });

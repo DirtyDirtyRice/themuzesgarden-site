@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { findTimelineDawStudioFocusArea, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, shouldTimelineDawWorkspaceAreaOpen, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey, type TimelineDawStudioFocusArea } from "@/lib/timeline/TimelineDawStudioFocusPolicy";
+import { findTimelineDawStudioFocusArea, parseTimelineDawStudioFocusArea, resolveTimelineDawStudioRestoreState, shouldTimelineDawWorkspaceAreaOpen, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey, type TimelineDawStudioFocusArea } from "@/lib/timeline/TimelineDawStudioFocusPolicy";
 import { TIMELINE_DAW_HELP_WORKFLOWS } from "@/lib/timeline/TimelineDawHelpCoveragePolicy";
 
 const button = "rounded-xl border border-white/20 bg-white px-3 py-2 text-sm font-black text-black";
@@ -13,21 +13,20 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
   const [destination, setDestination] = useState<TimelineDawStudioFocusArea>("transport");
 
   useEffect(() => {
-    const initial = parseTimelineDawStudioFocusArea(window.localStorage.getItem(storageKey));
-    const initialScroll = parseTimelineDawStudioScrollPosition(window.localStorage.getItem(scrollStorageKey));
-    queueMicrotask(() => { setSaved(initial); if (initial) setDestination(initial); });
+    const restored = resolveTimelineDawStudioRestoreState(readStorage(storageKey), readStorage(scrollStorageKey));
+    queueMicrotask(() => { setSaved(restored.area); if (restored.area) setDestination(restored.area); });
     const elements = [...document.querySelectorAll<HTMLElement>("[data-daw-focus-area]")];
-    const initialTarget = initial ? elements.find((element) => element.dataset.dawFocusArea === initial) : null;
+    const initialTarget = restored.area ? elements.find((element) => element.dataset.dawFocusArea === restored.area) : null;
     if (initialTarget && !window.location.hash) openWorkspacePanel(initialTarget);
-    if (initialScroll && !window.location.hash) requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: initialScroll, behavior: "auto" })));
-    const rememberScroll = () => window.localStorage.setItem(scrollStorageKey, String(Math.round(window.scrollY)));
+    if (restored.scrollTop && !window.location.hash) requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: restored.scrollTop, behavior: "auto" })));
+    const rememberScroll = () => writeStorage(scrollStorageKey, String(Math.round(window.scrollY)));
     const rememberOpenedPanel = (event: Event) => {
       const panel = event.target as HTMLDetailsElement;
       if (!panel.open || !panel.matches("details[data-daw-workspace-panel]")) return;
       const area = parseTimelineDawStudioFocusArea(panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea);
       if (!area) return;
       openWorkspacePanel(panel);
-      window.localStorage.setItem(storageKey, area);
+      writeStorage(storageKey, area);
       setSaved(area);
       setDestination(area);
     };
@@ -38,7 +37,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       const visible = entries.filter((entry) => entry.isIntersecting).sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
       const area = parseTimelineDawStudioFocusArea((visible?.target as HTMLElement | undefined)?.dataset.dawFocusArea);
       if (area) {
-        window.localStorage.setItem(storageKey, area);
+        writeStorage(storageKey, area);
         setSaved(area);
         setDestination(area);
       }
@@ -83,7 +82,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     const target = document.querySelector<HTMLElement>(`[data-daw-focus-area="${area}"]`);
     if (!target) return;
     openWorkspacePanel(target);
-    window.localStorage.setItem(storageKey, area);
+    writeStorage(storageKey, area);
     setSaved(area);
     requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
@@ -101,4 +100,12 @@ function openWorkspacePanel(target: HTMLElement) {
     const panelArea = panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea;
     panel.open = shouldTimelineDawWorkspaceAreaOpen(panelArea, selectedArea);
   });
+}
+
+function readStorage(key: string) {
+  try { return window.localStorage.getItem(key); } catch { return null; }
+}
+
+function writeStorage(key: string, value: string) {
+  try { window.localStorage.setItem(key, value); } catch { /* Navigation memory must never block music work. */ }
 }

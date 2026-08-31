@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Refresh-Safe DAW Work-Area Restore
+
+- Refresh restoration now resolves the saved Studio area and bounded scroll position together through one strict policy before touching the page.
+- A valid session-scoped work area reopens exclusively and returns to its saved page position after Chrome refresh or suspension.
+- Corrupted, unknown, negative, or excessive stored values are rejected or safely bounded instead of opening an unintended section.
+- Browser storage read/write failures are non-blocking, so privacy settings or unavailable storage cannot stop recording, editing, mixing, recovery, or export work.
+- Eleven focused navigator/help tests, targeted lint, TypeScript, and the clean production release build passed. No private content or audio enters browser storage.
+- **Branch 14 leaf complete:** Preserve the selected work area after refresh.
+
 ## Completed milestone - Exclusive DAW Work Area
 
 - Opening a Studio heading, compact-menu destination, help-directory destination, or valid in-page help link now runs the same explicit one-area rule.

@@ -53,3 +53,10 @@ export function parseTimelineDawStudioScrollPosition(value: unknown): number {
   const parsed = typeof value === "string" ? Number(value) : Number.NaN;
   return Number.isFinite(parsed) ? Math.max(0, Math.min(10_000_000, Math.round(parsed))) : 0;
 }
+
+export function resolveTimelineDawStudioRestoreState(areaValue: unknown, scrollValue: unknown) {
+  return {
+    area: parseTimelineDawStudioFocusArea(areaValue),
+    scrollTop: parseTimelineDawStudioScrollPosition(scrollValue),
+  } as const;
+}
