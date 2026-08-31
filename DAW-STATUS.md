@@ -3211,6 +3211,14 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Baby-Step Named Region Help
+
+- **Recorded and promoted audio** now includes an eight-step guide for choosing the correct track, setting and saving Named Region boundaries, auditioning or looping a section, correcting either boundary, renaming it, using consistent section names in Session View, and safely removing a label.
+- Instructions name the exact visible controls and distinguish Named Region labels from destructive audio edits.
+- Removing a label explicitly preserves the track, private recording, arrangement clip, and Global Library song.
+- Only a validated session-scoped help-step number is remembered; region names, boundaries, track IDs, audio, paths, and private notes are excluded.
+- Focused region-help tests, TypeScript, targeted lint, and the production build passed. No database migration was required.
+
 ## Completed milestone - Baby-Step Arrangement and Editing Help
 
 - The main **Arrangement Workspace** now includes an eight-step guide covering clip selection, Grid/Slip/Shuffle/Spot modes, movement and alignment, trimming, splitting, copying, repeating, fades, folders, locks, audition, Undo, and recovery checkpoints.

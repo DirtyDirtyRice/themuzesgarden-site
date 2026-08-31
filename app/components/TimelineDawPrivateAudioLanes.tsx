@@ -71,6 +71,7 @@ import { createTimelineDawRiffAudition, createTimelineDawRiffAuditionNextIndex, 
 import TimelineDawMusicianMixer from "@/app/components/TimelineDawMusicianMixer";
 import TimelineDawPrivateMidiSequencer from "@/app/components/TimelineDawPrivateMidiSequencer";
 import TimelineDawSessionView from "@/app/components/TimelineDawSessionView";
+import TimelineDawRegionHelp from "@/app/components/TimelineDawRegionHelp";
 import { timelineDawPrivateClipGainAtFrame } from "@/lib/timeline/TimelineDawPrivateClipRepairPolicy";
 import { resolveTimelineDawMusicianTrackMove } from "@/lib/timeline/TimelineDawMusicianTrackMove";
 import { resolveTimelineDawMusicianGroupMove, type TimelineDawMusicianGroupMoveMode } from "@/lib/timeline/TimelineDawMusicianGroupMove";
@@ -1454,6 +1455,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       </details>
       {crossfades.length ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/10 p-3 text-xs text-violet-100"><p className="font-black">Automatic smooth transitions</p>{crossfades.map((crossfade) => { const outgoing = lanes.find((lane) => lane.id === crossfade.outgoingLaneId); const incoming = lanes.find((lane) => lane.id === crossfade.incomingLaneId); return <p key={`${crossfade.outgoingLaneId}:${crossfade.incomingLaneId}`} className="mt-1">{outgoing?.name} into {incoming?.name}: {crossfade.startSeconds.toFixed(2)} to {crossfade.endSeconds.toFixed(2)} seconds ({crossfade.durationSeconds.toFixed(2)}-second transition)</p>; })}</div> : null}
 {freezes.filter((freeze) => freeze.active).map((freeze) => <audio key={freeze.id} ref={(element) => { if (element) freezeAudioRefs.current.set(freeze.id, element); else freezeAudioRefs.current.delete(freeze.id); }} src={freeze.artifact.playbackUrl} crossOrigin="anonymous" preload="metadata" />)}
+      {lanes.length ? <TimelineDawRegionHelp sessionId={sessionId} /> : null}
             {lanes.length ? (
         <ol className="mt-4 grid gap-2">
           {lanes.filter((lane) => !Object.values(trackFolders).some((folder) => folder.collapsed && folder.laneIds.includes(lane.id))).map((lane) => {
