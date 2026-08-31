@@ -14,16 +14,17 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
 
   useEffect(() => {
     const restored = resolveTimelineDawStudioRestoreState(readStorage(storageKey), readStorage(scrollStorageKey));
-    queueMicrotask(() => { setSaved(restored.area); if (restored.area) setDestination(restored.area); });
+    const initialArea = restored.area ?? "transport";
+    queueMicrotask(() => { setSaved(initialArea); setDestination(initialArea); });
     const elements = [...document.querySelectorAll<HTMLElement>("[data-daw-focus-area]")];
-    const initialTarget = restored.area ? elements.find((element) => element.dataset.dawFocusArea === restored.area) : null;
+    const initialTarget = elements.find((element) => element.dataset.dawFocusArea === initialArea) ?? null;
     if (initialTarget && !window.location.hash) openWorkspacePanel(initialTarget);
     if (restored.scrollTop && !window.location.hash) requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: restored.scrollTop, behavior: "auto" })));
     const rememberScroll = () => writeStorage(scrollStorageKey, String(Math.round(window.scrollY)));
     const rememberOpenedPanel = (event: Event) => {
       const panel = event.target as HTMLDetailsElement;
       if (!panel.open || !panel.matches("details[data-daw-workspace-panel]")) return;
-      const area = parseTimelineDawStudioFocusArea(panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea);
+      const area = workspacePanelArea(panel);
       if (!area) return;
       openWorkspacePanel(panel);
       writeStorage(storageKey, area);
@@ -95,11 +96,16 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
 function openWorkspacePanel(target: HTMLElement) {
   const disclosure = target.closest<HTMLDetailsElement>("details[data-daw-workspace-panel]");
   if (!disclosure) return;
-  const selectedArea = disclosure.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea;
+  const selectedArea = workspacePanelArea(disclosure);
   document.querySelectorAll<HTMLDetailsElement>("details[data-daw-workspace-panel]").forEach((panel) => {
-    const panelArea = panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea;
+    const panelArea = workspacePanelArea(panel);
     panel.open = shouldTimelineDawWorkspaceAreaOpen(panelArea, selectedArea);
   });
+}
+
+function workspacePanelArea(panel: HTMLDetailsElement) {
+  return parseTimelineDawStudioFocusArea(panel.dataset.dawFocusArea)
+    ?? parseTimelineDawStudioFocusArea(panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea);
 }
 
 function readStorage(key: string) {

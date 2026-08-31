@@ -3211,6 +3211,16 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Complete ADD-Friendly Workspace Reduction
+
+- The Studio no longer presents a vertical wall of ten collapsed work-area headings; inactive work areas are removed from the visual flow.
+- On first entry, Transport opens as the single safe default. Afterward, the session-scoped saved area and bounded scroll position restore the musician's exact working context.
+- The compact sticky menu remains the one consistent way to open any musician, Verbal Editing, lesson, beta, mastering/support, or technical-readiness area.
+- **Technical engine readiness** is now a first-class menu destination and follows the same exclusive-open, restore, return, and validation rules as every other Studio area.
+- The active work-area heading remains visible inside its panel, while inactive controls and headings stay hidden until intentionally selected.
+- Focused navigation, help, and owner-test policy tests, targeted lint, TypeScript, and the clean production release build passed. No audio, project, privacy, or database behavior changed.
+- **Branch 14 — Shorter DAW Workspace Pages is fully DONE.** All seven leaves are complete.
+
 ## Completed milestone - Persistent Return-to-Step Controls
 
 - The sticky Studio navigator now always shows **Return to open [work area]** whenever a valid work area is active, including when the menu selection already matches it.

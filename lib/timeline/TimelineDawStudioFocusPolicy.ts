@@ -9,6 +9,7 @@ export const TIMELINE_DAW_STUDIO_FOCUS_AREAS = [
   { id: "guide", menuLabel: "Lessons & Checks", label: "Lessons and owner checks", help: "Open learning guides and technical checks.", musician: false },
   { id: "beta", menuLabel: "Beta Tools", label: "Beta testing tools", help: "Manage musician testing and feedback.", musician: false },
   { id: "mastering", menuLabel: "Mastering & Support", label: "Mastering and support tools", help: "Open advanced normalization and support records.", musician: false },
+  { id: "technical", menuLabel: "Engine Readiness", label: "Technical engine readiness", help: "Inspect readiness stages and advanced engine details.", musician: false },
 ] as const;
 
 export type TimelineDawStudioFocusArea = typeof TIMELINE_DAW_STUDIO_FOCUS_AREAS[number]["id"];

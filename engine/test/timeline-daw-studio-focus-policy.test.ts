@@ -32,6 +32,7 @@ describe("DAW Studio focus policy", () => {
     expect(areas.map((area) => area.id)).toEqual(TIMELINE_DAW_STUDIO_FOCUS_AREAS.map((area) => area.id));
     expect(new Set(areas.map((area) => area.id)).size).toBe(areas.length);
     expect(areas.every((area) => area.menuLabel.length >= 3 && area.menuLabel.length <= 21)).toBe(true);
+    expect(groups[1].areas.map((area) => area.id)).toEqual(["guide", "beta", "mastering", "technical"]);
   });
 
   it("allows exactly one validated Studio work area to remain open", () => {
@@ -40,6 +41,7 @@ describe("DAW Studio focus policy", () => {
     expect(shouldTimelineDawWorkspaceAreaOpen("record", "mix")).toBe(false);
     expect(shouldTimelineDawWorkspaceAreaOpen("private-lane-id", "mix")).toBe(false);
     expect(shouldTimelineDawWorkspaceAreaOpen("mix", "not-real")).toBe(false);
+    expect(shouldTimelineDawWorkspaceAreaOpen("technical", "technical")).toBe(true);
   });
 
   it("scopes browser focus state to one session", () => {

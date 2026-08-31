@@ -57,7 +57,7 @@ import { TIMELINE_DAW_MUSICIAN_ACTION, TIMELINE_DAW_MUSICIAN_SESSION_STATE } fro
 const buttonClass =
   "rounded-xl border border-white/25 bg-white px-4 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
 
-const workspacePanelClass = "rounded-3xl border border-white/15 bg-[#080808] p-4";
+const workspacePanelClass = "hidden rounded-3xl border border-white/15 bg-[#080808] p-4 open:block";
 const workspaceSummaryClass = "cursor-pointer text-xl font-black marker:text-cyan-300";
 
 export default function ProjectDawSessionPage() {
@@ -233,9 +233,9 @@ export default function ProjectDawSessionPage() {
 
       <section aria-labelledby="daw-work-area-heading" className="space-y-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Choose one work area</p>
-          <h2 id="daw-work-area-heading" className="mt-1 text-2xl font-black">Only the section you choose will open</h2>
-          <p className="mt-1 text-sm text-white/60">Choose a heading below. Opening another heading closes the previous one.</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Focused workspace</p>
+          <h2 id="daw-work-area-heading" className="mt-1 text-2xl font-black">Only your active work area stays on screen</h2>
+          <p className="mt-1 text-sm text-white/60">Use the sticky DAW work-area menu above to change jobs. Inactive sections stay hidden so you do not have to scan a wall of controls.</p>
         </div>
 
       <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
@@ -330,7 +330,7 @@ export default function ProjectDawSessionPage() {
         </div>
       </details>
 
-      <details name="daw-workspace-area" data-daw-workspace-panel className="rounded-3xl border border-white/15 bg-black p-5">
+      <details name="daw-workspace-area" data-daw-workspace-panel data-daw-focus-area="technical" className={workspacePanelClass}>
       <summary className={workspaceSummaryClass}>Technical engine readiness <span className="ml-2 text-sm font-normal text-white/50">Advanced details</span></summary>
       <section className="mt-5">
         <div className="mb-3">
