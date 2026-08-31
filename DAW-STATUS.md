@@ -110,6 +110,14 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Musicians can prepare a review-only plan to keep the placeholder, choose a separately qualified replacement, use a fingerprint-verified render, or remove only the instrument slot.
 - Instrument-slot removal requires explicit confirmation, and every recovery plan remains held without activating an instrument or changing MIDI, audio, or routing.
 
+## Completed milestone - Chrome MIDI Production Evidence Gate
+
+- MIDI now has a twelve-trial production gate that automatically identifies Google Chrome while excluding Edge and other Chromium browsers.
+- The gate requires a named physical MIDI controller and musician-confirmed Web MIDI access, device identity, note response, velocity/channel, timing, controller-event, editing, instrument, recall, reconnect, session-reopen, and export/reimport trials.
+- Partial evidence, missing hardware, a non-Chrome browser, or any reported issue cannot pass.
+- Evidence remains only in the current tab and does not store MIDI, device information, private audio, or session content.
+- The gate is software-complete; the real MIDI-controller and full Chrome MIDI production QA leaves remain open until actual hardware passes all twelve trials.
+
 ## Current DAW tree - DONE / MUST DO
 
 ```text
