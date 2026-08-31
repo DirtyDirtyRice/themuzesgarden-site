@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Complete Important-Control Help Coverage
+
+- The sticky **Where do you want to work?** navigator now includes a visible **Help for every important DAW workflow** directory.
+- Thirteen musician workflows are covered: transport, recording, import, arrangement, Named Regions, three-version riff comparison, Hybrid Edit, Session View, MIDI, mixing, recovery, export, and Verbal Editing.
+- Every directory entry names its exact important controls, identifies the on-screen guide, and opens the correct protected Studio work area.
+- An automated coverage policy now requires every musician-facing Studio area to remain represented and prevents duplicate workflow IDs or control labels from silently weakening the directory.
+- Focused coverage tests, targeted lint, TypeScript, and the production release build passed. No database migration or additional private-data persistence was required.
+- **Branch 13 — Baby-Step Help is fully DONE.** All sixteen leaves are complete.
+
 ## Completed milestone - Baby-Step Session View Help
 
 - **Session View — Clip and Scene Launcher** now includes an eight-step guide for building scenes from Named Regions, setting musical launch timing, configuring individual clips, launching one clip, planning scene follow actions, launching and navigating scenes, stopping immediately or quantized, and saving the performance.
