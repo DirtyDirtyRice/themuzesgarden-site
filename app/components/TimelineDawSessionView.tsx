@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { TimelineDawTrackRegionLabels } from "@/lib/timeline/TimelineDawTrackRegionLabelPolicy";
+import TimelineDawSessionViewHelp from "@/app/components/TimelineDawSessionViewHelp";
 import {
   createTimelineDawSessionScenes,
   createTimelineDawSessionNavigationIndex,
@@ -74,6 +75,7 @@ type QueuedTimingRecall = { slot: TimingSnapshotSlot; snapshot: TimingSnapshot; 
 const launchButton = "rounded-lg border border-cyan-200/25 bg-cyan-200 px-3 py-2 text-xs font-black text-cyan-950 transition hover:bg-white disabled:opacity-40";
 
 export default function TimelineDawSessionView({
+  sessionId,
   lanes,
   labels,
   activeSceneId,
@@ -97,6 +99,7 @@ export default function TimelineDawSessionView({
   onLaunchQueuedNow,
   onQueueStop,
 }: {
+  sessionId: string;
   lanes: SessionLane[];
   labels: TimelineDawTrackRegionLabels;
   activeSceneId?: string;
@@ -564,6 +567,7 @@ export default function TimelineDawSessionView({
       </summary>
 
       <div className="border-t border-cyan-300/15 p-4" tabIndex={0} onKeyDown={handleLauncherKeyDown} aria-label="Session View performance controls">
+        <TimelineDawSessionViewHelp sessionId={sessionId} />
         <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
           <label className="text-xs font-black text-white/70">Session BPM
             <input className="mt-1 block w-28 rounded-lg border border-white/20 bg-black px-3 py-2 text-white disabled:opacity-50" type="number" min={30} max={300} step={1} value={bpm} disabled={tempoLocked} onChange={(event) => { resetTapTempo(); setBpm(Math.min(300, Math.max(30, Number(event.target.value) || 120))); }} />

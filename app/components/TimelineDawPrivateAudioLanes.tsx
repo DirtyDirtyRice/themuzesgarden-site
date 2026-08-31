@@ -1353,6 +1353,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       <TimelineDawPrivateMasterBus sessionId={sessionId} onChange={setMaster} />
       <TimelineDawMusicianImport sessionId={sessionId} projectId={projectId} />
       <TimelineDawSessionView
+        sessionId={sessionId}
         lanes={lanes.map((lane) => ({ id: lane.id, name: lane.name }))}
         labels={regionLabels}
         activeSceneId={activeSessionSceneId}

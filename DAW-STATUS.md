@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Baby-Step Session View Help
+
+- **Session View — Clip and Scene Launcher** now includes an eight-step guide for building scenes from Named Regions, setting musical launch timing, configuring individual clips, launching one clip, planning scene follow actions, launching and navigating scenes, stopping immediately or quantized, and saving the performance.
+- Instructions name the exact visible timing, quantization, clip override, queued launch, clip transport, scene routing, live flow, scene navigation, stop, and performance-take controls.
+- The guide explains how matching Named Region labels create scene rows and why unmatched tracks remain empty slots.
+- Session View explicitly preserves the linear arrangement, private recordings, and Global Library songs; launch and follow behavior affect performance playback rather than source edits.
+- Only a validated session-scoped help-step number is remembered; labels, scene routes, timing settings, launch history, audio, and private notes are excluded.
+- Focused Session View help tests, TypeScript, targeted lint, and the production build passed. No database migration was required.
+
 ## Completed milestone - Baby-Step Hybrid Edit Track Help
 
 - **Track 4 — Hybrid Edit** now includes an eight-step guide for finding source riffs, choosing the best performance, copying a protected riff reference, auditioning one copied clip, arranging playback order, duplicating or removing ideas, hearing the full edit, and intentionally clearing the recipe.
