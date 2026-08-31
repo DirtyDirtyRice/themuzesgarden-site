@@ -3211,6 +3211,14 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Baby-Step Arrangement Import Help
+
+- **Import Into Arrangement** now includes an eight-step guide for choosing linked project songs or computer files, selecting Full Song, Stems, or Alternate Versions, and choosing layered or sequential placement.
+- The guide names the exact existing controls: **Place Selected Songs**, **Import Into Arrangement**, and **Stop safely**, then requires musicians to audition and verify the new lanes before editing.
+- It explicitly preserves Global Library originals, protected source copies, and successfully completed imports while duplicates remain held.
+- Only the validated session-scoped help-step number is remembered; song names, filenames, audio, paths, project selections, and private notes are excluded.
+- Focused import-help tests, TypeScript, targeted lint, and the production build passed. No database migration was required.
+
 ## Completed milestone - Chrome Long-Session Recovery Production Evidence Gate
 
 - **Save or recover work** now includes ten explicit real-production trials for long-session continuity, checkpoints, recording recovery, saved takes, history, guarded restore, exact restore, undo/redo, and owner privacy.

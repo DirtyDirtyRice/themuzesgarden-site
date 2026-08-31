@@ -13,6 +13,8 @@ import {
   type TimelineDawMusicianImportKind,
   type TimelineDawMusicianImportPlacement,
 } from "@/lib/timeline/TimelineDawMusicianImportPolicy";
+import ProjectDawBabyStepHelp from "@/app/workspace/projects/[id]/ProjectDawBabyStepHelp";
+import { TIMELINE_DAW_IMPORT_HELP_STEPS, timelineDawImportHelpStorageKey } from "@/lib/timeline/TimelineDawImportHelpPolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40";
 const field = "rounded-xl border border-white/15 bg-black px-3 py-2 text-sm text-white";
@@ -37,7 +39,6 @@ export default function TimelineDawMusicianImport({ sessionId, projectId }: { se
 
   useEffect(() => {
     let active = true;
-    setLoadingSongs(true);
     Promise.all([getSupabaseTracksClient(), listLinkedProjectTrackIds(projectId)])
       .then(([tracks, linked]) => { if (active) setProjectSongs(tracks.filter((track) => linked.has(track.id))); })
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Project songs could not be loaded."); })
@@ -130,6 +131,7 @@ export default function TimelineDawMusicianImport({ sessionId, projectId }: { se
     <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">Step 1 · Bring in your music</p>
     <h3 className="mt-1 text-xl font-black">Import Into Arrangement</h3>
     <p className="mt-1 text-sm text-white/60">Choose what you are bringing in. Protected source copies and the correct lanes are created automatically.</p>
+    <ProjectDawBabyStepHelp title="How do I bring my music into the arrangement?" steps={TIMELINE_DAW_IMPORT_HELP_STEPS} storageKey={timelineDawImportHelpStorageKey(sessionId)} />
     <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-300/[0.06] p-3">
       <p className="text-sm font-black text-emerald-100">Choose songs already in this project</p>
       <p className="mt-1 text-xs text-white/55">Pick up to 3. The DAW makes protected arrangement copies; your Library songs are not moved or changed.</p>
