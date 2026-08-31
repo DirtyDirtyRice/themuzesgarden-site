@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import TimelineDawRecoveryBabyStepHelp from "@/app/components/TimelineDawRecoveryBabyStepHelp";
 import type { TimelineDawRecoveryCheckpoint } from "../../../../lib/timeline/TimelineDawRecoveryCheckpointStore";
 import {
   captureDawRecovery,
@@ -90,6 +91,8 @@ export default function ProjectDawRecoveryWorkspace({
   }
 
   return (
+    <div>
+      <TimelineDawRecoveryBabyStepHelp sessionId={session.id} />
     <section className="rounded-3xl border border-white/15 bg-[#080808] p-5 sm:p-7">
       <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-300">Recovery</p>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
@@ -136,5 +139,6 @@ export default function ProjectDawRecoveryWorkspace({
         ))}
       </ol>
     </section>
+    </div>
   );
 }

@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Baby-Step Recovery Help
+
+- The **Save or recover work** area now opens an eight-step musician guide covering unsaved recording recovery, saved-take reload, named checkpoints, guarded restore, and post-restore verification.
+- The guide explicitly separates recent-edit Undo from durable checkpoint restore and tells the musician when current session changes may be replaced.
+- Every step preserves private source audio and directs musicians to keep recovery WAVs and older checkpoints until recovered playback is verified.
+- Browser persistence is restricted to one validated session-scoped help-step number; audio, filenames, checkpoint names, device details, and private notes are excluded.
+- Focused recovery-help policy tests, TypeScript, targeted lint, and the production build passed.
+- No database migration or new private-data persistence was required.
+
 - Preserve existing architecture and user data.
 - Work one file at a time and keep each completed milestone build-green.
 - No placeholders, TODOs, or nonfunctional buttons.
