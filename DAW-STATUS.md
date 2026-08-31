@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Chrome Long-Session Recovery Production Evidence Gate
+
+- **Save or recover work** now includes ten explicit real-production trials for long-session continuity, checkpoints, recording recovery, saved takes, history, guarded restore, exact restore, undo/redo, and owner privacy.
+- The gate recognizes Google Chrome and explicitly rejects Microsoft Edge and other Chromium-branded browsers as qualifying evidence.
+- Automated tests cannot qualify the leaf; every trial must be marked from a real production run, and any issue holds the result for retesting.
+- Allowlisted pass/issue markers persist by session so a required Chrome refresh does not erase QA progress; audio, names, paths, checkpoints, history, and private content are excluded.
+- The software evidence gate is complete. The **Long-session real-browser recovery QA** tree leaf remains **STILL TO DO** until all ten production trials pass in Chrome.
+- Focused policy tests, TypeScript, targeted lint, and the production build passed. No database migration was required.
+
 ## Completed milestone - Baby-Step Recovery Help
 
 - The **Save or recover work** area now opens an eight-step musician guide covering unsaved recording recovery, saved-take reload, named checkpoints, guarded restore, and post-restore verification.

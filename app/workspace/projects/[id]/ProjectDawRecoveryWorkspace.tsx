@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import TimelineDawRecoveryBabyStepHelp from "@/app/components/TimelineDawRecoveryBabyStepHelp";
+import TimelineDawChromeRecoveryQaWorkspace from "@/app/components/TimelineDawChromeRecoveryQaWorkspace";
 import type { TimelineDawRecoveryCheckpoint } from "../../../../lib/timeline/TimelineDawRecoveryCheckpointStore";
 import {
   captureDawRecovery,
@@ -139,6 +140,7 @@ export default function ProjectDawRecoveryWorkspace({
         ))}
       </ol>
     </section>
+      <TimelineDawChromeRecoveryQaWorkspace sessionId={session.id} />
     </div>
   );
 }
