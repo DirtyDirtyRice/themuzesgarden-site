@@ -31,6 +31,12 @@ export function timelineDawCompactMenuGroups() {
   ] as const;
 }
 
+export function shouldTimelineDawWorkspaceAreaOpen(area: unknown, selectedArea: unknown) {
+  const areaId = parseTimelineDawStudioFocusArea(area);
+  const selectedId = parseTimelineDawStudioFocusArea(selectedArea);
+  return areaId !== null && selectedId !== null && areaId === selectedId;
+}
+
 export function timelineDawStudioFocusStorageKey(sessionId: string) {
   const normalized = sessionId.trim();
   if (!normalized || normalized.length > 200) throw new Error("A valid DAW session is required for focus restore.");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { findTimelineDawStudioFocusArea, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey, type TimelineDawStudioFocusArea } from "@/lib/timeline/TimelineDawStudioFocusPolicy";
+import { findTimelineDawStudioFocusArea, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, shouldTimelineDawWorkspaceAreaOpen, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey, type TimelineDawStudioFocusArea } from "@/lib/timeline/TimelineDawStudioFocusPolicy";
 import { TIMELINE_DAW_HELP_WORKFLOWS } from "@/lib/timeline/TimelineDawHelpCoveragePolicy";
 
 const button = "rounded-xl border border-white/20 bg-white px-3 py-2 text-sm font-black text-black";
@@ -26,6 +26,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       if (!panel.open || !panel.matches("details[data-daw-workspace-panel]")) return;
       const area = parseTimelineDawStudioFocusArea(panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea);
       if (!area) return;
+      openWorkspacePanel(panel);
       window.localStorage.setItem(storageKey, area);
       setSaved(area);
       setDestination(area);
@@ -95,7 +96,9 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
 function openWorkspacePanel(target: HTMLElement) {
   const disclosure = target.closest<HTMLDetailsElement>("details[data-daw-workspace-panel]");
   if (!disclosure) return;
+  const selectedArea = disclosure.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea;
   document.querySelectorAll<HTMLDetailsElement>("details[data-daw-workspace-panel]").forEach((panel) => {
-    panel.open = panel === disclosure;
+    const panelArea = panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea;
+    panel.open = shouldTimelineDawWorkspaceAreaOpen(panelArea, selectedArea);
   });
 }

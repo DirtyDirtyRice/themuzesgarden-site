@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Exclusive DAW Work Area
+
+- Opening a Studio heading, compact-menu destination, help-directory destination, or valid in-page help link now runs the same explicit one-area rule.
+- The selected validated work area opens while every other Studio work-area panel closes, even if a browser does not consistently enforce named-disclosure grouping.
+- Unknown or malformed destinations cannot open a panel or accidentally close the musician into an invalid workspace state.
+- Directly clicking a work-area heading now applies the same exclusivity enforcement before its selection is remembered.
+- Ten focused navigator/help tests, targeted lint, TypeScript, and the clean production release build passed. No database migration or private-data persistence change was required.
+- **Branch 14 leaf complete:** Open only the selected work area.
+
 ## Completed milestone - Compact DAW Work-Area Menu
 
 - The sticky Studio navigator is now a compact single-row **DAW work area** menu with one short destination name and one **Open** action.

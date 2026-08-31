@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
+import { findTimelineDawStudioFocusArea, TIMELINE_DAW_STUDIO_FOCUS_AREAS, parseTimelineDawStudioFocusArea, parseTimelineDawStudioScrollPosition, shouldTimelineDawWorkspaceAreaOpen, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey } from "../../lib/timeline/TimelineDawStudioFocusPolicy";
 
 describe("DAW Studio focus policy", () => {
   it("accepts only known high-level Studio areas", () => {
@@ -32,6 +32,14 @@ describe("DAW Studio focus policy", () => {
     expect(areas.map((area) => area.id)).toEqual(TIMELINE_DAW_STUDIO_FOCUS_AREAS.map((area) => area.id));
     expect(new Set(areas.map((area) => area.id)).size).toBe(areas.length);
     expect(areas.every((area) => area.menuLabel.length >= 3 && area.menuLabel.length <= 21)).toBe(true);
+  });
+
+  it("allows exactly one validated Studio work area to remain open", () => {
+    const openForMix = TIMELINE_DAW_STUDIO_FOCUS_AREAS.filter((area) => shouldTimelineDawWorkspaceAreaOpen(area.id, "mix"));
+    expect(openForMix.map((area) => area.id)).toEqual(["mix"]);
+    expect(shouldTimelineDawWorkspaceAreaOpen("record", "mix")).toBe(false);
+    expect(shouldTimelineDawWorkspaceAreaOpen("private-lane-id", "mix")).toBe(false);
+    expect(shouldTimelineDawWorkspaceAreaOpen("mix", "not-real")).toBe(false);
   });
 
   it("scopes browser focus state to one session", () => {
