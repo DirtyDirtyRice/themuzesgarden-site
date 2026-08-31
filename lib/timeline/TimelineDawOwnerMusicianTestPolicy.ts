@@ -2,6 +2,18 @@ export const TIMELINE_DAW_OWNER_TEST_STEPS = ["protect", "import", "audition", "
 export type TimelineDawOwnerTestStep = (typeof TIMELINE_DAW_OWNER_TEST_STEPS)[number];
 export type TimelineDawOwnerTestOutcome = "pass" | "fail" | "confusing" | "blocked";
 
+export function parseTimelineDawOwnerTestReturnStep(value: unknown): TimelineDawOwnerTestStep | null {
+  return typeof value === "string" && TIMELINE_DAW_OWNER_TEST_STEPS.includes(value as TimelineDawOwnerTestStep)
+    ? value as TimelineDawOwnerTestStep
+    : null;
+}
+
+export function timelineDawOwnerTestReturnStorageKey(sessionId: string) {
+  const normalized = sessionId.trim();
+  if (!normalized || normalized.length > 200 || !/^[a-zA-Z0-9_-]+$/.test(normalized)) throw new Error("A valid DAW session is required for return-to-step memory.");
+  return `muzes:daw-owner-test-return:${normalized}`;
+}
+
 export type TimelineDawOwnerTestEvidence = {
   audioSourceCount: number;
   editCount: number;

@@ -3211,6 +3211,15 @@ Three verification attempts on August 16, 2026 reached the same external Supabas
 
 ## Working rules
 
+## Completed milestone - Persistent Return-to-Step Controls
+
+- The sticky Studio navigator now always shows **Return to open [work area]** whenever a valid work area is active, including when the menu selection already matches it.
+- The private seven-step owner-musician test keeps its fixed **Return to Step X of 7** control visible while the musician visits a required DAW control.
+- That test return control now survives a Chrome refresh in the same tab and reappears only when its validated saved step still matches the current unfinished step.
+- Return-to-step memory contains only the allowlisted step identifier under a session-scoped key; notes, screenshots, audio, song details, and test observations are excluded.
+- Focused navigator and owner-test policy tests, targeted lint, TypeScript, and the clean production release build passed. No database migration was required.
+- **Branch 14 leaf complete:** Keep return-to-step controls visible.
+
 ## Completed milestone - Refresh-Safe DAW Work-Area Restore
 
 - Refresh restoration now resolves the saved Studio area and bounded scroll position together through one strict policy before touching the page.
