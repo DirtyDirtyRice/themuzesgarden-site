@@ -70,9 +70,14 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       if (target) openWorkspacePanel(target);
     }
     window.addEventListener("hashchange", openHashDestination);
+    const restoreHashWhenVisible = () => {
+      if (document.visibilityState === "visible") openHashDestination();
+    };
+    document.addEventListener("visibilitychange", restoreHashWhenVisible);
     document.addEventListener("click", openClickedHash, true);
     return () => {
       window.removeEventListener("hashchange", openHashDestination);
+      document.removeEventListener("visibilitychange", restoreHashWhenVisible);
       document.removeEventListener("click", openClickedHash, true);
     };
   }, []);
@@ -83,6 +88,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     const target = document.querySelector<HTMLElement>(`[data-daw-focus-area="${area}"]`);
     if (!target) return;
     openWorkspacePanel(target);
+    if (window.location.hash) window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
     writeStorage(storageKey, area);
     setSaved(area);
     requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));

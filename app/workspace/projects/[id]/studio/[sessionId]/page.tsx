@@ -240,7 +240,7 @@ export default function ProjectDawSessionPage() {
 
       <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
         <summary className={workspaceSummaryClass}>Play and stop the song</summary>
-        <div data-daw-focus-area="transport" className="mt-5 scroll-mt-24">
+        <div id="timeline-daw-transport" data-daw-focus-area="transport" className="mt-5 scroll-mt-24">
           <ProjectDawTransport session={session} workspaceRevision={snapshot.workspaceRevision} onWorkspaceRevision={handleWorkspaceRevision} />
         </div>
       </details>
@@ -254,7 +254,7 @@ export default function ProjectDawSessionPage() {
 
       <details name="daw-workspace-area" data-daw-workspace-panel className={workspacePanelClass}>
         <summary className={workspaceSummaryClass}>Tracks, editing, and MIDI</summary>
-        <div data-daw-focus-area="arrange" className="mt-5 scroll-mt-24">
+        <div id="timeline-daw-arrange" data-daw-focus-area="arrange" className="mt-5 scroll-mt-24">
           <ProjectDawTimeline session={session} />
         </div>
       </details>

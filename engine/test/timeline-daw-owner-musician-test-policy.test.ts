@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateTimelineDawOwnerTest, parseTimelineDawOwnerTestReturnStep, timelineDawOwnerTestReturnStorageKey, validateTimelineDawOwnerTestResult, type TimelineDawOwnerTestEvidence } from "../../lib/timeline/TimelineDawOwnerMusicianTestPolicy";
+import { evaluateTimelineDawOwnerTest, parseTimelineDawOwnerTestReturnStep, TIMELINE_DAW_OWNER_TEST_DEFINITIONS, timelineDawOwnerTestReturnStorageKey, validateTimelineDawOwnerTestResult, type TimelineDawOwnerTestEvidence } from "../../lib/timeline/TimelineDawOwnerMusicianTestPolicy";
 const empty: TimelineDawOwnerTestEvidence={audioSourceCount:0,editCount:0,mixControlCount:0,snapshotCount:0,completedExportCount:0};
 describe("TimelineDawOwnerMusicianTestPolicy",()=>{
   it("reveals exactly the first unfinished step",()=>{expect(evaluateTimelineDawOwnerTest([],empty).current?.step).toBe("protect");expect(evaluateTimelineDawOwnerTest([{step:"protect",outcome:"pass"}],empty).current?.step).toBe("import")});
@@ -7,4 +7,5 @@ describe("TimelineDawOwnerMusicianTestPolicy",()=>{
   it("retains failures while keeping that step current",()=>{const result=evaluateTimelineDawOwnerTest([{step:"protect",outcome:"pass"},{step:"import",outcome:"fail"}],empty);expect(result.completed).toBe(1);expect(result.current?.step).toBe("import")});
   it("requires an actual local download match before export can pass",()=>{const evidence={...empty,completedExportCount:1};expect(()=>validateTimelineDawOwnerTestResult({step:"export",outcome:"pass",evidence})).toThrow(/verify the downloaded/i);expect(validateTimelineDawOwnerTestResult({step:"export",outcome:"pass",evidence,downloadVerified:true}).step).toBe("export")});
   it("remembers only a validated current return step for one session",()=>{expect(parseTimelineDawOwnerTestReturnStep("mix")).toBe("mix");expect(parseTimelineDawOwnerTestReturnStep("private-note")).toBeNull();expect(timelineDawOwnerTestReturnStorageKey("session-14")).toBe("muzes:daw-owner-test-return:session-14");expect(()=>timelineDawOwnerTestReturnStorageKey("bad/session")).toThrow(/valid DAW session/i)});
+  it("sends the reversible edit step to the real arrangement workspace",()=>{expect(TIMELINE_DAW_OWNER_TEST_DEFINITIONS.find((item)=>item.step==="edit")?.destination).toBe("#timeline-daw-arrange")});
 });

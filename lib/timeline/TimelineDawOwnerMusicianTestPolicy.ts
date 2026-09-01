@@ -39,7 +39,7 @@ export const TIMELINE_DAW_OWNER_TEST_DEFINITIONS: TimelineDawOwnerTestDefinition
   { step: "protect", title: "Protect the original", instruction: "Confirm that this test uses a copy of your song and never replaces the original.", destination: "#owner-test-workspace", proof: null },
   { step: "import", title: "Import your song", instruction: "Import a full song, stems, or alternate versions into protected lanes.", destination: "#musician-audio-import", proof: "audioSourceCount" },
   { step: "audition", title: "Listen before editing", instruction: "Play the imported audio and confirm that it is the song you expected.", destination: "#timeline-daw-transport", proof: null },
-  { step: "edit", title: "Make one reversible edit", instruction: "Move, trim, split, or arrange one item, then listen to the change.", destination: "#beta-workflow-edit", proof: "editCount" },
+  { step: "edit", title: "Make one reversible edit", instruction: "Move, trim, split, or arrange one item, then listen to the change.", destination: "#timeline-daw-arrange", proof: "editCount" },
   { step: "mix", title: "Make one Quick Mix decision", instruction: "Change one level, pan, mute, solo, send, route, or native mix preset.", destination: "#musician-quick-mix", proof: "mixControlCount" },
   { step: "recover", title: "Prove recovery works", instruction: "Create a named recovery snapshot before export.", destination: "#private-session-snapshots", proof: "snapshotCount" },
   { step: "export", title: "Verify the delivered file", instruction: "Create and download one completed, checksum-protected export.", destination: "#daw-export-workspace", proof: "completedExportCount" },
