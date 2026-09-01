@@ -55,13 +55,20 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
   useEffect(() => {
     function openHashDestination() {
       const hash = decodeURIComponent(window.location.hash.slice(1));
-      if (!hash) return;
+      if (!hash) return false;
       const target = document.getElementById(hash);
-      if (!target) return;
+      if (!target) return false;
       openWorkspacePanel(target);
       requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+      return true;
     }
     openHashDestination();
+    const delayedTargetObserver = new MutationObserver(() => {
+      if (openHashDestination()) delayedTargetObserver.disconnect();
+    });
+    if (window.location.hash && !document.getElementById(decodeURIComponent(window.location.hash.slice(1)))) {
+      delayedTargetObserver.observe(document.body, { childList: true, subtree: true });
+    }
     function openClickedHash(event: MouseEvent) {
       const anchor = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
       const hash = anchor?.getAttribute("href")?.slice(1);
@@ -76,6 +83,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     document.addEventListener("visibilitychange", restoreHashWhenVisible);
     document.addEventListener("click", openClickedHash, true);
     return () => {
+      delayedTargetObserver.disconnect();
       window.removeEventListener("hashchange", openHashDestination);
       document.removeEventListener("visibilitychange", restoreHashWhenVisible);
       document.removeEventListener("click", openClickedHash, true);

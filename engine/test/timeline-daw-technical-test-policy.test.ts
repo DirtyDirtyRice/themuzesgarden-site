@@ -25,6 +25,9 @@ describe("TimelineDawTechnicalTestPolicy", () => {
     expect(evaluation.verifiedCount).toBe(0);
     expect(evaluation.heldCount).toBe(6);
     expect(evaluation.readyForHuman).toBe(false);
+    expect(evaluation.results.find((item) => item.step === "recover")?.anchor).toBe(
+      "#private-session-snapshots",
+    );
   });
 
   it("becomes ready for a short human audition when all technical evidence exists", () => {

@@ -80,7 +80,7 @@ export const TIMELINE_DAW_TECHNICAL_TEST_DEFINITIONS: Definition[] = [
     step: "recover",
     lessonId: "recover",
     title: "Recovery snapshot",
-    anchor: "#beta-workflow-protect",
+    anchor: "#private-session-snapshots",
     evidenceKey: "snapshotCount",
     verifiedDetail: "At least one checksum-protected recovery snapshot exists.",
     heldDetail: "No recovery snapshot has been recorded.",
