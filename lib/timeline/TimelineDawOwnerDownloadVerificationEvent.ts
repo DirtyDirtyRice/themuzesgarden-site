@@ -1,4 +1,5 @@
 export const TIMELINE_DAW_OWNER_DOWNLOAD_VERIFIED_EVENT = "the-muzes-garden:timeline-daw-owner-download-verified";
+export const TIMELINE_DAW_OWNER_EDIT_PERFORMED_EVENT = "the-muzes-garden:timeline-daw-owner-edit-performed";
 
 export type TimelineDawOwnerDownloadVerifiedDetail = {
   sessionId: string;

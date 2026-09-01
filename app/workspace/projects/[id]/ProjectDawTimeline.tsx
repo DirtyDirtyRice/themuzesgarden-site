@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { TIMELINE_DAW_OWNER_EDIT_PERFORMED_EVENT } from "@/lib/timeline/TimelineDawOwnerDownloadVerificationEvent";
 import { getSupabaseTracks } from "../../../../lib/getSupabaseTracks";
 import { listLinkedProjectTrackIds } from "../../../../lib/projectTracksApi";
 import {
@@ -1605,6 +1606,7 @@ export default function ProjectDawTimeline({ session }: { session: DawSession })
     setClipHistory((history) => [...history.slice(-(clipHistoryLimit - 1)), snapshot]);
     setClipRedoHistory([]);
     setClips(edit(clips));
+    window.dispatchEvent(new CustomEvent(TIMELINE_DAW_OWNER_EDIT_PERFORMED_EVENT, { detail: { sessionId: session.id } }));
   }
 
   function editSelected(action: "move-left" | "move-right" | "trim-start" | "trim-end" | "split") {
