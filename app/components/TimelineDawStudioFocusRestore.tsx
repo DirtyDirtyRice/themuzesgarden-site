@@ -34,18 +34,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     document.querySelectorAll<HTMLDetailsElement>("details[data-daw-workspace-panel]").forEach((panel) => panel.addEventListener("toggle", rememberOpenedPanel));
     window.addEventListener("scroll", rememberScroll, { passive: true });
     window.addEventListener("pagehide", rememberScroll);
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-      const area = parseTimelineDawStudioFocusArea((visible?.target as HTMLElement | undefined)?.dataset.dawFocusArea);
-      if (area) {
-        writeStorage(storageKey, area);
-        setSaved(area);
-        setDestination(area);
-      }
-    }, { rootMargin: "-20% 0px -55%", threshold: [0.1, 0.5] });
-    elements.forEach((element) => observer.observe(element));
     return () => {
-      observer.disconnect();
       document.querySelectorAll<HTMLDetailsElement>("details[data-daw-workspace-panel]").forEach((panel) => panel.removeEventListener("toggle", rememberOpenedPanel));
       window.removeEventListener("scroll", rememberScroll);
       window.removeEventListener("pagehide", rememberScroll);
