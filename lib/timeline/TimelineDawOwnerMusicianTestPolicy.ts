@@ -59,8 +59,8 @@ export function validateTimelineDawOwnerTestResult(input: { step: TimelineDawOwn
   // The owner-test result itself is the durable human attestation for clip edits.
   // ProjectDawTimeline clip edits are intentionally reversible current-session state,
   // so they do not always create a server-side arrangement edit row.
-  const verifiedCurrentTabEdit = input.step === "edit";
-  if (input.outcome === "pass" && definition.proof && input.evidence[definition.proof] < 1 && !verifiedCurrentTabEdit) {
+  const verifiedCurrentSessionAction = input.step === "edit" || input.step === "mix";
+  if (input.outcome === "pass" && definition.proof && input.evidence[definition.proof] < 1 && !verifiedCurrentSessionAction) {
     throw new Error(`The DAW has not recorded the required proof for “${definition.title}” yet.`);
   }
   if (input.step === "export" && input.outcome === "pass" && !input.downloadVerified) {

@@ -9,4 +9,5 @@ describe("TimelineDawOwnerMusicianTestPolicy",()=>{
   it("remembers only a validated current return step for one session",()=>{expect(parseTimelineDawOwnerTestReturnStep("mix")).toBe("mix");expect(parseTimelineDawOwnerTestReturnStep("private-note")).toBeNull();expect(timelineDawOwnerTestReturnStorageKey("session-14")).toBe("muzes:daw-owner-test-return:session-14");expect(()=>timelineDawOwnerTestReturnStorageKey("bad/session")).toThrow(/valid DAW session/i)});
   it("sends the reversible edit step to the real arrangement workspace",()=>{expect(TIMELINE_DAW_OWNER_TEST_DEFINITIONS.find((item)=>item.step==="edit")?.destination).toBe("#timeline-daw-arrange")});
   it("accepts the owner's reversible current-session clip-edit attestation",()=>{expect(validateTimelineDawOwnerTestResult({step:"edit",outcome:"pass",evidence:empty}).step).toBe("edit")});
+  it("accepts the owner's audible current-session Quick Mix attestation",()=>{expect(validateTimelineDawOwnerTestResult({step:"mix",outcome:"pass",evidence:empty}).step).toBe("mix")});
 });
