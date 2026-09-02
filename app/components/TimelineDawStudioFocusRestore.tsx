@@ -14,7 +14,9 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
 
   useEffect(() => {
     const restored = resolveTimelineDawStudioRestoreState(readStorage(storageKey), readStorage(scrollStorageKey));
-    const initialArea = restored.area ?? "transport";
+    const requestedArea = delayedHashFocusArea(decodeURIComponent(window.location.hash.slice(1)));
+    const initialArea = requestedArea ?? restored.area ?? "transport";
+    if (requestedArea) writeStorage(storageKey, requestedArea);
     queueMicrotask(() => { setSaved(initialArea); setDestination(initialArea); });
     const elements = [...document.querySelectorAll<HTMLElement>("[data-daw-focus-area]")];
     const initialTarget = elements.find((element) => element.dataset.dawFocusArea === initialArea) ?? null;
@@ -42,6 +44,14 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
   }, [scrollStorageKey, storageKey]);
 
   useEffect(() => {
+    function rememberHashArea(target: HTMLElement, fallbackArea: TimelineDawStudioFocusArea | null = null) {
+      const panel = target.closest<HTMLDetailsElement>("details[data-daw-workspace-panel]");
+      const area = (panel ? workspacePanelArea(panel) : null) ?? fallbackArea;
+      if (!area) return;
+      writeStorage(storageKey, area);
+      setSaved(area);
+      setDestination(area);
+    }
     function openHashDestination() {
       const hash = decodeURIComponent(window.location.hash.slice(1));
       if (!hash) return false;
@@ -51,10 +61,14 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
         const delayedPanel = delayedArea
           ? document.querySelector<HTMLElement>(`[data-daw-focus-area="${delayedArea}"]`)
           : null;
-        if (delayedPanel) openWorkspacePanel(delayedPanel);
+        if (delayedPanel) {
+          openWorkspacePanel(delayedPanel);
+          rememberHashArea(delayedPanel, delayedArea);
+        }
         return false;
       }
       openWorkspacePanel(target);
+      rememberHashArea(target, delayedHashFocusArea(hash));
       requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
       return true;
     }
@@ -84,7 +98,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       document.removeEventListener("visibilitychange", restoreHashWhenVisible);
       document.removeEventListener("click", openClickedHash, true);
     };
-  }, []);
+  }, [storageKey]);
 
   const selected = findTimelineDawStudioFocusArea(saved);
   const chosen = findTimelineDawStudioFocusArea(destination);
@@ -116,6 +130,13 @@ function openWorkspacePanel(target: HTMLElement) {
     const panelArea = workspacePanelArea(panel);
     panel.open = shouldTimelineDawWorkspaceAreaOpen(panelArea, selectedArea);
   });
+  let ancestor: HTMLElement | null = target;
+  while (ancestor && ancestor !== disclosure) {
+    const nestedDisclosure: HTMLDetailsElement | null = ancestor.closest("details");
+    if (!nestedDisclosure || nestedDisclosure === disclosure) break;
+    nestedDisclosure.open = true;
+    ancestor = nestedDisclosure.parentElement;
+  }
 }
 
 function workspacePanelArea(panel: HTMLDetailsElement) {

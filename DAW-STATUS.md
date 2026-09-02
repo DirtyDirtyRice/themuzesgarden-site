@@ -14,6 +14,13 @@ Build a credible professional DAW that musicians can use in a closed beta, while
 - Three separately saved takes were visible together after the recovery fix on August 28, 2026; repeated-take persistence passed.
 - A separate QA finding remains active: returning from another application resets the open Studio section and scroll position, forcing repeated navigation before the musician can continue.
 
+## Completed milestone - Owner Step 6 Snapshot Destination Stability
+
+- The direct Step 6 recovery link now selects and remembers Mix before any older saved Lessons choice can restore.
+- When the Session Snapshots target loads asynchronously, the enclosing advanced-mixing disclosure opens automatically so Snapshot name is immediately visible.
+- Hash-driven navigation now keeps the compact work-area menu, visible panel, and session-scoped saved area synchronized.
+- TypeScript and the clean production build passed; the remaining acceptance check repeats the complete owner Step 6 path four times in Chrome after deployment.
+
 ## Completed milestone - Pre-Upload Recording Recovery Checkpoint
 
 - Every stopped single-input WAV now enters durable private browser recovery before its network upload begins.
