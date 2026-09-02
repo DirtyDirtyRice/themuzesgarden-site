@@ -39,7 +39,7 @@ export default function TimelineDawPrivateSnapshots({ sessionId, currentMaster, 
   const master = (snapshot: Snapshot) =>
     (snapshot.state.timeline_daw_private_masters as Array<Record<string, unknown>> | undefined)?.[0] ?? { gain: 1, muted: false, revision: 0 };
 
-  return <section id="private-session-snapshots" className="mt-3 scroll-mt-24 rounded-xl border border-indigo-300/20 bg-indigo-300/[.05] p-3 text-xs">
+  return <section id="private-session-snapshots" className="mt-3 scroll-mt-56 rounded-xl border border-indigo-300/20 bg-indigo-300/[.05] p-3 text-xs">
     <div className="flex flex-wrap gap-2">
       <strong>Session Snapshots</strong>
       <input className="bg-black" value={name} onChange={(event) => setName(event.target.value)} placeholder="Snapshot name" />
