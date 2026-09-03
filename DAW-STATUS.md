@@ -2,6 +2,12 @@
 
 Last updated: September 3, 2026
 
+## Completed milestone - Steady-Screen DAW Refresh (DONE 9/3/26)
+
+- Refresh and app-return restoration now hold a fixed DAW return screen over late authenticated loading and layout restoration.
+- The saved work area is positioned before the overlay is removed, preventing the visible multi-page trip through intermediate DAW sections.
+- Live production measurement reproduced the prior five-second jump before this correction, so this milestone directly covers that reported behavior.
+
 ## Current objective
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.

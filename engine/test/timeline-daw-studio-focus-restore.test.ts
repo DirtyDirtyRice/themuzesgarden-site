@@ -39,4 +39,10 @@ describe("DAW Studio focus restore behavior", () => {
     expect(source).toContain('window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`)');
     expect(source).toContain("writeStorage(scrollStorageKey, String(Math.round(window.scrollY)))");
   });
+
+  it("covers the page while the saved position is restored", () => {
+    expect(source).toContain("restoringPosition");
+    expect(source).toContain("Returning to your DAW…");
+    expect(source).toContain("setRestoringPosition(false)");
+  });
 });
