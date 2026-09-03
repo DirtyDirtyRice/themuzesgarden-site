@@ -89,6 +89,7 @@ import { createTimelineDawTrackFolder, parseTimelineDawTrackFolders, removeTimel
 import { copyTimelineDawTrackFolderSend, createTimelineDawTrackFolderSendDryCheck, createTimelineDawTrackFolderSendFocusCheck, cycleTimelineDawTrackFolderSendFocus, jumpTimelineDawTrackFolderSendFocus, nudgeTimelineDawTrackFolderSendLevelDb, parseTimelineDawTrackFolderSend, resolveTimelineDawTrackFolderSendDestinations, resolveTimelineDawTrackFolderSendRemoval, restoreTimelineDawTrackFolderSendDryCheck, switchTimelineDawTrackFolderSendFocus, timelineDawTrackFolderSendDbToLevel, timelineDawTrackFolderSendLevelToDb, toggleTimelineDawTrackFolderSendFocusReference, updateTimelineDawTrackFolderSend } from "@/lib/timeline/TimelineDawTrackFolderRoutingPolicy";
 import { createTimelineDawSessionClipLaunchPlan, createTimelineDawSessionFollowIndex, createTimelineDawSessionLaunchDelay, createTimelineDawSessionSceneLaunch, createTimelineDawSessionScenes, orderTimelineDawSessionScenes, resolveTimelineDawSessionFollowTargetIndex, resolveTimelineDawSessionScenePlayCount, type TimelineDawSessionFollowAction, type TimelineDawSessionLaunchQuantization, type TimelineDawSessionScene } from "@/lib/timeline/TimelineDawSessionViewPolicy";
 import { createTimelineDawTrackConsolidationPlan } from "@/lib/timeline/TimelineDawTrackConsolidationPolicy";
+import { planTimelineDawTrackSolo, type TimelineDawSoloMode } from "@/lib/timeline/TimelineDawSoloModePolicy";
 
 const button = "rounded-xl border border-white/25 bg-white px-3 py-2 text-sm font-black text-black disabled:opacity-40";
 
@@ -97,6 +98,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [movementNotice, setMovementNotice] = useState<string>();
+  const [soloMode, setSoloMode] = useState<TimelineDawSoloMode>("additive");
   const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
   const [placementTargets, setPlacementTargets] = useState<Record<string, string>>({});
   const [previewLaneId, setPreviewLaneId] = useState<string>();
@@ -474,6 +476,25 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
     if (!lockedIds.has(laneId)) return false;
     setMovementNotice("This track is locked. Unlock it before changing its arrangement or sound.");
     return true;
+  }
+
+  function changeTrackSolo(lane: DawPrivateAudioLane) {
+    try {
+      const changes = planTimelineDawTrackSolo(
+        lanes.map((track) => ({ id: track.id, soloed: track.mix.soloed, locked: lockedIds.has(track.id) })),
+        lane.id,
+        soloMode,
+      );
+      for (const change of changes) {
+        const track = lanes.find((candidate) => candidate.id === change.id);
+        if (track) queueMix(track, { soloed: change.soloed });
+      }
+      setMovementNotice(soloMode === "exclusive" && !lane.mix.soloed
+        ? `${lane.name} is Soloed exclusively. Other track Solos are off.`
+        : undefined);
+    } catch (cause) {
+      setMovementNotice(cause instanceof Error ? cause.message : "Solo mode could not be changed.");
+    }
   }
 
   function editFade(laneId: string, patch: Partial<DawPrivateAudioLane["fade"]>) {
@@ -1328,7 +1349,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
       {error ? <p role="alert" className="mt-3 text-sm text-red-200">{error}</p> : null}
       {movementNotice ? <p role="status" className="mt-3 text-sm font-bold text-emerald-200">{movementNotice}</p> : null}
       <TimelineDawPrivateSnapshots sessionId={sessionId} currentMaster={master} onAudition={setMaster} onRestored={()=>window.location.reload()} />
-      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><span className="text-xs font-black text-white/70">If tracks seem missing:</span><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed)} onClick={() => void restoreAllTrackSound("solo")}>Turn Off All Solo</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.muted)} onClick={() => void restoreAllTrackSound("mute")}>Unmute All Tracks</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed || lane.mix.muted)} onClick={() => void restoreAllTrackSound("both")}>Hear All Tracks Again</button></div>
+      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-black/50 p-3"><label className="text-xs font-black text-white/70">Solo mode <select className="ml-2 rounded-lg border border-white/20 bg-black px-2 py-1 text-white" value={soloMode} onChange={(event) => setSoloMode(event.target.value as TimelineDawSoloMode)}><option value="additive">Additive Solo</option><option value="exclusive">Exclusive Solo</option></select></label><span className="text-xs text-white/45">Additive hears several Solo tracks. Exclusive switches to one track.</span><span className="text-xs font-black text-white/70">If tracks seem missing:</span><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed)} onClick={() => void restoreAllTrackSound("solo")}>Turn Off All Solo</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.muted)} onClick={() => void restoreAllTrackSound("mute")}>Unmute All Tracks</button><button type="button" className={button} disabled={busy || !lanes.some((lane) => lane.mix.soloed || lane.mix.muted)} onClick={() => void restoreAllTrackSound("both")}>Hear All Tracks Again</button></div>
       <div className="mt-3 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] p-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-black text-cyan-100">Move tracks together: {selectedIds.size} selected</span>
@@ -1535,7 +1556,7 @@ export default function TimelineDawPrivateAudioLanes({ sessionId, projectId }: {
                 <details className="mt-3 rounded-xl border border-white/10 p-3"><summary className="cursor-pointer text-xs font-black text-white/55">Advanced speed and pitch settings</summary><div className="mt-3 flex flex-wrap gap-2"><label className="text-xs">Stretch<input className="ml-1 w-20 bg-black" type="number" min={0.25} max={4} step={0.01} value={lane.transform.stretchRatio} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,stretchRatio:Number(e.target.value)}}:y))}/></label><label className="text-xs">Pitch<input className="ml-1 w-20 bg-black" type="number" min={-24} max={24} step={0.1} value={lane.transform.pitchSemitones} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,pitchSemitones:Number(e.target.value)}}:y))}/></label><select className="bg-black" value={lane.transform.algorithm} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,algorithm:(e.target.value === "resample" ? "resample" : "preserve-pitch")}}:y))}><option value="preserve-pitch">Preserve pitch</option><option value="resample">Resample</option></select><select className="bg-black" aria-label="Elastic quality" value={lane.transform.quality} onChange={(e)=>setLanes(x=>x.map(y=>y.id===lane.id?{...y,transform:{...y.transform,quality:(e.target.value === "draft"||e.target.value === "high"?e.target.value:"balanced")}}:y))}><option value="draft">Draft</option><option value="balanced">Balanced</option><option value="high">High</option></select><button className={button} disabled={busy} onClick={()=>void updateDawPrivateAudioLaneTransform(sessionId,lane.id,lane.transform).then(({lane:saved})=>{setLanes(x=>x.map(y=>y.id===saved.id?saved:y));setHistoryRevision(x=>x+1)})}>Save Advanced Settings</button></div></details>
                 <div className="mt-3 grid gap-3 md:grid-cols-[auto_auto_1fr_1fr]">
                   <button type="button" aria-pressed={lane.mix.muted} className={`${button} ${lane.mix.muted ? "!bg-red-300" : ""}`} onClick={() => queueMix(lane, { muted: !lane.mix.muted })}>{lane.mix.muted ? "Muted" : "Mute"}</button>
-                  <button type="button" aria-pressed={lane.mix.soloed} className={`${button} ${lane.mix.soloed ? "!bg-amber-300" : ""}`} onClick={() => queueMix(lane, { soloed: !lane.mix.soloed })}>{lane.mix.soloed ? "Soloed" : "Solo"}</button>
+                  <button type="button" aria-pressed={lane.mix.soloed} className={`${button} ${lane.mix.soloed ? "!bg-amber-300" : ""}`} onClick={() => changeTrackSolo(lane)}>{lane.mix.soloed ? "Soloed" : "Solo"}</button>
                   <label className="text-xs font-black text-white/55">Gain {lane.mix.gain.toFixed(2)}Ã—<input className="mt-1 block w-full accent-violet-300" type="range" min={0} max={2} step={0.01} value={lane.mix.gain} onChange={(event) => queueMix(lane, { gain: Number(event.target.value) })} /></label>
                   <label className="text-xs font-black text-white/55">Pan {lane.mix.pan === 0 ? "C" : lane.mix.pan < 0 ? `L${Math.round(Math.abs(lane.mix.pan) * 100)}` : `R${Math.round(lane.mix.pan * 100)}`}<input className="mt-1 block w-full accent-violet-300" type="range" min={-1} max={1} step={0.01} value={lane.mix.pan} onChange={(event) => queueMix(lane, { pan: Number(event.target.value) })} /></label>
                   <div className="flex flex-wrap gap-2 md:col-span-4"><button type="button" className={button} disabled={busy || lane.mix.gain === 1} onClick={() => void resetTrackMix(lane, "volume")}>Return Volume to Normal</button><button type="button" className={button} disabled={busy || lane.mix.pan === 0} onClick={() => void resetTrackMix(lane, "pan")}>Center Left / Right</button><button type="button" className={button} disabled={busy || (lane.mix.gain === 1 && lane.mix.pan === 0)} onClick={() => void resetTrackMix(lane, "both")}>Reset Volume and Center</button></div>

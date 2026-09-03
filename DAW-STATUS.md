@@ -2,6 +2,13 @@
 
 Last updated: September 3, 2026
 
+## Completed milestone - Professional Additive and Exclusive Track Solo (DONE 9/3/26)
+
+- The private mixer now offers Additive Solo for hearing several chosen tracks and Exclusive Solo for switching immediately to one track.
+- Exclusive Solo durably turns off the other active track Solos before enabling the requested track through the existing owner/session-scoped mixer save path.
+- Track locks prevent partial exclusive transitions, and the existing Turn Off All Solo recovery control remains available.
+- Solo mode itself is temporary interface preference; no private names, audio, paths, or session content enters browser storage.
+
 ## Completed milestone - Steady-Screen DAW Refresh (DONE 9/3/26)
 
 - Refresh and app-return restoration now hold a fixed DAW return screen over late authenticated loading and layout restoration.
