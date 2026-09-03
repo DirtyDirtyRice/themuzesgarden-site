@@ -1,10 +1,20 @@
 # The Muzes Garden DAW - Development Status
 
-Last updated: August 30, 2026
+Last updated: September 3, 2026
 
 ## Current objective
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
+
+## Completed milestone - Verified Chat Return Without Page Travel (DONE 9/3/26)
+
+- Returning from another application no longer runs the old 15-second timed scroll-correction loop that visibly carried the musician through multiple DAW work areas.
+- After a direct destination is reached, the one-time hash is removed from the address so Chrome cannot replay native anchor travel during refresh or app return.
+- Destination alignment now happens before paint and responds only to real late layout changes through a bounded observer.
+- Session Snapshots now render before the large advanced-workspace block, removing a major late-loading layout shift from the recovery destination.
+- The owner-musician acceptance flow now has eight steps, including a required leave-the-app, visit-this-Codex-chat, and return step.
+- The new return step cannot pass until the browser detects that the DAW was hidden or blurred for at least one second and then became visible or focused again.
+- This leave-and-return check is now a required acceptance step for future DAW completion runs.
 
 ## Completed milestone - Exact Hash Destination Recall After App Return
 

@@ -73,6 +73,8 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       openWorkspacePanel(target);
       rememberHashArea(target, delayedHashFocusArea(hash));
       if (forceAlignment || !isHashDestinationAligned(target)) alignHashDestination(target);
+      writeStorage(scrollStorageKey, String(Math.round(window.scrollY)));
+      window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
       return true;
     }
     openHashDestination(true);
@@ -109,7 +111,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       window.removeEventListener("focus", restoreHashOnFocus);
       document.removeEventListener("click", openClickedHash, true);
     };
-  }, [storageKey]);
+  }, [scrollStorageKey, storageKey]);
 
   const selected = findTimelineDawStudioFocusArea(saved);
   const chosen = findTimelineDawStudioFocusArea(destination);

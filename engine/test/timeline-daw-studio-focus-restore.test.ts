@@ -34,4 +34,9 @@ describe("DAW Studio focus restore behavior", () => {
     expect(source).not.toContain("15_000");
     expect(source).not.toContain("setInterval(openHashDestination");
   });
+
+  it("consumes a successful direct hash so Chrome cannot replay anchor travel", () => {
+    expect(source).toContain('window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`)');
+    expect(source).toContain("writeStorage(scrollStorageKey, String(Math.round(window.scrollY)))");
+  });
 });

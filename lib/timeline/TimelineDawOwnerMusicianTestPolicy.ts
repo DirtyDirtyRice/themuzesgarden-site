@@ -1,4 +1,4 @@
-export const TIMELINE_DAW_OWNER_TEST_STEPS = ["protect", "import", "audition", "edit", "mix", "recover", "export"] as const;
+export const TIMELINE_DAW_OWNER_TEST_STEPS = ["protect", "import", "audition", "edit", "mix", "recover", "return", "export"] as const;
 export type TimelineDawOwnerTestStep = (typeof TIMELINE_DAW_OWNER_TEST_STEPS)[number];
 export type TimelineDawOwnerTestOutcome = "pass" | "fail" | "confusing" | "blocked";
 
@@ -12,6 +12,15 @@ export function timelineDawOwnerTestReturnStorageKey(sessionId: string) {
   const normalized = sessionId.trim();
   if (!normalized || normalized.length > 200 || !/^[a-zA-Z0-9_-]+$/.test(normalized)) throw new Error("A valid DAW session is required for return-to-step memory.");
   return `muzes:daw-owner-test-return:${normalized}`;
+}
+
+export function isTimelineDawOwnerTestReturnVerified(leftAppAt: number | null, returnedAt: number, minimumAwayMilliseconds = 1_000) {
+  return leftAppAt !== null
+    && Number.isFinite(leftAppAt)
+    && Number.isFinite(returnedAt)
+    && Number.isFinite(minimumAwayMilliseconds)
+    && minimumAwayMilliseconds >= 1_000
+    && returnedAt - leftAppAt >= minimumAwayMilliseconds;
 }
 
 export type TimelineDawOwnerTestEvidence = {
@@ -42,6 +51,7 @@ export const TIMELINE_DAW_OWNER_TEST_DEFINITIONS: TimelineDawOwnerTestDefinition
   { step: "edit", title: "Make one reversible edit", instruction: "Move, trim, split, or arrange one item, then listen to the change.", destination: "#timeline-daw-arrange", proof: "editCount" },
   { step: "mix", title: "Make one Quick Mix decision", instruction: "Change one level, pan, mute, solo, send, route, or native mix preset.", destination: "#musician-quick-mix", proof: "mixControlCount" },
   { step: "recover", title: "Prove recovery works", instruction: "Create a named recovery snapshot before export.", destination: "#private-session-snapshots", proof: "snapshotCount" },
+  { step: "return", title: "Leave for this chat and return", instruction: "Leave the Muzes Garden app, spend at least one second in this Codex chat, then return. Confirm that the DAW stays on this step without traveling through other pages or work areas.", destination: "#owner-test-workspace", proof: null },
   { step: "export", title: "Verify the delivered file", instruction: "Create and download one completed, checksum-protected export.", destination: "#daw-export-workspace", proof: "completedExportCount" },
 ];
 
@@ -53,7 +63,7 @@ export function evaluateTimelineDawOwnerTest(observations: TimelineDawOwnerTestO
   return { completed: completedSteps.length, required: TIMELINE_DAW_OWNER_TEST_STEPS.length, current, complete: completedSteps.length === TIMELINE_DAW_OWNER_TEST_STEPS.length, evidence };
 }
 
-export function validateTimelineDawOwnerTestResult(input: { step: TimelineDawOwnerTestStep; outcome: TimelineDawOwnerTestOutcome; evidence: TimelineDawOwnerTestEvidence; downloadVerified?: boolean; controlActionVerified?: boolean }) {
+export function validateTimelineDawOwnerTestResult(input: { step: TimelineDawOwnerTestStep; outcome: TimelineDawOwnerTestOutcome; evidence: TimelineDawOwnerTestEvidence; downloadVerified?: boolean; controlActionVerified?: boolean; returnVerified?: boolean }) {
   const definition = TIMELINE_DAW_OWNER_TEST_DEFINITIONS.find((item) => item.step === input.step);
   if (!definition) throw new Error("The guided-test step is invalid.");
   // The owner-test result itself is the durable human attestation for clip edits.
@@ -65,6 +75,9 @@ export function validateTimelineDawOwnerTestResult(input: { step: TimelineDawOwn
   }
   if (input.step === "export" && input.outcome === "pass" && !input.downloadVerified) {
     throw new Error("Verify the downloaded WAV or stems ZIP before passing this step.");
+  }
+  if (input.step === "return" && input.outcome === "pass" && !input.returnVerified) {
+    throw new Error("Leave the app for this chat, wait at least one second, and return before passing this step.");
   }
   return definition;
 }
