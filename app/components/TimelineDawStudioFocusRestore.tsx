@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { findTimelineDawStudioFocusArea, parseTimelineDawStudioFocusArea, resolveTimelineDawStudioRestoreState, shouldTimelineDawWorkspaceAreaOpen, timelineDawCompactMenuGroups, timelineDawStudioFocusStorageKey, timelineDawStudioScrollStorageKey, type TimelineDawStudioFocusArea } from "@/lib/timeline/TimelineDawStudioFocusPolicy";
 import { TIMELINE_DAW_HELP_WORKFLOWS } from "@/lib/timeline/TimelineDawHelpCoveragePolicy";
 
@@ -12,7 +12,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
   const [saved, setSaved] = useState<TimelineDawStudioFocusArea | null>(null);
   const [destination, setDestination] = useState<TimelineDawStudioFocusArea>("transport");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const restored = resolveTimelineDawStudioRestoreState(readStorage(storageKey), readStorage(scrollStorageKey));
     const requestedArea = delayedHashFocusArea(decodeURIComponent(window.location.hash.slice(1)));
     const initialArea = requestedArea ?? restored.area ?? "transport";
@@ -46,7 +46,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     };
   }, [scrollStorageKey, storageKey]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     function rememberHashArea(target: HTMLElement, fallbackArea: TimelineDawStudioFocusArea | null = null) {
       const panel = target.closest<HTMLDetailsElement>("details[data-daw-workspace-panel]");
       const area = (panel ? workspacePanelArea(panel) : null) ?? fallbackArea;
@@ -78,8 +78,9 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     openHashDestination(true);
     const delayedTargetObserver = new MutationObserver(() => openHashDestination());
     if (window.location.hash) delayedTargetObserver.observe(document.body, { childList: true, subtree: true });
-    const stabilizationInterval = window.setInterval(openHashDestination, 500);
-    const stabilizationTimeout = window.setTimeout(() => window.clearInterval(stabilizationInterval), 15_000);
+    const destinationResizeObserver = new ResizeObserver(() => openHashDestination());
+    const observedPanel = document.querySelector<HTMLElement>(`[data-daw-focus-area="${delayedHashFocusArea(decodeURIComponent(window.location.hash.slice(1))) ?? ""}"]`);
+    if (observedPanel) destinationResizeObserver.observe(observedPanel);
     function openClickedHash(event: MouseEvent) {
       const anchor = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
       const hash = anchor?.getAttribute("href")?.slice(1);
@@ -100,8 +101,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     document.addEventListener("click", openClickedHash, true);
     return () => {
       delayedTargetObserver.disconnect();
-      window.clearInterval(stabilizationInterval);
-      window.clearTimeout(stabilizationTimeout);
+      destinationResizeObserver.disconnect();
       window.removeEventListener("hashchange", restoreHashDestination);
       window.removeEventListener("pageshow", restoreHashDestination);
       window.removeEventListener("popstate", restoreHashDestination);
@@ -156,7 +156,7 @@ function workspacePanelArea(panel: HTMLDetailsElement) {
 }
 
 function alignHashDestination(target: HTMLElement) {
-  requestAnimationFrame(() => target.scrollIntoView({ behavior: "auto", block: "start" }));
+  target.scrollIntoView({ behavior: "auto", block: "start" });
 }
 
 function isHashDestinationAligned(target: HTMLElement) {

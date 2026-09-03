@@ -23,4 +23,15 @@ describe("DAW Studio focus restore behavior", () => {
     expect(source).toContain("!isHashDestinationAligned(target)");
     expect(source).toContain("getBoundingClientRect().top - margin");
   });
+
+  it("opens and aligns the requested workspace before paint", () => {
+    expect(source).toContain("useLayoutEffect(() => {");
+    expect(source).toContain('target.scrollIntoView({ behavior: "auto", block: "start" })');
+  });
+
+  it("tracks real layout changes instead of waiting through a timed correction loop", () => {
+    expect(source).toContain("new ResizeObserver");
+    expect(source).not.toContain("15_000");
+    expect(source).not.toContain("setInterval(openHashDestination");
+  });
 });
