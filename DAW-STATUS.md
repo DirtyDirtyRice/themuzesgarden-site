@@ -2,6 +2,12 @@
 
 Last updated: September 3, 2026
 
+## Completed milestone - Track Solo Safe Monitoring (DONE 9/3/26)
+
+- Every private audio track can now be marked Solo Safe so an essential effect return, cue, or reference track remains audible while another lane is Soloed.
+- Solo Safe respects track Mute and bus Mute/Solo routing, so it cannot bypass intentional silence or escape its assigned bus path.
+- Solo Safe is a temporary monitoring decision and does not rewrite the durable mix, source recording, arrangement, automation, or Global Library song.
+
 ## Completed milestone - Professional Additive and Exclusive Track Solo (DONE 9/3/26)
 
 - The private mixer now offers Additive Solo for hearing several chosen tracks and Exclusive Solo for switching immediately to one track.

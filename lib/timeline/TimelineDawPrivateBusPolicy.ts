@@ -13,7 +13,7 @@ export function parseTimelineDawPrivateBus(value: unknown) {
 }
 
 export function resolveTimelineDawPrivateRoutingAudibility(
-  lanes: Array<{ id: string; busId: string | null; muted: boolean; soloed: boolean }>,
+  lanes: Array<{ id: string; busId: string | null; muted: boolean; soloed: boolean; soloSafe?: boolean }>,
   buses: Array<{ id: string; muted: boolean; soloed: boolean }>,
 ): ReadonlyMap<string, boolean> {
   const anyLaneSolo = lanes.some((lane) => lane.soloed);
@@ -22,7 +22,7 @@ export function resolveTimelineDawPrivateRoutingAudibility(
   return new Map(lanes.map((lane) => {
     const bus = lane.busId ? byId.get(lane.busId) : undefined;
     const busAllows = !bus?.muted && (!anyBusSolo || Boolean(bus?.soloed));
-    const laneAllows = !lane.muted && (!anyLaneSolo || lane.soloed);
+    const laneAllows = !lane.muted && (!anyLaneSolo || lane.soloed || Boolean(lane.soloSafe));
     return [lane.id, laneAllows && busAllows];
   }));
 }

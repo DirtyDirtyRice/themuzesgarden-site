@@ -17,4 +17,14 @@ describe("private bus policy", () => {
     ], buses);
     expect(Object.fromEntries(result)).toEqual({ lead: true, double: false, guitar: false, master: false });
   });
+
+  it("keeps Solo Safe tracks audible during another lane solo without overriding mute or bus solo", () => {
+    const result = resolveTimelineDawPrivateRoutingAudibility([
+      { id: "lead", busId: "vocals", muted: false, soloed: true },
+      { id: "reverb-return", busId: "vocals", muted: false, soloed: false, soloSafe: true },
+      { id: "muted-safe", busId: "vocals", muted: true, soloed: false, soloSafe: true },
+      { id: "other-bus-safe", busId: "music", muted: false, soloed: false, soloSafe: true },
+    ], [{ id: "vocals", muted: false, soloed: true }, { id: "music", muted: false, soloed: false }]);
+    expect(Object.fromEntries(result)).toEqual({ lead: true, "reverb-return": true, "muted-safe": false, "other-bus-safe": false });
+  });
 });
