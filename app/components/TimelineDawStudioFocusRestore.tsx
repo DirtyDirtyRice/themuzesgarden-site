@@ -23,8 +23,8 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     const initialTarget = elements.find((element) => element.dataset.dawFocusArea === initialArea) ?? null;
     if (initialTarget && !window.location.hash) openWorkspacePanel(initialTarget);
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (restored.scrollTop && !window.location.hash) window.scrollTo({ top: restored.scrollTop, behavior: "auto" });
-      setRestoringPosition(false);
+      if (restored.scrollTop && !window.location.hash) instantWindowScroll(restored.scrollTop);
+      requestAnimationFrame(() => setRestoringPosition(false));
     }));
     const rememberScroll = () => {
       if (window.location.hash) return;
@@ -126,7 +126,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     if (window.location.hash) window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
     writeStorage(storageKey, area);
     setSaved(area);
-    requestAnimationFrame(() => target.scrollIntoView({ behavior: "auto", block: "start" }));
+    requestAnimationFrame(() => target.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" }));
   }
 
   const menuGroups = timelineDawCompactMenuGroups();
@@ -162,7 +162,11 @@ function workspacePanelArea(panel: HTMLDetailsElement) {
 }
 
 function alignHashDestination(target: HTMLElement) {
-  target.scrollIntoView({ behavior: "auto", block: "start" });
+  target.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" });
+}
+
+function instantWindowScroll(top: number) {
+  window.scrollTo({ top, behavior: "instant" as ScrollBehavior });
 }
 
 function isHashDestinationAligned(target: HTMLElement) {

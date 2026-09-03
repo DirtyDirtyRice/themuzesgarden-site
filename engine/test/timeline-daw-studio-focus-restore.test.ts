@@ -15,7 +15,7 @@ describe("DAW Studio focus restore behavior", () => {
   });
 
   it("uses immediate anchor correction instead of visible smooth scrolling", () => {
-    expect(source).toContain('target.scrollIntoView({ behavior: "auto", block: "start" })');
+    expect(source).toContain('target.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" })');
     expect(source).not.toContain('target.scrollIntoView({ behavior: "smooth", block: "start" })');
   });
 
@@ -26,7 +26,7 @@ describe("DAW Studio focus restore behavior", () => {
 
   it("opens and aligns the requested workspace before paint", () => {
     expect(source).toContain("useLayoutEffect(() => {");
-    expect(source).toContain('target.scrollIntoView({ behavior: "auto", block: "start" })');
+    expect(source).toContain('target.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" })');
   });
 
   it("tracks real layout changes instead of waiting through a timed correction loop", () => {
@@ -44,5 +44,6 @@ describe("DAW Studio focus restore behavior", () => {
     expect(source).toContain("restoringPosition");
     expect(source).toContain("Returning to your DAW…");
     expect(source).toContain("setRestoringPosition(false)");
+    expect(source).toContain('window.scrollTo({ top, behavior: "instant" as ScrollBehavior })');
   });
 });
