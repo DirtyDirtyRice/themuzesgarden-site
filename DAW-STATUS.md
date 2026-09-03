@@ -6,6 +6,14 @@ Last updated: August 30, 2026
 
 Build a credible professional DAW that musicians can use in a closed beta, while preserving the original AI-assisted and historical-ledger vision. Work proceeds by complete milestones: implementation, focused tests, production build, commit, push, and this status update.
 
+## Completed milestone - Exact Hash Destination Recall After App Return
+
+- Direct DAW destinations such as Step 6 Session Snapshots now realign immediately when Chrome returns from another application, when the page becomes visible, and after late content changes alter the page height.
+- Hash-directed travel no longer uses smooth scrolling, so musicians do not visibly pass through unrelated DAW sections before reaching the requested control.
+- Temporary positions encountered during direct hash navigation can no longer overwrite the session's normal saved scroll position.
+- Focused navigation tests passed (12 tests), TypeScript passed, targeted lint passed, and the production build passed with 76 generated pages.
+- Production acceptance still requires the exact Step 6 leave-and-return workflow to pass ten consecutive repetitions in Chrome after deployment.
+
 ## Active production QA finding - Multiple Recording Takes
 
 - Chrome microphone and private WAV recording passed on August 28, 2026, but only one of three user-recorded takes remained visible after repeated page reloads.

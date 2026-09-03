@@ -22,7 +22,10 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     const initialTarget = elements.find((element) => element.dataset.dawFocusArea === initialArea) ?? null;
     if (initialTarget && !window.location.hash) openWorkspacePanel(initialTarget);
     if (restored.scrollTop && !window.location.hash) requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: restored.scrollTop, behavior: "auto" })));
-    const rememberScroll = () => writeStorage(scrollStorageKey, String(Math.round(window.scrollY)));
+    const rememberScroll = () => {
+      if (window.location.hash) return;
+      writeStorage(scrollStorageKey, String(Math.round(window.scrollY)));
+    };
     const rememberOpenedPanel = (event: Event) => {
       const panel = event.target as HTMLDetailsElement;
       if (!panel.open || !panel.matches("details[data-daw-workspace-panel]")) return;
@@ -52,7 +55,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       setSaved(area);
       setDestination(area);
     }
-    function openHashDestination() {
+    function openHashDestination(forceAlignment = false) {
       const hash = decodeURIComponent(window.location.hash.slice(1));
       if (!hash) return false;
       const target = document.getElementById(hash);
@@ -67,14 +70,13 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
         }
         return false;
       }
-      const alreadyOpen = isHashDestinationOpen(target);
       openWorkspacePanel(target);
       rememberHashArea(target, delayedHashFocusArea(hash));
-      if (!alreadyOpen) requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+      if (forceAlignment || !isHashDestinationAligned(target)) alignHashDestination(target);
       return true;
     }
-    openHashDestination();
-    const delayedTargetObserver = new MutationObserver(openHashDestination);
+    openHashDestination(true);
+    const delayedTargetObserver = new MutationObserver(() => openHashDestination());
     if (window.location.hash) delayedTargetObserver.observe(document.body, { childList: true, subtree: true });
     const stabilizationInterval = window.setInterval(openHashDestination, 500);
     const stabilizationTimeout = window.setTimeout(() => window.clearInterval(stabilizationInterval), 15_000);
@@ -85,13 +87,14 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       const target = document.getElementById(decodeURIComponent(hash));
       if (target) openWorkspacePanel(target);
     }
-    window.addEventListener("hashchange", openHashDestination);
-    window.addEventListener("pageshow", openHashDestination);
-    window.addEventListener("popstate", openHashDestination);
+    const restoreHashDestination = () => openHashDestination(true);
+    window.addEventListener("hashchange", restoreHashDestination);
+    window.addEventListener("pageshow", restoreHashDestination);
+    window.addEventListener("popstate", restoreHashDestination);
     const restoreHashWhenVisible = () => {
-      if (document.visibilityState === "visible") openHashDestination();
+      if (document.visibilityState === "visible") restoreHashDestination();
     };
-    const restoreHashOnFocus = () => openHashDestination();
+    const restoreHashOnFocus = () => restoreHashDestination();
     document.addEventListener("visibilitychange", restoreHashWhenVisible);
     window.addEventListener("focus", restoreHashOnFocus);
     document.addEventListener("click", openClickedHash, true);
@@ -99,9 +102,9 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
       delayedTargetObserver.disconnect();
       window.clearInterval(stabilizationInterval);
       window.clearTimeout(stabilizationTimeout);
-      window.removeEventListener("hashchange", openHashDestination);
-      window.removeEventListener("pageshow", openHashDestination);
-      window.removeEventListener("popstate", openHashDestination);
+      window.removeEventListener("hashchange", restoreHashDestination);
+      window.removeEventListener("pageshow", restoreHashDestination);
+      window.removeEventListener("popstate", restoreHashDestination);
       document.removeEventListener("visibilitychange", restoreHashWhenVisible);
       window.removeEventListener("focus", restoreHashOnFocus);
       document.removeEventListener("click", openClickedHash, true);
@@ -117,7 +120,7 @@ export default function TimelineDawStudioFocusRestore({ sessionId }: { sessionId
     if (window.location.hash) window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
     writeStorage(storageKey, area);
     setSaved(area);
-    requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+    requestAnimationFrame(() => target.scrollIntoView({ behavior: "auto", block: "start" }));
   }
 
   const menuGroups = timelineDawCompactMenuGroups();
@@ -152,15 +155,13 @@ function workspacePanelArea(panel: HTMLDetailsElement) {
     ?? parseTimelineDawStudioFocusArea(panel.querySelector<HTMLElement>("[data-daw-focus-area]")?.dataset.dawFocusArea);
 }
 
-function isHashDestinationOpen(target: HTMLElement) {
-  const workspace = target.closest<HTMLDetailsElement>("details[data-daw-workspace-panel]");
-  if (!workspace?.open) return false;
-  let ancestor = target.parentElement;
-  while (ancestor && ancestor !== workspace) {
-    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) return false;
-    ancestor = ancestor.parentElement;
-  }
-  return true;
+function alignHashDestination(target: HTMLElement) {
+  requestAnimationFrame(() => target.scrollIntoView({ behavior: "auto", block: "start" }));
+}
+
+function isHashDestinationAligned(target: HTMLElement) {
+  const margin = Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) || 0;
+  return Math.abs(target.getBoundingClientRect().top - margin) <= 4;
 }
 
 function readStorage(key: string) {
