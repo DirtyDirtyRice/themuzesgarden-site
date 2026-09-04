@@ -24,4 +24,9 @@ describe("owner test semantic landing", () => {
   it("reveals the card only after final alignment", () => {
     expect(source).toContain("requestAnimationFrame(()=>setLandingReady(true))");
   });
+
+  it("lets the musician confirm a real return when Chrome does not expose focus changes", () => {
+    expect(source).toContain("I confirm I left for this Codex chat");
+    expect(source).toContain("returnVerified||returnConfirmed");
+  });
 });
