@@ -39,4 +39,12 @@ describe("owner test semantic landing", () => {
     expect(source).not.toContain('document.addEventListener("visibilitychange"');
     expect(source).toContain('current.step==="return"&&!returnConfirmed');
   });
+
+  it("never offers a new test before the saved-test lookup succeeds", () => {
+    expect(source).toContain("[loaded,setLoaded]=useState(false)");
+    expect(source).toContain("setLoaded(true)");
+    expect(source).toContain("Your saved guided-test progress has not loaded yet");
+    expect(source).toContain("Retry saved test");
+    expect(source).toContain("!loaded?");
+  });
 });
