@@ -27,8 +27,16 @@ describe("owner test semantic landing", () => {
 
   it("lets the musician confirm a real return when Chrome does not expose focus changes", () => {
     expect(source).toContain("I confirm I left for this Codex chat");
-    expect(source).toContain("returnVerified||returnConfirmed");
+    expect(source).toContain('returnVerified:current.step==="return"&&returnConfirmed');
+    expect(source).not.toContain("returnVerified||returnConfirmed");
     expect(source).toContain("if(!data?.session)return");
     expect(source).toContain('sessionStorage.getItem(confirmedKey)==="yes"');
+  });
+
+  it("does not let screenshot file-picker focus events pass the return step", () => {
+    expect(source).not.toContain('window.addEventListener("blur"');
+    expect(source).not.toContain('window.addEventListener("focus"');
+    expect(source).not.toContain('document.addEventListener("visibilitychange"');
+    expect(source).toContain('current.step==="return"&&!returnConfirmed');
   });
 });
