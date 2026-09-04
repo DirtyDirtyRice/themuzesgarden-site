@@ -28,5 +28,7 @@ describe("owner test semantic landing", () => {
   it("lets the musician confirm a real return when Chrome does not expose focus changes", () => {
     expect(source).toContain("I confirm I left for this Codex chat");
     expect(source).toContain("returnVerified||returnConfirmed");
+    expect(source).toContain("if(!data?.session)return");
+    expect(source).toContain('sessionStorage.getItem(confirmedKey)==="yes"');
   });
 });

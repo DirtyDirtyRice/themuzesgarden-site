@@ -20,6 +20,12 @@ export function timelineDawOwnerTestAwayStorageKey(sessionId: string) {
   return `muzes:daw-owner-test-away:${normalized}`;
 }
 
+export function timelineDawOwnerTestReturnConfirmedStorageKey(sessionId: string) {
+  const normalized = sessionId.trim();
+  if (!normalized || normalized.length > 200 || !/^[a-zA-Z0-9_-]+$/.test(normalized)) throw new Error("A valid DAW session is required for return confirmation memory.");
+  return `muzes:daw-owner-test-return-confirmed:${normalized}`;
+}
+
 export function isTimelineDawOwnerTestReturnVerified(leftAppAt: number | null, returnedAt: number, minimumAwayMilliseconds = 1_000) {
   return leftAppAt !== null
     && Number.isFinite(leftAppAt)
