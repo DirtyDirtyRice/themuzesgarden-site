@@ -31,6 +31,7 @@ export default function ProjectDawExportWorkspace({
   workspaceRevision: number;
   onWorkspaceRevision: (revision: number) => void;
 }) {
+  const uploadAttemptKey = `muzes:daw-export-upload-attempt:${session.id}`;
   const [name, setName] = useState(`${session.name} Mix`);
   const [target, setTarget] = useState<TimelineRenderTarget>("mix");
   const [format, setFormat] = useState<TimelineRenderFormat>("wav");
@@ -79,6 +80,14 @@ export default function ProjectDawExportWorkspace({
 
   useEffect(() => { queueMicrotask(() => void load()); }, [load]);
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem(uploadAttemptKey) === "pending") {
+        queueMicrotask(() => setError("The previous private-audio upload was interrupted before it finished. Choose the WAV again, then retry the upload without refreshing the page."));
+        sessionStorage.removeItem(uploadAttemptKey);
+      }
+    } catch {}
+  }, [uploadAttemptKey]);
+  useEffect(() => {
     const receive = (event: Event) => {
       const detail = (event as CustomEvent<DawRecordedSourceEventDetail>).detail;
       if (!detail?.source?.uri) return;
@@ -101,6 +110,7 @@ export default function ProjectDawExportWorkspace({
     setUploading(true);
     setError(null);
     setNotice(null);
+    try { sessionStorage.setItem(uploadAttemptKey, "pending"); } catch {}
     try {
       const uploaded = [];
       for (const file of sourceFiles) {
@@ -117,8 +127,10 @@ export default function ProjectDawExportWorkspace({
       setSources(uploaded.map((item) => item.source.uri).join(", "));
       setNotice(`${uploaded.length} private audio source${uploaded.length === 1 ? "" : "s"} uploaded at ${uploaded[0].audio.sampleRate.toLocaleString()} Hz.`);
       setSourceFiles([]);
+      try { sessionStorage.removeItem(uploadAttemptKey); } catch {}
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Audio sources could not be uploaded.");
+      try { sessionStorage.removeItem(uploadAttemptKey); } catch {}
     } finally {
       setUploading(false);
     }
@@ -317,7 +329,7 @@ export default function ProjectDawExportWorkspace({
         <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,.mp3,audio/wav,audio/mpeg" onChange={(event) => setSourceFiles(Array.from(event.target.files ?? []))} aria-label="WAV or MP3 render source files" />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploadingâ€¦" : "Upload Private Audio Sources"}</button>
+        <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploading…" : error && sourceFiles.length ? "Retry Private Audio Upload" : "Upload Private Audio Sources"}</button>
         <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Workingâ€¦" : "Validate & Save Render"}</button>
         <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav" || exportPreflight?.safe === false} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
