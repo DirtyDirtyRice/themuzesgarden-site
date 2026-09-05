@@ -6,7 +6,7 @@ import type {
   TimelineRenderFormat,
   TimelineRenderTarget,
 } from "../../../../lib/timeline/TimelineOfflineRenderAndExportEngine";
-import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
+import { executeDawStemPackage, executeDawWavRender, loadDawRenderDelivery, loadDawRenderSources, loadDawRenders, prepareDawRender, ProjectDawApiError, uploadDawRenderSource } from "./projectDawApi";
 import ProjectDawInterchangeWorkspace from "./ProjectDawInterchangeWorkspace";
 import ProjectDawExportHelp from "./ProjectDawExportHelp";
 import { DAW_RECORDED_SOURCE_EVENT, type DawRecordedSourceEventDetail } from "@/lib/timeline/TimelineDawRecordedSourceEvent";
@@ -63,13 +63,28 @@ export default function ProjectDawExportWorkspace({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const snapshot = await loadDawRenders(session.id);
+      const [snapshot, sourceSnapshot] = await Promise.all([
+        loadDawRenders(session.id),
+        loadDawRenderSources(session.id),
+      ]);
       setJobs(snapshot.jobs);
       setSelectedJob((current) =>
         current
           ? snapshot.jobs.find((job) => job.id === current.id) ?? snapshot.jobs.at(-1) ?? null
           : snapshot.jobs.at(-1) ?? null);
       onWorkspaceRevision(snapshot.workspaceRevision);
+      if (sourceSnapshot.uploads.length) {
+        const uploaded = sourceSnapshot.uploads;
+        const sampleRates = new Set(uploaded.map((item) => item.audio.sampleRate));
+        const channelCounts = new Set(uploaded.map((item) => item.audio.channelCount));
+        if (sampleRates.size === 1 && channelCounts.size === 1) {
+          setSources(uploaded.map((item) => item.source.uri).join(", "));
+          setSampleRate(uploaded[0].audio.sampleRate);
+          setChannels(uploaded[0].audio.channelCount);
+          setDurationSeconds(Math.max(0.001, Math.floor(Math.min(...uploaded.map((item) => item.audio.durationSeconds)) * 1000) / 1000));
+          setNotice(`${uploaded.length} completed private upload${uploaded.length === 1 ? "" : "s"} restored for Step 8.`);
+        }
+      }
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Saved renders could not be loaded.");

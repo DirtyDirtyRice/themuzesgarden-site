@@ -1,5 +1,6 @@
 ﻿import { prepareTimelineDawAudioImport } from "../../../../lib/timeline/TimelineDawAudioImportPolicy";
 import { requireProjectSupabase } from "./projectSupabase";
+import { withTimelineDawUploadDeadline } from "../../../../lib/timeline/TimelineDawUploadDeadline";
 import type { DawSession, DawSessionAction, DawSnapshot } from "./projectDawTypes";
 import type {
   TimelineOfflineRenderJob,
@@ -189,7 +190,20 @@ export type DawRenderSource = {
   checksum: string;
 };
 
-export async function uploadDawRenderSource(sessionId: string, file: File): Promise<{ source: DawRenderSource; audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number } }> {
+export type DawRenderSourceUpload = {
+  source: DawRenderSource;
+  audio: { sampleRate: number; channelCount: number; frameCount: number; durationSeconds: number };
+};
+
+export function loadDawRenderSources(sessionId: string): Promise<{ uploads: DawRenderSourceUpload[] }> {
+  return request(`/api/timeline/daw-render-sources?sessionId=${encodeURIComponent(sessionId)}`);
+}
+
+export async function uploadDawRenderSource(sessionId: string, file: File): Promise<DawRenderSourceUpload> {
+  return withTimelineDawUploadDeadline(uploadDawRenderSourceWithoutDeadline(sessionId, file));
+}
+
+async function uploadDawRenderSourceWithoutDeadline(sessionId: string, file: File): Promise<DawRenderSourceUpload> {
   const prepared = await prepareTimelineDawAudioImport(file);
   if (prepared.file.size <= 0 || prepared.file.size > 268_435_456) {
     throw new Error("WAV source size must be from 1 byte to 256 MB.");

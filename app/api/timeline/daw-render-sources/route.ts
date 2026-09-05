@@ -40,6 +40,41 @@ function failure(error: unknown) {
     { status: error instanceof ApiError ? error.status : 400, headers: { "Cache-Control": "no-store" } },
   );
 }
+const receiptSuffix = ".source.json";
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await authorize(request);
+    const sessionId = request.nextUrl.searchParams.get("sessionId")?.trim() ?? "";
+    if (!sessionId) throw new ApiError("sessionId is required.", 400);
+    const session = await createTimelineDawWorkspaceServer(user.id, user.token).get(user.id, sessionId);
+    if (!session) throw new ApiError("DAW session was not found.", 404);
+    const prefix = `${user.id}/${sessionId}`;
+    const { data: objects, error } = await user.client.storage
+      .from("timeline-daw-render-sources")
+      .list(prefix, { limit: 100, sortBy: { column: "updated_at", order: "desc" } });
+    if (error) throw new ApiError(`Private upload receipts could not be loaded: ${error.message}`, 500);
+    const uploads = [];
+    for (const object of objects ?? []) {
+      if (!object.name.endsWith(receiptSuffix)) continue;
+      const { data, error: downloadError } = await user.client.storage
+        .from("timeline-daw-render-sources")
+        .download(`${prefix}/${object.name}`);
+      if (downloadError || !data) continue;
+      try {
+        const receipt = JSON.parse(await data.text()) as {
+          source?: { id?: unknown; name?: unknown; uri?: unknown; byteLength?: unknown; checksum?: unknown };
+          audio?: { sampleRate?: unknown; channelCount?: unknown; frameCount?: unknown; durationSeconds?: unknown };
+        };
+        const source = receipt.source;
+        const audio = receipt.audio;
+        if (!source || !audio || typeof source.id !== "string" || typeof source.name !== "string" || typeof source.uri !== "string" || !source.uri.startsWith(`supabase://timeline-daw-render-sources/${prefix}/`) || typeof source.byteLength !== "number" || typeof source.checksum !== "string" || !/^sha256:[a-f0-9]{64}$/.test(source.checksum) || typeof audio.sampleRate !== "number" || typeof audio.channelCount !== "number" || typeof audio.frameCount !== "number" || typeof audio.durationSeconds !== "number") continue;
+        uploads.push({ source, audio });
+      } catch { /* Ignore corrupt or legacy receipt objects. */ }
+    }
+    return NextResponse.json({ uploads }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) { return failure(error); }
+}
 export async function POST(request: NextRequest) {
   try {
     const user = await authorize(request);
@@ -74,7 +109,7 @@ export async function POST(request: NextRequest) {
         sourceArtifactId: name, sourceFingerprint: checksum, bytes, fileName: name, decodedBy: user.id,
       });
       if (!decoded.accepted) throw new ApiError(decoded.issues[0]?.message ?? "WAV source is invalid.", 400);
-      return NextResponse.json({
+      const upload = {
         source: {
           id: `timeline-daw-source-${checksum.slice(7, 23)}`,
           ownerId: user.id,
@@ -85,7 +120,14 @@ export async function POST(request: NextRequest) {
           checksum,
         },
         audio: decoded.evidence,
-      }, { status: 201, headers: { "Cache-Control": "no-store" } });
+      };
+      const { error: receiptError } = await user.client.storage.from("timeline-daw-render-sources").upload(
+        `${path}${receiptSuffix}`,
+        new Blob([JSON.stringify(upload)], { type: "application/json" }),
+        { contentType: "application/json", cacheControl: "private, max-age=0, no-store", upsert: true },
+      );
+      if (receiptError) throw new ApiError(`Private upload receipt could not be saved: ${receiptError.message}`, 500);
+      return NextResponse.json(upload, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
     const form = await request.formData();
     const sessionId = typeof form.get("sessionId") === "string"

@@ -22,4 +22,10 @@ describe("DAW export upload recovery", () => {
     expect(failure).toBeGreaterThan(clearFiles);
     expect(source).toContain("Retry Private Audio Upload");
   });
+
+  it("restores completed private uploads from owner-only server receipts", () => {
+    expect(source).toContain("loadDawRenderSources(session.id)");
+    expect(source).toContain("completed private upload");
+    expect(source).toContain("restored for Step 8");
+  });
 });
