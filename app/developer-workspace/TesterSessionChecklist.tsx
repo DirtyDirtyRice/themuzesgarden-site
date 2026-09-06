@@ -33,8 +33,11 @@ export default function TesterSessionChecklist() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setCompleted(readStoredSteps());
-    setLoaded(true);
+    const timer = window.setTimeout(() => {
+      setCompleted(readStoredSteps());
+      setLoaded(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export default function TesterSessionChecklist() {
           <p className="mt-1 text-sm text-white/55">Progress is saved in this browser so a tester can leave and safely resume.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/developer-workspace/guide" className="rounded-lg border border-emerald-300/35 px-4 py-2 text-sm font-black text-emerald-100">Open guide</Link>
+          <Link href="/developer-workspace/docs" className="rounded-lg border border-emerald-300/35 px-4 py-2 text-sm font-black text-emerald-100">Open documentation</Link>
           <button type="button" onClick={() => setCompleted([])} disabled={completed.length === 0} className="rounded-lg border border-white/15 px-4 py-2 text-sm font-bold text-white/65 disabled:opacity-35">Reset</button>
         </div>
       </div>

@@ -31,7 +31,8 @@ export default function StandaloneDeveloperWorkspaceLayout({ children }: { child
           <div className="flex items-center gap-2">
             <WorkspaceConnectionStatus />
             <InstallWorkspaceButton />
-            <Link href="/developer-workspace/guide" className="rounded-lg border border-violet-300/25 px-3 py-2 text-xs font-bold text-violet-100 hover:border-violet-300/50">Tester guide</Link>
+            <Link href="/developer-workspace/docs" className="rounded-lg border border-violet-300/25 px-3 py-2 text-xs font-bold text-violet-100 hover:border-violet-300/50">Documentation</Link>
+            <Link href="/developer-workspace/beta-feedback" className="rounded-lg border border-amber-300/25 px-3 py-2 text-xs font-bold text-amber-100 hover:border-amber-300/50">Beta feedback</Link>
             <a href="/api/developer-workspace/support-report" download className="rounded-lg border border-cyan-300/25 px-3 py-2 text-xs font-bold text-cyan-100 hover:border-cyan-300/50">Download support report</a>
             <Link href="/tools/developer-workspace" className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 hover:border-cyan-300/40 hover:text-white">Host-site view</Link>
           </div>
