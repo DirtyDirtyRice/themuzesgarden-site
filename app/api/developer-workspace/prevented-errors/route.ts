@@ -5,17 +5,11 @@ import {
   summarizePreventedErrors,
   type PreventedErrorEvent,
 } from "@/lib/developer-workspace/preventedErrorLedger";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 import { readAiDriftReport } from "@/lib/developer-workspace/aiDriftReport";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function localDevelopment(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  return process.env.NODE_ENV !== "production" &&
-    (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]");
-}
 
 function requestedLimit(request: NextRequest): number {
   const value = Number(request.nextUrl.searchParams.get("limit") ?? "200");
@@ -39,7 +33,7 @@ function searchable(event: PreventedErrorEvent): string {
 }
 
 export async function GET(request: NextRequest) {
-  if (!localDevelopment(request)) {
+  if (!isLocalDevelopmentWorkspaceRequest(request)) {
     return NextResponse.json(
       { error: "Prevented-error evidence is available only from the local development server." },
       { status: 403 }

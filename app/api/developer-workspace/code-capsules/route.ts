@@ -9,15 +9,10 @@ import {
   storeCodeCapsuleFragment,
   storeNewCodeCapsule,
 } from "@/lib/developer-workspace/codeCapsuleStore";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function localDevelopment(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  return process.env.NODE_ENV !== "production" && (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]");
-}
 
 function stringValue(value: unknown, name: string, allowEmpty = false): string {
   if (typeof value !== "string" || (!allowEmpty && !value.trim())) throw new Error(`${name} is required.`);
@@ -69,7 +64,7 @@ function createInput(value: unknown): CreateCodeCapsuleInput {
 }
 
 export async function GET(request: NextRequest) {
-  if (!localDevelopment(request)) return NextResponse.json({ error: "Code capsules are available only from the local development server." }, { status: 403 });
+  if (!isLocalDevelopmentWorkspaceRequest(request)) return NextResponse.json({ error: "Code capsules are available only from the local development server." }, { status: 403 });
   try {
     const context = await resolveWorkspaceRequestContext(request);
     const id = request.nextUrl.searchParams.get("id")?.trim();
@@ -82,7 +77,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!localDevelopment(request)) return NextResponse.json({ error: "Code capsules are available only from the local development server." }, { status: 403 });
+  if (!isLocalDevelopmentWorkspaceRequest(request)) return NextResponse.json({ error: "Code capsules are available only from the local development server." }, { status: 403 });
   try {
     const context = await resolveWorkspaceRequestContext(request);
     const payload = await request.json() as Record<string, unknown>;

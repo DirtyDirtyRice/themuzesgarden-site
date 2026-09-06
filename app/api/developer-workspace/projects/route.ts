@@ -7,16 +7,10 @@ import {
 } from "@/lib/developer-workspace/workspaceProjectRegistry";
 import { createWorkspaceTypeScriptProject } from "@/lib/developer-workspace/workspaceProjectScaffolder";
 import { establishWorkspaceAdoptionBaseline } from "@/lib/developer-workspace/workspaceAdoptionBaseline";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function localDevelopment(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  return process.env.NODE_ENV !== "production" &&
-    (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]");
-}
 
 function requiredString(value: unknown, label: string): string {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} is required.`);
@@ -24,7 +18,7 @@ function requiredString(value: unknown, label: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  if (!localDevelopment(request)) {
+  if (!isLocalDevelopmentWorkspaceRequest(request)) {
     return NextResponse.json(
       { error: "Workspace projects are available only from the local development server." },
       { status: 403 }
@@ -53,7 +47,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!localDevelopment(request)) {
+  if (!isLocalDevelopmentWorkspaceRequest(request)) {
     return NextResponse.json(
       { error: "Workspace project changes are available only from the local development server." },
       { status: 403 }

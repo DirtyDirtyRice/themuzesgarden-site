@@ -4,18 +4,12 @@ import { triageBuildDiagnostics } from "@/lib/developer-workspace/diagnosticTria
 import { NextRequest, NextResponse } from "next/server";
 
 import { enqueueVerification } from "@/lib/developer-workspace/verificationCoordinator";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type BuildAction = "typecheck" | "build";
-
-function isLocalDevelopmentRequest(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  const localHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
-  return process.env.NODE_ENV !== "production" && localHost;
-}
 
 function readAction(value: unknown): BuildAction {
   if (
@@ -30,7 +24,7 @@ function readAction(value: unknown): BuildAction {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isLocalDevelopmentRequest(request)) {
+  if (!isLocalDevelopmentWorkspaceRequest(request)) {
     return NextResponse.json(
       { error: "Build checks are available only from the local development server." },
       { status: 403 }

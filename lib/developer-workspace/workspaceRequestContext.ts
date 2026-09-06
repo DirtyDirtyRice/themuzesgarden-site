@@ -17,7 +17,8 @@ export type WorkspaceRequestContext = {
 
 export function isLocalDevelopmentWorkspaceRequest(request: NextRequest): boolean {
   const hostname = request.nextUrl.hostname.toLowerCase();
-  return process.env.NODE_ENV !== "production" &&
+  const localRuntime = process.env.NODE_ENV !== "production" || process.env.DEVELOPER_WORKSPACE_LOCAL_RUNTIME === "1";
+  return localRuntime &&
     (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]");
 }
 

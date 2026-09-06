@@ -13,7 +13,7 @@ The detailed, numbered scripts are available inside the app at `/developer-works
 
 ## Installation model
 
-The beta is a local-first installable web application. Run this repository on the coder's computer, open `/developer-workspace` in Chrome, and use Chrome's **Install app** option when offered. Filesystem and mutation APIs intentionally reject non-local production access.
+The beta is distributed as a self-contained Windows folder. Run `npm run workspace:package` on the release machine, give the resulting `developer-workspace-beta` folder to the tester, and have the tester double-click **Start Developer Workspace.cmd**. The package carries its own Node runtime, chooses an available loopback port, and opens Chrome in app mode. Filesystem and mutation APIs continue to reject non-loopback access.
 
 ## Verification baseline
 

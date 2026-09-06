@@ -5,20 +5,15 @@ import { readRecentGitEvents, searchGitEvents } from "@/lib/developer-workspace/
 import { buildSymbolIndex } from "@/lib/developer-workspace/symbolIndex";
 import { buildRelationshipIndex } from "@/lib/developer-workspace/relationshipIndex";
 import { updateRelationshipEventLedger } from "@/lib/developer-workspace/relationshipEventLedger";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 let activeUpdate = false;
 
-function local(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
-}
-
 export async function GET(request: NextRequest) {
-  if (!local(request)) return NextResponse.json({ error: "Code events are available only in the local workspace." }, { status: 403 });
+  if (!isLocalDevelopmentWorkspaceRequest(request)) return NextResponse.json({ error: "Code events are available only in the local workspace." }, { status: 403 });
   try {
     const context = await resolveWorkspaceRequestContext(request);
     const requested = Number(request.nextUrl.searchParams.get("limit") ?? "200");
@@ -32,7 +27,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!local(request) || process.env.NODE_ENV === "production") return NextResponse.json({ error: "Ledger updates are available only from the local development server." }, { status: 403 });
+  if (!isLocalDevelopmentWorkspaceRequest(request)) return NextResponse.json({ error: "Ledger updates are available only from the local development server." }, { status: 403 });
   if (activeUpdate) return NextResponse.json({ error: "The Code Event Ledger is already updating." }, { status: 409 });
   activeUpdate = true;
   try {

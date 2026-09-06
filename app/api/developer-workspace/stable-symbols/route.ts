@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { readStableSymbolRegistry } from "@/lib/developer-workspace/stableSymbolIdentityStore";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function local(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
-}
 
 function limitFrom(request: NextRequest): number {
   const limit = Number(request.nextUrl.searchParams.get("limit") ?? "100");
@@ -20,7 +15,7 @@ function limitFrom(request: NextRequest): number {
 }
 
 export async function GET(request: NextRequest) {
-  if (!local(request)) {
+  if (!isLocalDevelopmentWorkspaceRequest(request)) {
     return NextResponse.json(
       { error: "Stable symbol identities are available only in the local workspace." },
       { status: 403 }

@@ -4,15 +4,10 @@ import type { BuildDiagnostic } from "@/lib/developer-workspace/buildDiagnostics
 import { buildRelationshipIndex } from "@/lib/developer-workspace/relationshipIndex";
 import { buildSymbolIndex } from "@/lib/developer-workspace/symbolIndex";
 import { investigateTemporalErrorOrigin } from "@/lib/developer-workspace/temporalErrorOrigin";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function local(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  return process.env.NODE_ENV !== "production" && (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]");
-}
 
 function diagnostic(value: unknown): BuildDiagnostic {
   if (typeof value !== "object" || value === null) throw new Error("A build diagnostic is required.");
@@ -32,7 +27,7 @@ function diagnostic(value: unknown): BuildDiagnostic {
 }
 
 export async function POST(request: NextRequest) {
-  if (!local(request)) return NextResponse.json({ error: "Temporal error tracing is available only in the local workspace." }, { status: 403 });
+  if (!isLocalDevelopmentWorkspaceRequest(request)) return NextResponse.json({ error: "Temporal error tracing is available only in the local workspace." }, { status: 403 });
   try {
     const payload = await request.json() as { diagnostic?: unknown };
     const selected = diagnostic(payload.diagnostic);

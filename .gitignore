@@ -19,6 +19,7 @@
 
 # production
 /build
+/developer-workspace-beta/
 
 # misc
 .DS_Store

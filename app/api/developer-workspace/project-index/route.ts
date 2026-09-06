@@ -4,7 +4,7 @@ import {
   buildProjectIndex,
   searchProjectIndex,
 } from "@/lib/developer-workspace/projectIndex";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,10 +24,7 @@ function readLimit(request: NextRequest): number {
 }
 
 export async function GET(request: NextRequest) {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  const local = process.env.NODE_ENV !== "production" &&
-    (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]");
-  if (!local) {
+  if (!isLocalDevelopmentWorkspaceRequest(request)) {
     return NextResponse.json(
       { error: "Project indexing is available only from the local development server." },
       { status: 403 }

@@ -98,7 +98,7 @@ async function start() {
     : ["run", "dev", "--", "--hostname", "127.0.0.1", "--port", String(port)];
   const child = spawn(command, commandArgs, {
     cwd: root,
-    env: { ...process.env, DEVELOPER_WORKSPACE_LAUNCHER: "1" },
+    env: { ...process.env, DEVELOPER_WORKSPACE_LAUNCHER: "1", DEVELOPER_WORKSPACE_LOCAL_RUNTIME: "1" },
     stdio: "inherit",
     windowsHide: true,
   });

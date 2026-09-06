@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { applySafePatch, previewSafePatch, type SafePatchProposal } from "@/lib/developer-workspace/safePatchExecutor";
-import { resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
+import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 let activePatch = false;
-
-function isLocalDevelopmentRequest(request: NextRequest): boolean {
-  const hostname = request.nextUrl.hostname.toLowerCase();
-  return process.env.NODE_ENV !== "production" && (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]");
-}
 
 function readProposal(value: unknown): SafePatchProposal {
   if (typeof value !== "object" || value === null) throw new Error("A safe patch proposal is required.");
@@ -21,7 +16,7 @@ function readProposal(value: unknown): SafePatchProposal {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isLocalDevelopmentRequest(request)) return NextResponse.json({ error: "Safe patches are available only from the local development server." }, { status: 403 });
+  if (!isLocalDevelopmentWorkspaceRequest(request)) return NextResponse.json({ error: "Safe patches are available only from the local development server." }, { status: 403 });
   if (activePatch) return NextResponse.json({ error: "Another safe patch is currently being verified." }, { status: 409 });
   try {
     const context = await resolveWorkspaceRequestContext(request);
