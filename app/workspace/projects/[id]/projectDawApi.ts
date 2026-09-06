@@ -1,6 +1,10 @@
 ﻿import { prepareTimelineDawAudioImport } from "../../../../lib/timeline/TimelineDawAudioImportPolicy";
 import { requireProjectSupabase } from "./projectSupabase";
-import { withTimelineDawUploadDeadline } from "../../../../lib/timeline/TimelineDawUploadDeadline";
+import {
+  TIMELINE_DAW_LARGE_UPLOAD_DEADLINE_MS,
+  withTimelineDawUploadDeadline,
+} from "../../../../lib/timeline/TimelineDawUploadDeadline";
+import { Upload as TusUpload } from "tus-js-client";
 import type { DawSession, DawSessionAction, DawSnapshot } from "./projectDawTypes";
 import type {
   TimelineOfflineRenderJob,
@@ -199,29 +203,48 @@ export function loadDawRenderSources(sessionId: string): Promise<{ uploads: DawR
   return request(`/api/timeline/daw-render-sources?sessionId=${encodeURIComponent(sessionId)}`);
 }
 
-export async function uploadDawRenderSource(sessionId: string, file: File): Promise<DawRenderSourceUpload> {
-  return withTimelineDawUploadDeadline(uploadDawRenderSourceWithoutDeadline(sessionId, file));
+export async function uploadDawRenderSource(
+  sessionId: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<DawRenderSourceUpload> {
+  const timeoutMs = file.size > 6 * 1024 * 1024 ? TIMELINE_DAW_LARGE_UPLOAD_DEADLINE_MS : undefined;
+  return withTimelineDawUploadDeadline(uploadDawRenderSourceWithoutDeadline(sessionId, file, onProgress), timeoutMs);
 }
 
-async function uploadDawRenderSourceWithoutDeadline(sessionId: string, file: File): Promise<DawRenderSourceUpload> {
+async function uploadDawRenderSourceWithoutDeadline(
+  sessionId: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<DawRenderSourceUpload> {
   const prepared = await prepareTimelineDawAudioImport(file);
   if (prepared.file.size <= 0 || prepared.file.size > 268_435_456) {
     throw new Error("WAV source size must be from 1 byte to 256 MB.");
   }
   const client = requireProjectSupabase();
-  const { data: auth } = await client.auth.getUser();
+  const [{ data: auth }, { data: sessionData }] = await Promise.all([
+    client.auth.getUser(),
+    client.auth.getSession(),
+  ]);
   if (!auth.user?.id) throw new Error("Sign in to upload private DAW audio.");
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) throw new Error("Your private upload session expired. Sign in again and retry.");
   const digest = await crypto.subtle.digest("SHA-256", await prepared.file.arrayBuffer());
   const checksum = `sha256:${Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, "0")).join("")}`;
   const safeName = prepared.file.name.trim().replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-180);
   const sourceId = `timeline-daw-source-${checksum.slice(7, 23)}`;
   const path = `${auth.user.id}/${sessionId}/${sourceId}-${safeName}`;
-  const { error: uploadError } = await client.storage.from("timeline-daw-render-sources").upload(path, prepared.file, {
-    contentType: "audio/wav",
-    cacheControl: "private, max-age=0, no-store",
-    upsert: true,
-  });
-  if (uploadError) throw new Error(`Private WAV upload failed: ${uploadError.message}`);
+  if (prepared.file.size > 6 * 1024 * 1024) {
+    await uploadLargeDawRenderSource(path, prepared.file, accessToken, onProgress);
+  } else {
+    const { error: uploadError } = await client.storage.from("timeline-daw-render-sources").upload(path, prepared.file, {
+      contentType: "audio/wav",
+      cacheControl: "private, max-age=0, no-store",
+      upsert: true,
+    });
+    if (uploadError) throw new Error(`Private WAV upload failed: ${uploadError.message}`);
+    onProgress?.(100);
+  }
   try {
     return await request("/api/timeline/daw-render-sources", {
       method: "POST",
@@ -238,6 +261,37 @@ async function uploadDawRenderSourceWithoutDeadline(sessionId: string, file: Fil
     await client.storage.from("timeline-daw-render-sources").remove([path]);
     throw cause;
   }
+}
+
+function uploadLargeDawRenderSource(
+  path: string,
+  file: File,
+  accessToken: string,
+  onProgress?: (percent: number) => void,
+) {
+  const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!projectUrl) return Promise.reject(new Error("NEXT_PUBLIC_SUPABASE_URL is not configured."));
+  return new Promise<void>((resolve, reject) => {
+    const upload = new TusUpload(file, {
+      endpoint: `${projectUrl}/storage/v1/upload/resumable`,
+      headers: { authorization: `Bearer ${accessToken}`, "x-upsert": "true" },
+      metadata: {
+        bucketName: "timeline-daw-render-sources",
+        objectName: path,
+        contentType: "audio/wav",
+        cacheControl: "private, max-age=0, no-store",
+      },
+      chunkSize: 6 * 1024 * 1024,
+      retryDelays: [0, 1_000, 3_000, 5_000, 10_000],
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      storeFingerprintForResuming: false,
+      onProgress: (uploaded, total) => onProgress?.(total > 0 ? Math.min(100, Math.round(uploaded / total * 100)) : 0),
+      onError: (error) => reject(new Error(`Private WAV upload failed: ${error.message}`)),
+      onSuccess: () => { onProgress?.(100); resolve(); },
+    });
+    upload.start();
+  });
 }
 
 export type DawRecordingTake = {

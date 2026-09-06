@@ -45,6 +45,7 @@ export default function ProjectDawExportWorkspace({
   const [sources, setSources] = useState("");
   const [sourceFiles, setSourceFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [deliveryUrls, setDeliveryUrls] = useState<Record<string, string>>({});
   const [jobs, setJobs] = useState<TimelineOfflineRenderJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<TimelineOfflineRenderJob | null>(null);
@@ -123,13 +124,14 @@ export default function ProjectDawExportWorkspace({
   async function uploadSources() {
     if (!sourceFiles.length) return;
     setUploading(true);
+    setUploadProgress(0);
     setError(null);
     setNotice(null);
     try { sessionStorage.setItem(uploadAttemptKey, "pending"); } catch {}
     try {
       const uploaded = [];
       for (const file of sourceFiles) {
-        uploaded.push(await uploadDawRenderSource(session.id, file));
+        uploaded.push(await uploadDawRenderSource(session.id, file, setUploadProgress));
       }
       const sampleRates = new Set(uploaded.map((item) => item.audio.sampleRate));
       const channelCounts = new Set(uploaded.map((item) => item.audio.channelCount));
@@ -148,6 +150,7 @@ export default function ProjectDawExportWorkspace({
       try { sessionStorage.removeItem(uploadAttemptKey); } catch {}
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }
 
@@ -344,7 +347,7 @@ export default function ProjectDawExportWorkspace({
         <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,.mp3,audio/wav,audio/mpeg" onChange={(event) => setSourceFiles(Array.from(event.target.files ?? []))} aria-label="WAV or MP3 render source files" />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? "Uploading…" : error && sourceFiles.length ? "Retry Private Audio Upload" : "Upload Private Audio Sources"}</button>
+        <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? `Uploading ${uploadProgress}%` : error && sourceFiles.length ? "Retry Private Audio Upload" : "Upload Private Audio Sources"}</button>
         <button type="button" className={button} disabled={busy || loading || !sources} onClick={() => void prepare()}>{busy ? "Workingâ€¦" : "Validate & Save Render"}</button>
         <button type="button" className={button} disabled={busy || selectedJob?.state !== "validated" || selectedJob.format !== "wav" || exportPreflight?.safe === false} onClick={() => selectedJob && void execute(selectedJob)}>{selectedJob?.target === "stem" ? "Render Stem ZIP" : "Render PCM WAV"}</button>
         <button type="button" className={button} disabled={selectedJob?.state !== "validated"} onClick={() => downloadManifest(selectedJob)}>Download Selected Manifest</button>
