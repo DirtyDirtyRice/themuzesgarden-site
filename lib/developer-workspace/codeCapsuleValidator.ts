@@ -15,6 +15,10 @@ import {
 } from "./codeCapsule";
 import { updateStoredCodeCapsule } from "./codeCapsuleStore";
 import { evaluateCompletenessContract } from "./completenessContract";
+import {
+  evaluateGeneratedDeclarationUsage,
+  type GeneratedDeclarationUsageReport,
+} from "./generatedDeclarationUsageGate";
 import { evaluateImportAcceptance } from "./importAcceptanceGate";
 import { recordPreventedAttempt, recordPreventionOutcome } from "./preventedErrorLedger";
 import { previewSafePatch, type SafePatchProposal } from "./safePatchExecutor";
@@ -118,7 +122,14 @@ function readTsconfig(root: string): ts.ParsedCommandLine {
   return parsed;
 }
 
-function virtualProjectDiagnostics(root: string, targetFile: string, source: string): string[] {
+function virtualProjectValidation(
+  root: string,
+  targetFile: string,
+  source: string,
+  insertedStartLine: number,
+  insertedEndLine: number,
+  reservations: CodeCapsule["intentionalReservations"]
+): { diagnostics: string[]; usage: GeneratedDeclarationUsageReport } {
   const parsed = readTsconfig(root);
   const targetKey = path.resolve(targetFile).toLowerCase();
   const options: ts.CompilerOptions = { ...parsed.options, noEmit: true, incremental: false, composite: false };
@@ -138,11 +149,19 @@ function virtualProjectDiagnostics(root: string, targetFile: string, source: str
     projectReferences: parsed.projectReferences,
     host,
   });
-  return ts
+  const diagnostics = ts
     .getPreEmitDiagnostics(program)
     .filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)
     .slice(0, 200)
     .map((diagnostic) => diagnosticText(diagnostic, root));
+  const usage = evaluateGeneratedDeclarationUsage(
+    program,
+    targetFile,
+    insertedStartLine,
+    insertedEndLine,
+    reservations ?? []
+  );
+  return { diagnostics, usage };
 }
 
 export async function validateStoredCodeCapsule(
@@ -201,10 +220,20 @@ export async function validateStoredCodeCapsule(
       ...importDiagnostics,
       ...completenessDiagnostics,
     ];
-    const projectDiagnostics = gateDiagnostics.length
-      ? []
-      : virtualProjectDiagnostics(rootPath, absoluteTarget, candidate);
-    finalDiagnostics = [...new Set([...gateDiagnostics, ...projectDiagnostics])];
+    const replacementLineCount = assembledCodeCapsuleText(working).split(/\r?\n/).length;
+    const virtualValidation = gateDiagnostics.length
+      ? null
+      : virtualProjectValidation(
+          rootPath,
+          absoluteTarget,
+          candidate,
+          working.target.startLine,
+          working.target.startLine + replacementLineCount - 1,
+          working.intentionalReservations ?? []
+        );
+    const projectDiagnostics = virtualValidation?.diagnostics ?? [];
+    const declarationDiagnostics = virtualValidation?.usage.diagnostics ?? [];
+    finalDiagnostics = [...new Set([...gateDiagnostics, ...projectDiagnostics, ...declarationDiagnostics])];
     const passed = finalDiagnostics.length === 0;
     const validatedAt = new Date().toISOString();
     let preventionAttemptId = working.preventionAttemptId ?? null;
@@ -216,10 +245,16 @@ export async function validateStoredCodeCapsule(
         candidateSource: candidate,
         importAcceptance,
         completeness,
-        contractFailures: requirementDiagnostics.map((message) => ({
-          code: "CAPSULE_REQUIREMENT_FAILED",
-          message,
-        })),
+        contractFailures: [
+          ...requirementDiagnostics.map((message) => ({
+            code: "CAPSULE_REQUIREMENT_FAILED",
+            message,
+          })),
+          ...declarationDiagnostics.map((message) => ({
+            code: "UNREALIZED_DECLARATION",
+            message,
+          })),
+        ],
         compilerDiagnostics: [...syntaxDiagnostics, ...projectDiagnostics].map((message) => ({ message })),
         note: "Candidate remained inactive because one or more acceptance gates failed.",
         occurredAt: validatedAt,
@@ -245,7 +280,8 @@ export async function validateStoredCodeCapsule(
       requirementsPassed: requirementDiagnostics.length === 0,
       importAcceptancePassed: importAcceptance.accepted,
       completenessPassed: completeness?.complete ?? true,
-      projectTypecheckPassed: passed,
+      projectTypecheckPassed: projectDiagnostics.length === 0 && syntaxDiagnostics.length === 0,
+      declarationUsagePassed: virtualValidation?.usage.passed ?? false,
       diagnostics: finalDiagnostics,
       confirmationTokenHash: confirmationToken ? hash(confirmationToken) : null,
       confirmationExpiresAt: confirmationToken
@@ -254,7 +290,7 @@ export async function validateStoredCodeCapsule(
     };
     working = { ...working, version: working.version + 1, validation, preventionAttemptId, updatedAt: validatedAt };
     if (passed) {
-      return transitionCodeCapsule(working, "validated", "Virtual project typecheck and all capsule requirements passed.", "validator", validatedAt);
+      return transitionCodeCapsule(working, "validated", "Virtual project typecheck, declaration usage, and all capsule requirements passed.", "validator", validatedAt);
     }
     const incomplete = transitionCodeCapsule(working, "incomplete", "Validation failed; inactive fragments remain isolated from the live source.", "validator", validatedAt);
     return { ...incomplete, version: incomplete.version + 1, validation, updatedAt: validatedAt };

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { applySafePatch, previewSafePatch, type SafePatchProposal } from "@/lib/developer-workspace/safePatchExecutor";
+import { newlyIntroducedDeclarationKeys } from "@/lib/developer-workspace/generatedDeclarationUsageGate";
 import { isLocalDevelopmentWorkspaceRequest, resolveWorkspaceRequestContext } from "@/lib/developer-workspace/workspaceRequestContext";
 
 export const runtime = "nodejs";
@@ -22,6 +23,16 @@ export async function POST(request: NextRequest) {
     const context = await resolveWorkspaceRequestContext(request);
     const payload = await request.json() as { action?: unknown; proposal?: unknown; expectedHash?: unknown; confirmed?: unknown };
     const proposal = readProposal(payload.proposal);
+    const generatedDeclarations = newlyIntroducedDeclarationKeys(
+      proposal.expectedLines.join("\n"),
+      proposal.replacementLines.join("\n"),
+      proposal.file
+    );
+    if (generatedDeclarations.length) {
+      throw new Error(
+        `Safe Patch cannot directly activate newly generated declarations (${generatedDeclarations.join(", ")}). Place this change in an inactive code capsule so usage validation and human approval cannot be bypassed.`
+      );
+    }
     if (payload.action === "preview") return NextResponse.json({ ...await previewSafePatch(proposal, context.root), project: context.project });
     if (payload.action !== "apply") throw new Error("Safe patch action must be preview or apply.");
     if (payload.confirmed !== true) throw new Error("Explicit patch confirmation is required.");

@@ -17,9 +17,13 @@ The beta is distributed as a self-contained Windows folder. Run `npm run workspa
 
 ## Verification baseline
 
-- Dedicated Developer Workspace suite: 10 test files and 25 automated checks before the beta-documentation additions.
+- Dedicated Developer Workspace suite: 12 test files and 43 automated checks, including the generated-declaration usage gate and direct Safe Patch bypass protection.
 - Full TypeScript verification and production build passed on September 6, 2026.
 - The in-app beta handoff test additionally protects the two required scenarios and the local-only feedback boundary.
+
+## Human-controlled declaration threshold
+
+Every newly generated type, interface, enum, class, function, or constant stays unrealized inside its inactive capsule until validation proves a real usage relationship. If an unused declaration is deliberately being kept for future work, a human developer must approve an **intentionally reserved** designation with the exact declaration name, kind, reason, and timestamp. AI cannot grant this exception, and reservation approval does not replace the separate human activation confirmation.
 
 ## Feedback package
 

@@ -3,7 +3,11 @@ import path from "node:path";
 import process from "node:process";
 
 const root = path.resolve(import.meta.dirname, "..");
-const output = path.join(root, "developer-workspace-beta");
+const outputName = process.argv[2] || "developer-workspace-beta";
+if (!/^[a-zA-Z0-9._-]+$/.test(outputName) || outputName === "." || outputName === "..") {
+  throw new Error("The package output name must be a simple folder name.");
+}
+const output = path.join(root, outputName);
 const standalone = path.join(root, ".next", "standalone");
 
 const launcher = `const { accessSync } = require("node:fs");

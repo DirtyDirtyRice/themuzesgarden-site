@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import type { CodeCapsuleRequirement, CreateCodeCapsuleInput } from "@/lib/developer-workspace/codeCapsule";
+import type { CodeCapsuleRequirement, CreateCodeCapsuleInput, GeneratedDeclarationKind } from "@/lib/developer-workspace/codeCapsule";
 import { activateStoredCodeCapsule } from "@/lib/developer-workspace/codeCapsuleActivator";
 import { validateStoredCodeCapsule } from "@/lib/developer-workspace/codeCapsuleValidator";
 import {
   listCodeCapsules,
   readCodeCapsule,
+  storeIntentionalDeclarationReservation,
   storeCodeCapsuleFragment,
   storeNewCodeCapsule,
 } from "@/lib/developer-workspace/codeCapsuleStore";
@@ -112,7 +113,23 @@ export async function POST(request: NextRequest) {
         )
       );
     }
-    throw new Error("Capsule action must be create, add-fragment, validate, or activate.");
+    if (payload.action === "reserve-declaration") {
+      const declarationKind = stringValue(payload.declarationKind, "Declaration kind") as GeneratedDeclarationKind;
+      if (!new Set<GeneratedDeclarationKind>(["type", "interface", "enum", "class", "function", "constant"]).has(declarationKind)) {
+        throw new Error("Declaration kind is unsupported.");
+      }
+      return NextResponse.json(
+        await storeIntentionalDeclarationReservation(
+          stringValue(payload.id, "Capsule id"),
+          stringValue(payload.declarationName, "Declaration name"),
+          declarationKind,
+          stringValue(payload.reason, "Reservation reason"),
+          integerValue(payload.expectedVersion, "expectedVersion"),
+          context.root
+        )
+      );
+    }
+    throw new Error("Capsule action must be create, add-fragment, reserve-declaration, validate, or activate.");
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Code capsule request failed." }, { status: 400 });
   }

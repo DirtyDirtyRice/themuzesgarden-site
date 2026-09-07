@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   appendCodeCapsuleFragment,
+  approveIntentionalDeclarationReservation,
   assembledCodeCapsuleText,
   createCodeCapsule,
   transitionCodeCapsule,
@@ -94,5 +95,26 @@ describe("code capsule lifecycle", () => {
     expect(() => transitionCodeCapsule(capsule(), "active", "skip checks", "activator")).toThrow(
       "cannot transition from draft to active"
     );
+  });
+
+  it("records a timestamped human approval for an intentionally reserved declaration", () => {
+    const incomplete = appendCodeCapsuleFragment(capsule(), "export type FutureRuntime = true;", "");
+    const reserved = approveIntentionalDeclarationReservation(
+      incomplete,
+      "FutureRuntime",
+      "type",
+      "Public extension point approved for the next milestone.",
+      "2026-07-20T02:00:00.000Z"
+    );
+
+    expect(reserved.intentionalReservations).toEqual([{
+      declarationName: "FutureRuntime",
+      declarationKind: "type",
+      reason: "Public extension point approved for the next milestone.",
+      approvedBy: "developer",
+      approvedAt: "2026-07-20T02:00:00.000Z",
+    }]);
+    expect(reserved.transitions.at(-1)?.actor).toBe("developer");
+    expect(reserved.validation).toBeNull();
   });
 });

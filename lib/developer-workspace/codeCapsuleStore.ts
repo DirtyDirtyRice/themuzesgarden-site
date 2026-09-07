@@ -6,9 +6,11 @@ import path from "node:path";
 
 import {
   appendCodeCapsuleFragment,
+  approveIntentionalDeclarationReservation,
   createCodeCapsule,
   type CodeCapsule,
   type CreateCodeCapsuleInput,
+  type GeneratedDeclarationKind,
 } from "./codeCapsule";
 
 const directoryName = "code-map-reports/code-capsules";
@@ -31,6 +33,22 @@ async function withCapsuleLock<T>(id: string, work: () => Promise<T>): Promise<T
     release();
     if (locks.get(id) === queued) locks.delete(id);
   }
+}
+
+export async function storeIntentionalDeclarationReservation(
+  id: string,
+  declarationName: string,
+  declarationKind: GeneratedDeclarationKind,
+  reason: string,
+  expectedVersion: number,
+  root = process.cwd()
+): Promise<CodeCapsule> {
+  return updateStoredCodeCapsule(
+    id,
+    expectedVersion,
+    (capsule) => approveIntentionalDeclarationReservation(capsule, declarationName, declarationKind, reason),
+    root
+  );
 }
 
 function directory(root: string): string {

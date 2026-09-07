@@ -21,6 +21,16 @@ export type CodeCapsuleRequirement = {
   description: string;
 };
 
+export type GeneratedDeclarationKind = "type" | "interface" | "enum" | "class" | "function" | "constant";
+
+export type IntentionalDeclarationReservation = {
+  declarationName: string;
+  declarationKind: GeneratedDeclarationKind;
+  reason: string;
+  approvedBy: "developer";
+  approvedAt: string;
+};
+
 export type CodeCapsuleFragment = {
   id: string;
   order: number;
@@ -47,6 +57,7 @@ export type CodeCapsuleValidation = {
   importAcceptancePassed?: boolean;
   completenessPassed?: boolean;
   projectTypecheckPassed: boolean;
+  declarationUsagePassed?: boolean;
   diagnostics: string[];
   confirmationTokenHash: string | null;
   confirmationExpiresAt: string | null;
@@ -70,6 +81,7 @@ export type CodeCapsule = {
   transitions: CodeCapsuleTransition[];
   validation: CodeCapsuleValidation | null;
   preventionAttemptId: string | null;
+  intentionalReservations: IntentionalDeclarationReservation[];
   createdAt: string;
   updatedAt: string;
   activatedAt: string | null;
@@ -149,9 +161,49 @@ export function createCodeCapsule(
     transitions: [transitionEntry(null, "draft", occurredAt, "Code capsule created outside the active source tree.", "developer")],
     validation: null,
     preventionAttemptId: null,
+    intentionalReservations: [],
     createdAt: occurredAt,
     updatedAt: occurredAt,
     activatedAt: null,
+  };
+}
+
+export function approveIntentionalDeclarationReservation(
+  capsule: CodeCapsule,
+  declarationName: string,
+  declarationKind: GeneratedDeclarationKind,
+  reason: string,
+  occurredAt = new Date().toISOString()
+): CodeCapsule {
+  if (["active", "deprecated", "archived", "deleted"].includes(capsule.state)) {
+    throw new Error(`Declarations cannot be reserved while a capsule is ${capsule.state}.`);
+  }
+  if (!declarationName.trim()) throw new Error("Reserved declaration name is required.");
+  if (!reason.trim()) throw new Error("An intentionally reserved declaration requires a human explanation.");
+  const reservation: IntentionalDeclarationReservation = {
+    declarationName: declarationName.trim(),
+    declarationKind,
+    reason: reason.trim(),
+    approvedBy: "developer",
+    approvedAt: occurredAt,
+  };
+  const current = capsule.intentionalReservations ?? [];
+  const reasonText = `Developer intentionally reserved ${declarationKind} '${reservation.declarationName}': ${reservation.reason}`;
+  const base = capsule.state === "validated"
+    ? transitionCodeCapsule(capsule, "incomplete", reasonText, "developer", occurredAt)
+    : {
+        ...capsule,
+        version: capsule.version + 1,
+        validation: null,
+        updatedAt: occurredAt,
+        transitions: [...capsule.transitions, transitionEntry(capsule.state, capsule.state, occurredAt, reasonText, "developer")],
+      };
+  return {
+    ...base,
+    intentionalReservations: [
+      ...current.filter((item) => !(item.declarationName === reservation.declarationName && item.declarationKind === reservation.declarationKind)),
+      reservation,
+    ],
   };
 }
 
