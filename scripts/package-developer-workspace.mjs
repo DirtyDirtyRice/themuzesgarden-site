@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -72,9 +72,18 @@ await cp(path.join(standalone, "package.json"), path.join(output, "package.json"
 await cp(path.join(standalone, "node_modules"), path.join(output, "node_modules"), { recursive: true, dereference: true });
 await cp(path.join(standalone, ".next"), path.join(output, ".next"), { recursive: true, dereference: true });
 await cp(path.join(root, ".next", "static"), path.join(output, ".next", "static"), { recursive: true });
+// Engine Health intentionally verifies the registered timeline engines against
+// their TypeScript source modules. Keep those inspectable sources beside the
+// standalone server so the packaged app performs the same probes as the repo.
+await cp(path.join(root, "lib", "timeline"), path.join(output, "lib", "timeline"), { recursive: true });
 await mkdir(path.join(output, "runtime"), { recursive: true });
 await cp(process.execPath, path.join(output, "runtime", "node.exe"));
 await writeFile(path.join(output, "launcher.cjs"), launcher, "utf8");
 await writeFile(path.join(output, "Start Developer Workspace.cmd"), startCommand, "utf8");
 await writeFile(path.join(output, "README-FIRST.txt"), readme, "utf8");
+await Promise.all([
+  access(path.join(output, "lib", "timeline", "TimelineValidationEngine.ts")),
+  access(path.join(output, "lib", "timeline", "TimelineDiagnosticsEngine.ts")),
+  access(path.join(output, "lib", "timeline", "TimelineQueryEngine.ts")),
+]);
 console.log(`Developer Workspace beta package created at ${output}`);
