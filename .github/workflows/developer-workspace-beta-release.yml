@@ -67,7 +67,7 @@ jobs:
             Invoke-RestMethod -Uri "http://127.0.0.1:3220/api/developer-workspace/projects" -Method Post -ContentType "application/json" -Body $createBody | Out-Null
 
             $health = Invoke-RestMethod -Uri "http://127.0.0.1:3220/api/developer-workspace/engine-health"
-            if (-not $health.ready -or $health.summary.healthy -ne $health.summary.total) {
+            if (-not $health.report.ready -or $health.report.summary.healthy -ne $health.report.summary.total) {
               throw "Engine Health did not pass every probe."
             }
 
