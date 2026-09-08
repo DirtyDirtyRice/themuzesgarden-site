@@ -10,6 +10,7 @@ function projectIndex(): ProjectIndex {
     root: "C:/project",
     generatedAt: "2026-07-21T00:00:00.000Z",
     truncated: false,
+    truncationReason: null,
     stats: {
       directoryCount: 1,
       fileCount: 4,

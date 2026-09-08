@@ -144,10 +144,13 @@ export default function DeveloperWorkspace() {
   const loadIndex = useCallback(async () => {
     setLoading(true);
     setError("");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 45_000);
 
     try {
       const response = await fetch("/api/developer-workspace/project-index", {
         cache: "no-store",
+        signal: controller.signal,
       });
       const body: unknown = await response.json();
       if (!response.ok || isApiError(body)) {
@@ -156,8 +159,11 @@ export default function DeveloperWorkspace() {
 
       setIndex(body as ProjectIndex);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Project index request failed.");
+      setError(loadError instanceof DOMException && loadError.name === "AbortError"
+        ? "Indexing stopped after 45 seconds. Check for unexpected generated folders, then refresh the bounded index."
+        : loadError instanceof Error ? loadError.message : "Project index request failed.");
     } finally {
+      window.clearTimeout(timeout);
       setLoading(false);
     }
   }, []);
@@ -230,7 +236,7 @@ export default function DeveloperWorkspace() {
         </div>
 
         {index ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["Files", index.stats.fileCount.toLocaleString()],
               ["Folders", index.stats.directoryCount.toLocaleString()],
@@ -242,7 +248,7 @@ export default function DeveloperWorkspace() {
                 <div className="mt-1 text-xl font-black">{value}</div>
               </div>
             ))}
-          </div>
+          </div>{index.truncated ? <div role="status" className="mt-3 rounded-lg border border-amber-300/40 bg-amber-300/10 p-3 text-sm text-amber-100">Partial index: scanning stopped cleanly at the {index.truncationReason?.replaceAll("-", " ") ?? "configured limit"}. Excluded generated and dependency folders were skipped; narrow the project or remove unexpected generated folders before rescanning.</div> : null}</>
         ) : null}
       </header>
 

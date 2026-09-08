@@ -41,6 +41,8 @@ type RootResponse = {
     coveragePercent: number;
     roots: CodeRoot[];
     issues: RootIssue[];
+    projectIndexTruncated?: boolean;
+    projectIndexTruncationReason?: "file-limit" | "directory-limit" | "time-limit" | null;
   };
   registry: { trackedRootCount: number };
   events: RootEvent[];
@@ -70,14 +72,19 @@ export default function CodeRootNavigator() {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 45_000);
     try {
-      const response = await fetch("/api/developer-workspace/code-roots?eventLimit=100", { cache: "no-store" });
+      const response = await fetch("/api/developer-workspace/code-roots?eventLimit=100", { cache: "no-store", signal: controller.signal });
       const body: unknown = await response.json();
       if (!response.ok) throw new Error(apiError(body, "Code roots could not be loaded."));
       setData(body as RootResponse);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Code roots could not be loaded.");
+      setError(cause instanceof DOMException && cause.name === "AbortError"
+        ? "Scanning stopped after 45 seconds. The project may contain an unexpected generated folder; excluded folders and scan limits are active on the next rescan."
+        : cause instanceof Error ? cause.message : "Code roots could not be loaded.");
     } finally {
+      window.clearTimeout(timeout);
       setLoading(false);
     }
   }, []);
@@ -167,6 +174,7 @@ export default function CodeRootNavigator() {
       </div>
 
       {error ? <div className="mt-3 rounded border border-red-400/40 bg-red-400/10 p-3 text-sm text-red-100">{error}</div> : null}
+      {data?.index.projectIndexTruncated ? <div role="status" className="mt-3 rounded border border-amber-300/40 bg-amber-300/10 p-3 text-sm text-amber-100">Root Signatures are based on a partial project index. Scanning stopped cleanly at the {data.index.projectIndexTruncationReason?.replaceAll("-", " ") ?? "configured limit"}; results shown below are complete only for indexed files.</div> : null}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.1fr)]">
         <div className="max-h-[58vh] space-y-2 overflow-auto">

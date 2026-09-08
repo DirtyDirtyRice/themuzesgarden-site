@@ -73,7 +73,15 @@ const BLOCKED_PATH_SEGMENTS = new Set([
   "code-map-reports",
   "codex-session-notes",
   "duplicate-reports",
+  ".cache",
+  ".turbo",
+  "coverage",
+  "dist",
+  "out",
+  "build",
 ]);
+
+const BLOCKED_PATH_PREFIXES = [".codex-deploy-"];
 
 function createKindCounts(): Record<ProjectSymbolKind, number> {
   return {
@@ -124,7 +132,10 @@ function isBlockedFile(root: string, fileName: string): boolean {
   if (relative.startsWith("..") || path.isAbsolute(relative)) return true;
 
   const segments = relative.split(path.sep);
-  return segments.some((segment) => BLOCKED_PATH_SEGMENTS.has(segment));
+  return segments.some((segment) => {
+    const normalized = segment.toLowerCase();
+    return BLOCKED_PATH_SEGMENTS.has(normalized) || BLOCKED_PATH_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+  });
 }
 
 function symbolKindForNode(node: ts.Node): ProjectSymbolKind | null {

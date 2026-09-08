@@ -51,6 +51,8 @@ export type CodeRootIndex = {
   files: CodeRootFile[];
   roots: IndexedCodeRoot[];
   issues: CodeRootIndexIssue[];
+  projectIndexTruncated?: boolean;
+  projectIndexTruncationReason?: ProjectIndex["truncationReason"];
 };
 
 export type CodeRootIndexOptions = {
@@ -194,6 +196,8 @@ export async function buildCodeRootIndex(options: CodeRootIndexOptions = {}): Pr
     files,
     roots,
     issues,
+    projectIndexTruncated: projectIndex.truncated,
+    projectIndexTruncationReason: projectIndex.truncationReason,
   };
 }
 

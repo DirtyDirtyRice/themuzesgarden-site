@@ -28,12 +28,17 @@ export type ProjectIndex = {
   entries: ProjectEntry[];
   stats: ProjectIndexStats;
   truncated: boolean;
+  truncationReason: ProjectIndexTruncationReason | null;
 };
+
+export type ProjectIndexTruncationReason = "file-limit" | "directory-limit" | "time-limit";
 
 export type ProjectIndexOptions = {
   root?: string;
   excludeNames?: Iterable<string>;
   maxFiles?: number;
+  maxDirectories?: number;
+  maxDurationMs?: number;
 };
 
 export type ProjectSearchResult = {
@@ -49,9 +54,19 @@ const DEFAULT_EXCLUDED_NAMES = new Set([
   "code-map-reports",
   "codex-session-notes",
   "duplicate-reports",
+  ".cache",
+  ".turbo",
+  "coverage",
+  "dist",
+  "out",
+  "build",
 ]);
 
+const DEFAULT_EXCLUDED_PREFIXES = [".codex-deploy-"];
+
 const DEFAULT_MAX_FILES = 50_000;
+const DEFAULT_MAX_DIRECTORIES = 10_000;
+const DEFAULT_MAX_DURATION_MS = 30_000;
 
 function normalizePath(value: string): string {
   return value.split(path.sep).join("/");
@@ -85,10 +100,15 @@ function recordFile(stats: ProjectIndexStats, extension: string | null, size: nu
   stats.extensions[key] = (stats.extensions[key] ?? 0) + 1;
 }
 
-function assertValidLimit(maxFiles: number): void {
-  if (!Number.isInteger(maxFiles) || maxFiles < 1) {
-    throw new Error(`Project index maxFiles must be a positive integer; received ${maxFiles}.`);
+function assertValidLimit(value: number, label: string): void {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`Project index ${label} must be a positive integer; received ${value}.`);
   }
+}
+
+export function isExcludedProjectEntryName(name: string, excludedNames: ReadonlySet<string>): boolean {
+  const normalized = name.toLowerCase();
+  return excludedNames.has(normalized) || DEFAULT_EXCLUDED_PREFIXES.some((prefix) => normalized.startsWith(prefix));
 }
 
 function assertInsideRoot(root: string, candidate: string): void {
@@ -104,34 +124,41 @@ export async function buildProjectIndex(
   const requestedRoot = path.resolve(options.root ?? process.cwd());
   const root = await realpath(requestedRoot);
   const maxFiles = options.maxFiles ?? DEFAULT_MAX_FILES;
+  const maxDirectories = options.maxDirectories ?? DEFAULT_MAX_DIRECTORIES;
+  const maxDurationMs = options.maxDurationMs ?? DEFAULT_MAX_DURATION_MS;
   const excludedNames = new Set([
     ...DEFAULT_EXCLUDED_NAMES,
-    ...(options.excludeNames ?? []),
+    ...[...(options.excludeNames ?? [])].map((name) => name.toLowerCase()),
   ]);
 
-  assertValidLimit(maxFiles);
+  assertValidLimit(maxFiles, "maxFiles");
+  assertValidLimit(maxDirectories, "maxDirectories");
+  assertValidLimit(maxDurationMs, "maxDurationMs");
 
   const stats = createStats();
   let truncated = false;
+  let truncationReason: ProjectIndexTruncationReason | null = null;
+  const deadline = Date.now() + maxDurationMs;
+
+  function reachedLimit(): boolean {
+    if (stats.fileCount >= maxFiles) truncationReason ??= "file-limit";
+    else if (Date.now() >= deadline) truncationReason ??= "time-limit";
+    if (truncationReason) truncated = true;
+    return truncated;
+  }
 
   async function scanDirectory(absoluteDirectory: string): Promise<ProjectEntry[]> {
-    if (stats.fileCount >= maxFiles) {
-      truncated = true;
-      return [];
-    }
+    if (reachedLimit()) return [];
 
     const directoryEntries = await readdir(absoluteDirectory, { withFileTypes: true });
     const entries: ProjectEntry[] = [];
 
     for (const directoryEntry of directoryEntries) {
-      if (excludedNames.has(directoryEntry.name)) {
+      if (isExcludedProjectEntryName(directoryEntry.name, excludedNames)) {
         continue;
       }
 
-      if (stats.fileCount >= maxFiles) {
-        truncated = true;
-        break;
-      }
+      if (reachedLimit()) break;
 
       const absoluteEntry = path.join(absoluteDirectory, directoryEntry.name);
       assertInsideRoot(root, absoluteEntry);
@@ -144,6 +171,11 @@ export async function buildProjectIndex(
       const relativePath = normalizePath(path.relative(root, absoluteEntry));
 
       if (directoryEntry.isDirectory()) {
+        if (stats.directoryCount >= maxDirectories) {
+          truncationReason = "directory-limit";
+          truncated = true;
+          break;
+        }
         stats.directoryCount += 1;
         entries.push({
           kind: "directory",
@@ -182,6 +214,7 @@ export async function buildProjectIndex(
     entries: await scanDirectory(root),
     stats,
     truncated,
+    truncationReason,
   };
 }
 

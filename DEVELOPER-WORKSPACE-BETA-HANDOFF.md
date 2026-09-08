@@ -21,6 +21,13 @@ The beta is distributed as a self-contained Windows folder. Run `npm run workspa
 - Full TypeScript verification and production build passed on September 6, 2026.
 - The in-app beta handoff test additionally protects the two required scenarios and the local-only feedback boundary.
 
+## Bounded existing-project scanning correction (September 8, 2026)
+
+- Live Project Explorer and Root Signatures now exclude dependency, generated-output, report, repository-internal, and `.codex-deploy-*` deployment-copy directories.
+- Project indexing has independent file, directory, and elapsed-time limits. Reaching one returns a completed partial index with its exact truncation reason instead of leaving the interface on **Scanning...**.
+- Both scanner panels stop their browser request after 45 seconds and display recovery guidance if the local server does not answer.
+- Focused regression coverage verifies deployment-copy exclusion and clean file- and directory-limit termination.
+
 ## Human-controlled declaration threshold
 
 Every newly generated type, interface, enum, class, function, or constant stays unrealized inside its inactive capsule until validation proves a real usage relationship. If an unused declaration is deliberately being kept for future work, a human developer must approve an **intentionally reserved** designation with the exact declaration name, kind, reason, and timestamp. AI cannot grant this exception, and reservation approval does not replace the separate human activation confirmation.
