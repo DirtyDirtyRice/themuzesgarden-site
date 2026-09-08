@@ -120,4 +120,9 @@ describe("Developer Workspace coder beta handoff", () => {
     expect(windowsRelease).toContain('if ($check.status -ne "passed")');
     expect(windowsRelease).toContain("gh release create $env:RELEASE_TAG");
   });
+
+  it("bundles the fallback TypeScript compiler used by Fast Check", () => {
+    expect(packager).toContain('path.join(root, "node_modules", "typescript")');
+    expect(packager).toContain('"typescript", "bin", "tsc"');
+  });
 });
