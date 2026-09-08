@@ -49,6 +49,10 @@ const supportDownload = readFileSync(
   ),
   "utf8",
 );
+const authProvider = readFileSync(
+  new URL("../../app/components/AuthProvider.tsx", import.meta.url),
+  "utf8",
+);
 const liveTimeline = readFileSync(
   new URL(
     "../../app/tools/developer-workspace/LiveEventTimeline.tsx",
@@ -124,5 +128,11 @@ describe("Developer Workspace coder beta handoff", () => {
   it("bundles the fallback TypeScript compiler used by Fast Check", () => {
     expect(packager).toContain('path.join(root, "node_modules", "typescript")');
     expect(packager).toContain('"typescript", "bin", "tsc"');
+  });
+
+  it("does not initialize Supabase authentication in the local workspace", () => {
+    expect(authProvider).toContain('pathname === "/developer-workspace"');
+    expect(authProvider).toContain("return <SupabaseAuthProvider>");
+    expect(authProvider).toContain("value={localWorkspaceAuth}");
   });
 });

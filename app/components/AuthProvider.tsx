@@ -1,7 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { User } from "@supabase/supabase-js";
+import { usePathname } from "next/navigation";
 
 import { supabase } from "../../lib/supabaseClient";
 
@@ -19,7 +27,31 @@ const AuthContext = createContext<AuthContextType>({
   refreshSession: async () => null,
 });
 
+const localWorkspaceAuth: AuthContextType = {
+  user: null,
+  loading: false,
+  error: null,
+  refreshSession: async () => null,
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const localWorkspace =
+    pathname === "/developer-workspace" ||
+    pathname.startsWith("/developer-workspace/");
+
+  if (localWorkspace) {
+    return (
+      <AuthContext.Provider value={localWorkspaceAuth}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
+  return <SupabaseAuthProvider>{children}</SupabaseAuthProvider>;
+}
+
+function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return nextUser;
     } catch (cause) {
       setUser(null);
-      setError(cause instanceof Error ? cause.message : "Member session could not be checked.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Member session could not be checked.",
+      );
       return null;
     } finally {
       setLoading(false);
@@ -45,7 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     void refreshSession();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       setUser(session?.user ?? null);
       setError(null);
@@ -59,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<AuthContextType>(
     () => ({ user, loading, error, refreshSession }),
-    [user, loading, error, refreshSession]
+    [user, loading, error, refreshSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

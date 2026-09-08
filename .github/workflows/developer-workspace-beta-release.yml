@@ -15,8 +15,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     env:
-      PACKAGE_NAME: Developer-Workspace-Beta-v0.2.1-Chrome
-      RELEASE_TAG: developer-workspace-beta-v0.2.1
+      PACKAGE_NAME: Developer-Workspace-Beta-v0.2.2-Chrome
+      RELEASE_TAG: developer-workspace-beta-v0.2.2
       NODE_OPTIONS: --max-old-space-size=12288
 
     steps:
@@ -99,4 +99,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create $env:RELEASE_TAG "$env:PACKAGE_NAME.zip" --title "Developer Workspace Beta v0.2.1" --notes "Corrected Windows coder beta: complete Engine Health sources, visible section navigation, reliable support-report download, clearer installed status, improved timeline source opening, and Fast Check support for newly scaffolded projects."
+          gh release create $env:RELEASE_TAG "$env:PACKAGE_NAME.zip" --title "Developer Workspace Beta v0.2.2" --notes "Corrected Windows coder beta: standalone startup no longer requires website Supabase credentials; includes complete Engine Health sources, visible section navigation, reliable support-report download, clearer installed status, improved timeline source opening, and Fast Check support for newly scaffolded projects."
