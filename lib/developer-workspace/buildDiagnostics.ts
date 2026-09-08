@@ -1,7 +1,7 @@
 import "server-only";
 
 import { spawn } from "node:child_process";
-import { realpath } from "node:fs/promises";
+import { access, realpath } from "node:fs/promises";
 import path from "node:path";
 
 export type BuildCheckKind = "typecheck" | "build";
@@ -335,12 +335,29 @@ async function executeCheck(
   };
 }
 
-export function runTypeCheck(rootOption = process.cwd()): Promise<BuildCheckResult> {
+async function resolveTypeScriptCli(projectRoot: string): Promise<string> {
+  const candidates = [
+    path.join(projectRoot, "node_modules", "typescript", "bin", "tsc"),
+    path.join(process.cwd(), "node_modules", "typescript", "bin", "tsc"),
+  ];
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      // Try the runtime-bundled TypeScript package next.
+    }
+  }
+  throw new Error("TypeScript is unavailable. Install project dependencies or repair the Developer Workspace runtime.");
+}
+
+export async function runTypeCheck(rootOption = process.cwd()): Promise<BuildCheckResult> {
+  const typeScriptCli = await resolveTypeScriptCli(rootOption);
   return executeCheck(
     "typecheck",
     process.execPath,
     [
-      path.join(rootOption, "node_modules", "typescript", "bin", "tsc"),
+      typeScriptCli,
       "--noEmit",
       "--pretty",
       "false",

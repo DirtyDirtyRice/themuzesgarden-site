@@ -54,7 +54,7 @@ export default function InstallWorkspaceButton() {
   }
 
   if (installed) {
-    return <span className="rounded-lg border border-emerald-300/30 bg-emerald-300/10 px-3 py-2 text-xs font-black text-emerald-100">Installed app</span>;
+    return <span aria-label="Installation status: installed" className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-black text-emerald-100">Status: Installed</span>;
   }
 
   if (!promptEvent) return null;

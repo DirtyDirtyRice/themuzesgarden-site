@@ -21,6 +21,7 @@ export default function LiveEventTimeline() {
   const [kind, setKind] = useState<CodeEventKind | "all">("all");
   const [selected, setSelected] = useState<CodeEvent | null>(null);
   const [source, setSource] = useState<ProjectFileView | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
@@ -39,7 +40,7 @@ export default function LiveEventTimeline() {
   const visible = useMemo(() => { const clean = query.trim().toLowerCase(); return events.filter((event) => kind === "all" || event.kind === kind).filter((event) => !clean || `${event.symbolName} ${event.path} ${event.details}`.toLowerCase().includes(clean)); }, [events, kind, query]);
 
   async function openEvent(event: CodeEvent) {
-    setSelected(event); setSource(null);
+    setSelected(event); setSource(null); setOpeningId(event.id); setError("");
     try {
       const params = new URLSearchParams({ path: event.path, line: String(Math.max(1, event.line - 8)), count: "32" });
       const response = await fetch(`/api/developer-workspace/file?${params}`, { cache: "no-store" });
@@ -47,6 +48,7 @@ export default function LiveEventTimeline() {
       if (!response.ok || isApiError(body)) throw new Error(isApiError(body) ? body.error : "Event source could not be opened.");
       setSource(body as ProjectFileView);
     } catch (sourceError) { setError(sourceError instanceof Error ? sourceError.message : "Event source could not be opened."); }
+    finally { setOpeningId(null); }
   }
 
   async function control(action: "start" | "stop") {
@@ -63,6 +65,6 @@ export default function LiveEventTimeline() {
     {watcher?.pendingFiles.length ? <div className="mt-3 text-xs text-amber-100">Indexing {watcher.pendingFiles.length} changed file(s)…</div> : null}
     {error ? <div className="mt-3 rounded border border-red-400/40 bg-red-400/10 p-3 text-sm text-red-100">{error}</div> : null}
     <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_220px]"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search symbol or file…" className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 outline-none focus:border-sky-300/70" /><select value={kind} onChange={(event) => setKind(event.target.value as CodeEventKind | "all")} className="rounded-lg border border-white/15 bg-[#071016] px-3 py-2">{KINDS.map((value) => <option key={value} value={value}>{value.replaceAll("-", " ")}</option>)}</select></div>
-    <div className="mt-4 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]"><div className="max-h-[60vh] space-y-2 overflow-auto">{visible.map((event) => <button key={event.id} type="button" onClick={() => void openEvent(event)} className={`w-full rounded-lg border p-3 text-left ${selected?.id === event.id ? "border-sky-300/60 bg-sky-300/10" : "border-white/10 bg-black/20"}`}><div className="flex justify-between gap-3"><span className="font-bold">{event.symbolName}</span><span className="text-xs text-white/35">{new Date(event.occurredAt).toLocaleString()}</span></div><div className="mt-1 text-xs text-sky-100/60">{event.kind} · {event.path}:{event.line}</div>{event.gitCommit ? <div className="mt-1 truncate text-xs text-indigo-100/55">{event.gitCommit.slice(0, 8)} · {event.gitAuthor} · {event.gitSubject}</div> : null}</button>)}</div><div className="min-w-0 rounded-lg border border-white/10 bg-black/20">{source && selected ? <><div className="border-b border-white/10 p-3 text-sm font-bold text-sky-100">{selected.path}:{selected.line}</div><div className="max-h-[60vh] overflow-auto py-2 font-mono text-xs">{source.lines.map((line) => <div key={line.number} className={`grid min-w-max grid-cols-[4rem_1fr] ${line.number === selected.line ? "bg-sky-300/15" : ""}`}><span className="px-2 text-right text-white/30">{line.number}</span><pre className="px-3 text-white/70">{line.text || " "}</pre></div>)}</div></> : <div className="p-10 text-center text-sm text-white/35">Choose an event to open its exact source.</div>}</div></div>
+    <div className="mt-4 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]"><div className="max-h-[60vh] space-y-2 overflow-auto">{visible.map((event) => <button key={event.id} type="button" aria-pressed={selected?.id === event.id} onClick={() => void openEvent(event)} className={`w-full rounded-lg border p-3 text-left ${selected?.id === event.id ? "border-sky-300/60 bg-sky-300/10" : "border-white/10 bg-black/20"}`}><div className="flex justify-between gap-3"><span className="font-bold">{event.symbolName}</span><span className="text-xs text-white/35">{new Date(event.occurredAt).toLocaleString()}</span></div><div className="mt-1 flex items-center justify-between gap-3 text-xs text-sky-100/60"><span>{event.kind} · {event.path}:{event.line}</span><span className="font-black text-sky-100">{openingId === event.id ? "Opening…" : "Open source"}</span></div>{event.gitCommit ? <div className="mt-1 truncate text-xs text-indigo-100/55">{event.gitCommit.slice(0, 8)} · {event.gitAuthor} · {event.gitSubject}</div> : null}</button>)}</div><div className="min-w-0 rounded-lg border border-white/10 bg-black/20">{source && selected ? <><div className="border-b border-white/10 p-3 text-sm font-bold text-sky-100">{selected.path}:{selected.line}</div><div className="max-h-[60vh] overflow-auto py-2 font-mono text-xs">{source.lines.map((line) => <div key={line.number} className={`grid min-w-max grid-cols-[4rem_1fr] ${line.number === selected.line ? "bg-sky-300/15" : ""}`}><span className="px-2 text-right text-white/30">{line.number}</span><pre className="px-3 text-white/70">{line.text || " "}</pre></div>)}</div></> : <div className="p-10 text-center text-sm text-white/35">{openingId ? "Opening the event's exact source…" : selected ? "The event was selected, but its source could not be opened. See the error above." : "Choose an event to open its exact source."}</div>}</div></div>
   </section>;
 }

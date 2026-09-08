@@ -246,11 +246,11 @@ export default function DeveloperWorkspace() {
         ) : null}
       </header>
 
-      <div id="workspace-projects"><WorkspaceProjectSelector /></div>
-      <div id="code-roots"><CodeRootNavigator /></div>
-      <div id="architecture"><ArchitecturalHealthDashboard /></div>
-      <div id="engine-health"><EngineHealthDashboard /></div>
-      <div id="activation-audit"><ActivationAuditPanel /></div>
+      <div id="workspace-projects" className="scroll-mt-56"><WorkspaceProjectSelector /></div>
+      <div id="code-roots" className="scroll-mt-56"><CodeRootNavigator /></div>
+      <div id="architecture" className="scroll-mt-56"><ArchitecturalHealthDashboard /></div>
+      <div id="engine-health" className="scroll-mt-56"><EngineHealthDashboard /></div>
+      <div id="activation-audit" className="scroll-mt-56"><ActivationAuditPanel /></div>
 
       {error ? (
         <div className="mt-4 rounded-lg border border-red-400/50 bg-red-400/10 p-3 text-red-100">
@@ -258,13 +258,13 @@ export default function DeveloperWorkspace() {
         </div>
       ) : null}
 
-      <div id="build-errors"><BuildErrorWorkspace /></div>
-      <div id="event-timeline"><LiveEventTimeline /></div>
-      <div id="draft-activation"><DraftActivationWorkspace /></div>
-      <div id="prevented-errors"><PreventedErrorWorkspace /></div>
-      <div id="ai-drift"><AiDriftHoldingReport /></div>
-      <div id="ai-assistant"><AiCodingAssistant /></div>
-      <div id="project-context"><ProjectContextInvestigator /></div>
+      <div id="build-errors" className="scroll-mt-56"><BuildErrorWorkspace /></div>
+      <div id="event-timeline" className="scroll-mt-56"><LiveEventTimeline /></div>
+      <div id="draft-activation" className="scroll-mt-56"><DraftActivationWorkspace /></div>
+      <div id="prevented-errors" className="scroll-mt-56"><PreventedErrorWorkspace /></div>
+      <div id="ai-drift" className="scroll-mt-56"><AiDriftHoldingReport /></div>
+      <div id="ai-assistant" className="scroll-mt-56"><AiCodingAssistant /></div>
+      <div id="project-context" className="scroll-mt-56"><ProjectContextInvestigator /></div>
 
       <section id="code-explorer" className="mt-4 grid scroll-mt-28 gap-4 lg:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.4fr)]">
         <div className="rounded-xl border border-white/10 bg-[#0b1720] p-4">

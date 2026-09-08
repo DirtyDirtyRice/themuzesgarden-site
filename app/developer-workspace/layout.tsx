@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import InstallWorkspaceButton from "./InstallWorkspaceButton";
+import SupportReportDownloadButton from "./SupportReportDownloadButton";
 import WorkspaceConnectionStatus from "./WorkspaceConnectionStatus";
 
 export const metadata: Metadata = {
@@ -33,12 +34,12 @@ export default function StandaloneDeveloperWorkspaceLayout({ children }: { child
             <InstallWorkspaceButton />
             <Link href="/developer-workspace/docs" className="rounded-lg border border-violet-300/25 px-3 py-2 text-xs font-bold text-violet-100 hover:border-violet-300/50">Documentation</Link>
             <Link href="/developer-workspace/beta-feedback" className="rounded-lg border border-amber-300/25 px-3 py-2 text-xs font-bold text-amber-100 hover:border-amber-300/50">Beta feedback</Link>
-            <a href="/api/developer-workspace/support-report" download className="rounded-lg border border-cyan-300/25 px-3 py-2 text-xs font-bold text-cyan-100 hover:border-cyan-300/50">Download support report</a>
+            <SupportReportDownloadButton />
             <Link href="/tools/developer-workspace" className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/70 hover:border-cyan-300/40 hover:text-white">Host-site view</Link>
           </div>
         </div>
         <nav aria-label="Developer Workspace sections" className="mx-auto mt-3 flex max-w-[1800px] gap-2 overflow-x-auto pb-1 text-xs">
-          {[["Projects", "#workspace-projects"], ["Architecture", "#architecture"], ["Engine Health", "#engine-health"], ["Build Errors", "#build-errors"], ["Event Timeline", "#event-timeline"], ["Draft Holding", "#draft-activation"], ["Prevented Errors", "#prevented-errors"], ["AI Drift", "#ai-drift"], ["AI Assistant", "#ai-assistant"], ["Code Explorer", "#code-explorer"]].map(([label, href]) => <a key={href} href={href} className="shrink-0 rounded-full border border-white/10 px-3 py-1.5 font-bold text-white/60 hover:border-cyan-300/35 hover:text-cyan-100">{label}</a>)}
+          {[["Projects", "#workspace-projects"], ["Architecture", "#architecture"], ["Engine Health", "#engine-health"], ["Build Errors", "#build-errors"], ["Event Timeline", "#event-timeline"], ["Draft Holding", "#draft-activation"], ["Prevented Errors", "#prevented-errors"], ["AI Drift", "#ai-drift"], ["AI Assistant", "#ai-assistant"], ["Code Explorer", "#code-explorer"]].map(([label, href]) => <a key={href} href={`/developer-workspace${href}`} className="shrink-0 rounded-full border border-white/10 px-3 py-1.5 font-bold text-white/60 hover:border-cyan-300/35 hover:text-cyan-100">{label}</a>)}
         </nav>
       </header>
       {children}

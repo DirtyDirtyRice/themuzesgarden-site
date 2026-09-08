@@ -6,6 +6,11 @@ const feedback = readFileSync(new URL("../../app/developer-workspace/beta-feedba
 const requestContext = readFileSync(new URL("../../lib/developer-workspace/workspaceRequestContext.ts", import.meta.url), "utf8");
 const packager = readFileSync(new URL("../../scripts/package-developer-workspace.mjs", import.meta.url), "utf8");
 const nextConfig = readFileSync(new URL("../../next.config.ts", import.meta.url), "utf8");
+const layout = readFileSync(new URL("../../app/developer-workspace/layout.tsx", import.meta.url), "utf8");
+const workspace = readFileSync(new URL("../../app/tools/developer-workspace/DeveloperWorkspace.tsx", import.meta.url), "utf8");
+const buildDiagnostics = readFileSync(new URL("../../lib/developer-workspace/buildDiagnostics.ts", import.meta.url), "utf8");
+const supportDownload = readFileSync(new URL("../../app/developer-workspace/SupportReportDownloadButton.tsx", import.meta.url), "utf8");
+const liveTimeline = readFileSync(new URL("../../app/tools/developer-workspace/LiveEventTimeline.tsx", import.meta.url), "utf8");
 
 describe("Developer Workspace coder beta handoff", () => {
   it("documents both real-coder adoption scenarios and existing validation", () => {
@@ -34,5 +39,19 @@ describe("Developer Workspace coder beta handoff", () => {
     expect(packager).not.toContain("msedge");
     expect(nextConfig).toContain("outputFileTracingExcludes");
     expect(nextConfig).toContain('"./code-map-reports/**/*"');
+  });
+
+  it("keeps standalone navigation visible and usable from every workspace page", () => {
+    expect(layout).toContain('href={`/developer-workspace${href}`}');
+    expect(workspace).toContain('id="build-errors" className="scroll-mt-56"');
+    expect(workspace).toContain('id="event-timeline" className="scroll-mt-56"');
+  });
+
+  it("downloads support reports explicitly and can use runtime-bundled TypeScript", () => {
+    expect(supportDownload).toContain('URL.createObjectURL');
+    expect(supportDownload).toContain('anchor.download = filename');
+    expect(buildDiagnostics).toContain('path.join(process.cwd(), "node_modules", "typescript", "bin", "tsc")');
+    expect(liveTimeline).toContain("Open source");
+    expect(liveTimeline).toContain("Opening the event's exact source");
   });
 });
