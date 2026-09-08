@@ -1,0 +1,102 @@
+name: Developer Workspace Windows Beta Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: developer-workspace-windows-beta-release
+  cancel-in-progress: false
+
+jobs:
+  build-test-release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      PACKAGE_NAME: Developer-Workspace-Beta-v0.2.1-Chrome
+      RELEASE_TAG: developer-workspace-beta-v0.2.1
+      NODE_OPTIONS: --max-old-space-size=12288
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run focused beta tests
+        run: npm test -- engine/test/developer-workspace-beta-handoff.test.ts
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Package Windows application
+        run: node scripts/package-developer-workspace.mjs $env:PACKAGE_NAME
+
+      - name: Smoke-test packaged application
+        shell: pwsh
+        run: |
+          $packageRoot = Join-Path $env:GITHUB_WORKSPACE $env:PACKAGE_NAME
+          $env:HOSTNAME = "127.0.0.1"
+          $env:PORT = "3220"
+          $env:DEVELOPER_WORKSPACE_LOCAL_RUNTIME = "1"
+          $server = Start-Process -FilePath (Join-Path $packageRoot "runtime\node.exe") -ArgumentList "server.js" -WorkingDirectory $packageRoot -WindowStyle Hidden -PassThru
+          try {
+            $ready = $false
+            for ($attempt = 0; $attempt -lt 60; $attempt += 1) {
+              try {
+                $page = Invoke-WebRequest -Uri "http://127.0.0.1:3220/developer-workspace" -TimeoutSec 2
+                if ($page.StatusCode -eq 200) { $ready = $true; break }
+              } catch {
+                Start-Sleep -Seconds 1
+              }
+            }
+            if (-not $ready) { throw "Packaged Developer Workspace did not become ready." }
+
+            $parent = Join-Path $env:RUNNER_TEMP "developer-workspace-smoke"
+            New-Item -ItemType Directory -Path $parent -Force | Out-Null
+            $createBody = @{ action = "create"; parentDirectory = $parent; projectName = "smoke-project" } | ConvertTo-Json
+            Invoke-RestMethod -Uri "http://127.0.0.1:3220/api/developer-workspace/projects" -Method Post -ContentType "application/json" -Body $createBody | Out-Null
+
+            $health = Invoke-RestMethod -Uri "http://127.0.0.1:3220/api/developer-workspace/engine-health"
+            if (-not $health.ready -or $health.summary.healthy -ne $health.summary.total) {
+              throw "Engine Health did not pass every probe."
+            }
+
+            $checkBody = @{ action = "typecheck" } | ConvertTo-Json
+            $check = Invoke-RestMethod -Uri "http://127.0.0.1:3220/api/developer-workspace/build-check" -Method Post -ContentType "application/json" -Body $checkBody
+            if ($check.status -ne "passed") { throw "Packaged Fast Check failed." }
+
+            $support = Invoke-WebRequest -Uri "http://127.0.0.1:3220/api/developer-workspace/support-report"
+            if ($support.StatusCode -ne 200 -or $support.Headers["Content-Disposition"] -notmatch "attachment") {
+              throw "Support report download response is invalid."
+            }
+          } finally {
+            if (-not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+          }
+
+      - name: Create ZIP
+        shell: pwsh
+        run: Compress-Archive -LiteralPath $env:PACKAGE_NAME -DestinationPath "$env:PACKAGE_NAME.zip" -CompressionLevel Optimal
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.zip
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:RELEASE_TAG "$env:PACKAGE_NAME.zip" --title "Developer Workspace Beta v0.2.1" --notes "Corrected Windows coder beta: complete Engine Health sources, visible section navigation, reliable support-report download, clearer installed status, improved timeline source opening, and Fast Check support for newly scaffolded projects."

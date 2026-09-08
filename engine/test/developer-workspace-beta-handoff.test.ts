@@ -11,6 +11,7 @@ const workspace = readFileSync(new URL("../../app/tools/developer-workspace/Deve
 const buildDiagnostics = readFileSync(new URL("../../lib/developer-workspace/buildDiagnostics.ts", import.meta.url), "utf8");
 const supportDownload = readFileSync(new URL("../../app/developer-workspace/SupportReportDownloadButton.tsx", import.meta.url), "utf8");
 const liveTimeline = readFileSync(new URL("../../app/tools/developer-workspace/LiveEventTimeline.tsx", import.meta.url), "utf8");
+const windowsRelease = readFileSync(new URL("../../.github/workflows/developer-workspace-beta-release.yml", import.meta.url), "utf8");
 
 describe("Developer Workspace coder beta handoff", () => {
   it("documents both real-coder adoption scenarios and existing validation", () => {
@@ -53,5 +54,12 @@ describe("Developer Workspace coder beta handoff", () => {
     expect(buildDiagnostics).toContain('path.join(process.cwd(), "node_modules", "typescript", "bin", "tsc")');
     expect(liveTimeline).toContain("Open source");
     expect(liveTimeline).toContain("Opening the event's exact source");
+  });
+
+  it("publishes the Windows beta only after packaged smoke tests pass", () => {
+    expect(windowsRelease).toContain("runs-on: windows-latest");
+    expect(windowsRelease).toContain("Smoke-test packaged application");
+    expect(windowsRelease).toContain('if ($check.status -ne "passed")');
+    expect(windowsRelease).toContain("gh release create $env:RELEASE_TAG");
   });
 });
