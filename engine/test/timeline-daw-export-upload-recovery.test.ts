@@ -33,6 +33,14 @@ describe("DAW export upload recovery", () => {
     expect(source).toContain("restored for Step 8");
   });
 
+  it("protects selected files and export settings across a page remount", () => {
+    expect(source).toContain("loadTimelineDawExportRecovery(session.id)");
+    expect(source).toContain("saveTimelineDawExportRecovery");
+    expect(source).toContain("daw-export-draft");
+    expect(source).toContain("restored after leaving the DAW");
+    expect(source).toContain("deleteTimelineDawExportRecovery(session.id)");
+  });
+
   it("uses resumable 6 MB chunks for large audio and reports progress", () => {
     expect(apiSource).toContain("prepared.file.size > 6 * 1024 * 1024");
     expect(apiSource).toContain("chunkSize: 6 * 1024 * 1024");
@@ -40,5 +48,11 @@ describe("DAW export upload recovery", () => {
     expect(apiSource).toContain("onProgress:");
     expect(apiSource).toContain("TIMELINE_DAW_LARGE_UPLOAD_DEADLINE_MS");
     expect(source).toContain("Uploading ${uploadProgress}%");
+  });
+
+  it("does not compete for the Chrome auth lock during upload", () => {
+    expect(apiSource).not.toContain("Promise.all([\n    client.auth.getUser(),\n    client.auth.getSession(),");
+    expect(apiSource).toContain("client.auth.getSession()");
+    expect(apiSource).toContain("client.auth.getUser(accessToken)");
   });
 });

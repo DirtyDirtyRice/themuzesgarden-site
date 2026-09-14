@@ -222,13 +222,12 @@ async function uploadDawRenderSourceWithoutDeadline(
     throw new Error("WAV source size must be from 1 byte to 256 MB.");
   }
   const client = requireProjectSupabase();
-  const [{ data: auth }, { data: sessionData }] = await Promise.all([
-    client.auth.getUser(),
-    client.auth.getSession(),
-  ]);
-  if (!auth.user?.id) throw new Error("Sign in to upload private DAW audio.");
+  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+  if (sessionError) throw new Error(`Your private upload session could not be read: ${sessionError.message}`);
   const accessToken = sessionData.session?.access_token;
   if (!accessToken) throw new Error("Your private upload session expired. Sign in again and retry.");
+  const { data: auth, error: userError } = await client.auth.getUser(accessToken);
+  if (userError || !auth.user?.id) throw new Error("Sign in to upload private DAW audio.");
   const digest = await crypto.subtle.digest("SHA-256", await prepared.file.arrayBuffer());
   const checksum = `sha256:${Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, "0")).join("")}`;
   const safeName = prepared.file.name.trim().replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-180);

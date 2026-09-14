@@ -18,6 +18,7 @@ import {
 import { evaluateTimelineDawExportPreflight } from "@/lib/timeline/TimelineDawExportReliabilityPolicy";
 import { anchorTimelineDawDownloadVerificationReceipt, createTimelineDawDownloadVerificationReceipt, parseTimelineDawDownloadVerificationReceipt, verifyTimelineDawDownloadedArtifact, verifyTimelineDawReceiptArtifact, type TimelineDawDownloadVerificationReceipt } from "@/lib/timeline/TimelineDawDownloadVerification";
 import { createTimelineDawOwnerDownloadVerifiedDetail, TIMELINE_DAW_OWNER_DOWNLOAD_VERIFIED_EVENT } from "@/lib/timeline/TimelineDawOwnerDownloadVerificationEvent";
+import { deleteTimelineDawExportRecovery, loadTimelineDawExportRecovery, saveTimelineDawExportRecovery } from "@/lib/timeline/TimelineDawExportRecoveryStore";
 
 import type { DawSession } from "./projectDawTypes";
 
@@ -32,6 +33,7 @@ export default function ProjectDawExportWorkspace({
   onWorkspaceRevision: (revision: number) => void;
 }) {
   const uploadAttemptKey = `muzes:daw-export-upload-attempt:${session.id}`;
+  const exportDraftKey = `muzes:daw-export-draft:${session.id}`;
   const [name, setName] = useState(`${session.name} Mix`);
   const [target, setTarget] = useState<TimelineRenderTarget>("mix");
   const [format, setFormat] = useState<TimelineRenderFormat>("wav");
@@ -56,6 +58,7 @@ export default function ProjectDawExportWorkspace({
   const [downloadVerification, setDownloadVerification] = useState<Record<string, { verified: boolean; name: string; byteLength: number; checksum: string; verifiedAt: string }>>({});
   const [receiptVerification, setReceiptVerification] = useState<{ name: string; receipt: TimelineDawDownloadVerificationReceipt } | null>(null);
   const [receiptArtifactVerification, setReceiptArtifactVerification] = useState<{ verified: boolean; name: string; byteLength: number } | null>(null);
+  const [draftReady, setDraftReady] = useState(false);
   const exportPreflight = useMemo(
     () => selectedJob ? evaluateTimelineDawExportPreflight(selectedJob) : null,
     [selectedJob],
@@ -95,6 +98,31 @@ export default function ProjectDawExportWorkspace({
   }, [onWorkspaceRevision, session.id]);
 
   useEffect(() => { queueMicrotask(() => void load()); }, [load]);
+  useEffect(() => {
+    let active = true;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(exportDraftKey) ?? "null") as Record<string, unknown> | null;
+      if (saved) {
+        if (typeof saved.name === "string") setName(saved.name);
+        if (["mix", "stem", "selection"].includes(String(saved.target))) setTarget(saved.target as TimelineRenderTarget);
+        if (["wav", "flac", "mp3"].includes(String(saved.format))) setFormat(saved.format as TimelineRenderFormat);
+        if ([44100, 48000, 96000].includes(Number(saved.sampleRate))) setSampleRate(Number(saved.sampleRate));
+        if ([1, 2].includes(Number(saved.channels))) setChannels(Number(saved.channels));
+        if ([16, 24, 32].includes(Number(saved.bitDepth))) setBitDepth(Number(saved.bitDepth) as 16 | 24 | 32);
+        if (Number(saved.durationSeconds) > 0) setDurationSeconds(Number(saved.durationSeconds));
+      }
+    } catch {}
+    void loadTimelineDawExportRecovery(session.id).then((recovery) => {
+      if (!active || !recovery) return;
+      setSourceFiles(recovery.files);
+      setNotice(`${recovery.files.length} selected export source${recovery.files.length === 1 ? "" : "s"} restored after leaving the DAW.`);
+    }).catch(() => {}).finally(() => { if (active) setDraftReady(true); });
+    return () => { active = false; };
+  }, [exportDraftKey, session.id]);
+  useEffect(() => {
+    if (!draftReady) return;
+    try { sessionStorage.setItem(exportDraftKey, JSON.stringify({ name, target, format, sampleRate, channels, bitDepth, durationSeconds })); } catch {}
+  }, [bitDepth, channels, draftReady, durationSeconds, exportDraftKey, format, name, sampleRate, target]);
   useEffect(() => {
     try {
       if (sessionStorage.getItem(uploadAttemptKey) === "pending") {
@@ -144,6 +172,7 @@ export default function ProjectDawExportWorkspace({
       setSources(uploaded.map((item) => item.source.uri).join(", "));
       setNotice(`${uploaded.length} private audio source${uploaded.length === 1 ? "" : "s"} uploaded at ${uploaded[0].audio.sampleRate.toLocaleString()} Hz.`);
       setSourceFiles([]);
+      await deleteTimelineDawExportRecovery(session.id).catch(() => {});
       try { sessionStorage.removeItem(uploadAttemptKey); } catch {}
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Audio sources could not be uploaded.");
@@ -344,7 +373,7 @@ export default function ProjectDawExportWorkspace({
         </label>
         <input className={field} type="number" min={0.001} step={0.001} value={durationSeconds} onChange={(event) => setDurationSeconds(Number(event.target.value))} aria-label="Duration in seconds" />
         <input className={`${field} md:col-span-2 xl:col-span-3`} value={sources} readOnly aria-label="Private render source identifiers" placeholder="Upload one or more WAV sources below" />
-        <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,.mp3,audio/wav,audio/mpeg" onChange={(event) => setSourceFiles(Array.from(event.target.files ?? []))} aria-label="WAV or MP3 render source files" />
+        <input className={`${field} md:col-span-2 xl:col-span-3`} type="file" multiple accept=".wav,.mp3,audio/wav,audio/mpeg" onChange={(event) => { const files = Array.from(event.target.files ?? []); setSourceFiles(files); if (files.length) void saveTimelineDawExportRecovery({ sessionId: session.id, files, savedAt: new Date().toISOString() }).catch((cause) => setError(cause instanceof Error ? cause.message : "Selected audio could not be protected for recovery.")); }} aria-label="WAV or MP3 render source files" />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className={button} disabled={uploading || busy || !sourceFiles.length} onClick={() => void uploadSources()}>{uploading ? `Uploading ${uploadProgress}%` : error && sourceFiles.length ? "Retry Private Audio Upload" : "Upload Private Audio Sources"}</button>
